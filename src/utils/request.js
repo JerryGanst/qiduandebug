@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // 创建 axios 实例
 const service = axios.create({
-  baseURL: 'http://121.201.35.34:11234', // 服务器地址
-  timeout: 10000, // 请求超时时间
+  baseURL: 'http://10.180.248.140:8080', // 服务器地址
+  timeout: 600000, // 请求超时时间
 });
 
 // 请求拦截器
@@ -36,7 +36,7 @@ export const postRequest = (url, data) => {
   return service({
     method: 'post',
     url,
-    data: JSON.stringify(data), // 将参数转换为 JSON 字符串
+    data: data, // 将参数转换为 JSON 字符串
   });
 };
 
