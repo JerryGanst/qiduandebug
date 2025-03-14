@@ -177,7 +177,14 @@
             </div>
           </div>
           <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 140px;">
-
+            <div class="tran_select" v-if="pageType==='query'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
+              
+              <el-radio-group v-model="selectedMode">
+                <el-radio label="通用模式">通用模式</el-radio>
+                <el-radio label="人资专题">人资专题</el-radio>
+              </el-radio-group>
+              <div style="padding-right: 10px;line-height: 32px;font-size: 14px;">模式选择 : </div>
+            </div>
             <div class="textarea" v-if="pageType==='query'">
               <el-input
               v-model="newQuestion"
@@ -395,6 +402,7 @@ export default {
     const queryIng = ref(false);
     const passwordVisible = ref(false);
     const selectedLan = ref('中文')
+    const selectedMode = ref('人资专题')
     const pageType = ref('query')
     const transData = ref('')
     const finalData = ref({
@@ -425,10 +433,16 @@ export default {
     // 点击确定删除
     const handleConfirmDelete = async (val) => {
       let id = ''
+      const queryLimit = []
       for(var i=0;i<answerList.value.length;i++){
+        queryLimit.push(answerList.value[i].question)
         if(answerList.value[i].question===val){
           id = answerList.value[i].id
         }
+      }
+      if(!queryLimit.includes(val)){
+        ElMessage.warning('此问题正在回答中，请稍后再删除');
+        return
       }
       try {
         // 替换为实际的后端接口地址
@@ -457,14 +471,11 @@ export default {
           // botMessage.text = '抱歉，暂时无法获取回复';
         
       }
-      // ElMessage.success('删除成功！');
-      // console.log('删除操作已执行');
     };
 
     // 点击取消
     const handleCancel = () => {
       // ElMessage.info('已取消删除');
-      console.log('取消删除');
     };
         // 当前显示的消息内容
     const currentMessage = ref('');
@@ -595,6 +606,7 @@ export default {
         const res = await response.json();
         if(res.data && res.data.clientStatus==='PASS'){
           ElMessage.success('登录成功');
+          showPopup.value = false
           isLogin.value = true
           localStorage.setItem('userInfo',JSON.stringify(data))
           userInfo.value.userid = data.userid
@@ -618,6 +630,8 @@ export default {
       localStorage.setItem('userInfo','')
       questions.value = []
       answerList.value = []
+      currentAnswer.value = false
+      currentQuestion.value = false
       isLogin.value = false
     };
   // 动态调整 textarea 高度的方法
@@ -808,23 +822,22 @@ export default {
       currentQuestion.value = val
       const queryList = questions.value
       const anList =  JSON.parse(JSON.stringify(answerList.value))
+      const queryLimit = []
       pageType.value = 'query'
-      console.log(val)
       for(var i=0;i<queryList.length;i++){
         if(queryList[i]===val){    
           tipQuery.value = val
         }
       }
       for(var j=0;j<anList.length;j++){
+        queryLimit.push(anList[j].question)
         if(val===anList[j].question){
-          console.log(1)
           currentObj.value.messages = anList[j].answer
-        } else{
-          console.log(2)
-          currentObj.value.messages.isHistory = false
-          // console.log(currentObj.value.messages)
-        }
+        } 
       }  
+      if(!queryLimit.includes(val)){
+        currentObj.value.messages = {}
+      }
     };
   
     const dataList = ref(
@@ -1200,6 +1213,7 @@ export default {
                 queryIng.value = false
                 // loadingInstance.close();
                 currentObj.value.messages = JSON.parse(element)
+                currentObj.value.messages.isHistory = true
                 postQuestion(JSON.parse(element),queryValue)
               } else{
                 currentObj.value.messageList.push(JSON.parse(element))
@@ -1395,6 +1409,7 @@ export default {
       updateDots,
       finalIng,
       selectedLan,
+      selectedMode,
       handleConfirmDelete,
       Delete,
       handleCancel
@@ -1429,6 +1444,31 @@ export default {
 .main_content::-webkit-scrollbar-thumb:hover {
   background: #555; /* 滑块悬停时的颜色 */
 }
+
+.el-menu{
+  max-height: 630px;
+  overflow-y: auto;
+}
+/* WebKit 浏览器滚动条样式 */
+.el-menu::-webkit-scrollbar {
+  width: 1px; /* 滚动条宽度 */
+}
+
+.el-menu::-webkit-scrollbar-track {
+  background: #f1f1f1; /* 轨道背景颜色 */
+  border-radius: 0px; /* 轨道圆角 */
+}
+
+.el-menu::-webkit-scrollbar-thumb {
+  background: #888; /* 滑块颜色 */
+  border-radius: 0px; /* 滑块圆角 */
+  border: 1px solid #f1f1f1; /* 滑块边框 */
+}
+
+.el-menu::-webkit-scrollbar-thumb:hover {
+  background: #555; /* 滑块悬停时的颜色 */
+}
+
 .custom-tooltip {
   max-width: 500px !important;
 }
