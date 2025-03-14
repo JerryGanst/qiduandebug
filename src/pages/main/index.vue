@@ -1,7 +1,7 @@
 <template>
   <el-container style="height: 100vh;">
     <!-- 左侧栏 -->
-    <el-aside :width="isCollapsed ? '60px' : '250px'" style="background-color: #f5f5f5; transition: width 0.3s;display: flex;">
+    <el-aside :width="isCollapsed ? '60px' : '280px'" style="background-color: #f5f5f5; transition: width 0.3s;display: flex;">
       <div class="aside_left"  style="width: 60px;height: 44px;margin-top: 10px;">
         <img src="../../assets/fold.png" @click="toggleCollapse"/>
         <div class="user-avatar-container" v-if="isLogin">
@@ -40,7 +40,7 @@
         <div class="noLogin" v-if="!isLogin" @click="dialogVisible = true">未登录</div>
       </div>
 
-      <div class="aside_right" :style="{width:isCollapsed?'0px':'190px',borderRight:isCollapsed?'none':'2px solid #EAEAEA',display:isCollapsed?'none':'block'}">
+      <div class="aside_right" :style="{width:isCollapsed?'0px':'220px',borderRight:isCollapsed?'none':'2px solid #EAEAEA',display:isCollapsed?'none':'block'}">
         <div style="width: 176px;height: 57px;margin-top: 15px;"><img src="../../assets/lux.png" style="width: 100%;height: 100%;"></div>
         <div style="padding: 22px 10px 10px 10px;">
         <el-button type="primary" @click="startNewConversation" class="back_set">
@@ -48,10 +48,25 @@
         </el-button>
 
         </div>
-        <el-menu :collapse="isCollapsed" style="border-right: none;">
-        <el-tooltip v-for="(question, index) in questions" :key="index" :content="question" placement="right">
-          <el-menu-item :index="index.toString()" @click="queryAn(question)">
+        <el-menu  style="border-right: none;" :default-active="activeIndex" @select="handleSelect">
+        <el-tooltip v-for="(question, index) in questions" :key="index" :content="question" placement="right" popper-class="custom-tooltip">
+          <el-menu-item :index="index.toString()" @click="queryAn(question)" style="position: relative;">
             <span>{{ isCollapsed ? 'Q' : question }}</span>
+            <el-popconfirm
+              title="确定要删除吗？"
+              confirm-button-text="确定"
+              cancel-button-text="取消"
+              icon="el-icon-warning"
+              icon-color="red"
+              @confirm="handleConfirmDelete(question)"
+              @cancel="handleCancel"
+            >
+              <!-- 触发元素：图标 -->
+              <template #reference>
+                <img src="../../assets/delete.png" style="width: 14px;height: 14px;position: absolute;right: 10px">
+              </template>
+            </el-popconfirm>
+            
           </el-menu-item>
         </el-tooltip>
         </el-menu>
@@ -64,77 +79,109 @@
     <el-container>
       <el-main>
         <div v-if="!currentQuestion" class="center-container" style="display: flex;flex-direction: column;">
-          <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 180px);width: 60%;overflow-y: auto;">
-            <div class="title">
+          <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 180px);width: 60%;overflow-y: auto;overflow-x: hidden;">
+            <div class="title" v-if="pageType==='query'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src">
               <div>
                 <div class="title_top" style="line-height: 30px;">Hello!我是立讯技术百事通，有什么问题欢迎咨询</div>
                 <div class="title_item" style="line-height: 18px;">
-                  <span>我可以帮你做这些事情,</span>
-                  <span style="color: #409eff;padding-left: 5px;cursor: pointer;">换一换?</span>
-                  <div style="display: inline-block;cursor: pointer;"><img src="../../assets/re.png" style="width: 20px;height: 20px;margin-left: 5px;"></div>
+                  <span>我可以帮你做这些事情</span>
+                  <!-- <span style="color: #409eff;padding-left: 5px;cursor: pointer;" @click="changeData">换一换?</span>
+                  <div style="display: inline-block;cursor: pointer;"><img src="../../assets/re.png" style="width: 20px;height: 20px;margin-left: 5px;" @click="changeData"></div> -->
                 </div>
               </div>
               
             </div>
-            <div class="content_list">
+            <div class="content_list" v-if="pageType==='query'">
               <div class="list_item">
                   <div class="list_title">今日热搜</div>
                   <div class="list_tip">深度搜索你关心的问题</div>
                   <div class="list_arry">
-                    <div v-for="item in arrList" class="arr_item">
+                    <div v-for="item in arrList" class="arr_item" v-if="isHistory">
                       <span>{{ item.index }}.</span>
                       <span style="padding-left: 3px;" class="item_hover" @click="submitQuestion(item.name)">{{ item.name }}</span>
                     </div>
-  
+                    <div v-for="item in historyList" class="arr_item" v-if="!isHistory">
+                      <span>{{ item.index }}.</span>
+                      <span style="padding-left: 3px;" class="item_hover" @click="submitQuestion(item.name)">{{ item.name }}</span>
+                    </div>  
                   </div>
               </div>
-              <!-- <div class="list_item" style="margin-left: 20px;">
-                <div class="list_title">历史热搜</div>
-                  <div class="list_tip">看看哪些问题被问得最多</div>
-                  <div class="list_arry">
-                    <div v-for="item in historyList" class="arr_item">
-                      <span>{{ item.index }}.</span>
-                      <span style="padding-left: 3px;" class="item_hover" @click="submitQuestion(item.name)">{{ item.name }}</span>
-                    </div>
-  
-                  </div>
-              </div> -->
               <div class="list_item" style="margin-left: 20px;">
                 <div class="list_title">效率工具</div>
                   <div class="list_tip">办公学习必备</div>
                   <div class="img_list">
-                    <div class="img_item">
+                    <div class="img_item" @click="changeType('tran')">
                       <div class="image"><img src="../../assets/1.png"></div>
                       <div class="img_text">
                         <div class="text_title">翻译</div>
-                        <div class="text_content">准确翻译成各国语言</div>
+                        <div class="text_content">准确将各国语言翻译成中文</div>
                       </div>
                     </div>
-                    <div class="img_item" style="margin-top: 10px;">
+                    <div class="img_item" style="margin-top: 10px;" @click="changeType('final')">
                       <div class="image"><img src="../../assets/2.png"></div>
                       <div class="img_text">
                         <div class="text_title">总结</div>
-                        <div class="text_content">AI速读论文、图书等超长文档</div>
+                        <div class="text_content">AI智能总结,让复杂信息一目了然</div>
                       </div>
                     </div>
                     <div class="img_item" style="margin-top: 10px;">
                       <div class="image"><img src="../../assets/3.png"></div>
                       <div class="img_text">
-                        <div class="text_title">PPT创作</div>
-                        <div class="text_content">言之有物、设计精美的智能PPT</div>
+                        <div class="text_title">更多功能</div>
+                        <div class="text_content">开发中,敬请期待</div>
                       </div>
                     </div>
                   </div>
               </div>
             </div>
+            <div class="title" v-if="pageType==='tran'" style="width: 100%;justify-content: center;">
+              <img src="../../assets/chat.deepseek.com_.png" class="title_src">
+              <div>
+                <div class="title_top" style="line-height: 30px;">立讯技术AI翻译专家</div>
+                <div class="title_top">熟练掌握翻译技巧～你的翻译好帮手</div>
+              </div>
+              
+            </div>
+            <div style="font-size: 14px;margin-top: 30px;letter-spacing: 1px;" v-if="pageType==='tran'&&finalIng">
+              <span> 正在为您翻译,请稍等</span>
+              <span v-if="!transData">{{ dots }}</span>
+            </div>
+            <div style="margin-top: 30px;background-color: #fff;font-size: 14px;letter-spacing: 1px;line-height: 24px;border-radius: 10px;" v-if="pageType==='tran'" :style="{padding:transData?'0px 15px':'0px'}">
+              <p>{{ transData }}</p>
+            </div>
+
+            <div class="title" v-if="pageType==='final'" style="width: 100%;justify-content: center;">
+              <img src="../../assets/chat.deepseek.com_.png" class="title_src">
+              <div>
+                <div class="title_top" style="line-height: 30px;">立讯技术AI智能总结</div>
+                <div class="title_top">精准概括，助你快速理解长文本</div>
+              </div>
+              
+            </div>
+            <div style="font-size: 14px;margin-top: 30px;letter-spacing: 1px;" v-if="pageType==='final'&&finalIng">
+              <span> 正在为您总结,请稍等</span>
+              <span v-if="!finalData.title">{{ dots }}</span>
+            </div>
+            <div style="margin-top: 20px;background-color: #fff;font-size: 14px;letter-spacing: 1px;line-height: 24px;border-radius: 10px;" v-if="pageType==='final'" :style="{padding:finalData.title?'15px 15px':'0px'}">
+              <div v-if="finalData.title">
+                <span>概括 : </span>
+                <span>{{ finalData.title }} </span>
+              </div>
+              <div v-if="finalData.data.length>0" style="margin-top: 15px;">
+                <div>关键词 : </div>
+                <div v-for="items in finalData.data">
+                  {{ items }}
+                </div>
+              </div>
+            </div>
           </div>
           <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 140px;">
 
-            <div class="textarea">
+            <div class="textarea" v-if="pageType==='query'">
               <el-input
               v-model="newQuestion"
-              placeholder="请输入您的问题,换行请按下Shift+Enter"
+              :placeholder="pageType==='query'?'请输入您的问题,换行请按下Shift+Enter':pageType==='final'?'请输入您想总结的文本,换行请按下Shift+Enter':'请输入您想翻译的文本,换行请按下Shift+Enter'"
               style="width:100%;"
               class="custom-input"
               clearable
@@ -154,15 +201,74 @@
             >
             <img :src="newQuestion?imageB:imageA" class="arrow"/>
             </div>
+
+            </div>
+            <div class="tran_select" v-if="pageType==='tran'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
+              
+              <el-radio-group v-model="selectedLan">
+                <el-radio label="中文">中文</el-radio>
+                <el-radio label="英文">英文</el-radio>
+                <el-radio label="西班牙语">西班牙语</el-radio>
+                <el-radio label="越南语">越南语</el-radio>
+              </el-radio-group>
+              <div style="padding-right: 10px;line-height: 32px;font-size: 14px;">翻译成 : </div>
+            </div>
+            <div class="textarea" v-if="pageType==='tran'">
+              <el-input
+              v-model="newQuestion"
+              :placeholder="pageType==='query'?'请输入您的问题,换行请按下Shift+Enter':pageType==='final'?'请输入您想总结的文本,换行请按下Shift+Enter':'请输入您想翻译的文本,换行请按下Shift+Enter'"
+              style="width:100%;"
+              class="custom-input"
+              clearable
+              @keydown="tranPost"
+              @keyup.shift.enter="handleShiftEnter"
+              ref="textareaInputTran"
+              type="textarea"
+              :rows="dynamicRows"
+              @input="adjustTextareaHeightTran"
+            />
+                <!-- 发送图标 -->
+            <div
+              class="send-icon"
+              :class="{ 'hovered': isHovered }"
+              @click="submitTran"
+
+            >
+            <img :src="newQuestion?imageB:imageA" class="arrow"/>
+            </div>
             </div>
 
+            <div class="textarea" v-if="pageType==='final'">
+              <el-input
+              v-model="newQuestion"
+              :placeholder="pageType==='query'?'请输入您的问题,换行请按下Shift+Enter':pageType==='final'?'请输入您想总结的文本,换行请按下Shift+Enter':'请输入您想翻译的文本,换行请按下Shift+Enter'"
+              style="width:100%;"
+              class="custom-input"
+              clearable
+              @keydown="finalPost"
+              @keyup.shift.enter="handleShiftEnter"
+              ref="textareaInputFinal"
+              type="textarea"
+              :rows="dynamicRows"
+              @input="adjustTextareaHeightFinal"
+            />
+                <!-- 发送图标 -->
+            <div
+              class="send-icon"
+              :class="{ 'hovered': isHovered }"
+              @click="submitFinal"
+
+            >
+            <img :src="newQuestion?imageB:imageA" class="arrow"/>
+            </div>
+            </div>
         </div>
         </div>
         <div v-else style="height: 100%;">
-            <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 222px);width: 70%;margin-left: 15%;overflow-y: auto;">
+            <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 222px);width: 70%;margin-left: 15%;overflow-y: auto;overflow-x: hidden">
             <div style="width: 100%;text-align: center;padding-top: 30px;">{{ currentObj.messages.type?'已为您匹配到最佳答案':'正在为您查询...' }} </div>
             <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'50px':'30px'}">
-              <div style="background-color: #eff6ff;border-radius: 10px;padding: 10px;float: right;">{{ tipQuery }}</div>
+              <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff">{{ tipQuery }}</div>
             </div>
 
             <div class="text_item" style="margin-top: 25px;display: flex;line-height: 30px;" >
@@ -174,23 +280,23 @@
               <!-- <p style="font-size: 14px;" v-for="(msg,index) in displayedMessages">
                 {{ msg}}
               </p> -->
-              <div>{{ currentMessage }}</div>
+              <div>{{ currentObj.messages.isHistory?'':currentMessage }}</div>
             </div>
             <MarkdownRenderer v-if="currentObj.messages.type==='final_answer'" :markdown="currentObj.messages.content" />
             <div style="margin-top: 30px;padding: 0 10px;" v-if="currentObj.messages.type==='final_answer'&&currentObj.messages.sources">附件</div>
-            <a style="margin-top: 10px;color:#409eff;cursor: pointer;padding: 0 10px;font-size: 14px;" v-for="(it,index) in processedData" v-if="currentObj.messages.type==='final_answer'&&currentObj.messages.sources">
+            <a style="margin-top: 10px;color:#409eff;cursor: pointer;padding: 0 10px;font-size: 14px;" v-for="(it,index) in processedData" v-if="currentObj.messages.type==='final_answer'&&currentObj.messages.sources" @click="toDoc(it)">
               <!-- {{ it.document_title }}  ( 第 {{ it.page }} 页 ) -->
               {{ it.document_title }}(第{{ it.page.join('/') }}页)
             </a>
           </div>
           <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 182px;">
-            <el-button type="primary" @click="startNewConversation" class="back_set">
+            <!-- <el-button type="primary" @click="startNewConversation" class="back_set">
               开启新对话
-            </el-button>
+            </el-button> -->
             <div class="textarea" style="margin-top: 10px;">
               <el-input
               v-model="newQuestion"
-              placeholder="请输入您的问题,换行请按下Shift+Enter"
+             :placeholder="pageType==='query'?'请输入您的问题,换行请按下Shift+Enter':pageType==='final'?'请输入您想总结的文本,换行请按下Shift+Enter':'请输入您想翻译的文本,换行请按下Shift+Enter'"
               class="custom-input"
               style="width:100%;"
               @keydown="summitPost"
@@ -258,7 +364,7 @@ import imageB from '../../../src/assets/arrow_blue.png';
 import photo from '../../../src/assets/chat.deepseek.com_.png';
 import { createSSEConnection } from '../../../src/utils/sse';
 import MarkdownRenderer from './component/markdown.vue'; // 引入 Markdown 渲染组件
-import { View, Lock } from '@element-plus/icons-vue'; // 引入需要的图标
+import { View, Lock,Delete } from '@element-plus/icons-vue'; // 引入需要的图标
 // 静态导入图片
 export default {
   name:'main',
@@ -272,6 +378,7 @@ export default {
     const router = useRouter();
     const isCollapsed = ref(false);
     const questions = ref([]);
+    const activeIndex = ref('')
     const newQuestion = ref('');
     const currentQuestion = ref('');
     const currentAnswer = ref('');
@@ -283,11 +390,82 @@ export default {
     const dynamicRows = ref(1)
     const textareaInputs = ref(null); 
     const textareaInput = ref(null); // 获取 textarea 元素的引用
+    const textareaInputTran = ref(null)
+    const textareaInputFinal = ref(null)
     const queryIng = ref(false);
     const passwordVisible = ref(false);
+    const selectedLan = ref('中文')
+    const pageType = ref('query')
+    const transData = ref('')
+    const finalData = ref({
+      title:'',
+      data:[]
+    })
     const userInfo = ref({
       userid:'',
     })
+    const removeItemById = (arr, id) => {
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i].id === id) {
+          arr.splice(i, 1);
+          break; // 找到后立即退出循环
+        }
+      }
+      return arr;
+    }
+    const removeItemByName = (arr, val) => {
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i] === val) {
+          arr.splice(i, 1);
+          break; // 找到后立即退出循环
+        }
+      }
+      return arr;
+    }
+    // 点击确定删除
+    const handleConfirmDelete = async (val) => {
+      let id = ''
+      for(var i=0;i<answerList.value.length;i++){
+        if(answerList.value[i].question===val){
+          id = answerList.value[i].id
+        }
+      }
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.248.140:8080/UserQA/deleteQAById?id='+id, {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // body: JSON.stringify(query),
+
+        })
+        const res = await response.json();
+        if(res.status){
+          ElMessage.success('删除成功！');
+          const aryId= JSON.parse(JSON.stringify(answerList.value))
+          const aryName= JSON.parse(JSON.stringify(questions.value))
+          answerList.value = removeItemById(aryId, id);
+          questions.value = removeItemByName(aryName, val);
+          activeIndex.value = ''
+          currentQuestion.value = false
+        }
+
+      } catch (error) {
+          // loadingInstance.close();
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+      // ElMessage.success('删除成功！');
+      // console.log('删除操作已执行');
+    };
+
+    // 点击取消
+    const handleCancel = () => {
+      // ElMessage.info('已取消删除');
+      console.log('取消删除');
+    };
         // 当前显示的消息内容
     const currentMessage = ref('');
     const changeImage = (newImage) => {
@@ -297,6 +475,7 @@ export default {
       username: '',
       password: '',
     });
+    const isHistory = ref(false)
     const rules = {
       username: [
         { required: true, message: '请输入工号(用户名)', trigger: 'blur' },
@@ -305,6 +484,49 @@ export default {
         { required: true, message: '请输入密码', trigger: 'blur' },
       ],
     };
+
+    const dots = ref('.'); // 初始点号
+    let interval;
+
+    // 点号变化逻辑
+    const updateDots = () => {
+      if (dots.value.length >= 5) {
+        dots.value = '.'; // 重置为一个点
+      } else {
+        dots.value += '.'; // 增加一个点
+      }
+    };
+
+    const toDoc = async (data) => {
+      const query = {
+        fileName:data.document_title
+      }
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.248.140:8080/Files/getFileInfoByName', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(query),
+
+        })
+        const res = await response.json();
+        if(res.status){
+          if(res.data && res.data.fileLink){
+            window.open(res.data.fileLink, '_blank');
+          }
+
+        }
+
+      } catch (error) {
+          // loadingInstance.close();
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+      
+    }
     const togglePasswordVisibility = () => {
       passwordVisible.value = !passwordVisible.value;
     };
@@ -314,6 +536,7 @@ export default {
     const showPopup = ref(false);
     const dialogVisible = ref(false)
     const avatarUrl = ref(photo); // 替换为你的头像URL
+    const answerList = ref([])
     const handleClose = (done) => {
       // 这里可以添加一些关闭前的逻辑
       done();
@@ -374,7 +597,8 @@ export default {
           ElMessage.success('登录成功');
           isLogin.value = true
           localStorage.setItem('userInfo',JSON.stringify(data))
-          userInfo.userid = data.userid
+          userInfo.value.userid = data.userid
+          getHistory()
           dialogVisible.value = false
         } else if(res.data && res.data.clientStatus!=='PASS'){
           ElMessage.error(res.data.message);
@@ -392,6 +616,8 @@ export default {
       // 处理退出登录逻辑
       ElMessage.success('退出成功');
       localStorage.setItem('userInfo','')
+      questions.value = []
+      answerList.value = []
       isLogin.value = false
     };
   // 动态调整 textarea 高度的方法
@@ -429,7 +655,7 @@ export default {
     [
       {
         index:1,
-        name:'我进入立讯技术后如何选择导师？'
+        name:'我进入立讯技术后如何选择导师'
       },
       {
         index:2,
@@ -454,7 +680,7 @@ export default {
     [
     {
         index:1,
-        name:'内部讲师的选拔条件是什么'
+        name:'公司学生实习的要求是什么'
       },
       {
         index:2,
@@ -474,6 +700,69 @@ export default {
       },
     ]
   )
+
+  
+  const adjustTextareaHeightFinal = () => {
+    const textarea = textareaInputFinal.value?.textarea; // 获取 textarea 元素
+    if (textarea) {
+      // 重置行高，以便重新计算
+      textarea.style.height = 'auto';
+      // 获取计算后的样式
+      const computedStyle = window.getComputedStyle(textarea);
+      // 计算 lineHeight（考虑 Element Plus 的默认 line-height: 1.5）
+      const lineHeight = parseFloat(computedStyle.lineHeight);
+      // 计算 paddingTop 和 paddingBottom
+      const paddingTop = parseFloat(computedStyle.paddingTop);
+      const paddingBottom = parseFloat(computedStyle.paddingBottom);
+      // 计算内容高度（减去 padding）
+      const scrollHeight = textarea.scrollHeight - paddingTop - paddingBottom;
+      // 计算行数
+      const rows = Math.floor(scrollHeight / lineHeight);
+
+      // 只有当行数变化时，才更新 dynamicRows
+      if (rows !== dynamicRows.value) {
+        dynamicRows.value = Math.min(Math.max(rows, 1), 4); // 限制行数在 1 到 5 之间
+      }
+
+      // 根据行数动态设置 overflow-y
+      if (rows > 5) {
+        textarea.style.overflowY = 'auto'; // 超过 5 行时显示滚动条
+      } else {
+        textarea.style.overflowY = 'hidden'; // 小于等于 5 行时隐藏滚动条
+      }
+    }
+  }; 
+
+  const adjustTextareaHeightTran = () => {
+    const textarea = textareaInputTran.value?.textarea; // 获取 textarea 元素
+    if (textarea) {
+      // 重置行高，以便重新计算
+      textarea.style.height = 'auto';
+      // 获取计算后的样式
+      const computedStyle = window.getComputedStyle(textarea);
+      // 计算 lineHeight（考虑 Element Plus 的默认 line-height: 1.5）
+      const lineHeight = parseFloat(computedStyle.lineHeight);
+      // 计算 paddingTop 和 paddingBottom
+      const paddingTop = parseFloat(computedStyle.paddingTop);
+      const paddingBottom = parseFloat(computedStyle.paddingBottom);
+      // 计算内容高度（减去 padding）
+      const scrollHeight = textarea.scrollHeight - paddingTop - paddingBottom;
+      // 计算行数
+      const rows = Math.floor(scrollHeight / lineHeight);
+
+      // 只有当行数变化时，才更新 dynamicRows
+      if (rows !== dynamicRows.value) {
+        dynamicRows.value = Math.min(Math.max(rows, 1), 4); // 限制行数在 1 到 5 之间
+      }
+
+      // 根据行数动态设置 overflow-y
+      if (rows > 5) {
+        textarea.style.overflowY = 'auto'; // 超过 5 行时显示滚动条
+      } else {
+        textarea.style.overflowY = 'hidden'; // 小于等于 5 行时隐藏滚动条
+      }
+    }
+  }; 
      // 动态调整 textarea 高度的方法
   const adjustTextareaHeights = () => {
     const textarea = textareaInputs.value?.textarea; // 获取 textarea 元素
@@ -511,16 +800,31 @@ export default {
       newQuestion.value = '';
       tipQuery.value = ''
       dynamicRows.value = 1
-      // adjustTextareaHeights()
-      // adjustTextareaHeight()
+      activeIndex.value = ''
+      pageType.value = 'query'
     };
 
     const queryAn = (val) => {
-      
-      currentQuestion.value = true
-      submitQuestion(val)
-      // currentData.value = dataList.value[index]
-    
+      currentQuestion.value = val
+      const queryList = questions.value
+      const anList =  JSON.parse(JSON.stringify(answerList.value))
+      pageType.value = 'query'
+      console.log(val)
+      for(var i=0;i<queryList.length;i++){
+        if(queryList[i]===val){    
+          tipQuery.value = val
+        }
+      }
+      for(var j=0;j<anList.length;j++){
+        if(val===anList[j].question){
+          console.log(1)
+          currentObj.value.messages = anList[j].answer
+        } else{
+          console.log(2)
+          currentObj.value.messages.isHistory = false
+          // console.log(currentObj.value.messages)
+        }
+      }  
     };
   
     const dataList = ref(
@@ -641,6 +945,7 @@ export default {
       }
     };
 
+
     const currentObj = ref({
       messages:{},
       messageList:[]
@@ -650,6 +955,151 @@ export default {
       newQuestion.value += '\n';
     };
 
+   //  const changeData = () => {
+    //   isHistory.value = !isHistory.value
+   //  }
+
+    
+    const changeType = (val) => {
+      activeIndex.value = ''
+      finalData.value = {
+        title:'',
+        data:[]
+      }
+      transData.value = ''
+      pageType.value = val
+    }
+    const finalIng = ref(false)
+    const finalPost = (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // 阻止默认的换行行为
+        submitFinal();
+      }
+    }
+    
+    const submitFinal = async (val) => {
+      if(!isLogin.value){
+        ElMessage.warning('请先登录再使用');
+        return
+      }
+      if(isObject(val)&&!newQuestion.value){
+        val=''
+        ElMessage.warning('请输入您的问题再发送');
+        return
+      }
+
+      if(val&&!isObject(val)){
+        newQuestion.value = val
+      }
+      if(!newQuestion.value){
+        ElMessage.warning('请输入您的问题再发送');
+        return
+      }
+      changeImage(imageA)
+      dynamicRows.value = 1
+      const data = {
+        user_id:userInfo.value.userid,
+        question:newQuestion.value,
+      }
+      newQuestion.value = ''
+      finalData.value = {
+        title:'',
+        data:[]
+      }
+      finalIng.value = true
+      interval = setInterval(updateDots, 500); // 每 500ms 更新一次
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.248.140:8080/AI/summarize', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+
+        })
+        const res = await response.json();
+        finalIng.value = false
+        clearInterval(interval);
+        if(res.status){
+          finalData.value.title = res.data.summary
+          if(res.data.key_points){
+            finalData.value.data = res.data.key_points
+          }
+        }
+
+      } catch (error) {
+          finalIng.value = false
+          clearInterval(interval);
+          // loadingInstance.close();
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+    }
+
+    const tranPost = (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // 阻止默认的换行行为
+        submitTran();
+      }
+    }
+    
+    const submitTran = async (val) => {
+      if(!isLogin.value){
+        ElMessage.warning('请先登录再使用');
+        return
+      }
+      if(isObject(val)&&!newQuestion.value){
+        val=''
+        ElMessage.warning('请输入您的问题再发送');
+        return
+      }
+
+      if(val&&!isObject(val)){
+        newQuestion.value = val
+      }
+      if(!newQuestion.value){
+        ElMessage.warning('请输入您的问题再发送');
+        return
+      }
+
+      changeImage(imageA)
+      dynamicRows.value = 1
+      const data = {
+        user_id:userInfo.value.userid,
+        source_text:newQuestion.value,
+        target_language:selectedLan.value
+      }
+      finalIng.value = true
+      interval = setInterval(updateDots, 500); // 每 500ms 更新一次
+      newQuestion.value = ''
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.248.140:8080/AI/translate', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+
+        })
+        const res = await response.json();
+        finalIng.value = false
+        clearInterval(interval);
+        if(res.status){
+          transData.value = res.data
+        }
+
+      } catch (error) {
+          finalIng.value = false
+          clearInterval(interval);
+          // loadingInstance.close();
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+    }
     const summitPost = (event) => {
 
       if (event.key === 'Enter' && !event.shiftKey) {
@@ -662,63 +1112,50 @@ export default {
       if(queryIng.value){
         return
       }
+      if(!isLogin.value){
+        ElMessage.warning('请先登录再使用');
+        return
+      }
       if(isObject(val)&&!newQuestion.value){
         val=''
         ElMessage.warning('请输入您的问题再发送');
         return
       }
+
       if(val&&!isObject(val)){
-        
         newQuestion.value = val
       }
       if(!newQuestion.value){
         ElMessage.warning('请输入您的问题再发送');
         return
       }
-      
       currentQuestion.value = true
       changeImage(imageA)
-      
+      dynamicRows.value = 1
       currentMessageIndex.value = 0
       currentObj.value.messages = {}
       currentObj.value.messageList = []
-      // const messages = {}
-      // const messageList = []
-      // mesObj.value.push(obj)
-      // messages.value = {}
-      // messageList.value = []
       displayedMessages.value = []
       const queryValue = newQuestion.value
       tipQuery.value = queryValue
       newQuestion.value = ''
       queryIng.value = true
-      // const loadingInstance = ElLoading.service({
-      //   lock: true, // 是否锁定屏幕
-      //   text: '', // 加载文本
-      //   background: 'rgba(0, 0, 0, 0)', // 背景颜色
-      // });
+      if(questions.value.includes(queryValue)){
+        queryIng.value = false
+        for(var i=0;i<questions.value.length;i++){
+          if(queryValue===questions.value[i]){
+            activeIndex.value = i
+          }
+        }
+        queryAn(queryValue)
+        return
+      }
       if(!questions.value.includes(queryValue)){
-        questions.value.push(queryValue)
+        
+        questions.value.unshift(queryValue)
+        activeIndex.value = '0'
       }
-      if(localStorage.getItem('questionList')){
-        const questionList = JSON.parse(localStorage.getItem('questionList'))
-        if(!questionList.includes(queryValue)&&queryValue.trim()){
-          questionList.push(queryValue)
-          localStorage.setItem('questionList',JSON.stringify(questionList))
-        }
-
-      }
-      if(!localStorage.getItem('questionList')){
-        const questionList = []
-        if(!questionList.includes(queryValue)&&queryValue.trim()){
-          questionList.push(queryValue)
-          localStorage.setItem('questionList',JSON.stringify(questionList))
-        }
-
-      }
-      // displayMessagesSequentially();
       try {
-
         // 替换为实际的后端接口地址
         const res = await fetch('http://10.180.248.140:8080/AI/query', {
           method: 'POST',
@@ -727,7 +1164,7 @@ export default {
           },
           body: JSON.stringify({
             question: queryValue,
-            user_id: "2"
+            user_id: userInfo.value.userid
           }),
         })
 
@@ -744,20 +1181,26 @@ export default {
             // 将二进制数据解码并添加到缓冲区
             buffer += decoder.decode(value, { stream: true });
             //处理buffer数据
-            const jsonStr = buffer.replace(/data:\s*/g, '');
+
+            // 清理数据
+            buffer = buffer.replace(/data:\s*/g, '');
+
+            // 尝试按分隔符分割数据
+            const jsonStr = buffer.split('\n\n');
+            
+            // 如果最后一个部分不完整，保留在缓冲区中
+            buffer = jsonStr.pop() || '';
+
             // const jsonStr = buffer.replace(/data:\s*/g, '');
-            // if(jsonStr.includes(',{"p')){
-            //   jsonStr.replace(',{"p', '');
-            // }
-            // console.log(jsonStr)
-            const jsonStrArr =jsonStr.split("\n\n").filter(item => item.length!=0)
-            console.log(jsonStrArr)
-            jsonStrArr.forEach(element => {
+            // const jsonStrArr =jsonStr.split("\n\n").filter(item => item.length!=0)
+
+            jsonStr.forEach(element => {
               const type = JSON.parse(element).type
               if(type==='final_answer'){
                 queryIng.value = false
                 // loadingInstance.close();
                 currentObj.value.messages = JSON.parse(element)
+                postQuestion(JSON.parse(element),queryValue)
               } else{
                 currentObj.value.messageList.push(JSON.parse(element))
               }
@@ -791,7 +1234,77 @@ export default {
         }
     };
 
+    
+    const postQuestion = async (obj,val) => {
+      const data = {
+        userId:userInfo.value.userid,
+        question:val,
+        answer:obj
+      }
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.248.140:8080/UserQA/save', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
 
+        })
+        const res = await response.json();
+        if(res.status){
+          getHistory()
+        }
+
+      } catch (error) {
+          // loadingInstance.close();
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+    }
+    // 10.180.248.140
+    // 
+    const getHistory = async () => {
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.248.140:8080/UserQA/getQAByUserId', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userInfo.value.userid
+          }),
+
+        })
+        const res = await response.json();
+        if(res.status){
+          answerList.value = res.data
+          if(res.data&&res.data.length>0){
+            for(var i=0;i<res.data.length;i++){
+              questions.value.push(res.data[i].question)
+            }
+            questions.value = questions.value.reduce((acc, current) => {
+              if (!acc.find(item => item === current)) {
+                acc.push(current);
+              }
+              return acc;
+            }, []);
+          }
+          for(var j=0;j<answerList.value.length;j++){
+            answerList.value[j].answer.isHistory = true
+          }
+
+        }
+      } catch (error) {
+          // loadingInstance.close();
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+    };
+  
     // 组件挂载后初始化
     onMounted(() => {
       adjustTextareaHeight(); // 初始调整高度
@@ -799,21 +1312,24 @@ export default {
         isLogin.value = true
         const loginData = JSON.parse(localStorage.getItem('userInfo'))
         userInfo.value.userid = loginData.userid
-      }
-      if(localStorage.getItem('questionList')){
-        const questionList = JSON.parse(localStorage.getItem('questionList'))
-        questions.value = questionList
-      }else{
-        questions.value = []
+        getHistory()
       }
     });
+    const handleSelect = (index) => {
+      activeIndex.value = index;
+    };
         // 组件卸载时关闭 SSE 连接
     // 组件卸载时关闭 SSE 连接
     onUnmounted(() => {
-
+      if(interval){
+        clearInterval(interval)
+      }
+      
     });
 
     return {
+      activeIndex,
+      handleSelect,
       isCollapsed,
       questions,
       newQuestion,
@@ -823,6 +1339,7 @@ export default {
       imageA,
       imageB,
       changeImage,
+      toDoc,
       queryAn,
       currentAnswer,
       toggleCollapse,
@@ -835,8 +1352,16 @@ export default {
       dynamicRows,
       textareaInput,
       textareaInputs,
+      textareaInputTran,
+      textareaInputFinal,
       adjustTextareaHeights,
       adjustTextareaHeight,
+      adjustTextareaHeightTran,
+      adjustTextareaHeightFinal,
+      tranPost,
+      finalPost,
+      submitTran,
+      submitFinal,
       arrList,
       historyList,
       showPopup,
@@ -860,12 +1385,53 @@ export default {
       passwordVisible,
       View, // 注册图标组件
       Lock, // 注册图标组件
+      isHistory,
+      // changeData,
+      pageType,
+      changeType,
+      finalData,
+      transData,
+      dots,
+      updateDots,
+      finalIng,
+      selectedLan,
+      handleConfirmDelete,
+      Delete,
+      handleCancel
     };
   },
 };
 </script>
 
 <style lang="less">
+
+.el-aside{
+  overflow-x: hidden;
+}
+
+
+/* WebKit 浏览器滚动条样式 */
+.main_content::-webkit-scrollbar {
+  width: 1px; /* 滚动条宽度 */
+}
+
+.main_content::-webkit-scrollbar-track {
+  background: #f1f1f1; /* 轨道背景颜色 */
+  border-radius: 0px; /* 轨道圆角 */
+}
+
+.main_content::-webkit-scrollbar-thumb {
+  background: #888; /* 滑块颜色 */
+  border-radius: 0px; /* 滑块圆角 */
+  border: 1px solid #f1f1f1; /* 滑块边框 */
+}
+
+.main_content::-webkit-scrollbar-thumb:hover {
+  background: #555; /* 滑块悬停时的颜色 */
+}
+.custom-tooltip {
+  max-width: 500px !important;
+}
 .user-avatar-container {
   position: fixed;
   bottom: 20px;
@@ -950,6 +1516,30 @@ export default {
 }
 .el-textarea__inner{
   border-radius: 16px !important;
+  
+}
+/* WebKit 浏览器滚动条样式 */
+.el-textarea__inner::-webkit-scrollbar {
+  width: 1px; /* 滚动条宽度 */
+  opacity: 0;
+}
+
+.el-textarea__inner::-webkit-scrollbar-track {
+  background: rgba(135, 206, 235, 0); /* 轨道背景颜色 */
+  border-radius: 16px; /* 轨道圆角 */
+  opacity: 0;
+}
+
+.el-textarea__inner::-webkit-scrollbar-thumb {
+  background: rgba(135, 206, 235, 0); /* 滑块颜色 */
+  border-radius: 0px; /* 滑块圆角 */
+  border: 1px solid #f1f1f1; /* 滑块边框 */
+  opacity: 0;
+}
+
+.el-textarea__inner::-webkit-scrollbar-thumb:hover {
+  background: rgba(135, 206, 235, 0); /* 滑块悬停时的颜色 */
+  opacity: 0;
 }
 .textarea{
   width: 60%;
@@ -1055,7 +1645,7 @@ export default {
           .text_content{
             font-size: 12px;
             line-height: 15px;
-            max-width: 140px;
+            max-width: 180px;
             color: #333;
             white-space: nowrap;      /* 强制文本不换行 */
             overflow: hidden;        /* 隐藏超出容器的内容 */
@@ -1122,7 +1712,7 @@ body {
   height: 24px;
 }
 .aside_right{
-  width: 190px;
+  width: 220px;
   background-color: #fff;
   border-right: 2px solid #EAEAEA;
 }
@@ -1148,7 +1738,7 @@ body {
 
 .send-icon {
   position: absolute;
-  right: 18px;
+  right: 8px;
   bottom: 3px;
   cursor: pointer;
   transition: color 0.3s;
@@ -1162,8 +1752,8 @@ body {
   background-image: url('../../assets/start.png');
   background-repeat: no-repeat;
   padding-left: 35px;
-  background-size: 18px 18px;
-  background-position: 10px 7px;
+  background-size: 12px 12px;
+  background-position: 15px 9px;
 }
 
 .login-form {
