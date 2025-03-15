@@ -1,3 +1,4 @@
+
 <template>
   <el-container style="height: 100vh;">
     <!-- 左侧栏 -->
@@ -41,7 +42,7 @@
       </div>
 
       <div class="aside_right" :style="{width:isCollapsed?'0px':'220px',borderRight:isCollapsed?'none':'2px solid #EAEAEA',display:isCollapsed?'none':'block'}">
-        <div style="width: 176px;height: 57px;margin-top: 15px;"><img src="../../assets/lux.png" style="width: 100%;height: 100%;"></div>
+        <div style="width: 200px;height: 62px;margin-top: 20px;margin-left: 10px;"><img src="../../assets/lux.png" style="width: 100%;height: 100%;"></div>
         <div style="padding: 22px 10px 10px 10px;">
         <el-button type="primary" @click="startNewConversation" class="back_set">
           {{ isCollapsed ? '' : '开启新对话' }}
@@ -80,7 +81,7 @@
       <el-main>
         <div v-if="!currentQuestion" class="center-container" style="display: flex;flex-direction: column;">
           <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 180px);width: 60%;overflow-y: auto;overflow-x: hidden;">
-            <div class="title" v-if="pageType==='query'">
+            <div class="title" v-if="pageType==='query'||pageType==='sample'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src">
               <div>
                 <div class="title_top" style="line-height: 30px;">Hello!我是立讯技术百事通，有什么问题欢迎咨询</div>
@@ -92,7 +93,7 @@
               </div>
               
             </div>
-            <div class="content_list" v-if="pageType==='query'">
+            <div class="content_list" v-if="pageType==='query'||pageType==='sample'">
               <div class="list_item">
                   <div class="list_title">今日热搜</div>
                   <div class="list_tip">深度搜索你关心的问题</div>
@@ -177,12 +178,11 @@
             </div>
           </div>
           <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 140px;">
-            <div class="tran_select" v-if="pageType==='query'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
-              
-              <el-radio-group v-model="selectedMode">
+            <div class="tran_select" v-if="pageType==='query'||pageType==='sample'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
+              <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)">
                 <el-radio label="通用模式">通用模式</el-radio>
                 <el-radio label="人资专题">人资专题</el-radio>
-              </el-radio-group>
+              </el-radio-group> 
               <div style="padding-right: 10px;line-height: 32px;font-size: 14px;">模式选择 : </div>
             </div>
             <div class="textarea" v-if="pageType==='query'">
@@ -204,6 +204,31 @@
               class="send-icon"
               :class="{ 'hovered': isHovered }"
               @click="submitQuestion"
+
+            >
+            <img :src="newQuestion?imageB:imageA" class="arrow"/>
+            </div>
+
+            </div>
+            <div class="textarea" v-if="pageType==='sample'">
+              <el-input
+              v-model="newQuestion"
+              placeholder="请输入您的问题,换行请按下Shift+Enter"
+              style="width:100%;"
+              class="custom-input"
+              clearable
+              @keydown="samplePost"
+              @keyup.shift.enter="handleShiftEnter"
+              ref="textareaInputSample"
+              type="textarea"
+              :rows="dynamicRows"
+              @input="adjustTextareaHeightSample"
+            />
+                <!-- 发送图标 -->
+            <div
+              class="send-icon"
+              :class="{ 'hovered': isHovered }"
+              @click="submitSample"
 
             >
             <img :src="newQuestion?imageB:imageA" class="arrow"/>
@@ -272,35 +297,66 @@
         </div>
         </div>
         <div v-else style="height: 100%;">
-            <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 222px);width: 70%;margin-left: 15%;overflow-y: auto;overflow-x: hidden">
-            <div style="width: 100%;text-align: center;padding-top: 30px;">{{ currentObj.messages.type?'已为您匹配到最佳答案':'正在为您查询...' }} </div>
-            <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'50px':'30px'}">
+            <div class="main_content" style="margin-bottom: 20px;width: 70%;margin-left: 15%;overflow-y: auto;overflow-x: hidden" :style="{height:pageType==='sample'?'calc(100% - 220px)':'calc(100% - 220px)',overflow:pageType==='sample'?'hidden':'auto'}">
+            <div style="width: 100%;text-align: center;padding-top: 30px;" v-if="pageType==='query'">{{ currentObj.messages.type?'已为您匹配到最佳答案':'正在为您查询...' }} </div>
+            <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'50px':'30px'}" v-if="pageType==='query'">
               <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff">{{ tipQuery }}</div>
             </div>
 
-            <div class="text_item" style="margin-top: 25px;display: flex;line-height: 30px;" >
+            <div class="text_item" style="margin-top: 25px;display: flex;line-height: 30px;" v-if="pageType==='query'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src" style="margin-right: 4px;width: 30px;height: 30px;">
               <div style="width: 100%;padding-left: 3px;"> {{ currentObj.messages.type?'最佳答案已生成':'开始总结答案...' }} </div>
             
             </div>
-            <div style="margin-top: 20px;width: 100%;font-size: 12px;display: flex;flex-direction: column;">
+            <div style="margin-top: 20px;width: 100%;font-size: 12px;display: flex;flex-direction: column;" v-if="pageType==='query'">
               <!-- <p style="font-size: 14px;" v-for="(msg,index) in displayedMessages">
                 {{ msg}}
               </p> -->
               <div>{{ currentObj.messages.isHistory?'':currentMessage }}</div>
             </div>
-            <MarkdownRenderer v-if="currentObj.messages.type==='final_answer'" :markdown="currentObj.messages.content" />
-            <div style="margin-top: 30px;padding: 0 10px;" v-if="currentObj.messages.type==='final_answer'&&currentObj.messages.sources">附件</div>
-            <a style="margin-top: 10px;color:#409eff;cursor: pointer;padding: 0 10px;font-size: 14px;" v-for="(it,index) in processedData" v-if="currentObj.messages.type==='final_answer'&&currentObj.messages.sources" @click="toDoc(it)">
+            <MarkdownRenderer v-if="pageType==='query'&&currentObj.messages.type==='final_answer'" :markdown="currentObj.messages.content" />
+            <div style="margin-top: 30px;padding: 0 10px;" v-if="pageType==='query'&&currentObj.messages.type==='final_answer'&&currentObj.messages.sources">附件</div>
+            <a style="margin-top: 10px;color:#409eff;cursor: pointer;padding: 0 10px;font-size: 14px;" v-for="(it,index) in processedData" v-if="pageType==='query'&&currentObj.messages.type==='final_answer'&&currentObj.messages.sources" @click="toDoc(it)">
               <!-- {{ it.document_title }}  ( 第 {{ it.page }} 页 ) -->
               {{ it.document_title }}(第{{ it.page.join('/') }}页)
             </a>
+            <div style="width: 100%;text-align: center;padding-top: 30px;" v-if="pageType==='sample'">{{ sampleObj.messages.length>0?'已为您匹配到最佳答案':'正在为您查询...' }} </div>
+            <!-- <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'50px':'30px'}" v-if="pageType==='sample'">
+              <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff">{{ tipQuery }}</div>
+            </div> -->
+
+            <div class="text_item" style="margin-top: 25px;display: flex;line-height: 30px;" v-if="pageType==='sample'">
+              <img src="../../assets/chat.deepseek.com_.png" class="title_src" style="margin-right: 4px;width: 30px;height: 30px;">
+              <div style="width: 100%;padding-left: 3px;"> {{ sampleObj.messages.length>0?'最佳答案已生成':'开始总结答案...' }} </div>
+            
+            </div>
+
+
+            <div style="margin-top: 20px;width: 100%;font-size: 12px;display: flex;flex-direction: column;" v-if="pageType==='sample'">
+              <div class="content-box">{{ displayedText }}</div>
+            </div>
+            <div style="width: 100%;height:calc(100% - 40px);display: flex;flex-direction: column;overflow-y: auto;overflow-x: hidden;" class="sample_item">
+              <div style="font-size: 14px;letter-spacing: 1px;line-height: 24px;width: 100%" v-if="pageType==='sample'&&chatQuery.messages.length>0"  v-for="(item,index) in chatQuery.messages" :style="{padding:chatQuery.messages.length>0?'5px':'0px'}">
+                <div v-if="index % 2 === 0" style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;margin-right: 5px;" >问 : {{ item.content }}</div>
+                <div v-if="index % 2 !== 0" style="background-color: #fff;padding: 15px 15px;border-radius: 10px;">答 : {{ item.content }}</div>
+              </div>
+            </div>
+
+
+            
           </div>
           <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 182px;">
             <!-- <el-button type="primary" @click="startNewConversation" class="back_set">
               开启新对话
             </el-button> -->
-            <div class="textarea" style="margin-top: 10px;">
+            <div class="tran_select" v-if="pageType==='query'||pageType==='sample'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
+              <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)">
+                <el-radio label="通用模式">通用模式</el-radio>
+                <el-radio label="人资专题">人资专题</el-radio>
+              </el-radio-group> 
+              <div style="padding-right: 10px;line-height: 32px;font-size: 14px;">模式选择 : </div>
+            </div>
+            <div class="textarea" v-if="pageType==='query'">
               <el-input
               v-model="newQuestion"
              :placeholder="pageType==='query'?'请输入您的问题,换行请按下Shift+Enter':pageType==='final'?'请输入您想总结的文本,换行请按下Shift+Enter':'请输入您想翻译的文本,换行请按下Shift+Enter'"
@@ -321,6 +377,31 @@
             >
             <img :src="newQuestion?imageB:imageA" class="arrow"/>
             </div>
+            </div>
+            <div class="textarea" v-if="pageType==='sample'">
+              <el-input
+              v-model="newQuestion"
+              placeholder="请输入您的问题,换行请按下Shift+Enter"
+              style="width:100%;"
+              class="custom-input"
+              clearable
+              @keydown="samplePost"
+              @keyup.shift.enter="handleShiftEnter"
+              ref="textareaInputSample"
+              type="textarea"
+              :rows="dynamicRows"
+              @input="adjustTextareaHeightSample"
+            />
+                <!-- 发送图标 -->
+            <div
+              class="send-icon"
+              :class="{ 'hovered': isHovered }"
+              @click="submitSample"
+
+            >
+            <img :src="newQuestion?imageB:imageA" class="arrow"/>
+            </div>
+
             </div>
           </div>
 
@@ -362,6 +443,7 @@
 </template>
 
 <script>
+// 10.180.16.102
 import { ref,computed,onMounted,onUnmounted,reactive } from 'vue';
 import { postRequest } from '../../utils/request'; // 导入封装的 axios 方法
 import { ElMessage,ElLoading,ElPopover, ElButton, ElDivider } from 'element-plus'; // 引入 ElMessage
@@ -398,13 +480,32 @@ export default {
     const textareaInputs = ref(null); 
     const textareaInput = ref(null); // 获取 textarea 元素的引用
     const textareaInputTran = ref(null)
+    const textareaInputSample = ref(null)
     const textareaInputFinal = ref(null)
     const queryIng = ref(false);
     const passwordVisible = ref(false);
     const selectedLan = ref('中文')
-    const selectedMode = ref('人资专题')
-    const pageType = ref('query')
+    const selectedMode = ref('通用模式')
+    const pageType = ref('sample')
     const transData = ref('')
+    const isSampleLoad = ref(false)
+    const currentId = ref('')
+    const sampleObj = ref({
+      messages:[]
+    })
+    const data = [
+        {type: 'process', content: '开始处理请求...', sources: null},
+        {type: 'process', content: '[Start] 开始对问题进行分类...', sources: null},
+        {type: 'process', content: '[Start] 开始对问题进行优化...', sources: null},
+        {type: 'process', content: '[End] 已完成问题优化', sources: null},
+        {type: 'process', content: '[Start] 开始第 1 轮查询...', sources: null},
+        {type: 'process', content: '[End] 完成资料库检索', sources: null},
+        {type: 'process', content: '[Start] 开始总结答案...', sources: null},
+        {type: 'process', content: '[End] 已完成总结答案', sources: null},
+      ]
+    const chatQuery = reactive({
+      messages:[]
+    })
     const finalData = ref({
       title:'',
       data:[]
@@ -430,23 +531,19 @@ export default {
       }
       return arr;
     }
-    // 点击确定删除
-    const handleConfirmDelete = async (val) => {
-      let id = ''
-      const queryLimit = []
-      for(var i=0;i<answerList.value.length;i++){
-        queryLimit.push(answerList.value[i].question)
-        if(answerList.value[i].question===val){
-          id = answerList.value[i].id
-        }
-      }
-      if(!queryLimit.includes(val)){
-        ElMessage.warning('此问题正在回答中，请稍后再删除');
-        return
-      }
+
+    const changeMode = (val) => {
+      currentQuestion.value = false
+      activeIndex.value = ''
+      newQuestion.value = ''
+      dynamicRows.value = 1
+      pageType.value = selectedMode.value==='通用模式'?'sample':'query'
+    }
+    // 删除数据
+    const deleteData = async (id,val) => {
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.248.140:8080/UserQA/deleteQAById?id='+id, {
+        const response = await fetch('http://10.180.16.102:8080/Message/deleteMessageById?id='+id, {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -461,6 +558,7 @@ export default {
           const aryName= JSON.parse(JSON.stringify(questions.value))
           answerList.value = removeItemById(aryId, id);
           questions.value = removeItemByName(aryName, val);
+          chatQuery.messages = []
           activeIndex.value = ''
           currentQuestion.value = false
         }
@@ -471,6 +569,40 @@ export default {
           // botMessage.text = '抱歉，暂时无法获取回复';
         
       }
+    }
+    
+
+    // 点击确定删除
+    const handleConfirmDelete = (val) => {
+      if(selectedMode.value==='通用模式'){
+        if(isSampleLoad.value){
+          ElMessage.warning('有问题正在回答中，请稍后再删除');
+          return
+        }
+
+      }
+      console.log(1234545667)
+      let id = ''
+      const queryLimit = []
+      const anList = JSON.parse(JSON.stringify(answerList.value))
+      for(var i=0;i<anList.length;i++){
+        if(anList[i].type==='人资专题'){
+          queryLimit.push(anList[i].data.question)
+          if(anList[i].data.question===val){
+            id = anList[i].id
+          }
+        }else {
+          if(anList[i].title===val){
+            id = anList[i].id
+          }
+        }
+
+      }
+      if(selectedMode.value==='人资专题'&&!queryLimit.includes(val)){
+        ElMessage.warning('此问题正在回答中，请稍后再删除');
+        return
+      }
+      deleteData(id,val)
     };
 
     // 点击取消
@@ -514,7 +646,7 @@ export default {
       }
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.248.140:8080/Files/getFileInfoByName', {
+        const response = await fetch('http://10.180.16.102:8080/Files/getFileInfoByName', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -595,7 +727,7 @@ export default {
       }
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.248.140:8080/UserInfo/login', {
+        const response = await fetch('http://10.180.16.102:8080/UserInfo/login', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -607,6 +739,7 @@ export default {
         if(res.data && res.data.clientStatus==='PASS'){
           ElMessage.success('登录成功');
           showPopup.value = false
+          activeIndex.value = ''
           isLogin.value = true
           localStorage.setItem('userInfo',JSON.stringify(data))
           userInfo.value.userid = data.userid
@@ -630,6 +763,8 @@ export default {
       localStorage.setItem('userInfo','')
       questions.value = []
       answerList.value = []
+      chatQuery.messages = []
+      currentId.value = ''
       currentAnswer.value = false
       currentQuestion.value = false
       isLogin.value = false
@@ -747,6 +882,38 @@ export default {
     }
   }; 
 
+  
+  const adjustTextareaHeightSample = () => {
+    const textarea = textareaInputSample.value?.textarea; // 获取 textarea 元素
+    if (textarea) {
+      // 重置行高，以便重新计算
+      textarea.style.height = 'auto';
+      // 获取计算后的样式
+      const computedStyle = window.getComputedStyle(textarea);
+      // 计算 lineHeight（考虑 Element Plus 的默认 line-height: 1.5）
+      const lineHeight = parseFloat(computedStyle.lineHeight);
+      // 计算 paddingTop 和 paddingBottom
+      const paddingTop = parseFloat(computedStyle.paddingTop);
+      const paddingBottom = parseFloat(computedStyle.paddingBottom);
+      // 计算内容高度（减去 padding）
+      const scrollHeight = textarea.scrollHeight - paddingTop - paddingBottom;
+      // 计算行数
+      const rows = Math.floor(scrollHeight / lineHeight);
+
+      // 只有当行数变化时，才更新 dynamicRows
+      if (rows !== dynamicRows.value) {
+        dynamicRows.value = Math.min(Math.max(rows, 1), 4); // 限制行数在 1 到 5 之间
+      }
+
+      // 根据行数动态设置 overflow-y
+      if (rows > 5) {
+        textarea.style.overflowY = 'auto'; // 超过 5 行时显示滚动条
+      } else {
+        textarea.style.overflowY = 'hidden'; // 小于等于 5 行时隐藏滚动条
+      }
+    }
+  }; 
+
   const adjustTextareaHeightTran = () => {
     const textarea = textareaInputTran.value?.textarea; // 获取 textarea 元素
     if (textarea) {
@@ -815,7 +982,10 @@ export default {
       tipQuery.value = ''
       dynamicRows.value = 1
       activeIndex.value = ''
-      pageType.value = 'query'
+      chatQuery.messages = []
+      currentId.value = ''
+      pageType.value = 'sample'
+      selectedMode.value = '通用模式'
     };
 
     const queryAn = (val) => {
@@ -823,21 +993,42 @@ export default {
       const queryList = questions.value
       const anList =  JSON.parse(JSON.stringify(answerList.value))
       const queryLimit = []
-      pageType.value = 'query'
+      const querySample = []
+
       for(var i=0;i<queryList.length;i++){
         if(queryList[i]===val){    
           tipQuery.value = val
         }
       }
       for(var j=0;j<anList.length;j++){
-        queryLimit.push(anList[j].question)
-        if(val===anList[j].question){
-          currentObj.value.messages = anList[j].answer
-        } 
+        if(anList[j].type==='人资专题'){
+          queryLimit.push(anList[j].data.question)
+          if(val==anList[j].data.question){
+            pageType.value = 'query'
+            selectedMode.value = '人资专题'
+            currentId.value = ''
+            currentObj.value.messages = anList[j].data.answer
+          } 
+        } else {
+          querySample.push(anList[j].title)
+          if(val==anList[j].title){
+            pageType.value = 'sample'
+            selectedMode.value = '通用模式'
+            chatQuery.messages = anList[j].data
+            currentId.value = anList[j].id
+          } 
+
+        }
+
       }  
-      if(!queryLimit.includes(val)){
+      if(pageType.value === 'query'&&!queryLimit.includes(val)){
         currentObj.value.messages = {}
       }
+      if(pageType.value === 'sample'&&!querySample.includes(val)){
+        chatQuery.messages = []
+      }
+
+
     };
   
     const dataList = ref(
@@ -898,9 +1089,11 @@ export default {
 
    // 用于存储每条消息的当前显示内容
   const displayedMessages = ref([]);
+  const sampleData = ref([])
 
   // 当前正在显示的消息索引
   const currentMessageIndex = ref(0);
+  const sampleMessageIndex = ref(0)
 
   // 逐个字显示消息内容的函数
   // const displayMessage = async (message, index) => {
@@ -938,15 +1131,6 @@ export default {
       });
     };
 
-      // 逐条显示消息
-  // const displayMessagesSequentially = async () => {
-  //   while (currentMessageIndex.value < currentObj.value.messageList.length) {
-  //     const message = currentObj.value.messageList[currentMessageIndex.value];
-  //     displayedMessages.value.push(''); // 初始化当前消息的显示内容
-  //     await displayMessage(message, currentMessageIndex.value); // 显示当前消息
-  //     currentMessageIndex.value++; // 移动到下一条消息
-  //   }
-  // };
 
       // 逐条显示消息
     const displayMessagesSequentially = async () => {
@@ -957,6 +1141,7 @@ export default {
         currentMessageIndex.value++; // 移动到下一条消息
       }
     };
+
 
 
     const currentObj = ref({
@@ -1023,7 +1208,7 @@ export default {
       interval = setInterval(updateDots, 500); // 每 500ms 更新一次
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.248.140:8080/AI/summarize', {
+        const response = await fetch('http://10.180.16.102:8080/AI/summarize', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1050,12 +1235,136 @@ export default {
         
       }
     }
+    
+    const samplePost = (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // 阻止默认的换行行为
+        submitSample();
+      }
+    }
 
     const tranPost = (event) => {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault(); // 阻止默认的换行行为
         submitTran();
       }
+    }
+
+    const displayedText = ref(''); // 当前显示的内容
+    let currentItemIndex = 0; // 当前显示的数据索引
+    let currentCharIndex = 0; // 当前显示的字符索引
+    // 逐字显示函数
+    const showText = () => {
+      if (currentItemIndex < data.length) {
+        const currentItem = data[currentItemIndex];
+        if (currentCharIndex < currentItem.content.length) {
+          displayedText.value += currentItem.content[currentCharIndex]; // 逐字添加到显示内容
+          currentCharIndex++;
+          setTimeout(showText, 30); // 每个字间隔 100ms
+        } else {
+          if (currentItemIndex < data.length - 1) {
+            // 如果不是最后一条，清空内容并显示下一条
+            setTimeout(() => {
+              displayedText.value = ''; // 清空内容
+              currentCharIndex = 0; // 重置字符索引
+              currentItemIndex++; // 切换到下一条数据
+              showText(); // 继续显示下一条
+            }, 100); // 显示完一条后，等待 1 秒再清空并显示下一条
+          } else {
+            // 如果是最后一条，保留内容
+            console.log('所有内容显示完毕');
+          }
+        }
+      }
+    };
+    // 使用 map 方法
+    // const updateOddIndexIdsInPlace = (array) => {
+    //   array.forEach((item, index) => {
+    //     if (index % 2 !== 0) {
+    //       item.role = 'user'; // 直接修改原数组中的对象
+    //     }
+    //   });
+    //   return array
+    // };
+    
+    const submitSample = async (val) => {
+      if(!isLogin.value){
+        ElMessage.warning('请先登录再使用');
+        return
+      }
+      if(isObject(val)&&!newQuestion.value){
+        val=''
+        ElMessage.warning('请输入您的问题再发送');
+        return
+      }
+
+      if(val&&!isObject(val)){
+        newQuestion.value = val
+      }
+      if(!newQuestion.value){
+        ElMessage.warning('请输入您的问题再发送');
+        return
+      }
+      currentQuestion.value = true
+      changeImage(imageA)
+      dynamicRows.value = 1
+      sampleMessageIndex.value = 0
+      isSampleLoad.value = true
+      console.log('abcd')
+      // showText(); // 开始显示数据
+      
+      const currentData = {
+        role:'user',
+        content:newQuestion.value
+      }
+      chatQuery.messages.push(currentData)
+      const params = JSON.parse(JSON.stringify(chatQuery))
+      for(var j=0;j<params.messages.length;j++){
+        if (j % 2 === 0) {
+          params.messages[j].role = 'user'; 
+          console.log(params.messages[j].role)
+        } else{
+          params.messages[j].role = 'assistant'; 
+        }
+      }
+      const queryValue = newQuestion.value
+      tipQuery.value = queryValue
+      newQuestion.value = ''
+      const anList =  JSON.parse(JSON.stringify(answerList.value))
+      const hasId = anList.some(item => item.id === currentId.value);
+      console.log(params)
+      if(!hasId){
+        questions.value.unshift(queryValue)
+        activeIndex.value = '0'
+      }
+      console.log(questions.value)
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.16.102:8080/AI/chat', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(params),
+
+        })
+        const res = await response.json();
+        isSampleLoad.value = false
+        if(res.status){
+          const newMessage = { ...res.data.message }; //
+          chatQuery.messages.push(newMessage)
+
+          postSample()
+        }
+
+      } catch (error) {
+          isSampleLoad.value = false
+          // loadingInstance.close();
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+      
     }
     
     const submitTran = async (val) => {
@@ -1089,7 +1398,7 @@ export default {
       newQuestion.value = ''
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.248.140:8080/AI/translate', {
+        const response = await fetch('http://10.180.16.102:8080/AI/translate', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1170,14 +1479,14 @@ export default {
       }
       try {
         // 替换为实际的后端接口地址
-        const res = await fetch('http://10.180.248.140:8080/AI/query', {
+        const res = await fetch('http://10.180.16.102:8080/AI/query', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             question: queryValue,
-            user_id: userInfo.value.userid
+            user_id: userInfo.value.userid,
           }),
         })
 
@@ -1248,16 +1557,54 @@ export default {
         }
     };
 
-    
+    const postSample = async () => {
+      const data = {
+        userId:userInfo.value.userid,
+        type:selectedMode.value,
+        id:currentId.value,
+        data:chatQuery.messages,
+        title:chatQuery.messages[0].content
+      }
+
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.16.102:8080/Message/save', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+
+        })
+        const res = await response.json();
+        if(res.status){
+          currentId.value = res.data
+          getHistory()
+        }
+
+      } catch (error) {
+          // loadingInstance.close();
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+    };
+
     const postQuestion = async (obj,val) => {
       const data = {
         userId:userInfo.value.userid,
-        question:val,
-        answer:obj
+        type:selectedMode.value,
+        title:val,
+        id:'',
+        data:{
+          question:val,
+          answer:obj,
+        }
       }
+      console.log('efg')
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.248.140:8080/UserQA/save', {
+        const response = await fetch('http://10.180.16.102:8080/Message/save', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1277,12 +1624,12 @@ export default {
         
       }
     }
-    // 10.180.248.140
+    // 10.180.16.102
     // 
     const getHistory = async () => {
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.248.140:8080/UserQA/getQAByUserId', {
+        const response = await fetch('http://10.180.16.102:8080/Message/getMessageByUserId', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1297,7 +1644,12 @@ export default {
           answerList.value = res.data
           if(res.data&&res.data.length>0){
             for(var i=0;i<res.data.length;i++){
-              questions.value.push(res.data[i].question)
+              if(res.data[i].type==='人资专题'){
+                questions.value.push(res.data[i].data.question)
+              } else{
+                questions.value.push(res.data[i].title)
+              }
+              
             }
             questions.value = questions.value.reduce((acc, current) => {
               if (!acc.find(item => item === current)) {
@@ -1306,8 +1658,14 @@ export default {
               return acc;
             }, []);
           }
+          console.log(answerList.value[0])
           for(var j=0;j<answerList.value.length;j++){
-            answerList.value[j].answer.isHistory = true
+            if(res.data[j].type==='人资专题'){
+              answerList.value[j].data.answer.isHistory = true
+            } else{
+              answerList.value[j].data.isHistory = true
+            }
+            
           }
 
         }
@@ -1368,11 +1726,14 @@ export default {
       textareaInputs,
       textareaInputTran,
       textareaInputFinal,
+      textareaInputSample,
       adjustTextareaHeights,
       adjustTextareaHeight,
       adjustTextareaHeightTran,
       adjustTextareaHeightFinal,
+      adjustTextareaHeightSample,
       tranPost,
+      samplePost,
       finalPost,
       submitTran,
       submitFinal,
@@ -1388,6 +1749,7 @@ export default {
       currentObj,
       displayedMessages,
       currentMessageIndex,
+      sampleMessageIndex,
       displayMessagesSequentially,
       currentMessage,
       queryIng,
@@ -1410,9 +1772,18 @@ export default {
       finalIng,
       selectedLan,
       selectedMode,
+      changeMode,
       handleConfirmDelete,
       Delete,
-      handleCancel
+      handleCancel,
+      sampleObj,
+      sampleData,  
+      displayedText,
+      showText,
+      postSample,
+      chatQuery,
+      submitSample,
+      isSampleLoad
     };
   },
 };
@@ -1422,6 +1793,26 @@ export default {
 
 .el-aside{
   overflow-x: hidden;
+}
+
+
+.sample_item::-webkit-scrollbar {
+  width: 1px; /* 滚动条宽度 */
+}
+
+.sample_item::-webkit-scrollbar-track {
+  background: #f1f1f1; /* 轨道背景颜色 */
+  border-radius: 0px; /* 轨道圆角 */
+}
+
+.sample_item::-webkit-scrollbar-thumb {
+  background: #888; /* 滑块颜色 */
+  border-radius: 0px; /* 滑块圆角 */
+  border: 1px solid #f1f1f1; /* 滑块边框 */
+}
+
+.sample_item::-webkit-scrollbar-thumb:hover {
+  background: #555; /* 滑块悬停时的颜色 */
 }
 
 
@@ -1446,7 +1837,7 @@ export default {
 }
 
 .el-menu{
-  max-height: 630px;
+  max-height: 620px;
   overflow-y: auto;
 }
 /* WebKit 浏览器滚动条样式 */
