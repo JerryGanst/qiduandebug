@@ -1,5 +1,5 @@
 <template>
-    <div v-html="renderedMarkdown" style="margin-top: 10px;background-color: #fff;padding: 0px 15px;font-size: 14px;letter-spacing: 1px;line-height: 24px;border-radius: 10px;"></div>
+    <div v-html="renderedMarkdown" style="margin-top: 10px;background-color: #fff;padding: 2px 20px;font-size: 14px;letter-spacing: 1px;line-height: 24px;border-radius: 10px;"></div>
   </template>
   
   <script setup>

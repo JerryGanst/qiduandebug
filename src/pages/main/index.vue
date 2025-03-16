@@ -93,19 +93,54 @@
               </div>
               
             </div>
-            <div class="content_list" v-if="pageType==='query'||pageType==='sample'">
+            <div class="content_list" v-if="pageType==='query'">
               <div class="list_item">
                   <div class="list_title">今日热搜</div>
                   <div class="list_tip">深度搜索你关心的问题</div>
                   <div class="list_arry">
-                    <div v-for="item in arrList" class="arr_item" v-if="isHistory">
+                    <div v-for="item in arrList" class="arr_item">
                       <span>{{ item.index }}.</span>
                       <span style="padding-left: 3px;" class="item_hover" @click="submitQuestion(item.name)">{{ item.name }}</span>
                     </div>
-                    <div v-for="item in historyList" class="arr_item" v-if="!isHistory">
+                  </div>
+              </div>
+              <div class="list_item" style="margin-left: 20px;">
+                <div class="list_title">效率工具</div>
+                  <div class="list_tip">办公学习必备</div>
+                  <div class="img_list">
+                    <div class="img_item" @click="changeType('tran')">
+                      <div class="image"><img src="../../assets/1.png"></div>
+                      <div class="img_text">
+                        <div class="text_title">翻译</div>
+                        <div class="text_content">准确将各国语言翻译成中文</div>
+                      </div>
+                    </div>
+                    <div class="img_item" style="margin-top: 10px;" @click="changeType('final')">
+                      <div class="image"><img src="../../assets/2.png"></div>
+                      <div class="img_text">
+                        <div class="text_title">总结</div>
+                        <div class="text_content">AI智能总结,让复杂信息一目了然</div>
+                      </div>
+                    </div>
+                    <div class="img_item" style="margin-top: 10px;">
+                      <div class="image"><img src="../../assets/3.png"></div>
+                      <div class="img_text">
+                        <div class="text_title">更多功能</div>
+                        <div class="text_content">开发中,敬请期待</div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+            </div>
+            <div class="content_list" v-if="pageType==='sample'">
+              <div class="list_item">
+                  <div class="list_title">今日热搜</div>
+                  <div class="list_tip">深度搜索你关心的问题</div>
+                  <div class="list_arry">
+                    <div v-for="item in historyList" class="arr_item" >
                       <span>{{ item.index }}.</span>
-                      <span style="padding-left: 3px;" class="item_hover" @click="submitQuestion(item.name)">{{ item.name }}</span>
-                    </div>  
+                      <span style="padding-left: 3px;" class="item_hover" @click="submitSample(item.name)">{{ item.name }}</span>
+                    </div>
                   </div>
               </div>
               <div class="list_item" style="margin-left: 20px;">
@@ -179,7 +214,7 @@
           </div>
           <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 140px;">
             <div class="tran_select" v-if="pageType==='query'||pageType==='sample'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
-              <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)">
+              <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)" :disabled="isSampleLoad">
                 <el-radio label="通用模式">通用模式</el-radio>
                 <el-radio label="人资专题">人资专题</el-radio>
               </el-radio-group> 
@@ -298,8 +333,8 @@
         </div>
         <div v-else style="height: 100%;">
             <div class="main_content" style="margin-bottom: 20px;width: 70%;margin-left: 15%;overflow-y: auto;overflow-x: hidden" :style="{height:pageType==='sample'?'calc(100% - 220px)':'calc(100% - 220px)',overflow:pageType==='sample'?'hidden':'auto'}">
-            <div style="width: 100%;text-align: center;padding-top: 30px;" v-if="pageType==='query'">{{ currentObj.messages.type?'已为您匹配到最佳答案':'正在为您查询...' }} </div>
-            <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'50px':'30px'}" v-if="pageType==='query'">
+            <!-- <div style="width: 100%;text-align: center;padding-top: 30px;" v-if="pageType==='query'">{{ currentObj.messages.type?'已为您匹配到最佳答案':'正在为您查询...' }} </div> -->
+            <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'100px':'80px'}" v-if="pageType==='query'">
               <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff">{{ tipQuery }}</div>
             </div>
 
@@ -320,14 +355,18 @@
               <!-- {{ it.document_title }}  ( 第 {{ it.page }} 页 ) -->
               {{ it.document_title }}(第{{ it.page.join('/') }}页)
             </a>
-            <div style="width: 100%;text-align: center;padding-top: 30px;" v-if="pageType==='sample'">{{ sampleObj.messages.length>0?'已为您匹配到最佳答案':'正在为您查询...' }} </div>
+            <div style="margin-top: 20px;width: 100%;display: flex;" v-if="pageType==='query'&&currentObj.messages.type==='final_answer'">
+              <div><img src='../../assets/refresh.png' style="width: 18px;height: 18px;margin-left: 10px;cursor: pointer;"></div>
+              <div><img src='../../assets/up.png' style="width: 18px;height: 18px;margin-left: 15px;cursor: pointer;" @click="upCommon"></div>
+              <div><img src='../../assets/down.png' style="width: 18px;height: 18px;margin-left: 15px;cursor: pointer;" @click="downCommon"></div>
+            </div>
             <!-- <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'50px':'30px'}" v-if="pageType==='sample'">
               <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff">{{ tipQuery }}</div>
             </div> -->
 
-            <div class="text_item" style="margin-top: 25px;display: flex;line-height: 30px;" v-if="pageType==='sample'">
+            <div class="text_item" style="margin-top: 75px;display: flex;line-height: 30px;" v-if="pageType==='sample'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src" style="margin-right: 4px;width: 30px;height: 30px;">
-              <div style="width: 100%;padding-left: 3px;"> {{ sampleObj.messages.length>0?'最佳答案已生成':'开始总结答案...' }} </div>
+              <div style="width: 100%;padding-left: 3px;"> {{ chatQuery.messages.length>0?'最佳答案已生成':'开始总结答案...' }} </div>
             
             </div>
 
@@ -335,10 +374,12 @@
             <div style="margin-top: 20px;width: 100%;font-size: 12px;display: flex;flex-direction: column;" v-if="pageType==='sample'">
               <div class="content-box">{{ displayedText }}</div>
             </div>
-            <div style="width: 100%;height:calc(100% - 40px);display: flex;flex-direction: column;overflow-y: auto;overflow-x: hidden;" class="sample_item">
+            <div style="width: 100%;height:calc(100% - 40px);display: flex;flex-direction: column;overflow-y: auto;overflow-x: hidden;" class="sample_item" ref="messageContainer">
               <div style="font-size: 14px;letter-spacing: 1px;line-height: 24px;width: 100%" v-if="pageType==='sample'&&chatQuery.messages.length>0"  v-for="(item,index) in chatQuery.messages" :style="{padding:chatQuery.messages.length>0?'5px':'0px'}">
                 <div v-if="index % 2 === 0" style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;margin-right: 5px;" >问 : {{ item.content }}</div>
-                <div v-if="index % 2 !== 0" style="background-color: #fff;padding: 15px 15px;border-radius: 10px;">答 : {{ item.content }}</div>
+                <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer"/>
+                <!-- <div v-if="index % 2 === 0" style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;margin-right: 5px;" >问 : {{ item.content }}</div> -->
+                <!-- <div v-if="index % 2 !== 0" style="background-color: #fff;padding: 15px 15px;border-radius: 10px;">答 : {{ item.content }}</div> -->
               </div>
             </div>
 
@@ -350,7 +391,7 @@
               开启新对话
             </el-button> -->
             <div class="tran_select" v-if="pageType==='query'||pageType==='sample'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
-              <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)">
+              <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)" :disabled="isSampleLoad">
                 <el-radio label="通用模式">通用模式</el-radio>
                 <el-radio label="人资专题">人资专题</el-radio>
               </el-radio-group> 
@@ -440,11 +481,32 @@
       </el-form-item>
     </el-form>
   </el-dialog>
+
+  <el-dialog
+    v-model="commonVisible"
+    title="评价"
+    width="40%"
+    :before-close="handleCommonClose"
+  >
+  <el-input
+          v-model="commonQuestion"
+          placeholder="请输入您的宝贵意见"
+          style="width:100%;"
+          class="custom-input"
+          clearable
+          type="textarea"
+          rows="5"
+      />
+      <div class="button-item" style="display: flex;width: 100%;margin-top: 40px;flex-direction: row-reverse;margin-bottom: 20px;">
+        <el-button  @click="commonVisible = false" style="width: 100px;height: 40px;margin-left: 15px;">取消</el-button>
+        <el-button type="primary" @click="submitCommon" style="width: 100px;height: 40px;">提交</el-button>
+      </div>
+  </el-dialog>
 </template>
 
 <script>
 // 10.180.16.102
-import { ref,computed,onMounted,onUnmounted,reactive } from 'vue';
+import { ref,computed,onMounted,onUnmounted,reactive,nextTick } from 'vue';
 import { postRequest } from '../../utils/request'; // 导入封装的 axios 方法
 import { ElMessage,ElLoading,ElPopover, ElButton, ElDivider } from 'element-plus'; // 引入 ElMessage
 import { useRouter } from 'vue-router';
@@ -489,11 +551,12 @@ export default {
     const pageType = ref('sample')
     const transData = ref('')
     const isSampleLoad = ref(false)
+    const messageContainer = ref(null)
     const currentId = ref('')
     const sampleObj = ref({
       messages:[]
     })
-    const data = [
+    const charData = ref([
         {type: 'process', content: '开始处理请求...', sources: null},
         {type: 'process', content: '[Start] 开始对问题进行分类...', sources: null},
         {type: 'process', content: '[Start] 开始对问题进行优化...', sources: null},
@@ -502,7 +565,7 @@ export default {
         {type: 'process', content: '[End] 完成资料库检索', sources: null},
         {type: 'process', content: '[Start] 开始总结答案...', sources: null},
         {type: 'process', content: '[End] 已完成总结答案', sources: null},
-      ]
+      ]) 
     const chatQuery = reactive({
       messages:[]
     })
@@ -510,6 +573,7 @@ export default {
       title:'',
       data:[]
     })
+    const commonQuestion = ref('')
     const userInfo = ref({
       userid:'',
     })
@@ -581,7 +645,6 @@ export default {
         }
 
       }
-      console.log(1234545667)
       let id = ''
       const queryLimit = []
       const anList = JSON.parse(JSON.stringify(answerList.value))
@@ -618,7 +681,6 @@ export default {
       username: '',
       password: '',
     });
-    const isHistory = ref(false)
     const rules = {
       username: [
         { required: true, message: '请输入工号(用户名)', trigger: 'blur' },
@@ -678,12 +740,18 @@ export default {
     };
     const showPopup = ref(false);
     const dialogVisible = ref(false)
+    const commonVisible = ref(false)
     const avatarUrl = ref(photo); // 替换为你的头像URL
     const answerList = ref([])
     const handleClose = (done) => {
       // 这里可以添加一些关闭前的逻辑
       done();
     };
+    const handleCommonClose = (done) => {
+      // 这里可以添加一些关闭前的逻辑
+      done();
+    };
+    
     const isLogin = ref(false)
     // 方法定义
     const getCurrentTime = () => {
@@ -829,23 +897,23 @@ export default {
     [
     {
         index:1,
-        name:'公司学生实习的要求是什么'
+        name:'中国的传统节日'
       },
       {
         index:2,
-        name:'实习协议应包含哪些内容'
+        name:'国务院发布的法定节假日安排'
       },
       {
         index:3,
-        name:'员工培训包括哪些种类'
+        name:'如何锻炼腹肌'
       },
       {
         index:4,
-        name:'亲属回避包括哪些等级'
+        name:'工作压力大如何缓解压力'
       },
       {
         index:5,
-        name:'工人是否有自由结社的权利'
+        name:'东莞的旅游景点'
       },
     ]
   )
@@ -1002,11 +1070,11 @@ export default {
       }
       for(var j=0;j<anList.length;j++){
         if(anList[j].type==='人资专题'){
-          queryLimit.push(anList[j].data.question)
-          if(val==anList[j].data.question){
+          queryLimit.push(anList[j].title)
+          if(val==anList[j].title){
+            currentId.value = anList[j].id
             pageType.value = 'query'
             selectedMode.value = '人资专题'
-            currentId.value = ''
             currentObj.value.messages = anList[j].data.answer
           } 
         } else {
@@ -1017,10 +1085,14 @@ export default {
             chatQuery.messages = anList[j].data
             currentId.value = anList[j].id
           } 
-
+          // const hasIdOne = anList.some(item => item.title === val);
+          // if(!hasIdOne){
+          //   currentId.value = ''
+          // }
         }
 
       }  
+      console.log(currentId.value)
       if(pageType.value === 'query'&&!queryLimit.includes(val)){
         currentObj.value.messages = {}
       }
@@ -1095,23 +1167,6 @@ export default {
   const currentMessageIndex = ref(0);
   const sampleMessageIndex = ref(0)
 
-  // 逐个字显示消息内容的函数
-  // const displayMessage = async (message, index) => {
-  //   return new Promise((resolve) => {
-  //     let i = 0;
-  //     const interval = setInterval(() => {
-  //       if (i < message.content.length) {
-  //         // 逐个字添加到 displayedMessages 中
-  //         displayedMessages.value[index] += message.content[i];
-  //         i++;
-  //       } else {
-  //         // 停止定时器
-  //         clearInterval(interval);
-  //         resolve(); // 当前消息显示完成
-  //       }
-  //     }, 30); // 每个字的显示间隔为 100 毫秒
-  //   });
-  // };
 
       // 逐个字显示消息内容的函数
     const displayMessage = async (message) => {
@@ -1255,14 +1310,14 @@ export default {
     let currentCharIndex = 0; // 当前显示的字符索引
     // 逐字显示函数
     const showText = () => {
-      if (currentItemIndex < data.length) {
-        const currentItem = data[currentItemIndex];
+      if (currentItemIndex < charData.value.length) {
+        const currentItem = charData.value[currentItemIndex];
         if (currentCharIndex < currentItem.content.length) {
           displayedText.value += currentItem.content[currentCharIndex]; // 逐字添加到显示内容
           currentCharIndex++;
           setTimeout(showText, 30); // 每个字间隔 100ms
         } else {
-          if (currentItemIndex < data.length - 1) {
+          if (currentItemIndex < charData.value.length - 1) {
             // 如果不是最后一条，清空内容并显示下一条
             setTimeout(() => {
               displayedText.value = ''; // 清空内容
@@ -1276,7 +1331,113 @@ export default {
           }
         }
       }
-    };
+      };
+   const isDisabled = ref(false);
+   const upCommon = async () => {
+      if (isDisabled.value) return; // 如果按钮已禁用，直接返回
+      let id = ''
+      if(currentId.value){
+        id = currentId.value
+      } else{
+        for(var i=0;i<answerList.value.length;i++){
+          if(limitQuery.value === answerList.value[i].title){
+            id = answerList.value[i].id
+          }
+        }
+      }
+      isDisabled.value = true;
+      const data = {
+        id:id,
+        feedback:{
+          agree:true,
+          content:''
+        }
+      }
+      // 2 秒后重新启用按钮
+      setTimeout(() => {
+        isDisabled.value = false;
+      }, 3000);
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.16.102:8080/Message/feedback', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+
+        })
+        const res = await response.json();
+        if(res.status){
+          ElMessage.success('评价成功,我们会继续努力');
+          
+        }
+
+      } catch (error) {
+          // loadingInstance.close();
+          // ElMessage.error('评价成功,我们会继续努力');
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+
+
+    }
+    const downCommon = () => {
+      commonVisible.value = true
+
+    }
+    const submitCommon = async () => {
+      let id = ''
+      if(currentId.value){
+        id = currentId.value
+      } else{
+        for(var i=0;i<answerList.value.length;i++){
+          if(limitQuery.value === answerList.value[i].title){
+            id = answerList.value[i].id
+          }
+        }
+      }
+
+      const data = {
+        id:id,
+        feedback:{
+          agree:false,
+          content:commonQuestion.value
+        }
+      }
+
+      try {
+        // 替换为实际的后端接口地址
+        const response = await fetch('http://10.180.16.102:8080/Message/feedback', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+
+        })
+        const res = await response.json();
+        if(res.status){
+
+          ElMessage.success('评价成功,我们会继续努力');
+          commonVisible.value = false
+          commonQuestion.value = ''
+        }
+
+      } catch (error) {
+        commonVisible.value = false
+        commonQuestion.value = ''
+          // loadingInstance.close();
+          // ElMessage.error('评价成功,我们会继续努力');
+          console.error('获取回复失败:', error);
+          // botMessage.text = '抱歉，暂时无法获取回复';
+        
+      }
+
+      
+    }
+    
     // 使用 map 方法
     // const updateOddIndexIdsInPlace = (array) => {
     //   array.forEach((item, index) => {
@@ -1310,19 +1471,24 @@ export default {
       dynamicRows.value = 1
       sampleMessageIndex.value = 0
       isSampleLoad.value = true
-      console.log('abcd')
-      // showText(); // 开始显示数据
+      displayedText.value = ''; // 当前显示的内容
+      currentItemIndex = 0; // 当前显示的数据索引
+      currentCharIndex = 0; // 当前显示的字符索引
+      showText(); // 开始显示数据
       
       const currentData = {
         role:'user',
         content:newQuestion.value
       }
-      chatQuery.messages.push(currentData)
-      const params = JSON.parse(JSON.stringify(chatQuery))
+      let mes = {
+        messages:[]
+      }
+      mes = JSON.parse(JSON.stringify(chatQuery))
+      mes.messages.push(currentData)
+      const params = JSON.parse(JSON.stringify(mes))
       for(var j=0;j<params.messages.length;j++){
         if (j % 2 === 0) {
           params.messages[j].role = 'user'; 
-          console.log(params.messages[j].role)
         } else{
           params.messages[j].role = 'assistant'; 
         }
@@ -1332,12 +1498,10 @@ export default {
       newQuestion.value = ''
       const anList =  JSON.parse(JSON.stringify(answerList.value))
       const hasId = anList.some(item => item.id === currentId.value);
-      console.log(params)
       if(!hasId){
         questions.value.unshift(queryValue)
         activeIndex.value = '0'
       }
-      console.log(questions.value)
       try {
         // 替换为实际的后端接口地址
         const response = await fetch('http://10.180.16.102:8080/AI/chat', {
@@ -1352,8 +1516,14 @@ export default {
         isSampleLoad.value = false
         if(res.status){
           const newMessage = { ...res.data.message }; //
-          chatQuery.messages.push(newMessage)
-
+          mes.messages.push(newMessage)
+          chatQuery.messages = mes.messages
+          nextTick(() => {
+      // 滚动到底部
+          if (messageContainer.value) {
+            messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+          }
+        })
           postSample()
         }
 
@@ -1429,7 +1599,7 @@ export default {
         submitQuestion();
       }
     }
-
+    const limitQuery = ref('')
     const submitQuestion = async (val) => {
       if(queryIng.value){
         return
@@ -1452,6 +1622,8 @@ export default {
         return
       }
       currentQuestion.value = true
+      limitQuery.value = newQuestion.value
+      console.log(limitQuery.value)
       changeImage(imageA)
       dynamicRows.value = 1
       currentMessageIndex.value = 0
@@ -1462,6 +1634,7 @@ export default {
       tipQuery.value = queryValue
       newQuestion.value = ''
       queryIng.value = true
+      isSampleLoad.value = true
       if(questions.value.includes(queryValue)){
         queryIng.value = false
         for(var i=0;i<questions.value.length;i++){
@@ -1520,6 +1693,7 @@ export default {
               const type = JSON.parse(element).type
               if(type==='final_answer'){
                 queryIng.value = false
+                isSampleLoad.value = false
                 // loadingInstance.close();
                 currentObj.value.messages = JSON.parse(element)
                 currentObj.value.messages.isHistory = true
@@ -1550,6 +1724,7 @@ export default {
             await displayMessagesSequentially();
           }
         } catch (error) {
+          isSampleLoad.value = false
           queryIng.value = false
           // loadingInstance.close();
           console.error('获取回复失败:', error);
@@ -1558,10 +1733,15 @@ export default {
     };
 
     const postSample = async () => {
+      let id = ''
+      if(chatQuery.messages.length>2){
+        id = currentId.value
+      }
+      console.log(currentId.value)
       const data = {
         userId:userInfo.value.userid,
-        type:selectedMode.value,
-        id:currentId.value,
+        type:'通用模式',
+        id:id,
         data:chatQuery.messages,
         title:chatQuery.messages[0].content
       }
@@ -1593,7 +1773,7 @@ export default {
     const postQuestion = async (obj,val) => {
       const data = {
         userId:userInfo.value.userid,
-        type:selectedMode.value,
+        type:'人资专题',
         title:val,
         id:'',
         data:{
@@ -1601,7 +1781,6 @@ export default {
           answer:obj,
         }
       }
-      console.log('efg')
       try {
         // 替换为实际的后端接口地址
         const response = await fetch('http://10.180.16.102:8080/Message/save', {
@@ -1658,7 +1837,6 @@ export default {
               return acc;
             }, []);
           }
-          console.log(answerList.value[0])
           for(var j=0;j<answerList.value.length;j++){
             if(res.data[j].type==='人资专题'){
               answerList.value[j].data.answer.isHistory = true
@@ -1685,6 +1863,8 @@ export default {
         const loginData = JSON.parse(localStorage.getItem('userInfo'))
         userInfo.value.userid = loginData.userid
         getHistory()
+      }else{
+        dialogVisible.value = true
       }
     });
     const handleSelect = (index) => {
@@ -1716,7 +1896,9 @@ export default {
       currentAnswer,
       toggleCollapse,
       submitForm,
+      submitCommon,
       startNewConversation,
+      commonQuestion,
       handleShiftEnter,
       submitQuestion,
       summitPost,
@@ -1755,13 +1937,14 @@ export default {
       queryIng,
       isLogin,
       dialogVisible,
+      commonVisible,
       handleClose,
+      handleCommonClose,
       loginForm,
       togglePasswordVisibility,
       passwordVisible,
       View, // 注册图标组件
       Lock, // 注册图标组件
-      isHistory,
       // changeData,
       pageType,
       changeType,
@@ -1776,6 +1959,7 @@ export default {
       handleConfirmDelete,
       Delete,
       handleCancel,
+      charData,
       sampleObj,
       sampleData,  
       displayedText,
@@ -1783,7 +1967,12 @@ export default {
       postSample,
       chatQuery,
       submitSample,
-      isSampleLoad
+      isSampleLoad,
+      messageContainer,
+      limitQuery,
+      upCommon,
+      isDisabled,
+      downCommon
     };
   },
 };
@@ -1930,7 +2119,7 @@ export default {
 }
 .el-menu--vertical:not(.el-menu--collapse):not(.el-menu--popup-container) .el-menu-item{
   height: 40px;
-  padding: 0 15px !important;
+  padding: 0 25px 0 15px !important;
 }
 .el-menu-item span{
   height: 40px;

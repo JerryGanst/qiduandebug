@@ -75,7 +75,7 @@ export default {
         const res = await response.json();
         if(res.data && res.data.clientStatus==='PASS'){
           ElMessage.success('登录成功');
-          router.push('/main');
+          router.push('/');
         } else if(res.data && res.data.clientStatus!=='PASS'){
           ElMessage.error(res.data.message);
         } else{
