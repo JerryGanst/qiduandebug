@@ -8,6 +8,8 @@ export default defineConfig({
 
   ],
   server: {
+    host: '0.0.0.0', // 监听所有网络接口
+    port: 5173,      // 指定端口号（可选）
     proxy: {
       // 代理所有以 `/api` 开头的请求
       '/AI': {
