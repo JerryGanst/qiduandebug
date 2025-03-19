@@ -1,10 +1,10 @@
 
 <template>
-  <el-container style="height: 100vh;">
+  <el-container  class="container">
     <!-- 左侧栏 -->
-    <el-aside :width="isCollapsed ? '60px' : '280px'" style="background-color: #f5f5f5; transition: width 0.3s;display: flex;">
-      <div class="aside_left"  style="width: 60px;height: 44px;margin-top: 10px;">
-        <img src="../../assets/fold.png" @click="toggleCollapse"/>
+    <el-aside :width="isCollapsed ? '60px' : '280px'" class="aside">
+      <div class="aside_left">
+        <img src="../../assets/fold.png" @click="toggleCollapse" class="aside_left_img"/>
         <div class="user-avatar-container" v-if="isLogin">
             <!-- 头像 -->
             <el-avatar
@@ -28,7 +28,7 @@
 
               <div class="user-info-popup">
                 <div class="user-info">
-                  <el-avatar :size="40" :src="avatarUrl" />
+                  <el-avatar :size="40" :src="avatarUrl" class="el_avatar"/>
                   <div class="user-details">
                     <div class="username">{{ userInfo.userid }}</div>
                   </div>
@@ -42,7 +42,7 @@
       </div>
 
       <div class="aside_right" :style="{width:isCollapsed?'0px':'220px',borderRight:isCollapsed?'none':'2px solid #EAEAEA',display:isCollapsed?'none':'block'}">
-        <div style="width: 200px;height: 62px;margin-top: 20px;margin-left: 10px;"><img src="../../assets/lux.png" style="width: 100%;height: 100%;"></div>
+        <div class="aside_right_content"><img src="../../assets/lux.png"></div>
         <div style="padding: 22px 10px 10px 10px;">
         <el-button type="primary" @click="startNewConversation" class="back_set">
           {{ isCollapsed ? '' : '开启新对话' }}
@@ -80,7 +80,7 @@
     <el-container>
       <el-main>
         <div v-if="!currentQuestion" class="center-container" style="display: flex;flex-direction: column;">
-          <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 178px);width: 726px;overflow-y: auto;overflow-x: hidden;">
+          <div class="main_content" style="width: 726px;overflow-y: auto;overflow-x: hidden;flex: 1;">
             <div class="title" v-if="pageType==='query'||pageType==='sample'||pageType==='it'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src">
               <div>
@@ -187,7 +187,13 @@
               <span> 正在为您翻译,请稍等</span>
               <span v-if="!transData">{{ dots }}</span>
             </div>
-            <div style="margin-top: 30px;background-color: #fff;font-size: 14px;letter-spacing: 1px;line-height: 24px;border-radius: 10px;" v-if="pageType==='tran'" :style="{padding:transData?'0px 15px':'0px'}">
+            <div style="width: 100%;display: flex;flex-direction: row-reverse;">
+              <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;max-width: 600px;overflow: hidden;text-overflow: ellipsis;" v-if="pageType==='tran'" :style="{padding:transQuest?'0px 15px':'0px'}">
+                <p>{{ transQuest }}</p>
+              </div>
+            </div>
+
+            <div style="margin-top: 10px;background-color: #fff;font-size: 14px;letter-spacing: 1px;line-height: 24px;border-radius: 10px;" v-if="pageType==='tran'" :style="{padding:transData?'0px 15px':'0px'}">
               <p>{{ transData }}</p>
             </div>
 
@@ -203,6 +209,11 @@
               <span> 正在为您总结,请稍等</span>
               <span v-if="!finalData.title">{{ dots }}</span>
             </div>
+            <div style="width: 100%;display: flex;flex-direction: row-reverse;">
+              <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;max-width: 600px;overflow: hidden;text-overflow: ellipsis;" v-if="pageType==='final'" :style="{padding:finalData.title?'0px 15px':'0px'}">
+                <p>{{ finalQuest }}</p>
+              </div>
+            </div>
             <div style="margin-top: 20px;background-color: #fff;font-size: 14px;letter-spacing: 1px;line-height: 24px;border-radius: 10px;" v-if="pageType==='final'" :style="{padding:finalData.title?'15px 15px':'0px'}">
               <div v-if="finalData.title">
                 <span>概括 : </span>
@@ -216,12 +227,12 @@
               </div>
             </div>
           </div>
-          <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 140px;">
+          <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 140px;margin-bottom: 10px;">
             <div class="tran_select" v-if="pageType==='query'||pageType==='sample'||pageType==='it'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
               <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)" :disabled="isSampleLoad">
                 <el-radio label="通用模式">通用模式</el-radio>
                 <el-radio label="人资行政专题">人资行政专题</el-radio>
-                <el-radio label="IT专题">IT专题</el-radio>
+                <!-- <el-radio label="IT专题">IT专题</el-radio> -->
               </el-radio-group> 
               <div style="padding-right: 10px;line-height: 32px;font-size: 14px;letter-spacing: 1px;color: #333;">模式选择 : </div>
             </div>
@@ -283,7 +294,7 @@
                 <el-radio label="西班牙语">西班牙语</el-radio>
                 <el-radio label="越南语">越南语</el-radio>
               </el-radio-group>
-              <div style="padding-right: 10px;line-height: 32px;font-size: 14px;">翻译成 : </div>
+              <div style="padding-right: 10px;line-height: 32px;font-size: 14px;letter-spacing: 1px;color: #333;">翻译成 : </div>
             </div>
             <div class="textarea" v-if="pageType==='tran'">
               <el-input
@@ -337,17 +348,18 @@
         </div>
         </div>
         <div v-else style="height: 100%;display: flex;flex-direction: column;align-items: center;">
-            <div class="main_content" style="margin-bottom: 20px;width: 860px;overflow-y: auto;overflow-x: hidden" :style="{height:pageType==='sample'?'calc(100% - 220px)':'calc(100% - 220px)',overflow:pageType==='sample'?'hidden':'auto'}">
-            <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'100px':'80px'}" v-if="pageType==='query'||pageType==='it'">
-              <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;max-width: 600px;overflow: hidden;text-overflow: ellipsis;" class="tip">{{ tipQuery }}</div>
-            </div>
-
-            <div class="text_item" style="margin-top: 25px;display: flex;line-height: 30px;" v-if="pageType==='query'||pageType==='it'">
+            <div class="main_content" style="width: 860px;overflow-y: auto;overflow-x: hidden;flex: 1;" :style="{overflow:pageType==='sample'?'hidden':'auto'}">
+            <div class="text_item" style="margin-top: 75px;display: flex;line-height: 30px;" v-if="pageType==='query'||pageType==='it'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src" style="margin-right: 4px;width: 30px;height: 30px;">
               <div style="width: 100%;padding-left: 3px;"> {{ currentObj.messages.type?'最佳答案已生成':'开始总结答案...' }} </div>
             
             </div>
-            <div style="margin-top: 20px;width: 100%;font-size: 12px;display: flex;flex-direction: column;" v-if="pageType==='query'||pageType==='it'">
+            <div style="display: flex;flex-direction: row-reverse;width: 100%;margin-top: 40px;"  v-if="pageType==='query'||pageType==='it'">
+              <div style="background-color: #409eff;border-radius: 10px;padding: 13px 15px;float: right;color:#fff;max-width: 600px;overflow: hidden;text-overflow: ellipsis;font-size: 14px;letter-spacing: 1px;margin-bottom: 5px;" class="tip">{{ tipQuery }}</div>
+            </div>
+
+
+            <div style="width: 100%;font-size: 12px;display: flex;flex-direction: column;" v-if="pageType==='query'||pageType==='it'">
               <!-- <p style="font-size: 14px;" v-for="(msg,index) in displayedMessages">
                 {{ msg}}
               </p> -->
@@ -367,7 +379,7 @@
 
             <div class="text_item" style="margin-top: 75px;display: flex;line-height: 30px;" v-if="pageType==='sample'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src" style="margin-right: 4px;width: 30px;height: 30px;">
-              <div style="width: 100%;padding-left: 3px;"> {{ chatQuery.messages.length>0?'最佳答案已生成':'开始总结答案...' }} </div>
+              <div style="width: 100%;padding-left: 3px;"> {{ chatQuery.messages.length>0&&!limitLoading?'最佳答案已生成':'开始总结答案...' }} </div>
             
             </div>
 
@@ -379,9 +391,9 @@
               <span> 正在为您解答,请稍等</span>
               <span>{{ dots }}</span>
             </div>
-            <div style="width: 100%;height:calc(100% - 40px);display: flex;flex-direction: column;overflow-y: auto;overflow-x: hidden;margin-top: 10px;" class="sample_item" ref="messageContainer">
+            <div style="width: 100%;display: flex;flex-direction: column;overflow-y: auto;overflow-x: hidden;margin-top: 10px;" class="sample_item" ref="messageContainer">
               <div style="font-size: 14px;letter-spacing: 1px;line-height: 24px;width: 100%" v-if="pageType==='sample'&&chatQuery.messages.length>0"  v-for="(item,index) in chatQuery.messages" >
-                <div v-if="index % 2 === 0" style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;margin-right: 5px;max-width: 600px;overflow: hidden;text-overflow: ellipsis;" >{{ item.content }}</div>
+                <div v-if="index % 2 === 0" style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;max-width: 600px;overflow: hidden;text-overflow: ellipsis;margin-bottom: 5px;" >{{ item.content }}</div>
                 <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer"/>
               </div>
             </div>
@@ -389,7 +401,7 @@
 
             
           </div>
-          <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 182px;">
+          <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;margin-bottom: 10px;">
             <!-- <el-button type="primary" @click="startNewConversation" class="back_set">
               开启新对话
             </el-button> -->
@@ -397,7 +409,7 @@
               <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)" :disabled="isSampleLoad">
                 <el-radio label="通用模式">通用模式</el-radio>
                 <el-radio label="人资行政专题">人资行政专题</el-radio>
-                <el-radio label="IT专题">IT专题</el-radio>
+                <!-- <el-radio label="IT专题">IT专题</el-radio> -->
               </el-radio-group> 
               <div style="padding-right: 10px;line-height: 32px;font-size: 14px;letter-spacing: 1px;color: #333;">模式选择 : </div>
             </div>
@@ -553,6 +565,7 @@ export default {
     const selectedMode = ref('通用模式')
     const pageType = ref('sample')
     const transData = ref('')
+    const transQuest = ref('')
     const isSampleLoad = ref(false)
     const messageContainer = ref(null)
     const sampleData = ref('')
@@ -577,6 +590,7 @@ export default {
       title:'',
       data:[]
     })
+    const finalQuest = ref('')
     const commonQuestion = ref('')
     const userInfo = ref({
       userid:'',
@@ -1105,6 +1119,7 @@ export default {
     const limitLoading = ref(false)
     const queryAn = (val,index,data) => {
       currentQuestion.value = val
+      newQuestion.value = ''
       limitLoading.value = false
       val = (index||index===0)?questions.value[index]:val
       const queryList = questions.value
@@ -1292,11 +1307,11 @@ export default {
     
     const changeType = (val) => {
       activeIndex.value = ''
-      finalData.value = {
-        title:'',
-        data:[]
-      }
-      transData.value = ''
+      // finalData.value = {
+      //   title:'',
+      //   data:[]
+      // }
+      // transData.value = ''
       pageType.value = val
     }
     const finalIng = ref(false)
@@ -1331,11 +1346,13 @@ export default {
         user_id:userInfo.value.userid,
         question:newQuestion.value,
       }
+      const limitQuery = newQuestion.value
       newQuestion.value = ''
       finalData.value = {
         title:'',
         data:[]
       }
+      finalQuest.value = ''
       finalIng.value = true
       interval = setInterval(updateDots, 500); // 每 500ms 更新一次
       try {
@@ -1352,6 +1369,7 @@ export default {
         finalIng.value = false
         clearInterval(interval);
         if(res.status){
+          finalQuest.value = limitQuery
           finalData.value.title = res.data.summary
           if(res.data.key_points){
             finalData.value.data = res.data.key_points
@@ -1711,8 +1729,12 @@ export default {
       }
       finalIng.value = true
       interval = setInterval(updateDots, 500); // 每 500ms 更新一次
+      const limitQuest = newQuestion.value
+      
       newQuestion.value = ''
       try {
+        transQuest.value = ''
+        transData.value = ''
         // 替换为实际的后端接口地址
         const response = await fetch('http://10.180.248.140:8080/AI/translate', {
           method: 'post',
@@ -1726,6 +1748,7 @@ export default {
         finalIng.value = false
         clearInterval(interval);
         if(res.status){
+          transQuest.value = limitQuest
           transData.value = res.data
         }
 
@@ -2212,7 +2235,9 @@ export default {
       pageType,
       changeType,
       finalData,
+      finalQuest,
       transData,
+      transQuest,
       dots,
       updateDots,
       finalIng,
@@ -2247,9 +2272,95 @@ export default {
 </script>
 
 <style lang="less">
-* {
-  font-family:"Microsoft YaHei", Arial, sans-serif;
+.el-container{
+  background-color: #fff;
 }
+.user-info-popup {
+  text-align: center;
+  .user-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .el_avatar{
+      img{
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .user-details {
+      margin-left: 10px;
+      text-align: center;
+
+      .username {
+        font-weight: bold;
+      }
+    }
+  }
+}
+.container{
+  height: 100vh;
+  font-family:"Microsoft YaHei", Arial, sans-serif;
+  
+  .aside{
+    background-color: #f5f5f5; 
+    transition: width 0.3s;
+    display: flex;
+    .aside_left{
+      width: 60px;
+      height: 44px;
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      
+      .aside_left_img{
+        width: 24px;
+        height: 24px;
+      }
+      .noLogin{
+        font-size: 14px;
+        cursor: pointer;
+        position: fixed;
+        color: #409eff;
+        bottom: 30px;
+        left: 8px;
+      }
+      .user-avatar-container {
+        position: fixed;
+        bottom: 20px;
+        left: 8px;
+        .popover-reference {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 40px;
+          height: 40px;
+        }
+        .user-avatar {
+          cursor: pointer;
+        }
+
+      }
+    }
+    .aside_right{
+      width: 220px;
+      background-color: #fff;
+      border-right: 2px solid #EAEAEA;
+      .aside_right_content{
+        width: 200px;
+        height: 62px;
+        margin-top: 20px;
+        margin-left: 10px;
+        img{
+          width: 100%;height: 100%;
+        }
+      }
+    }
+  }
+}
+
+
 .el-aside{
   overflow-x: hidden;
 }
@@ -2322,49 +2433,8 @@ export default {
 .custom-tooltip {
   max-width: 500px !important;
 }
-.user-avatar-container {
-  position: fixed;
-  bottom: 20px;
-  left: 8px;
-}
-.noLogin{
-  font-size: 14px;
-  cursor: pointer;
-  position: fixed;
-  color: #409eff;
-  bottom: 30px;
-  left: 8px;
-}
-.user-avatar {
-  cursor: pointer;
-}
 
-.popover-reference {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 40px;
-  height: 40px;
-}
 
-.user-info-popup {
-  text-align: center;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-details {
-  margin-left: 10px;
-  text-align: left;
-}
-
-.username {
-  font-weight: bold;
-}
 
 .department {
   font-size: 12px;
@@ -2374,8 +2444,8 @@ export default {
   padding: 0px !important;
   background: linear-gradient(
                 to bottom,
-                rgba(135, 206, 235, 0.2), /* 淡蓝色，透明度 60% */
-                rgba(224, 247, 250, 0.1)  /* 更淡的蓝色，透明度 60% */
+                rgba(197, 208, 213, 0.2), /* 淡蓝色，透明度 60% */
+                rgba(188, 214, 218, 0.1)  /* 更淡的蓝色，透明度 60% */
             );
 }
 /* 去掉 textarea 右下角的小图标 */
@@ -2592,28 +2662,12 @@ body {
   margin: 0px;
   background-color: #EAEAEA;
 }
-.aside_left{
-  width: 60px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-}
-.aside_left > img{
-  width: 24px;
-  height: 24px;
-}
-.aside_right{
-  width: 220px;
-  background-color: #fff;
-  border-right: 2px solid #EAEAEA;
-}
+
+
 *{
   box-sizing: content-box;
 }
-.el-container{
-  background-color: #fff;
-}
+
 .center-container {
   display: flex;
   align-items: center;
