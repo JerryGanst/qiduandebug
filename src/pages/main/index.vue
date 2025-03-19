@@ -80,8 +80,8 @@
     <el-container>
       <el-main>
         <div v-if="!currentQuestion" class="center-container" style="display: flex;flex-direction: column;">
-          <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 180px);width: 726px;overflow-y: auto;overflow-x: hidden;">
-            <div class="title" v-if="pageType==='query'||pageType==='sample'">
+          <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 178px);width: 726px;overflow-y: auto;overflow-x: hidden;">
+            <div class="title" v-if="pageType==='query'||pageType==='sample'||pageType==='it'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src">
               <div>
                 <div class="title_top" style="line-height: 33px;">Hello!我是立讯技术百事通，有什么问题欢迎咨询</div>
@@ -93,12 +93,16 @@
               </div>
               
             </div>
-            <div class="content_list" v-if="pageType==='query'">
+            <div class="content_list" v-if="pageType==='query'||pageType==='it'">
               <div class="list_item">
                   <div class="list_title">今日热搜</div>
                   <div class="list_tip">深度搜索您关心的问题</div>
                   <div class="list_arry">
-                    <div v-for="item in arrList" class="arr_item">
+                    <div v-for="item in arrList" class="arr_item" v-if="pageType==='query'">
+                      <span>{{ item.index }}.</span>
+                      <span style="padding-left: 3px;" class="item_hover" @click="submitQuestion(item.name)">{{ item.name }}</span>
+                    </div>
+                    <div v-for="item in itList" class="arr_item" v-if="pageType==='it'">
                       <span>{{ item.index }}.</span>
                       <span style="padding-left: 3px;" class="item_hover" @click="submitQuestion(item.name)">{{ item.name }}</span>
                     </div>
@@ -213,17 +217,18 @@
             </div>
           </div>
           <div style="width: 100%;display: flex;justify-content: flex-end;align-items: center;border-radius: 10px;flex-direction: column;height: 140px;">
-            <div class="tran_select" v-if="pageType==='query'||pageType==='sample'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
+            <div class="tran_select" v-if="pageType==='query'||pageType==='sample'||pageType==='it'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
               <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)" :disabled="isSampleLoad">
                 <el-radio label="通用模式">通用模式</el-radio>
                 <el-radio label="人资行政专题">人资行政专题</el-radio>
+                <el-radio label="IT专题">IT专题</el-radio>
               </el-radio-group> 
-              <div style="padding-right: 10px;line-height: 32px;font-size: 14px;">模式选择 : </div>
+              <div style="padding-right: 10px;line-height: 32px;font-size: 14px;letter-spacing: 1px;color: #333;">模式选择 : </div>
             </div>
-            <div class="textarea" v-if="pageType==='query'">
+            <div class="textarea" v-if="pageType==='query'||pageType==='it'">
               <el-input
               v-model="newQuestion"
-              :placeholder="pageType==='query'?'请输入您的问题,换行请按下Shift+Enter':pageType==='final'?'请输入您想总结的文本,换行请按下Shift+Enter':'请输入您想翻译的文本,换行请按下Shift+Enter'"
+              placeholder="请输入您的问题,换行请按下Shift+Enter"
               style="width:100%;"
               class="custom-input"
               clearable
@@ -283,7 +288,7 @@
             <div class="textarea" v-if="pageType==='tran'">
               <el-input
               v-model="newQuestion"
-              :placeholder="pageType==='query'?'请输入您的问题,换行请按下Shift+Enter':pageType==='final'?'请输入您想总结的文本,换行请按下Shift+Enter':'请输入您想翻译的文本,换行请按下Shift+Enter'"
+              placeholder="请输入您想翻译的文本,换行请按下Shift+Enter"
               style="width:100%;"
               class="custom-input"
               clearable
@@ -308,7 +313,7 @@
             <div class="textarea" v-if="pageType==='final'">
               <el-input
               v-model="newQuestion"
-              :placeholder="pageType==='query'?'请输入您的问题,换行请按下Shift+Enter':pageType==='final'?'请输入您想总结的文本,换行请按下Shift+Enter':'请输入您想翻译的文本,换行请按下Shift+Enter'"
+              placeholder="请输入您想总结的文本,换行请按下Shift+Enter"
               style="width:100%;"
               class="custom-input"
               clearable
@@ -333,29 +338,28 @@
         </div>
         <div v-else style="height: 100%;display: flex;flex-direction: column;align-items: center;">
             <div class="main_content" style="margin-bottom: 20px;width: 860px;overflow-y: auto;overflow-x: hidden" :style="{height:pageType==='sample'?'calc(100% - 220px)':'calc(100% - 220px)',overflow:pageType==='sample'?'hidden':'auto'}">
-            <!-- <div style="width: 100%;text-align: center;padding-top: 30px;" v-if="pageType==='query'">{{ currentObj.messages.type?'已为您匹配到最佳答案':'正在为您查询...' }} </div> -->
-            <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'100px':'80px'}" v-if="pageType==='query'">
+            <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'100px':'80px'}" v-if="pageType==='query'||pageType==='it'">
               <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;max-width: 600px;overflow: hidden;text-overflow: ellipsis;" class="tip">{{ tipQuery }}</div>
             </div>
 
-            <div class="text_item" style="margin-top: 25px;display: flex;line-height: 30px;" v-if="pageType==='query'">
+            <div class="text_item" style="margin-top: 25px;display: flex;line-height: 30px;" v-if="pageType==='query'||pageType==='it'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src" style="margin-right: 4px;width: 30px;height: 30px;">
               <div style="width: 100%;padding-left: 3px;"> {{ currentObj.messages.type?'最佳答案已生成':'开始总结答案...' }} </div>
             
             </div>
-            <div style="margin-top: 20px;width: 100%;font-size: 12px;display: flex;flex-direction: column;" v-if="pageType==='query'">
+            <div style="margin-top: 20px;width: 100%;font-size: 12px;display: flex;flex-direction: column;" v-if="pageType==='query'||pageType==='it'">
               <!-- <p style="font-size: 14px;" v-for="(msg,index) in displayedMessages">
                 {{ msg}}
               </p> -->
               <div>{{ currentObj.messages.isHistory?'':currentMessage }}</div>
             </div>
-            <MarkdownRenderer v-if="pageType==='query'&&currentObj.messages.type==='final_answer'" :markdown="currentObj.messages.content" />
-            <div style="margin-top: 30px;padding: 0 10px;" v-if="pageType==='query'&&currentObj.messages.type==='final_answer'&&currentObj.messages.sources">附件</div>
-            <a style="margin-top: 10px;color:#409eff;cursor: pointer;padding: 0 10px;font-size: 14px;" v-for="(it,index) in processedData" v-if="pageType==='query'&&currentObj.messages.type==='final_answer'&&currentObj.messages.sources" @click="toDoc(it)">
+            <MarkdownRenderer v-if="(pageType==='query'||pageType==='it')&&currentObj.messages.type==='final_answer'" :markdown="currentObj.messages.content" />
+            <div style="margin-top: 30px;padding: 0 10px;" v-if="(pageType==='query'||pageType==='it')&&currentObj.messages.type==='final_answer'&&currentObj.messages.sources">附件</div>
+            <a style="margin-top: 10px;color:#409eff;cursor: pointer;padding: 0 10px;font-size: 14px;" v-for="(it,index) in processedData" v-if="(pageType==='query'||pageType==='it')&&currentObj.messages.type==='final_answer'&&currentObj.messages.sources" @click="toDoc(it)">
               <!-- {{ it.document_title }}  ( 第 {{ it.page }} 页 ) -->
               {{ it.document_title }}(第{{ it.page.join('/') }}页)
             </a>
-            <div style="margin-top: 20px;width: 100%;display: flex;" v-if="pageType==='query'&&currentObj.messages.type==='final_answer'">
+            <div style="margin-top: 20px;width: 100%;display: flex;" v-if="(pageType==='query'||pageType==='it')&&currentObj.messages.type==='final_answer'">
               <!-- <div><img src='../../assets/refresh.png' style="width: 18px;height: 18px;margin-left: 10px;cursor: pointer;"></div> -->
               <div><img src='../../assets/up.png' style="width: 18px;height: 18px;margin-left: 10px;cursor: pointer;" @click="upCommon"></div>
               <div><img src='../../assets/down.png' style="width: 18px;height: 18px;margin-left: 15px;cursor: pointer;" @click="downCommon"></div>
@@ -389,17 +393,18 @@
             <!-- <el-button type="primary" @click="startNewConversation" class="back_set">
               开启新对话
             </el-button> -->
-            <div class="tran_select" v-if="pageType==='query'||pageType==='sample'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
+            <div class="tran_select" v-if="pageType==='query'||pageType==='sample'||pageType==='it'" style="display: flex;flex-direction: row-reverse;margin-bottom: 10px;">
               <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)" :disabled="isSampleLoad">
                 <el-radio label="通用模式">通用模式</el-radio>
                 <el-radio label="人资行政专题">人资行政专题</el-radio>
+                <el-radio label="IT专题">IT专题</el-radio>
               </el-radio-group> 
-              <div style="padding-right: 10px;line-height: 32px;font-size: 14px;">模式选择 : </div>
+              <div style="padding-right: 10px;line-height: 32px;font-size: 14px;letter-spacing: 1px;color: #333;">模式选择 : </div>
             </div>
-            <div class="textarea" v-if="pageType==='query'">
+            <div class="textarea" v-if="pageType==='query'||pageType==='it'">
               <el-input
               v-model="newQuestion"
-             :placeholder="pageType==='query'?'请输入您的问题,换行请按下Shift+Enter':pageType==='final'?'请输入您想总结的文本,换行请按下Shift+Enter':'请输入您想翻译的文本,换行请按下Shift+Enter'"
+              placeholder="请输入您的问题,换行请按下Shift+Enter"
               class="custom-input"
               style="width:100%;"
               @keydown="summitPost"
@@ -534,9 +539,6 @@ export default {
     const newQuestion = ref('');
     const currentQuestion = ref('');
     const currentAnswer = ref('');
-    // const imageA = '../../../src/assets/arrow_gray.png'; // 图片 A 的路径
-    // const imageB = '../../../src/assets/arrow_blue.png'; // 图片 B 的路径
-    // const photo = '../../../src/assets/006joT8tgy1husr7becqfj30dm0dmmyn.jpg'; // 图片 B 的路径
     const currentData = ref({})
     const currentImage = ref(imageA); // 默认显示图片 B
     const dynamicRows = ref(1)
@@ -615,12 +617,12 @@ export default {
       newQuestion.value = ''
       dynamicRows.value = 1
       currentId.value = ''
-      pageType.value = selectedMode.value==='通用模式'?'sample':'query'
+      pageType.value = selectedMode.value==='通用模式'?'sample':selectedMode.value==='人资行政专题'?'query':'it'
       chatQuery.messages = []
       
     }
     // 删除数据
-    const deleteData = async (id,val) => {
+    const deleteData = async (id) => {
       try {
         // 替换为实际的后端接口地址
         const response = await fetch('http://10.180.248.140:8080/Message/deleteMessageById?id='+id, {
@@ -634,12 +636,6 @@ export default {
         const res = await response.json();
         if(res.status){
           ElMessage.success('删除成功！');
-          // const aryId= JSON.parse(JSON.stringify(answerList.value))
-          // const aryName= JSON.parse(JSON.stringify(questions.value))
-          // const aryType = JSON.parse(JSON.stringify(queryTypes.value))
-          // answerList.value = removeItemById(aryId, id);
-          // questions.value = removeItemByName(aryName, val);
-          // queryTypes.value = removeItemByType(aryType, val);
           chatQuery.messages = []
           activeIndex.value = ''
           currentQuestion.value = false
@@ -657,20 +653,21 @@ export default {
 
     // 点击确定删除
     const handleConfirmDelete = (val) => {
-      const queryData = selectedMode.value==='人资行政专题'?'(query)':'(sample)'
+      const queryData = selectedMode.value==='人资行政专题'?'(query)':selectedMode.value==='IT专题'?'(it)':'(sample)'
       val = val+queryData
-      if(selectedMode.value==='通用模式'){
-        if(isSampleLoad.value){
-          ElMessage.warning('有问题正在回答中，请稍后再删除');
-          return
-        }
 
+  
+      if(isSampleLoad.value){
+        ElMessage.warning('有问题正在回答中，请稍后再删除');
+        return
       }
+
+      
       let id = ''
       const queryLimit = []
       const anList = JSON.parse(JSON.stringify(answerList.value))
       for(var i=0;i<anList.length;i++){
-        if(anList[i].type==='人资行政专题'){
+        if(anList[i].type==='人资行政专题'||anList[i].type==='IT专题'){
           queryLimit.push(anList[i].title)
           if(anList[i].title===val){
             id = anList[i].id
@@ -683,11 +680,15 @@ export default {
 
       }
 
-      if(selectedMode.value==='人资行政专题'&&!queryLimit.includes(val)){
-        ElMessage.warning('此问题正在回答中，请稍后再删除');
-        return
-      }
-      deleteData(id,val)
+      // if(pageType.value==='query'&&!queryLimit.includes(val)){
+      //   ElMessage.warning('此问题正在回答中，请稍后再删除');
+      //   return
+      // }
+      // if(pageType.value==='it'&&!queryLimit.includes(val)){
+      //   ElMessage.warning('此问题正在回答中，请稍后再删除');
+      //   return
+      // }
+      deleteData(id)
     };
 
     // 点击取消
@@ -915,7 +916,30 @@ export default {
       },
     ]
   ) 
-
+  const itList = ref(
+    [
+      {
+        index:1,
+        name:'mes系统的基础数据怎么维护'
+      },
+      {
+        index:2,
+        name:'mes操作的常见异常处理'
+      },
+      {
+        index:3,
+        name:'会议室建设标准'
+      },
+      {
+        index:4,
+        name:'桌面云规划怎么做？'
+      },
+      {
+        index:5,
+        name:'产线设备数据采集怎么做？'
+      },
+    ]
+  ) 
   const historyList = ref(
     [
     {
@@ -1082,14 +1106,11 @@ export default {
     const queryAn = (val,index,data) => {
       currentQuestion.value = val
       limitLoading.value = false
-      console.log(questions.value)
       val = (index||index===0)?questions.value[index]:val
       const queryList = questions.value
       const anList =  JSON.parse(JSON.stringify(answerList.value))
       const queryLimit = []
       const querySample = []
-      console.log(anList)
-      console.log(val)
       for(var j=0;j<anList.length;j++){
         if(anList[j].type==='人资行政专题'){
           queryLimit.push(anList[j].title)
@@ -1099,7 +1120,16 @@ export default {
             selectedMode.value = '人资行政专题'
             currentObj.value.messages = anList[j].data.answer
           } 
-        } else {
+        } else if(anList[j].type==='IT专题'){
+          queryLimit.push(anList[j].title)
+          if(val==anList[j].title){
+            currentId.value = anList[j].id
+            pageType.value = 'it'
+            selectedMode.value = 'IT专题'
+            currentObj.value.messages = anList[j].data.answer
+          } 
+        }
+        else {
           querySample.push(anList[j].title)
           if(val==anList[j].title){
             pageType.value = 'sample'
@@ -1116,8 +1146,7 @@ export default {
             const result = match[1];
             pageType.value = result 
           }  
-          console.log(pageType.value)
-          if(pageType.value === 'query'){
+          if(pageType.value === 'query' || pageType.value === 'it'){
             tipQuery.value = val.replace(/\([^)]*\)/g, '')
           } else{
             const hasName = anList.some(item => item.title === val);
@@ -1125,12 +1154,9 @@ export default {
               limitLoading.value = false
             } else{
               nextTick(() => {
-                console.log(limitSample.value.messages)
                 limitLoading.value = true
                 chatQuery.messages = limitSample.value.messages
               })
-              
-              console.log(chatQuery.messages)
             }
             
           }
@@ -1144,6 +1170,9 @@ export default {
         }
       }
       if(pageType.value === 'query'&&!queryLimit.includes(val)){
+        currentObj.value.messages = {}
+      }
+      if(pageType.value === 'it'&&!queryLimit.includes(val)){
         currentObj.value.messages = {}
       }
       if(pageType.value === 'sample'&&!querySample.includes(val)){
@@ -1751,22 +1780,23 @@ export default {
       newQuestion.value = ''
       queryIng.value = true
       isSampleLoad.value = true
-      if(questions.value.includes(queryValue+'(query)')){
+      const addTitle = pageType.value === 'query'?'(query)':'(it)'
+      if(questions.value.includes(queryValue+addTitle)){
         queryIng.value = false
-        const qData = queryValue+'(query)'
+        const qData = queryValue+addTitle
         for(var i=0;i<questions.value.length;i++){
           if(qData===questions.value[i]){
             activeIndex.value = i
           }
         }
-        
+        console.log(qData)
         queryAn(qData,'')
         isSampleLoad.value = false
         return
       }
       if(!questions.value.includes(queryValue)){
         
-        questions.value.unshift(queryValue+'(query)')
+        questions.value.unshift(queryValue+addTitle)
         activeIndex.value = '0'
       }
       const limitData = JSON.parse(JSON.stringify(queryTypes.value))
@@ -1776,7 +1806,7 @@ export default {
           type:''
         }
         queryObj.name = questions.value[k]
-        queryObj.type = 'query'
+        queryObj.type = pageType.value
         const hasVal = limitData.some(item => item.name === queryObj.name);
         if(!hasVal){
           limitData.unshift(queryObj)
@@ -1793,6 +1823,7 @@ export default {
           body: JSON.stringify({
             question: queryValue,
             user_id: userInfo.value.userid,
+            type:pageType.value==='query'?'人资行政专题':'IT专题'
           }),
         })
 
@@ -1830,7 +1861,7 @@ export default {
                 // loadingInstance.close();
                 currentObj.value.messages = JSON.parse(element)
                 currentObj.value.messages.isHistory = true
-                postQuestion(JSON.parse(element),queryValue)
+                postQuestion(JSON.parse(element),queryValue,pageType.value)
               } else{
                 currentObj.value.messageList.push(JSON.parse(element))
               }
@@ -1899,10 +1930,10 @@ export default {
       }
     };
 
-    const postQuestion = async (obj,val) => {
+    const postQuestion = async (obj,val,type) => {
       const data = {
         userId:userInfo.value.userid,
-        type:'人资行政专题',
+        type:type==='query'?'人资行政专题':'IT专题',
         title:val,
         id:'',
         data:{
@@ -1922,7 +1953,7 @@ export default {
         })
         const res = await response.json();
         if(res.status){
-          getHistory('','query',val)
+          getHistory('',type,val)
         }
 
       } catch (error) {
@@ -1957,7 +1988,11 @@ export default {
               if(res.data[i].type==='人资行政专题'){
                 answerList.value[i].title = answerList.value[i].title+'(query)'
                 questions.value.push(answerList.value[i].title)
-              } else{
+              } else if(res.data[i].type==='IT专题'){
+                answerList.value[i].title = answerList.value[i].title+'(it)'
+                questions.value.push(answerList.value[i].title)
+              }  
+              else{
                 answerList.value[i].title = answerList.value[i].title+'(sample)'
                 questions.value.push(answerList.value[i].title)
               }
@@ -1975,7 +2010,7 @@ export default {
                 type:''
               }
               obj.name = answerList.value[k].title
-              obj.type = answerList.value[k].type==='人资行政专题'?'query':'sample'
+              obj.type = answerList.value[k].type==='人资行政专题'?'query':answerList.value[k].type==='IT专题'?'it':'sample'
               const hasVal = limitData.some(item => item.name === obj.name);
               if(!hasVal){
                 limitData.push(obj)
@@ -1984,7 +2019,7 @@ export default {
             queryTypes.value = JSON.parse(JSON.stringify(limitData))
           }
           for(var j=0;j<answerList.value.length;j++){
-            if(res.data[j].type==='人资行政专题'){
+            if(res.data[j].type==='人资行政专题'||res.data[j].type==='IT专题'){
               answerList.value[j].data.answer.isHistory = true
             } else{
               answerList.value[j].data.isHistory = true
@@ -2001,7 +2036,7 @@ export default {
           }
           if(page){
             pageType.value = page
-            if(page==='query'){
+            if(page==='query'||page==='it'){
               for(var h=0;h<answerList.value.length;h++){
                 if(val===answerList.value[h].title.replace(/\([^)]*\)/g, '')){
                   activeIndex.value = h
@@ -2023,7 +2058,7 @@ export default {
       if (newValue) {
       } else {
         if(activeIndex.value!==''){
-          selectedMode.value = queryTypes.value[activeIndex.value].type === 'sample'?'通用模式':'人资行政专题'
+          selectedMode.value = queryTypes.value[activeIndex.value].type === 'sample'?'通用模式':queryTypes.value[activeIndex.value].type === 'query'?'人资行政专题':'IT专题'
         }
       }
     });
@@ -2147,6 +2182,7 @@ export default {
       submitTran,
       submitFinal,
       arrList,
+      itList,
       historyList,
       showPopup,
       avatarUrl,
