@@ -188,8 +188,8 @@
               <span v-if="!transData">{{ dots }}</span>
             </div>
             <div style="width: 100%;display: flex;flex-direction: row-reverse;">
-              <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;max-width: 600px;overflow: hidden;text-overflow: ellipsis;" v-if="pageType==='tran'" :style="{padding:transQuest?'0px 15px':'0px'}">
-                <p>{{ transQuest }}</p>
+              <div style="background-color: #409eff;border-radius: 10px;float: right;color:#fff;margin-top: 30px;max-width: 600px;overflow: hidden;text-overflow: ellipsis;font-size: 14px;letter-spacing: 1px;" v-if="pageType==='tran'" :style="{padding:transQuest?'12px 15px':'0px'}">
+                {{ transQuest }}
               </div>
             </div>
 
