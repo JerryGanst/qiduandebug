@@ -50,8 +50,8 @@
 
         </div>
         <el-menu  style="border-right: none;" :default-active="activeIndex" @select="handleSelect">
-        <el-tooltip v-for="(question, index) in questions" :key="index" :content="question" placement="right" popper-class="custom-tooltip">
-          <el-menu-item :index="index.toString()" @click="queryAn(question)" style="position: relative;">
+        <el-tooltip v-for="(question, index) in processedQuerys" :key="index" :content="question" placement="right" popper-class="custom-tooltip">
+          <el-menu-item :index="index.toString()" @click="queryAn(question,index)" style="position: relative;">
             <span>{{ isCollapsed ? 'Q' : question }}</span>
             <el-popconfirm
               title="确定要删除吗？"
@@ -80,13 +80,13 @@
     <el-container>
       <el-main>
         <div v-if="!currentQuestion" class="center-container" style="display: flex;flex-direction: column;">
-          <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 180px);width: 60%;overflow-y: auto;overflow-x: hidden;">
+          <div class="main_content" style="margin-bottom: 20px;height: calc(100% - 180px);width: 726px;overflow-y: auto;overflow-x: hidden;">
             <div class="title" v-if="pageType==='query'||pageType==='sample'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src">
               <div>
-                <div class="title_top" style="line-height: 30px;">Hello!我是立讯技术百事通，有什么问题欢迎咨询</div>
+                <div class="title_top" style="line-height: 33px;">Hello!我是立讯技术百事通，有什么问题欢迎咨询</div>
                 <div class="title_item" style="line-height: 18px;">
-                  <span>我可以帮你做这些事情</span>
+                  <span>我可以帮您做这些事情</span>
                   <!-- <span style="color: #409eff;padding-left: 5px;cursor: pointer;" @click="changeData">换一换?</span>
                   <div style="display: inline-block;cursor: pointer;"><img src="../../assets/re.png" style="width: 20px;height: 20px;margin-left: 5px;" @click="changeData"></div> -->
                 </div>
@@ -96,7 +96,7 @@
             <div class="content_list" v-if="pageType==='query'">
               <div class="list_item">
                   <div class="list_title">今日热搜</div>
-                  <div class="list_tip">深度搜索你关心的问题</div>
+                  <div class="list_tip">深度搜索您关心的问题</div>
                   <div class="list_arry">
                     <div v-for="item in arrList" class="arr_item">
                       <span>{{ item.index }}.</span>
@@ -135,7 +135,7 @@
             <div class="content_list" v-if="pageType==='sample'">
               <div class="list_item">
                   <div class="list_title">今日热搜</div>
-                  <div class="list_tip">深度搜索你关心的问题</div>
+                  <div class="list_tip">深度搜索您关心的问题</div>
                   <div class="list_arry">
                     <div v-for="item in historyList" class="arr_item" >
                       <span>{{ item.index }}.</span>
@@ -174,8 +174,8 @@
             <div class="title" v-if="pageType==='tran'" style="width: 100%;justify-content: center;">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src">
               <div>
-                <div class="title_top" style="line-height: 30px;">立讯技术AI翻译专家</div>
-                <div class="title_top">熟练掌握翻译技巧～你的翻译好帮手</div>
+                <div class="title_top" style="line-height: 33px;">立讯技术AI翻译专家</div>
+                <div class="title_top">熟练掌握翻译技巧～您的翻译好帮手</div>
               </div>
               
             </div>
@@ -190,8 +190,8 @@
             <div class="title" v-if="pageType==='final'" style="width: 100%;justify-content: center;">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src">
               <div>
-                <div class="title_top" style="line-height: 30px;">立讯技术AI智能总结</div>
-                <div class="title_top">精准概括，助你快速理解长文本</div>
+                <div class="title_top" style="line-height: 33px;">立讯技术AI智能总结</div>
+                <div class="title_top">精准概括，助您快速理解长文本</div>
               </div>
               
             </div>
@@ -331,11 +331,11 @@
             </div>
         </div>
         </div>
-        <div v-else style="height: 100%;">
-            <div class="main_content" style="margin-bottom: 20px;width: 70%;margin-left: 15%;overflow-y: auto;overflow-x: hidden" :style="{height:pageType==='sample'?'calc(100% - 220px)':'calc(100% - 220px)',overflow:pageType==='sample'?'hidden':'auto'}">
+        <div v-else style="height: 100%;display: flex;flex-direction: column;align-items: center;">
+            <div class="main_content" style="margin-bottom: 20px;width: 860px;overflow-y: auto;overflow-x: hidden" :style="{height:pageType==='sample'?'calc(100% - 220px)':'calc(100% - 220px)',overflow:pageType==='sample'?'hidden':'auto'}">
             <!-- <div style="width: 100%;text-align: center;padding-top: 30px;" v-if="pageType==='query'">{{ currentObj.messages.type?'已为您匹配到最佳答案':'正在为您查询...' }} </div> -->
             <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'100px':'80px'}" v-if="pageType==='query'">
-              <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff">{{ tipQuery }}</div>
+              <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;max-width: 600px;overflow: hidden;text-overflow: ellipsis;" class="tip">{{ tipQuery }}</div>
             </div>
 
             <div class="text_item" style="margin-top: 25px;display: flex;line-height: 30px;" v-if="pageType==='query'">
@@ -360,9 +360,6 @@
               <div><img src='../../assets/up.png' style="width: 18px;height: 18px;margin-left: 10px;cursor: pointer;" @click="upCommon"></div>
               <div><img src='../../assets/down.png' style="width: 18px;height: 18px;margin-left: 15px;cursor: pointer;" @click="downCommon"></div>
             </div>
-            <!-- <div style="display: flex;flex-direction: row-reverse;width: 100%;" :style="{marginTop:index===0?'50px':'30px'}" v-if="pageType==='sample'">
-              <div style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff">{{ tipQuery }}</div>
-            </div> -->
 
             <div class="text_item" style="margin-top: 75px;display: flex;line-height: 30px;" v-if="pageType==='sample'">
               <img src="../../assets/chat.deepseek.com_.png" class="title_src" style="margin-right: 4px;width: 30px;height: 30px;">
@@ -374,16 +371,14 @@
             <!-- <div style="margin-top: 20px;width: 100%;font-size: 12px;display: flex;flex-direction: column;" v-if="pageType==='sample'">
               <div class="content-box">{{ displayedText }}</div>
             </div> -->
-            <div style="font-size: 14px;margin-top: 30px;letter-spacing: 1px;" v-if="pageType==='sample'&&isSampleLoad">
+            <div style="font-size: 14px;margin-top: 30px;letter-spacing: 1px;" v-if="pageType==='sample'&&isSampleLoad&&limitLoading">
               <span> 正在为您解答,请稍等</span>
               <span>{{ dots }}</span>
             </div>
             <div style="width: 100%;height:calc(100% - 40px);display: flex;flex-direction: column;overflow-y: auto;overflow-x: hidden;margin-top: 10px;" class="sample_item" ref="messageContainer">
               <div style="font-size: 14px;letter-spacing: 1px;line-height: 24px;width: 100%" v-if="pageType==='sample'&&chatQuery.messages.length>0"  v-for="(item,index) in chatQuery.messages" >
-                <div v-if="index % 2 === 0" style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;margin-right: 5px;" >{{ item.content }}</div>
+                <div v-if="index % 2 === 0" style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;margin-right: 5px;max-width: 600px;overflow: hidden;text-overflow: ellipsis;" >{{ item.content }}</div>
                 <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer"/>
-                <!-- <div v-if="index % 2 === 0" style="background-color: #409eff;border-radius: 10px;padding: 10px 15px;float: right;color:#fff;margin-top: 30px;margin-right: 5px;" >问 : {{ item.content }}</div> -->
-                <!-- <div v-if="index % 2 !== 0" style="background-color: #fff;padding: 15px 15px;border-radius: 10px;">答 : {{ item.content }}</div> -->
               </div>
             </div>
 
@@ -509,7 +504,7 @@
 </template>
 
 <script>
-// 10.180.16.102
+// 10.180.248.140
 import { ref,computed,onMounted,onUnmounted,reactive,nextTick,watch } from 'vue';
 import { postRequest } from '../../utils/request'; // 导入封装的 axios 方法
 import { ElMessage,ElLoading,ElPopover, ElButton, ElDivider } from 'element-plus'; // 引入 ElMessage
@@ -619,13 +614,16 @@ export default {
       activeIndex.value = ''
       newQuestion.value = ''
       dynamicRows.value = 1
+      currentId.value = ''
       pageType.value = selectedMode.value==='通用模式'?'sample':'query'
+      chatQuery.messages = []
+      
     }
     // 删除数据
     const deleteData = async (id,val) => {
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/Message/deleteMessageById?id='+id, {
+        const response = await fetch('http://10.180.248.140:8080/Message/deleteMessageById?id='+id, {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -636,15 +634,16 @@ export default {
         const res = await response.json();
         if(res.status){
           ElMessage.success('删除成功！');
-          const aryId= JSON.parse(JSON.stringify(answerList.value))
-          const aryName= JSON.parse(JSON.stringify(questions.value))
-          const aryType = JSON.parse(JSON.stringify(queryTypes.value))
-          answerList.value = removeItemById(aryId, id);
-          questions.value = removeItemByName(aryName, val);
-          queryTypes.value = removeItemByType(aryType, val);
+          // const aryId= JSON.parse(JSON.stringify(answerList.value))
+          // const aryName= JSON.parse(JSON.stringify(questions.value))
+          // const aryType = JSON.parse(JSON.stringify(queryTypes.value))
+          // answerList.value = removeItemById(aryId, id);
+          // questions.value = removeItemByName(aryName, val);
+          // queryTypes.value = removeItemByType(aryType, val);
           chatQuery.messages = []
           activeIndex.value = ''
           currentQuestion.value = false
+          getHistory()
         }
 
       } catch (error) {
@@ -658,6 +657,8 @@ export default {
 
     // 点击确定删除
     const handleConfirmDelete = (val) => {
+      const queryData = selectedMode.value==='人资行政专题'?'(query)':'(sample)'
+      val = val+queryData
       if(selectedMode.value==='通用模式'){
         if(isSampleLoad.value){
           ElMessage.warning('有问题正在回答中，请稍后再删除');
@@ -670,8 +671,8 @@ export default {
       const anList = JSON.parse(JSON.stringify(answerList.value))
       for(var i=0;i<anList.length;i++){
         if(anList[i].type==='人资行政专题'){
-          queryLimit.push(anList[i].data.question)
-          if(anList[i].data.question===val){
+          queryLimit.push(anList[i].title)
+          if(anList[i].title===val){
             id = anList[i].id
           }
         }else {
@@ -681,6 +682,7 @@ export default {
         }
 
       }
+
       if(selectedMode.value==='人资行政专题'&&!queryLimit.includes(val)){
         ElMessage.warning('此问题正在回答中，请稍后再删除');
         return
@@ -728,7 +730,7 @@ export default {
       }
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/Files/getFileInfoByName', {
+        const response = await fetch('http://10.180.248.140:8080/Files/getFileInfoByName', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -815,7 +817,7 @@ export default {
       }
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/UserInfo/login', {
+        const response = await fetch('http://10.180.248.140:8080/UserInfo/login', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -963,7 +965,7 @@ export default {
       }
 
       // 根据行数动态设置 overflow-y
-      if (rows > 5) {
+      if (rows > 4) {
         textarea.style.overflowY = 'auto'; // 超过 5 行时显示滚动条
       } else {
         textarea.style.overflowY = 'hidden'; // 小于等于 5 行时隐藏滚动条
@@ -995,7 +997,7 @@ export default {
       }
 
       // 根据行数动态设置 overflow-y
-      if (rows > 5) {
+      if (rows > 4) {
         textarea.style.overflowY = 'auto'; // 超过 5 行时显示滚动条
       } else {
         textarea.style.overflowY = 'hidden'; // 小于等于 5 行时隐藏滚动条
@@ -1026,7 +1028,7 @@ export default {
       }
 
       // 根据行数动态设置 overflow-y
-      if (rows > 5) {
+      if (rows > 4) {
         textarea.style.overflowY = 'auto'; // 超过 5 行时显示滚动条
       } else {
         textarea.style.overflowY = 'hidden'; // 小于等于 5 行时隐藏滚动条
@@ -1057,7 +1059,7 @@ export default {
       }
 
       // 根据行数动态设置 overflow-y
-      if (rows > 5) {
+      if (rows > 4) {
         textarea.style.overflowY = 'auto'; // 超过 5 行时显示滚动条
       } else {
         textarea.style.overflowY = 'hidden'; // 小于等于 5 行时隐藏滚动条
@@ -1076,19 +1078,18 @@ export default {
       pageType.value = 'sample'
       selectedMode.value = '通用模式'
     };
-
-    const queryAn = (val) => {
+    const limitLoading = ref(false)
+    const queryAn = (val,index,data) => {
       currentQuestion.value = val
+      limitLoading.value = false
+      console.log(questions.value)
+      val = (index||index===0)?questions.value[index]:val
       const queryList = questions.value
       const anList =  JSON.parse(JSON.stringify(answerList.value))
       const queryLimit = []
       const querySample = []
-
-      for(var i=0;i<queryList.length;i++){
-        if(queryList[i]===val){    
-          tipQuery.value = val
-        }
-      }
+      console.log(anList)
+      console.log(val)
       for(var j=0;j<anList.length;j++){
         if(anList[j].type==='人资行政专题'){
           queryLimit.push(anList[j].title)
@@ -1108,6 +1109,34 @@ export default {
           } 
         }
       }  
+      for(var i=0;i<queryList.length;i++){
+        if(queryList[i]===val){  
+          const match = val.match(/\(([^)]+)\)$/);
+          if (match) {
+            const result = match[1];
+            pageType.value = result 
+          }  
+          console.log(pageType.value)
+          if(pageType.value === 'query'){
+            tipQuery.value = val.replace(/\([^)]*\)/g, '')
+          } else{
+            const hasName = anList.some(item => item.title === val);
+            if(hasName){
+              limitLoading.value = false
+            } else{
+              nextTick(() => {
+                console.log(limitSample.value.messages)
+                limitLoading.value = true
+                chatQuery.messages = limitSample.value.messages
+              })
+              
+              console.log(chatQuery.messages)
+            }
+            
+          }
+          
+        }
+      }
       const limitData = JSON.parse(JSON.stringify(queryTypes.value))
       for(var k=0;k<limitData.length;k++){
         if(val === limitData[k].name){
@@ -1282,7 +1311,7 @@ export default {
       interval = setInterval(updateDots, 500); // 每 500ms 更新一次
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/AI/summarize', {
+        const response = await fetch('http://10.180.248.140:8080/AI/summarize', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1382,7 +1411,7 @@ export default {
       }, 3000);
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/Message/feedback', {
+        const response = await fetch('http://10.180.248.140:8080/Message/feedback', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1432,7 +1461,7 @@ export default {
 
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/Message/feedback', {
+        const response = await fetch('http://10.180.248.140:8080/Message/feedback', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1470,7 +1499,9 @@ export default {
     //   });
     //   return array
     // };
-    
+    const limitSample = ref({
+      messages:[]
+    })
     const submitSampleTitle = (val) => {
       if(isSampleLoad.value){
         ElMessage.warning('有问答正在进行中,请稍后再试');
@@ -1501,6 +1532,7 @@ export default {
       dynamicRows.value = 1
       sampleMessageIndex.value = 0
       isSampleLoad.value = true
+      limitLoading.value = true
       displayedText.value = ''; // 当前显示的内容
       currentItemIndex = 0; // 当前显示的数据索引
       currentCharIndex = 0; // 当前显示的字符索引
@@ -1515,6 +1547,7 @@ export default {
       }
       mes = JSON.parse(JSON.stringify(chatQuery))
       mes.messages.push(currentData)
+      limitSample.value= JSON.parse(JSON.stringify(mes))
       const params = JSON.parse(JSON.stringify(mes))
       for(var j=0;j<params.messages.length;j++){
         if (j % 2 === 0) {
@@ -1526,14 +1559,31 @@ export default {
       const queryValue = newQuestion.value
       tipQuery.value = queryValue
       newQuestion.value = ''
+      if(questions.value.includes(queryValue+'(sample)')){
+        const qData = queryValue+'(sample)'
+        for(var ms=0;ms<questions.value.length;ms++){
+          if(qData===questions.value[ms]){
+            activeIndex.value = ms
+          }
+        }
+        queryAn(qData,'')
+        isSampleLoad.value = false
+        return
+      }
+
       const anList =  JSON.parse(JSON.stringify(answerList.value))
       const hasId = anList.some(item => item.id === currentId.value);
+      let id = ''
       if(!hasId){
-        questions.value.unshift(queryValue)
+        questions.value.unshift(queryValue+'(sample)')
         activeIndex.value = '0'
+
       }
-      
+      if(hasId){
+        id = currentId.value
+      }
       const limitData = JSON.parse(JSON.stringify(queryTypes.value))
+
       for(var k=0;k<questions.value.length;k++){
         const queryObj = {
           name:'',
@@ -1544,11 +1594,12 @@ export default {
         const hasVal = limitData.some(item => item.name === queryObj.name);
         if(!hasVal){
           limitData.unshift(queryObj)
-        }  
+        } 
       }
       queryTypes.value = JSON.parse(JSON.stringify(limitData))
       interval = setInterval(updateDots, 500);  
       try {
+
         chatQuery.messages = mes.messages
         nextTick(() => {
           if (messageContainer.value) {
@@ -1558,7 +1609,7 @@ export default {
 
         // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/AI/chat', {
+        const response = await fetch('http://10.180.248.140:8080/AI/chat', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1569,7 +1620,11 @@ export default {
         const res = await response.json();
         clearInterval(interval);
         isSampleLoad.value = false
+        limitLoading.value = false
         if(res.status){
+          limitSample.value = {
+            messages:[]
+          }
           const newMessage = { ...res.data.message }; //
           mes.messages.push(newMessage)
           chatQuery.messages = mes.messages
@@ -1585,7 +1640,7 @@ export default {
             // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
           }
         })
-          postSample()
+          postSample(id)
         }
 
       } catch (error) {
@@ -1630,7 +1685,7 @@ export default {
       newQuestion.value = ''
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/AI/translate', {
+        const response = await fetch('http://10.180.248.140:8080/AI/translate', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1696,21 +1751,22 @@ export default {
       newQuestion.value = ''
       queryIng.value = true
       isSampleLoad.value = true
-      if(questions.value.includes(queryValue)){
+      if(questions.value.includes(queryValue+'(query)')){
         queryIng.value = false
+        const qData = queryValue+'(query)'
         for(var i=0;i<questions.value.length;i++){
-          if(queryValue===questions.value[i]){
+          if(qData===questions.value[i]){
             activeIndex.value = i
           }
         }
         
-        queryAn(queryValue)
+        queryAn(qData,'')
         isSampleLoad.value = false
         return
       }
       if(!questions.value.includes(queryValue)){
         
-        questions.value.unshift(queryValue)
+        questions.value.unshift(queryValue+'(query)')
         activeIndex.value = '0'
       }
       const limitData = JSON.parse(JSON.stringify(queryTypes.value))
@@ -1729,7 +1785,7 @@ export default {
       queryTypes.value = JSON.parse(JSON.stringify(limitData))
       try {
         // 替换为实际的后端接口地址
-        const res = await fetch('http://10.180.16.102:8080/AI/query', {
+        const res = await fetch('http://10.180.248.140:8080/AI/query', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1809,22 +1865,18 @@ export default {
         }
     };
 
-    const postSample = async () => {
-      let id = ''
-      if(chatQuery.messages.length>2){
-        id = currentId.value
-      }
+    const postSample = async (ids) => {
       const data = {
         userId:userInfo.value.userid,
         type:'通用模式',
-        id:id,
+        id:ids,
         data:chatQuery.messages,
         title:chatQuery.messages[0].content
       }
 
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/Message/save', {
+        const response = await fetch('http://10.180.248.140:8080/Message/save', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1835,7 +1887,8 @@ export default {
         const res = await response.json();
         if(res.status){
           currentId.value = res.data
-          getHistory()
+          const id = currentId.value
+          getHistory(id,'sample')
         }
 
       } catch (error) {
@@ -1859,7 +1912,7 @@ export default {
       }
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/Message/save', {
+        const response = await fetch('http://10.180.248.140:8080/Message/save', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1869,7 +1922,7 @@ export default {
         })
         const res = await response.json();
         if(res.status){
-          getHistory()
+          getHistory('','query',val)
         }
 
       } catch (error) {
@@ -1879,12 +1932,12 @@ export default {
         
       }
     }
-    // 10.180.16.102
+    // 10.180.248.140
     // 
-    const getHistory = async () => {
+    const getHistory = async (id,page,val) => {
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/Message/getMessageByUserId', {
+        const response = await fetch('http://10.180.248.140:8080/Message/getMessageByUserId', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -1897,13 +1950,16 @@ export default {
         const res = await response.json();
         if(res.status){
           answerList.value = res.data
+          questions.value = []
           const limitData = JSON.parse(JSON.stringify(queryTypes.value))
           if(res.data&&res.data.length>0){
             for(var i=0;i<res.data.length;i++){
               if(res.data[i].type==='人资行政专题'){
-                questions.value.push(res.data[i].data.question)
+                answerList.value[i].title = answerList.value[i].title+'(query)'
+                questions.value.push(answerList.value[i].title)
               } else{
-                questions.value.push(res.data[i].title)
+                answerList.value[i].title = answerList.value[i].title+'(sample)'
+                questions.value.push(answerList.value[i].title)
               }
               
             }
@@ -1933,9 +1989,27 @@ export default {
             } else{
               answerList.value[j].data.isHistory = true
             }
-            
           }
-
+          if(activeIndex.value!==''){
+            const idx = parseInt(activeIndex.value)
+            currentId.value = answerList.value[idx].id
+          }
+          for(var s=0;s<answerList.value.length;s++){
+            if(id === answerList.value[s].id){
+              activeIndex.value = s
+            }
+          }
+          if(page){
+            pageType.value = page
+            if(page==='query'){
+              for(var h=0;h<answerList.value.length;h++){
+                if(val===answerList.value[h].title.replace(/\([^)]*\)/g, '')){
+                  activeIndex.value = h
+                  tipQuery.value = answerList.value[h].title.replace(/\([^)]*\)/g, '')
+                }
+              }
+            } 
+          }
         }
       } catch (error) {
           // loadingInstance.close();
@@ -1953,6 +2027,14 @@ export default {
         }
       }
     });
+
+        // 计算属性，处理 querys
+     const processedQuerys = computed(() => {
+      return questions.value.map(query => {
+        // 使用正则表达式去掉括号及其内容
+        return query.replace(/\([^)]*\)/g, '');
+      });
+    });
   
     // 组件挂载后初始化
     onMounted(() => {
@@ -1964,7 +2046,7 @@ export default {
         getHistory()
       }else{
         if(queryParams&&queryParams.tokenId){
-          checkToken(queryParams.tokenId,queryParams.access_key)
+          checkToken(queryParams.tokenId)
         } else{
           dialogVisible.value = true
         }
@@ -1974,14 +2056,14 @@ export default {
     const handleSelect = (index) => {
       activeIndex.value = index;
     };
-    const checkToken = async (token,key) => {
+    const checkToken = async (token) => {
       const data = {
-        access_key:key,
+        access_key:'76eb4367-a19d-4485-aadb-cea65fa8fbbe',
         tokenId:token
       }
       try {
         // 替换为实际的后端接口地址
-        const response = await fetch('http://10.180.16.102:8080/UserInfo/luxlinkLogin', {
+        const response = await fetch('http://10.180.248.140:8080/UserInfo/luxlinkLogin', {
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
@@ -2031,6 +2113,7 @@ export default {
       checkToken,
       tipQuery,
       currentQuestion,
+      processedQuerys,
       currentImage,
       imageA,
       imageB,
@@ -2119,14 +2202,18 @@ export default {
       isDisabled,
       queryTypes,
       queryParams,
-      downCommon
+      downCommon,
+      limitLoading,
+      limitSample
     };
   },
 };
 </script>
 
 <style lang="less">
-
+* {
+  font-family:"Microsoft YaHei", Arial, sans-serif;
+}
 .el-aside{
   overflow-x: hidden;
 }
@@ -2309,7 +2396,7 @@ export default {
   opacity: 0;
 }
 .textarea{
-  width: 60%;
+  width: 726px;
   position: relative;
 }
 .title_src{
@@ -2320,6 +2407,8 @@ export default {
 .title{
   margin-bottom: 10px;
   display: flex;
+  width: 100%;
+  justify-content: center;
   .title_top{
     font-size: 20px;
     font-weight: bold;
