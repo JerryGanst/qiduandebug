@@ -1,5 +1,5 @@
 <template>
-    <div v-html="renderedMarkdown" style="margin-top: 10px;background-color: #fff;padding: 2px 20px;font-size: 14px;letter-spacing: 1px;line-height: 24px;border-radius: 10px;letter-spacing: 1px;"></div>
+    <div class="renderedMarkdown" v-html="renderedMarkdown"></div>
   </template>
   
   <script setup>
@@ -13,13 +13,29 @@
       required: true,
     },
   });
-  
+  // 配置 marked 以启用硬换行
+marked.setOptions({
+  breaks: true,
+});
   // 使用 computed 将 Markdown 转换为 HTML
   const renderedMarkdown = computed(() => {
     return marked(props.markdown);
   });
   </script>
   
-  <style scoped>
-  /* 可以在这里添加样式 */
+  <style scoped lang="less">
+  .renderedMarkdown{
+    margin-top: 10px;
+    background-color: #fff;
+    padding: 2px 20px;
+    font-size: 14px;
+    letter-spacing: 1px;
+    line-height: 24px;
+    border-radius: 10px;
+    letter-spacing: 1px;
+    // white-space: pre-wrap;
+    :deep(.language-json){
+      white-space: pre-wrap;
+    }
+  }
   </style>

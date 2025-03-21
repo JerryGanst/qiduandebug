@@ -1,15 +1,12 @@
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
+import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-
-  ],
+  plugins: [vue()],
   server: {
     host: '0.0.0.0', // 监听所有网络接口
-    port: 5173,      // 指定端口号（可选）
+    port: 5173, // 指定端口号（可选）
     proxy: {
       // 代理所有以 `/api` 开头的请求
       '/AI': {
