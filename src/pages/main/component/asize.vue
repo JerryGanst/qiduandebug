@@ -135,14 +135,7 @@
         </el-input>
       </el-form-item>
       <el-form-item
-        class="button-item"
-        style="
-          display: flex;
-          justify-content: center;
-          width: 100%;
-          margin-top: 40px;
-        "
-      >
+        class="button-item">
         <el-button
           type="primary"
           @click="submitForm"
@@ -170,7 +163,6 @@ import { Lock, View } from '@element-plus/icons-vue' // 引入需要的图标
 import photo from '../../../assets/chat.deepseek.com_.png'
 import request from '../../../utils/request' // 导入封装的 axios 方法
 const isCollapsed = ref(false)
-
 const showPopup = ref(false)
 const dialogVisible = ref(false)
 const route = useRoute()
@@ -540,6 +532,10 @@ const processedQuerys = computed(() => {
   .button-item {
     display: flex;
     justify-content: center;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 40px;
   }
 }
 </style>
