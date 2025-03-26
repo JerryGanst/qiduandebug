@@ -1,400 +1,50 @@
 <template>
   <el-container class="container">
     <!-- 左侧栏 -->
-    <AsizeComponent @change-history="getHistory"></AsizeComponent>
+    <AsizeComponent @change-history="getHistory" ref="asizeRef"></AsizeComponent>
     <!-- 右侧内容 -->
     <el-container>
       <el-main>
         <div v-if="!currentQuestion" class="center-container">
-          <div class="main_content">
-            <div
-              class="title"
-              v-if="
-                pageType === 'query' ||
-                pageType === 'sample' ||
-                pageType === 'it'
-              "
-            >
-              <img
-                src="../../assets/chat.deepseek.com_.png"
-                class="title_src"
-              />
-              <div>
-                <div class="title_top" style="line-height: 33px">
-                  Hello!我是立讯技术百事通，有什么问题欢迎咨询
-                </div>
-                <div class="title_item">
-                  <span>我可以帮您做这些事情</span>
-                </div>
-              </div>
-            </div>
-            <div
-              class="content_list"
-              v-if="pageType === 'query' || pageType === 'it'"
-            >
-              <div class="list_item">
-                <div class="list_title">今日热搜</div>
-                <div class="list_tip">深度搜索您关心的问题</div>
-                <div class="list_arry">
-                  <div
-                    v-for="item in arrList"
-                    class="arr_item"
-                    v-if="pageType === 'query'"
-                  >
-                    <span>{{ item.index }}.</span>
-                    <span class="item_hover" @click="submitQuestion(item.name)">
-                      {{ item.name }}
-                    </span>
-                  </div>
-                  <!-- <div v-for="item in itList" class="arr_item" v-if="pageType==='it'">
-                      <span>{{ item.index }}.</span>
-                      <span class="item_hover" @click="submitQuestion(item.name)">{{ item.name }}</span>
-                    </div> -->
-                </div>
-              </div>
-              <div class="list_item" style="margin-left: 20px">
-                <div class="list_title">效率工具</div>
-                <div class="list_tip">办公学习必备</div>
-                <div class="img_list">
-                  <div class="img_item" @click="changeType('tran')">
-                    <div class="image"><img src="../../assets/1.png" /></div>
-                    <div class="img_text">
-                      <div class="text_title">翻译</div>
-                      <div class="text_content">准确将各国语言翻译成中文</div>
-                    </div>
-                  </div>
-                  <div
-                    class="img_item"
-                    style="margin-top: 10px"
-                    @click="changeType('final')"
-                  >
-                    <div class="image"><img src="../../assets/2.png" /></div>
-                    <div class="img_text">
-                      <div class="text_title">总结</div>
-                      <div class="text_content">
-                        AI智能总结,让复杂信息一目了然
-                      </div>
-                    </div>
-                  </div>
-                  <div class="img_item" style="margin-top: 10px">
-                    <div class="image"><img src="../../assets/3.png" /></div>
-                    <div class="img_text">
-                      <div class="text_title">更多功能</div>
-                      <div class="text_content">开发中,敬请期待</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="content_list" v-if="pageType === 'sample'">
-              <div class="list_item">
-                <div class="list_title">今日热搜</div>
-                <div class="list_tip">深度搜索您关心的问题</div>
-                <div class="list_arry">
-                  <div v-for="item in historyList" class="arr_item">
-                    <span>{{ item.index }}.</span>
-                    <span
-                      class="item_hover"
-                      @click="submitSampleTitle(item.name)"
-                    >
-                      {{ item.name }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div class="list_item" style="margin-left: 20px">
-                <div class="list_title">效率工具</div>
-                <div class="list_tip">办公学习必备</div>
-                <div class="img_list">
-                  <div class="img_item" @click="changeType('tran')">
-                    <div class="image"><img src="../../assets/1.png" /></div>
-                    <div class="img_text">
-                      <div class="text_title">翻译</div>
-                      <div class="text_content">准确将各国语言翻译成中文</div>
-                    </div>
-                  </div>
-                  <div
-                    class="img_item"
-                    style="margin-top: 10px"
-                    @click="changeType('final')"
-                  >
-                    <div class="image"><img src="../../assets/2.png" /></div>
-                    <div class="img_text">
-                      <div class="text_title">总结</div>
-                      <div class="text_content">
-                        AI智能总结,让复杂信息一目了然
-                      </div>
-                    </div>
-                  </div>
-                  <div class="img_item" style="margin-top: 10px">
-                    <div class="image"><img src="../../assets/3.png" /></div>
-                    <div class="img_text">
-                      <div class="text_title">更多功能</div>
-                      <div class="text_content">开发中,敬请期待</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="title" v-if="pageType === 'tran'">
-              <img
-                src="../../assets/chat.deepseek.com_.png"
-                class="title_src"
-              />
-              <div>
-                <div class="title_top" style="line-height: 33px">
-                  立讯技术AI翻译专家
-                </div>
-                <div class="title_top">熟练掌握翻译技巧～您的翻译好帮手</div>
-              </div>
-            </div>
-            <div v-if="pageType === 'tran' && finalIng" class="title_wait">
-              <span>正在为您翻译,请稍等</span>
-              <span v-if="!transData">{{ dots }}</span>
-            </div>
-            <div class="title_tran_tip">
-              <div
-                v-if="pageType === 'tran'"
-                :style="{ padding: transQuest ? '13px 15px' : '0px' }"
-              >
-                {{ transQuest }}
-              </div>
-            </div>
-
-            <div
-              class="title_tran_data"
-              v-if="pageType === 'tran'"
-              :style="{ padding: transData ? '0px 15px' : '0px' }"
-            >
-              <p>{{ transData }}</p>
-            </div>
-
-            <div class="title" v-if="pageType === 'final'">
-              <img
-                src="../../assets/chat.deepseek.com_.png"
-                class="title_src"
-              />
-              <div>
-                <div class="title_top" style="line-height: 33px">
-                  立讯技术AI智能总结
-                </div>
-                <div class="title_top">精准概括，助您快速理解长文本</div>
-              </div>
-            </div>
-            <div v-if="pageType === 'final' && finalIng" class="title_wait">
-              <span>正在为您总结,请稍等</span>
-              <span v-if="!finalData.title">{{ dots }}</span>
-            </div>
-            <div class="title_final_tip">
-              <div
-                class="title_final_query"
-                v-if="pageType === 'final'"
-                :style="{ padding: finalData.title ? '10px 15px' : '0px' }"
-              >
-                <div>{{ finalQuest }}</div>
-              </div>
-            </div>
-            <div
-              class="title_final_data"
-              v-if="pageType === 'final'"
-              :style="{ padding: finalData.title ? '15px 15px' : '0px' }"
-            >
-              <div v-if="finalData.title">
-                <span>概括 :</span>
-                <span>{{ finalData.title }}</span>
-              </div>
-              <div v-if="finalData.data.length > 0" style="margin-top: 15px">
-                <div>关键词 :</div>
-                <div v-for="items in finalData.data">
-                  {{ items }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="select_content">
-            <div
-              class="tran_select"
-              v-if="
-                pageType === 'query' ||
-                pageType === 'sample' ||
-                pageType === 'it'
-              "
-            >
-              <el-radio-group
-                v-model="selectedMode"
-                @change="changeMode(selectedMode)"
-                :disabled="isSampleLoad"
-              >
-                <el-radio label="通用模式">通用模式</el-radio>
-                <el-radio label="人资行政专题">人资行政专题</el-radio>
-                <!-- <el-radio label="IT专题">IT专题</el-radio> -->
-              </el-radio-group>
-              <div class="mode_title">模式选择 :</div>
-            </div>
-            <div
-              class="textarea"
-              v-if="pageType === 'query' || pageType === 'it'"
-            >
-              <el-input
-                v-model="newQuestion"
-                placeholder="请输入您的问题,换行请按下Shift+Enter"
-                style="width: 100%"
-                class="custom-input"
-                clearable
-                @keydown="summitPost"
-                @keyup.shift.enter="handleShiftEnter"
-                ref="textareaInputQuery"
-                type="textarea"
-                :rows="dynamicRows"
-                @input="adjustTextareaHeight('textareaInputQuery')"
-              />
-              <!-- 发送图标 -->
-              <div
-                class="send-icon"
-                :class="{ hovered: isHovered }"
-                @click="submitQuestionSend"
-              >
-                <img
-                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
-                  class="arrow"
-                />
-              </div>
-            </div>
-            <div class="textarea" v-if="pageType === 'sample'">
-              <el-input
-                v-model="newQuestion"
-                placeholder="请输入您的问题,换行请按下Shift+Enter"
-                style="width: 100%"
-                class="custom-input"
-                clearable
-                @keydown="samplePost"
-                @keyup.shift.enter="handleShiftEnter"
-                ref="textareaInputSample"
-                type="textarea"
-                :rows="dynamicRows"
-                @input="adjustTextareaHeight('textareaInputSample')"
-              />
-              <!-- 发送图标 -->
-              <div
-                class="send-icon"
-                :class="{ hovered: isHovered }"
-                @click="submitSampleSend"
-              >
-                <img
-                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
-                  class="arrow"
-                />
-              </div>
-            </div>
-            <div class="tran_select" v-if="pageType === 'tran'">
-              <el-radio-group v-model="selectedLan">
-                <el-radio label="中文">中文</el-radio>
-                <el-radio label="英文">英文</el-radio>
-                <el-radio label="西班牙语">西班牙语</el-radio>
-                <el-radio label="越南语">越南语</el-radio>
-              </el-radio-group>
-              <div class="mode_title">翻译成 :</div>
-            </div>
-            <div class="textarea" v-if="pageType === 'tran'">
-              <el-input
-                v-model="newQuestion"
-                placeholder="请输入您想翻译的文本,换行请按下Shift+Enter"
-                style="width: 100%"
-                class="custom-input"
-                clearable
-                @keydown="tranPost"
-                @keyup.shift.enter="handleShiftEnter"
-                ref="textareaInputTran"
-                type="textarea"
-                :rows="dynamicRows"
-                @input="adjustTextareaHeight('textareaInputTran')"
-              />
-              <!-- 发送图标 -->
-              <div
-                class="send-icon"
-                :class="{ hovered: isHovered }"
-                @click="submitTranSend"
-              >
-                <img
-                  :src="finalIng ? imageC : newQuestion ? imageB : imageA"
-                  class="arrow"
-                />
-              </div>
-            </div>
-
-            <div class="textarea" v-if="pageType === 'final'">
-              <el-input
-                v-model="newQuestion"
-                placeholder="请输入您想总结的文本,换行请按下Shift+Enter"
-                style="width: 100%"
-                class="custom-input"
-                clearable
-                @keydown="finalPost"
-                @keyup.shift.enter="handleShiftEnter"
-                ref="textareaInputFinal"
-                type="textarea"
-                :rows="dynamicRows"
-                @input="adjustTextareaHeight('textareaInputFinal')"
-              />
-              <!-- 发送图标 -->
-              <div
-                class="send-icon"
-                :class="{ hovered: isHovered }"
-                @click="submitFinalSend"
-              >
-                <img
-                  :src="finalIng ? imageC : newQuestion ? imageB : imageA"
-                  class="arrow"
-                />
-              </div>
-            </div>
-          </div>
+          <Entry
+            @submit-tran="submitTran"
+            @submit-final="submitFinal"
+            @submit-question="submitQuestion"
+            @cancel-currentRequest="cancelCurrentRequest(val)"
+            @submit-sample-title="submitSampleTitle"
+            @sample-post="samplePost"
+            @summit-post="summitPost"
+            @submit-tranSend="submitTranSend"
+            @up-common="upCommon"
+            @down-common="downCommon"
+            @refresh-data="refreshData"
+            @submit-questionSend="submitQuestionSend"
+            @submit-sampleSend="submitSampleSend"
+          ></Entry>
         </div>
         <div v-else class="center-container" style="padding-top: 0px">
           <div class="main_content" style="width: 860px">
-            <div
-              class="text_item"
-              v-if="pageType === 'query' || pageType === 'it'"
-            >
-              <img
-                src="../../assets/chat.deepseek.com_.png"
-                class="title_src"
-              />
+            <div class="text_item" v-if="pageType === 'query' || pageType === 'it'">
+              <img src="../../assets/chat.deepseek.com_.png" class="title_src" />
               <div class="title_final">
                 {{
-                  isQueryStop
-                    ? '请重新提出您的问题'
-                    : currentObj.messages.type
-                      ? '最佳答案已生成'
-                      : '开始总结答案...'
+                  isQueryStop ? '请重新提出您的问题' : currentObj.messages.type ? '最佳答案已生成' : '开始总结答案...'
                 }}
               </div>
             </div>
-            <div
-              class="title_float"
-              v-if="pageType === 'query' || pageType === 'it'"
-            >
+            <div class="title_float" v-if="pageType === 'query' || pageType === 'it'">
               <div>
                 {{ currentObj.messages.isHistory ? '' : currentMessage }}
               </div>
             </div>
-            <div
-              v-if="pageType === 'query' || pageType === 'it'"
-              class="title_tiQuery"
-            >
-              <div
-                class="title_tiQuery_text"
-                :style="{ padding: tipQuery ? '13px 15px' : '0px' }"
-              >
+            <div v-if="pageType === 'query' || pageType === 'it'" class="title_tiQuery">
+              <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
                 {{ tipQuery }}
               </div>
             </div>
 
             <MarkdownRenderer
-              v-if="
-                (pageType === 'query' || pageType === 'it') &&
-                currentObj.messages.type === 'final_answer'
-              "
+              v-if="(pageType === 'query' || pageType === 'it') && currentObj.messages.type === 'final_answer'"
               :markdown="currentObj.messages.content"
             />
             <div
@@ -417,24 +67,22 @@
               "
               @click="toDoc(it)"
             >
-              <!-- {{ it.document_title }}  ( 第 {{ it.page }} 页 ) -->
               {{ it.document_title }}(第{{ it.page.join('/') }}页)
             </a>
             <div
               class="query_common"
-              v-if="
-                (pageType === 'query' || pageType === 'it') &&
-                currentObj.messages.type === 'final_answer'
-              "
+              v-if="(pageType === 'query' || pageType === 'it') && currentObj.messages.type === 'final_answer'"
             >
-              <!-- <div><img src='../../assets/refresh.png' style="width: 18px;height: 18px;margin-left: 10px;cursor: pointer;"></div> -->
               <div>
                 <img
-                  src="../../assets/up.png"
+                  src="../../assets/refresh.png"
                   style="margin-left: 10px"
-                  @click="upCommon"
                   class="query_common_img"
+                  @click="refreshData"
                 />
+              </div>
+              <div>
+                <img src="../../assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
               </div>
               <div>
                 <img
@@ -447,10 +95,7 @@
             </div>
 
             <div class="text_item" v-if="pageType === 'sample'">
-              <img
-                src="../../assets/chat.deepseek.com_.png"
-                class="title_src"
-              />
+              <img src="../../assets/chat.deepseek.com_.png" class="title_src" />
               <div>
                 {{
                   isSampleStop
@@ -462,10 +107,7 @@
               </div>
             </div>
 
-            <div
-              class="tip_load"
-              v-if="pageType === 'sample' && isSampleLoad && limitLoading"
-            >
+            <div class="tip_load" v-if="pageType === 'sample' && isSampleLoad && limitLoading">
               <span>正在为您解答,请稍等</span>
               <span>{{ dots }}</span>
             </div>
@@ -475,44 +117,27 @@
                 v-if="pageType === 'sample' && chatQuery.messages.length > 0"
                 v-for="(item, index) in chatQuery.messages"
               >
-                <div v-if="index % 2 === 0" class="sample_chat_query">
+                <div
+                  v-if="index % 2 === 0"
+                  class="sample_chat_query"
+                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                >
                   {{ item.content }}
                 </div>
-                <MarkdownRenderer
-                  v-if="index % 2 !== 0"
-                  :markdown="item.content"
-                  type="answer"
-                />
+                <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" />
               </div>
             </div>
           </div>
           <div class="query_content">
-            <!-- <el-button type="primary" @click="startNewConversation" class="back_set">
-              开启新对话
-            </el-button> -->
-            <div
-              class="tran_select"
-              v-if="
-                pageType === 'query' ||
-                pageType === 'sample' ||
-                pageType === 'it'
-              "
-            >
-              <el-radio-group
-                v-model="selectedMode"
-                @change="changeMode(selectedMode)"
-                :disabled="isSampleLoad"
-              >
+            <div class="tran_select" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
+              <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)" :disabled="isSampleLoad">
                 <el-radio label="通用模式">通用模式</el-radio>
                 <el-radio label="人资行政专题">人资行政专题</el-radio>
-                <!-- <el-radio label="IT专题">IT专题</el-radio> -->
+                <el-radio label="IT专题">IT专题</el-radio>
               </el-radio-group>
               <div class="mode_title">模式选择 :</div>
             </div>
-            <div
-              class="textarea"
-              v-if="pageType === 'query' || pageType === 'it'"
-            >
+            <div class="textarea" v-if="pageType === 'query' || pageType === 'it'">
               <el-input
                 v-model="newQuestion"
                 placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -526,15 +151,8 @@
                 @input="adjustTextareaHeight('textareaInputQuery')"
               />
               <!-- 发送图标 -->
-              <div
-                class="send-icon"
-                :class="{ hovered: isHovered }"
-                @click="submitQuestionSend"
-              >
-                <img
-                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
-                  class="arrow"
-                />
+              <div class="send-icon" @click="submitQuestionSend">
+                <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" />
               </div>
             </div>
             <div class="textarea" v-if="pageType === 'sample'">
@@ -552,15 +170,8 @@
                 @input="adjustTextareaHeight('textareaInputSample')"
               />
               <!-- 发送图标 -->
-              <div
-                class="send-icon"
-                :class="{ hovered: isHovered }"
-                @click="submitSampleSend"
-              >
-                <img
-                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
-                  class="arrow"
-                />
+              <div class="send-icon" @click="submitSampleSend">
+                <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" />
               </div>
             </div>
           </div>
@@ -570,45 +181,18 @@
   </el-container>
   <!-- 弹窗 -->
 
-
-  <el-dialog
-    v-model="commonVisible"
-    title="评价"
-    width="40%"
-    :before-close="handleCommonClose"
-  >
+  <el-dialog v-model="commonVisible" title="评价" width="40%" :before-close="handleCommonClose">
     <el-input
       v-model="commonQuestion"
       placeholder="请输入您的宝贵建议"
       style="width: 100%"
-      class="custom-input"
       clearable
       type="textarea"
       rows="5"
     />
-    <div
-      class="button-item"
-      style="
-        display: flex;
-        width: 100%;
-        margin-top: 40px;
-        flex-direction: row-reverse;
-        margin-bottom: 20px;
-      "
-    >
-      <el-button
-        @click="commonVisible = false"
-        style="width: 100px; height: 40px; margin-left: 15px"
-      >
-        取消
-      </el-button>
-      <el-button
-        type="primary"
-        @click="submitCommon"
-        style="width: 100px; height: 40px"
-      >
-        提交
-      </el-button>
+    <div class="button-item_common">
+      <el-button @click="commonVisible = false" style="width: 100px; height: 40px; margin-left: 15px">取消</el-button>
+      <el-button type="primary" @click="submitCommon" style="width: 100px; height: 40px">提交</el-button>
     </div>
   </el-dialog>
 </template>
@@ -616,142 +200,70 @@
 <script setup>
 // 10.180.248.140
 import AsizeComponent from './component/asize.vue'
+import Entry from './component/entry.vue'
 import { useShared } from '../../utils/useShared'
-import { ElButton,  ElMessage} from 'element-plus' // 引入 ElMessage
-import {
-  computed,
-  nextTick,
-  onMounted,
-  onUnmounted,
-  reactive,
-  ref,
-  watch,
-} from 'vue'
-
-import imageB from '../../../src/assets/arrow_blue.png'
-import imageA from '../../../src/assets/arrow_gray.png'
-import imageC from '../../../src/assets/stop.png'
+import { ElButton, ElMessage } from 'element-plus' // 引入 ElMessage
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import imageB from '../../assets/arrow_blue.png'
+import imageA from '../..//assets/arrow_gray.png'
+import imageC from '../../assets/stop.png'
 import request from '../../utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './component/markdown.vue' // 引入 Markdown 渲染组件
 // 静态导入图片
 
 // 变量区域
-const { currentQuestion,newQuestion,isSampleStop,isQueryStop,limitLoading,questions,answerList,currentId,pageType,selectedMode,currentObj,tipQuery,imitLoading,userInfo,activeIndex,queryTypes,chatQuery,currentAnswer,isLogin,dynamicRows,isSampleLoad  } = useShared()
+const {
+  currentQuestion,
+  newQuestion,
+  isSampleStop,
+  isQueryStop,
+  limitLoading,
+  questions,
+  answerList,
+  currentId,
+  pageType,
+  selectedMode,
+  currentObj,
+  tipQuery,
+  userInfo,
+  activeIndex,
+  queryTypes,
+  chatQuery,
+  isLogin,
+  dynamicRows,
+  limitSample,
+  isSampleLoad,
+  handleShiftEnter,
+  adjustTextareaHeight,
+  textareaInputQuery,
+  textareaInputSample,
+  finalIng,
+  updateFinalQuest,
+  selectedLan,
+  changeMode,
+  transData,
+  transQuest,
+  finalQuest,
+  finalData,
+  dots
+} = useShared()
 
-const currentData = ref({})
-const currentImage = ref(imageA) // 默认显示图片 B
-
-const textareaInputQuery = ref(null) // 获取 textarea 元素的引用
-const textareaInputSample = ref(null) // 获取 textarea 元素的引用
-const textareaInputTran = ref(null) // 获取 textarea 元素的引用
-const textareaInputFinal = ref(null) // 获取 textarea 元素的引用
 const queryIng = ref(false)
-const passwordVisible = ref(false)
-const selectedLan = ref('中文')
-const transData = ref('')
-const transQuest = ref('')
+const asizeRef = ref(null)
 const messageContainer = ref(null)
 const sampleData = ref('')
 const isTranStop = ref(false)
 const isFinalStop = ref(false)
-const finalData = ref({
-  title: '',
-  data: [],
-})
-const finalQuest = ref('')
+
 const commonQuestion = ref('')
 // 当前显示的消息内容
 const currentMessage = ref('')
-const dots = ref('.') // 初始点号
+
 const commonVisible = ref(false)
-// 用于存储每条消息的当前显示内容
-const displayedMessages = ref([])
 // 当前正在显示的消息索引
 const currentMessageIndex = ref(0)
-const sampleMessageIndex = ref(0)
-// 消息数据
-const mesObj = ref({
-  messages: [],
-  messageList: [],
-})
-const arrList = ref([
-  {
-    index: 1,
-    name: '我进入立讯技术后如何选择导师',
-  },
-  {
-    index: 2,
-    name: '员工延假与销假如何进行',
-  },
-  {
-    index: 3,
-    name: '公司实习生的待遇怎么样',
-  },
-  {
-    index: 4,
-    name: '亲属回避包括哪些等级',
-  },
-  {
-    index: 5,
-    name: '工人是否有宗教信仰的自由',
-  },
-])
-const itList = ref([
-  {
-    index: 1,
-    name: 'mes系统的基础数据怎么维护',
-  },
-  {
-    index: 2,
-    name: 'mes操作的常见异常处理',
-  },
-  {
-    index: 3,
-    name: '会议室建设标准',
-  },
-  {
-    index: 4,
-    name: '桌面云规划怎么做？',
-  },
-  {
-    index: 5,
-    name: '产线设备数据采集怎么做？',
-  },
-])
-const historyList = ref([
-  {
-    index: 1,
-    name: '中国的传统节日',
-  },
-  {
-    index: 2,
-    name: '国务院发布的法定节假日安排',
-  },
-  {
-    index: 3,
-    name: '如何锻炼腹肌',
-  },
-  {
-    index: 4,
-    name: '工作压力大如何缓解压力',
-  },
-  {
-    index: 5,
-    name: '东莞的旅游景点',
-  },
-])
-
-
-const displayedText = ref('') // 当前显示的内容
-let currentItemIndex = 0 // 当前显示的数据索引
-let currentCharIndex = 0 // 当前显示的字符索引
-
 const isDisabled = ref(false)
-
 const limitQuery = ref('')
-const limitSample = ref({
-  messages: [],
-})
 const currentRequestUrl = ref('')
 let interval
 
@@ -783,31 +295,10 @@ const removeItemByType = (arr, name) => {
   }
   return arr
 }
-const changeMode = (val) => {
-  currentQuestion.value = false
-  activeIndex.value = ''
-  newQuestion.value = ''
-  dynamicRows.value = 1
-  currentId.value = ''
-  pageType.value =
-    selectedMode.value === '通用模式'
-      ? 'sample'
-      : selectedMode.value === '人资行政专题'
-        ? 'query'
-        : 'it'
-  chatQuery.messages = []
-}
-
-
-
 
 // 点击取消
 const handleCancel = () => {
   // ElMessage.info('已取消删除');
-}
-
-const changeImage = (newImage) => {
-  currentImage.value = newImage
 }
 
 // 点号变化逻辑
@@ -818,39 +309,27 @@ const updateDots = () => {
     dots.value += '.' // 增加一个点
   }
 }
-const toDoc = async (data) => {
-  const query = {
-    fileName: data.document_title,
-  }
-  try {
-    // 替换为实际的后端接口地址
-    const response = await fetch(
-      'http://10.180.248.140:8080/Files/getFileInfoByName',
-      {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(query),
+const toDoc = async data => {
+  request
+    .post('/Files/getFileInfoByName', {
+      fileName: data.document_title
+      // showLoading: true
+    })
+    .then(res => {
+      if (res.status) {
+        if (res.data && res.data.fileLink) {
+          window.open(res.data.fileLink, '_blank')
+        }
       }
-    )
-    const res = await response.json()
-    if (res.status) {
-      if (res.data && res.data.fileLink) {
-        window.open(res.data.fileLink, '_blank')
-      }
-    }
-  } catch (error) {
-    // loadingInstance.close();
-    console.error('获取回复失败:', error)
-    // botMessage.text = '抱歉，暂时无法获取回复';
-  }
-}
-const togglePasswordVisibility = () => {
-  passwordVisible.value = !passwordVisible.value
+    })
+    .catch(err => {
+      // loadingInstance.close();
+      console.error('获取回复失败:', err)
+      // botMessage.text = '抱歉，暂时无法获取回复';
+    })
 }
 
-const handleCommonClose = (done) => {
+const handleCommonClose = done => {
   // 这里可以添加一些关闭前的逻辑
   done()
 }
@@ -862,74 +341,35 @@ const getCurrentTime = () => {
 const processedData = computed(() => {
   const result = []
   const map = new Map()
-  currentObj.value.messages.sources.forEach((item) => {
+  currentObj.value.messages.sources.forEach(item => {
     const key = `${item.document_id}-${item.document_title}`
     if (!map.has(key)) {
       map.set(key, {
         document_id: item.document_id,
         document_title: item.document_title,
-        page: new Set(),
+        page: new Set()
       })
     }
     map.get(key).page.add(item.page)
   })
 
-  map.forEach((value) => {
+  map.forEach(value => {
     result.push({
       document_title: value.document_title,
-      page: Array.from(value.page).sort((a, b) => a - b),
+      page: Array.from(value.page).sort((a, b) => a - b)
     })
   })
 
   return result
 })
-// 动态调整 textarea 高度的方法
-const adjustTextareaHeight = (val) => {
-  const textareaRef =
-    val === 'textareaInputQuery'
-      ? textareaInputQuery
-      : val === 'textareaInputSample'
-        ? textareaInputSample
-        : val === 'textareaInputTran'
-          ? textareaInputTran
-          : textareaInputFinal
-  const textarea = textareaRef.value?.textarea // 获取 textarea 元素
-  if (textarea) {
-    // 重置行高，以便重新计算
-    textarea.style.height = 'auto'
-    // 获取计算后的样式
-    const computedStyle = window.getComputedStyle(textarea)
-    // 计算 lineHeight（考虑 Element Plus 的默认 line-height: 1.5）
-    const lineHeight = parseFloat(computedStyle.lineHeight)
-    // 计算 paddingTop 和 paddingBottom
-    const paddingTop = parseFloat(computedStyle.paddingTop)
-    const paddingBottom = parseFloat(computedStyle.paddingBottom)
-    // 计算内容高度（减去 padding）
-    const scrollHeight = textarea.scrollHeight - paddingTop - paddingBottom
-    // 计算行数
-    const rows = Math.floor(scrollHeight / lineHeight)
 
-    // 只有当行数变化时，才更新 dynamicRows
-    if (rows !== dynamicRows.value) {
-      dynamicRows.value = Math.min(Math.max(rows, 1), 4) // 限制行数在 1 到 5 之间
-    }
-
-    // 根据行数动态设置 overflow-y
-    if (rows > 4) {
-      textarea.style.overflowY = 'auto' // 超过 5 行时显示滚动条
-    } else {
-      textarea.style.overflowY = 'hidden' // 小于等于 5 行时隐藏滚动条
-    }
-  }
-}
-
-const isObject = (variable) => {
+const isObject = variable => {
   const type = Object.prototype.toString.call(variable)
   return type === '[object PointerEvent]' || type === '[object KeyboardEvent]'
 }
 // 逐个字显示消息内容的函数
-const displayMessage = async (message) => {
-  return new Promise((resolve) => {
+const displayMessage = async message => {
+  return new Promise(resolve => {
     let i = 0
     const interval = setInterval(() => {
       if (i < message.content.length) {
@@ -953,22 +393,8 @@ const displayMessagesSequentially = async () => {
     currentMessageIndex.value++ // 移动到下一条消息
   }
 }
-const handleShiftEnter = () => {
-  // Shift + Enter 时允许换行
-  newQuestion.value += '\n'
-}
-const changeType = (val) => {
-  activeIndex.value = ''
-  pageType.value = val
-}
-const finalIng = ref(false)
-const finalPost = (event) => {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault() // 阻止默认的换行行为
-    submitFinal()
-  }
-}
-const submitFinal = async (val) => {
+
+const submitFinal = async (val, isRefresh) => {
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return
@@ -987,47 +413,95 @@ const submitFinal = async (val) => {
     return
   }
   isFinalStop.value = false
-  changeImage(imageA)
   dynamicRows.value = 1
   const data = {
-    user_id: userInfo.value.userid,
-    question: newQuestion.value,
+    user_id: userInfo.value.id,
+    question: newQuestion.value
   }
-  const limitQuery = newQuestion.value
+  limitQuery.value = newQuestion.value
   newQuestion.value = ''
   finalData.value = {
     title: '',
-    data: [],
+    data: []
   }
   finalQuest.value = ''
   finalIng.value = true
+  if (questions.value.includes(limitQuery.value + '(final)') && !isRefresh) {
+    const qData = limitQuery.value + '(final)'
+    for (var ms = 0; ms < questions.value.length; ms++) {
+      if (qData === questions.value[ms]) {
+        activeIndex.value = ms
+      }
+    }
+    asizeRef.value.queryAn(qData, '')
+    finalIng.value = false
+    return
+  }
+  if (questions.value.includes(limitQuery.value + '(final)') && isRefresh) {
+    const qData = limitQuery.value + '(final)'
+    const index = questions.value.findIndex(item => item === qData)
+    const idx = answerList.value.findIndex(item => item.title === qData)
+    const targetId = answerList.value.find(item => item.title === qData)?.id
+    if (index !== -1) {
+      questions.value.splice(index, 1)
+    }
+    if (idx !== -1) {
+      answerList.value.splice(index, 1)
+    }
+    await asizeRef.value.deleteData(targetId, isRefresh)
+  }
+
+  if (!questions.value.includes(limitQuery.value + '(final)')) {
+    const qData = limitQuery.value + '(final)'
+    questions.value.unshift(qData)
+  }
+  const limitData = JSON.parse(JSON.stringify(queryTypes.value))
+  for (var k = 0; k < questions.value.length; k++) {
+    const queryObj = {
+      name: '',
+      type: ''
+    }
+    queryObj.name = questions.value[k]
+    queryObj.type = pageType.value
+    const hasVal = limitData.some(item => item.name === queryObj.name)
+    if (!hasVal) {
+      limitData.unshift(queryObj)
+    }
+  }
+  queryTypes.value = JSON.parse(JSON.stringify(limitData))
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   currentRequestUrl.value = '/AI/summarize'
+  finalQuest.value = limitQuery.value
   request
     .post('/AI/summarize', {
-      user_id: userInfo.value.userid,
-      question: limitQuery,
+      user_id: userInfo.value.id,
+      question: limitQuery.value
       // showLoading: true
     })
-    .then((res) => {
+    .then(res => {
       finalIng.value = false
       currentRequestUrl.value = ''
       clearInterval(interval)
       if (res.status) {
-        finalQuest.value = limitQuery
         finalData.value.title = res.data.summary
+
         if (res.data.key_points) {
           finalData.value.data = res.data.key_points
         }
+        const obj = {
+          question: finalQuest.value,
+          answer: finalData.value
+        }
+        postFinal(obj)
       }
     })
-    .catch((err) => {
+    .catch(err => {
       console.error(err)
       finalIng.value = false
       clearInterval(interval)
     })
 }
-const samplePost = (event) => {
+const samplePost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
     if (isSampleLoad.value) {
@@ -1037,10 +511,15 @@ const samplePost = (event) => {
     submitSample()
   }
 }
-const tranPost = (event) => {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault() // 阻止默认的换行行为
-    submitTran()
+
+const refreshData = () => {
+  if (pageType.value === 'query' || pageType.value === 'it') {
+    queryIng.value = false
+    submitQuestion(tipQuery.value, true)
+  } else if (pageType.value === 'tran') {
+    submitTran(transQuest.value, true)
+  } else if (pageType.value === 'final') {
+    submitFinal(finalQuest.value, true)
   }
 }
 const upCommon = async () => {
@@ -1049,33 +528,28 @@ const upCommon = async () => {
   if (currentId.value) {
     id = currentId.value
   } else {
-    for (var i = 0; i < answerList.value.length; i++) {
-      if (limitQuery.value === answerList.value[i].title) {
-        id = answerList.value[i].id
-      }
-    }
+    id = answerList.value[0].id
   }
   isDisabled.value = true
   // 2 秒后重新启用按钮
   setTimeout(() => {
     isDisabled.value = false
   }, 3000)
-
   request
     .post('/Message/feedback', {
       id: id,
       feedback: {
         agree: true,
-        content: '',
-      },
+        content: ''
+      }
       // showLoading: true
     })
-    .then((res) => {
+    .then(res => {
       if (res.status) {
         ElMessage.success('谢谢您的点赞,您的支持是我们最大的动力！')
       }
     })
-    .catch((err) => {
+    .catch(err => {
       console.error(err)
     })
 }
@@ -1098,18 +572,18 @@ const submitCommon = async () => {
       id: id,
       feedback: {
         agree: false,
-        content: commonQuestion.value,
-      },
+        content: commonQuestion.value
+      }
       // showLoading: true
     })
-    .then((res) => {
+    .then(res => {
       if (res.status) {
         ElMessage.success('评价成功,我们会继续努力的！')
         commonVisible.value = false
         commonQuestion.value = ''
       }
     })
-    .catch((err) => {
+    .catch(err => {
       commonVisible.value = false
       commonQuestion.value = ''
       console.error('获取回复失败:', err)
@@ -1137,15 +611,8 @@ const submitTranSend = () => {
   }
   submitTran()
 }
-const submitFinalSend = () => {
-  if (finalIng.value) {
-    cancelCurrentRequest('final')
-    return
-  }
-  submitFinal()
-}
 
-const submitSampleTitle = (val) => {
+const submitSampleTitle = val => {
   if (isSampleLoad.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
@@ -1154,18 +621,17 @@ const submitSampleTitle = (val) => {
 }
 const stopQuery = async () => {
   request
-    .post('/AI/stop?userId=' + userInfo.value.userid, {
+    .post('/AI/stop?userId=' + userInfo.value.id, {
       // showLoading: true
     })
-    .then((res) => {
+    .then(res => {
       if (res.status) {
-        // ElMessage.success('中止请求成功');
         cancelCurrentRequest('query')
       }
     })
-    .catch((err) => {})
+    .catch(err => {})
 }
-const submitSample = async (val) => {
+const submitSample = async val => {
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return
@@ -1186,21 +652,15 @@ const submitSample = async (val) => {
 
   currentQuestion.value = true
   isSampleStop.value = false
-  changeImage(imageA)
   dynamicRows.value = 1
-  sampleMessageIndex.value = 0
   isSampleLoad.value = true
   limitLoading.value = true
-  displayedText.value = '' // 当前显示的内容
-  currentItemIndex = 0 // 当前显示的数据索引
-  currentCharIndex = 0 // 当前显示的字符索引
-
   const currentData = {
     role: 'user',
-    content: newQuestion.value,
+    content: newQuestion.value
   }
   let mes = {
-    messages: [],
+    messages: []
   }
   mes = JSON.parse(JSON.stringify(chatQuery))
   mes.messages.push(currentData)
@@ -1223,13 +683,13 @@ const submitSample = async (val) => {
         activeIndex.value = ms
       }
     }
-    queryAn(qData, '')
+    asizeRef.value.queryAn(qData, '')
     isSampleLoad.value = false
     return
   }
 
   const anList = JSON.parse(JSON.stringify(answerList.value))
-  const hasId = anList.some((item) => item.id === currentId.value)
+  const hasId = anList.some(item => item.id === currentId.value)
   let id = ''
   if (!hasId) {
     questions.value.unshift(queryValue + '(sample)')
@@ -1243,11 +703,11 @@ const submitSample = async (val) => {
   for (var k = 0; k < questions.value.length; k++) {
     const queryObj = {
       name: '',
-      type: '',
+      type: ''
     }
     queryObj.name = questions.value[k]
     queryObj.type = 'sample'
-    const hasVal = limitData.some((item) => item.name === queryObj.name)
+    const hasVal = limitData.some(item => item.name === queryObj.name)
     if (!hasVal) {
       limitData.unshift(queryObj)
     }
@@ -1264,14 +724,14 @@ const submitSample = async (val) => {
   currentRequestUrl.value = '/AI/chat'
   request
     .post('/AI/chat', JSON.stringify(params))
-    .then((res) => {
+    .then(res => {
       clearInterval(interval)
       isSampleLoad.value = false
       limitLoading.value = false
       currentRequestUrl.value = ''
       if (res.status) {
         limitSample.value = {
-          messages: [],
+          messages: []
         }
         const newMessage = { ...res.data.message } //
         mes.messages.push(newMessage)
@@ -1291,13 +751,13 @@ const submitSample = async (val) => {
         postSample(id)
       }
     })
-    .catch((err) => {
+    .catch(err => {
       currentRequestUrl.value = ''
       clearInterval(interval)
       console.error(err)
     })
 }
-const submitTran = async (val) => {
+const submitTran = async (val, isRefresh) => {
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return
@@ -1316,46 +776,93 @@ const submitTran = async (val) => {
     return
   }
   isTranStop.value = false
-  changeImage(imageA)
   dynamicRows.value = 1
   finalIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
-  const limitQuest = newQuestion.value
-
+  limitQuery.value = newQuestion.value
   newQuestion.value = ''
   transQuest.value = ''
   transData.value = ''
+  if (questions.value.includes(limitQuery.value + '(tran)') && !isRefresh) {
+    const qData = limitQuery.value + '(tran)'
+    for (var ms = 0; ms < questions.value.length; ms++) {
+      if (qData === questions.value[ms]) {
+        activeIndex.value = ms
+      }
+    }
+    asizeRef.value.queryAn(qData, '')
+    finalIng.value = false
+    return
+  }
+  if (questions.value.includes(limitQuery.value + '(tran)') && isRefresh) {
+    const qData = limitQuery.value + '(tran)'
+    const index = questions.value.findIndex(item => item === qData)
+    const idx = answerList.value.findIndex(item => item.title === qData)
+    const targetId = answerList.value.find(item => item.title === qData)?.id
+    if (index !== -1) {
+      questions.value.splice(index, 1)
+    }
+    if (idx !== -1) {
+      answerList.value.splice(index, 1)
+    }
+    await asizeRef.value.deleteData(targetId, isRefresh)
+  }
+
+  if (!questions.value.includes(limitQuery.value + '(tran)')) {
+    const qData = limitQuery.value + '(tran)'
+    questions.value.unshift(qData)
+  }
+  const limitData = JSON.parse(JSON.stringify(queryTypes.value))
+  for (var k = 0; k < questions.value.length; k++) {
+    const queryObj = {
+      name: '',
+      type: ''
+    }
+    queryObj.name = questions.value[k]
+    queryObj.type = pageType.value
+    const hasVal = limitData.some(item => item.name === queryObj.name)
+    if (!hasVal) {
+      limitData.unshift(queryObj)
+    }
+  }
+  queryTypes.value = JSON.parse(JSON.stringify(limitData))
+  transQuest.value = limitQuery.value
   currentRequestUrl.value = '/AI/translate'
   request
     .post('/AI/translate', {
-      user_id: userInfo.value.userid,
-      source_text: limitQuest,
-      target_language: selectedLan.value,
+      user_id: userInfo.value.id,
+      source_text: limitQuery.value,
+      target_language: selectedLan.value
       // showLoading: true
     })
-    .then((res) => {
+    .then(res => {
       finalIng.value = false
       currentRequestUrl.value = ''
+
       clearInterval(interval)
       if (res.status) {
-        transQuest.value = limitQuest
         transData.value = res.data
+        const passData = {
+          question: limitQuery.value,
+          answer: res.data
+        }
+        postTran(passData)
       }
     })
 
-    .catch((err) => {
+    .catch(err => {
       finalIng.value = false
       clearInterval(interval)
     })
 }
-const summitPost = (event) => {
+const summitPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
     submitQuestion()
   }
-} 
+}
 
-const submitQuestion = async (val) => {
+const submitQuestion = async (val, isRefresh) => {
   if (queryIng.value) {
     return
   }
@@ -1378,19 +885,17 @@ const submitQuestion = async (val) => {
   currentQuestion.value = true
   limitQuery.value = newQuestion.value
   isQueryStop.value = false
-  changeImage(imageA)
   dynamicRows.value = 1
   currentMessageIndex.value = 0
   currentObj.value.messages = {}
   currentObj.value.messageList = []
-  displayedMessages.value = []
   const queryValue = newQuestion.value
   tipQuery.value = queryValue
   newQuestion.value = ''
   queryIng.value = true
   isSampleLoad.value = true
   const addTitle = pageType.value === 'query' ? '(query)' : '(it)'
-  if (questions.value.includes(queryValue + addTitle)) {
+  if (questions.value.includes(queryValue + addTitle) && !isRefresh) {
     queryIng.value = false
     const qData = queryValue + addTitle
     for (var i = 0; i < questions.value.length; i++) {
@@ -1398,9 +903,22 @@ const submitQuestion = async (val) => {
         activeIndex.value = i
       }
     }
-    queryAn(qData, '')
+    asizeRef.value.queryAn(qData, '')
     isSampleLoad.value = false
     return
+  }
+  if (questions.value.includes(queryValue + addTitle) && isRefresh) {
+    const qData = queryValue + addTitle
+    const index = questions.value.findIndex(item => item === qData)
+    const idx = answerList.value.findIndex(item => item.title === qData)
+    const targetId = answerList.value.find(item => item.title === qData)?.id
+    if (index !== -1) {
+      questions.value.splice(index, 1)
+    }
+    if (idx !== -1) {
+      answerList.value.splice(index, 1)
+    }
+    await asizeRef.value.deleteData(targetId, isRefresh)
   }
   if (!questions.value.includes(queryValue)) {
     questions.value.unshift(queryValue + addTitle)
@@ -1410,29 +928,28 @@ const submitQuestion = async (val) => {
   for (var k = 0; k < questions.value.length; k++) {
     const queryObj = {
       name: '',
-      type: '',
+      type: ''
     }
     queryObj.name = questions.value[k]
     queryObj.type = pageType.value
-    const hasVal = limitData.some((item) => item.name === queryObj.name)
+    const hasVal = limitData.some(item => item.name === queryObj.name)
     if (!hasVal) {
       limitData.unshift(queryObj)
     }
   }
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
-
   try {
     // 替换为实际的后端接口地址
     const res = await fetch('http://10.180.248.141:8080/AI/query', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         question: queryValue,
-        user_id: userInfo.value.userid,
-        type: pageType.value === 'query' ? '人资行政专题' : 'IT专题',
-      }),
+        user_id: userInfo.value.id,
+        type: pageType.value === 'query' ? '人资行政专题' : 'IT专题'
+      })
     })
     // 处理流式数据
     const reader = res.body.getReader()
@@ -1456,7 +973,7 @@ const submitQuestion = async (val) => {
       // 如果最后一个部分不完整，保留在缓冲区中
       buffer = jsonStr.pop() || ''
 
-      jsonStr.forEach((element) => {
+      jsonStr.forEach(element => {
         const type = JSON.parse(element).type
         if (type === 'final_answer') {
           queryIng.value = false
@@ -1464,19 +981,15 @@ const submitQuestion = async (val) => {
           // loadingInstance.close();
           currentObj.value.messages = JSON.parse(element)
           currentObj.value.messages.isHistory = true
-          postQuestion(JSON.parse(element), queryValue, pageType.value)
+          postQuestion(JSON.parse(element), queryValue, pageType.value, isRefresh)
         } else {
           currentObj.value.messageList.push(JSON.parse(element))
         }
         if (currentObj.value.messageList.length > 0) {
           currentObj.value.messageList = Array.from(
-            new Set(
-              currentObj.value.messageList.map((message) => message.content)
-            )
-          ).map((content) => {
-            return currentObj.value.messageList.find(
-              (message) => message.content === content
-            )
+            new Set(currentObj.value.messageList.map(message => message.content))
+          ).map(content => {
+            return currentObj.value.messageList.find(message => message.content === content)
           })
         }
       })
@@ -1490,24 +1003,24 @@ const submitQuestion = async (val) => {
   }
 }
 
-const postSample = async (ids) => {
+const postSample = async ids => {
   request
     .post('/Message/save', {
-      userId: userInfo.value.userid,
+      userId: userInfo.value.id,
       type: '通用模式',
       id: ids,
       data: chatQuery.messages,
-      title: chatQuery.messages[0].content,
+      title: chatQuery.messages[0].content
       // showLoading: true
     })
-    .then((res) => {
+    .then(res => {
       if (res.status) {
         currentId.value = res.data
         const id = currentId.value
         getHistory(id, 'sample')
       }
     })
-    .catch((err) => {
+    .catch(err => {
       console.error('获取回复失败:', err)
     })
 }
@@ -1515,22 +1028,72 @@ const postSample = async (ids) => {
 const postQuestion = async (obj, val, type) => {
   request
     .post('/Message/save', {
-      userId: userInfo.value.userid,
+      userId: userInfo.value.id,
       type: type === 'query' ? '人资行政专题' : 'IT专题',
       title: val,
       id: '',
       data: {
         question: val,
-        answer: obj,
-      },
+        answer: obj
+      }
       // showLoading: true
     })
-    .then((res) => {
+    .then(res => {
       if (res.status) {
         getHistory('', type, val)
       }
     })
-    .catch((err) => {
+    .catch(err => {
+      console.error('获取回复失败:', err)
+    })
+}
+
+const postTran = async obj => {
+  request
+    .post('/Message/save', {
+      userId: userInfo.value.id,
+      type: '翻译',
+      title: obj.question,
+      id: '',
+      data: {
+        question: obj.question,
+        answer: obj.answer,
+        target: selectedLan.value
+      }
+      // showLoading: true
+    })
+    .then(res => {
+      if (res.status) {
+        getHistory('', 'tran', obj.question)
+      }
+    })
+    .catch(err => {
+      console.error('获取回复失败:', err)
+    })
+}
+
+const postFinal = async obj => {
+  request
+    .post('/Message/save', {
+      userId: userInfo.value.id,
+      type: '总结',
+      title: obj.question,
+      id: '',
+      data: {
+        question: obj.question,
+        answer: {
+          key_points: obj.answer.data,
+          summary: obj.answer.title
+        }
+      }
+      // showLoading: true
+    })
+    .then(res => {
+      if (res.status) {
+        getHistory('', 'final', obj.question)
+      }
+    })
+    .catch(err => {
       console.error('获取回复失败:', err)
     })
 }
@@ -1538,10 +1101,10 @@ const postQuestion = async (obj, val, type) => {
 const getHistory = async (id, page, val) => {
   request
     .post('/Message/getMessageByUserId', {
-      userId: userInfo.value.userid,
+      userId: userInfo.value.id
       // showLoading: true
     })
-    .then((res) => {
+    .then(res => {
       if (res.status) {
         answerList.value = res.data
         questions.value = []
@@ -1554,13 +1117,19 @@ const getHistory = async (id, page, val) => {
             } else if (res.data[i].type === 'IT专题') {
               answerList.value[i].title = answerList.value[i].title + '(it)'
               questions.value.push(answerList.value[i].title)
-            } else {
+            } else if (res.data[i].type === '通用模式') {
               answerList.value[i].title = answerList.value[i].title + '(sample)'
+              questions.value.push(answerList.value[i].title)
+            } else if (res.data[i].type === '翻译') {
+              answerList.value[i].title = answerList.value[i].title + '(tran)'
+              questions.value.push(answerList.value[i].title)
+            } else {
+              answerList.value[i].title = answerList.value[i].title + '(final)'
               questions.value.push(answerList.value[i].title)
             }
           }
           questions.value = questions.value.reduce((acc, current) => {
-            if (!acc.find((item) => item === current)) {
+            if (!acc.find(item => item === current)) {
               acc.push(current)
             }
             return acc
@@ -1568,7 +1137,7 @@ const getHistory = async (id, page, val) => {
           for (var k = 0; k < answerList.value.length; k++) {
             const obj = {
               name: '',
-              type: '',
+              type: ''
             }
             obj.name = answerList.value[k].title
             obj.type =
@@ -1576,8 +1145,12 @@ const getHistory = async (id, page, val) => {
                 ? 'query'
                 : answerList.value[k].type === 'IT专题'
                   ? 'it'
-                  : 'sample'
-            const hasVal = limitData.some((item) => item.name === obj.name)
+                  : answerList.value[k].type === '通用模式'
+                    ? 'sample'
+                    : answerList.value[k].type === '翻译'
+                      ? 'tran'
+                      : 'final'
+            const hasVal = limitData.some(item => item.name === obj.name)
             if (!hasVal) {
               limitData.push(obj)
             }
@@ -1585,10 +1158,7 @@ const getHistory = async (id, page, val) => {
           queryTypes.value = JSON.parse(JSON.stringify(limitData))
         }
         for (var j = 0; j < answerList.value.length; j++) {
-          if (
-            res.data[j].type === '人资行政专题' ||
-            res.data[j].type === 'IT专题'
-          ) {
+          if (res.data[j].type === '人资行政专题' || res.data[j].type === 'IT专题') {
             answerList.value[j].data.answer.isHistory = true
           } else {
             answerList.value[j].data.isHistory = true
@@ -1605,29 +1175,26 @@ const getHistory = async (id, page, val) => {
         }
         if (page) {
           pageType.value = page
-          if (page === 'query' || page === 'it') {
+          if (page === 'query' || page === 'it' || page === 'tran' || page === 'final') {
             for (var h = 0; h < answerList.value.length; h++) {
               if (val === answerList.value[h].title.replace(/\([^)]*\)/g, '')) {
                 activeIndex.value = h
-                tipQuery.value = answerList.value[h].title.replace(
-                  /\([^)]*\)/g,
-                  ''
-                )
+                if (page === 'query' || page === 'it') {
+                  tipQuery.value = answerList.value[h].title.replace(/\([^)]*\)/g, '')
+                }
               }
             }
           }
         }
       }
     })
-    .catch((err) => {
+    .catch(err => {
       console.error('获取回复失败:', err)
     })
 }
 
-
-
 // 终止请求方法
-const cancelCurrentRequest = (val) => {
+const cancelCurrentRequest = val => {
   request.cancelRequest(currentRequestUrl.value)
   ElMessage.success('请求已中止')
   if (val === 'sample') {
@@ -1636,7 +1203,6 @@ const cancelCurrentRequest = (val) => {
     isSampleStop.value = true
     chatQuery.messages.pop()
     activeIndex.value = ''
-    // currentQuestion.value = false
     getHistory()
   }
   if (val === 'query') {
@@ -1651,7 +1217,6 @@ const cancelCurrentRequest = (val) => {
     setTimeout(() => {
       currentMessage.value = ''
     }, 3000)
-    // currentQuestion.value = false
     getHistory()
   }
   if (val === 'tran') {
@@ -1668,7 +1233,7 @@ const cancelCurrentRequest = (val) => {
   }
 }
 
-watch(isSampleLoad, (newValue) => {
+watch(isSampleLoad, newValue => {
   if (newValue) {
   } else {
     if (activeIndex.value !== '') {
@@ -1682,10 +1247,6 @@ watch(isSampleLoad, (newValue) => {
   }
 })
 
-// 组件挂载后初始化
-onMounted(() => {
-  adjustTextareaHeight(textareaInputSample.value) // 初始调整高度
-})
 // 组件卸载时关闭 SSE 连接
 onUnmounted(() => {
   if (interval) {
@@ -1695,30 +1256,16 @@ onUnmounted(() => {
 </script>
 
 <style lang="less">
+.button-item_common {
+  display: flex;
+  width: 100%;
+  margin-top: 40px;
+  flex-direction: row;
+  justify-content: center;
+  margin-bottom: 20px;
+}
 .el-container {
   background-color: #fff;
-}
-.user-info-popup {
-  text-align: center;
-  .user-info {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    .el_avatar {
-      img {
-        width: 100%;
-        height: 100%;
-      }
-    }
-    .user-details {
-      margin-left: 10px;
-      text-align: center;
-
-      .username {
-        font-weight: bold;
-      }
-    }
-  }
 }
 
 .el-main {
@@ -1726,8 +1273,7 @@ onUnmounted(() => {
   background: linear-gradient(
     to bottom,
     rgba(197, 208, 213, 0.2),
-    /* 淡蓝色，透明度 60% */ rgba(188, 214, 218, 0.1)
-      /* 更淡的蓝色，透明度 60% */
+    /* 淡蓝色，透明度 60% */ rgba(188, 214, 218, 0.1) /* 更淡的蓝色，透明度 60% */
   );
   .center-container {
     display: flex;
@@ -1858,7 +1404,6 @@ onUnmounted(() => {
             padding: 13px 15px;
             float: right;
             color: #fff;
-            margin-top: 70px;
             max-width: 600px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -2010,8 +1555,7 @@ onUnmounted(() => {
           background: linear-gradient(
             to bottom,
             rgba(135, 206, 235, 0.3),
-            /* 淡蓝色，透明度 60% */ rgba(224, 247, 250, 0.3)
-              /* 更淡的蓝色，透明度 60% */
+            /* 淡蓝色，透明度 60% */ rgba(224, 247, 250, 0.3) /* 更淡的蓝色，透明度 60% */
           );
           .list_title {
             padding-left: 20px;
@@ -2101,8 +1645,6 @@ onUnmounted(() => {
 .container {
   height: 100vh;
   font-family: 'Microsoft YaHei', Arial, sans-serif;
-
-
 }
 
 .el-aside {

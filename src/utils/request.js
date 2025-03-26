@@ -8,7 +8,7 @@ class Request {
 
     // 全局请求拦截
     this.instance.interceptors.request.use(
-      (config) => {
+      config => {
         const controller = new AbortController()
         const url = config.url || ''
         config.signal = controller.signal
@@ -24,30 +24,35 @@ class Request {
 
         return config
       },
-      (error) => Promise.reject(error)
+      error => Promise.reject(error)
     )
 
     // 全局响应拦截
     this.instance.interceptors.response.use(
-      (response) => {
+      response => {
         const url = response.config.url || ''
         this.abortControllerMap.delete(url)
-        if (response.data.code !== 200) {
-          if (response.data.code === 429) {
-            ElMessage.error({
-              message: '服务器繁忙,请稍后再试',
-              duration: 2000, // 显示3秒
-            })
-          } else {
-            return Promise.reject(
-              new Error(response.data.message || 'Request failed')
-            )
+        if (url === '/AI/query') {
+          if (response.status !== 200) {
+            return Promise.reject(new Error(response.statusText || 'Request failed'))
           }
-        }
+          return response
+        } else {
+          if (response.data.code !== 200) {
+            if (response.data.code === 429) {
+              ElMessage.error({
+                message: '服务器繁忙,请稍后再试',
+                duration: 2000 // 显示3秒
+              })
+            } else {
+              return Promise.reject(new Error(response.data.message || 'Request failed'))
+            }
+          }
 
-        return response.data
+          return response.data
+        }
       },
-      (error) => {
+      error => {
         if (error.response) {
           const status = error.response.status
           switch (status) {
@@ -62,7 +67,7 @@ class Request {
             case 429:
               ElMessage.error({
                 message: '服务器繁忙,请稍后再试',
-                duration: 2000, // 显示3秒
+                duration: 2000 // 显示3秒
               })
               break
             default:
@@ -72,7 +77,7 @@ class Request {
         if (error.code === 'ECONNABORTED') {
           ElMessage.error({
             message: '服务器繁忙,请稍后再试',
-            duration: 2000, // 显示3秒
+            duration: 2000 // 显示3秒
           })
         }
         return Promise.reject(error)
@@ -103,13 +108,13 @@ class Request {
   }
 
   cancelAllRequest() {
-    this.abortControllerMap.forEach((controller) => controller.abort())
+    this.abortControllerMap.forEach(controller => controller.abort())
     this.abortControllerMap.clear()
   }
 
   cancelRequest(url) {
     const urlList = Array.isArray(url) ? url : [url]
-    urlList.forEach((u) => {
+    urlList.forEach(u => {
       this.abortControllerMap.get(u)?.abort()
       this.abortControllerMap.delete(u)
     })
@@ -117,13 +122,13 @@ class Request {
 }
 // 正式服务器 10.180.248.140
 // 测试服务器 10.180.248.141
-// 金浩 10.180.16.96
+// 金浩 10.180.16.132
 const request = new Request({
   baseURL: 'http://10.180.248.141:8080',
   timeout: 180000,
   headers: {
-    'Content-Type': 'application/json',
-  },
+    'Content-Type': 'application/json'
+  }
 })
 
 export default request
