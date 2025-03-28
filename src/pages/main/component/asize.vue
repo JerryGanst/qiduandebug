@@ -346,7 +346,6 @@ const queryAn = (val, index, data) => {
   isSampleStop.value = false
   isQueryStop.value = false
   limitLoading.value = false
-  console.log(val)
   val = index || index === 0 ? questions.value[index] : val
   const queryList = questions.value
   const anList = JSON.parse(JSON.stringify(answerList.value))
@@ -355,7 +354,6 @@ const queryAn = (val, index, data) => {
   const querySample = []
   const queryTran = []
   const queryFinal = []
-  console.log(val)
   for (var j = 0; j < anList.length; j++) {
     if (anList[j].type === '人资行政专题') {
       queryLimit.push(anList[j].title)
@@ -364,7 +362,6 @@ const queryAn = (val, index, data) => {
         pageType.value = 'query'
         selectedMode.value = '人资行政专题'
         currentObj.value.messages = anList[j].data.answer
-        console.log(selectedMode.value)
       }
     } else if (anList[j].type === 'IT专题') {
       queryIt.push(anList[j].title)
@@ -373,7 +370,6 @@ const queryAn = (val, index, data) => {
         pageType.value = 'it'
         selectedMode.value = 'IT专题'
         currentObj.value.messages = anList[j].data.answer
-        console.log(selectedMode.value)
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
@@ -468,7 +464,7 @@ const queryAn = (val, index, data) => {
 }
 
 onMounted(() => {
-  if (localStorage.getItem('userInfo')) {
+  if (localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).id) {
     isLogin.value = true
     const loginData = JSON.parse(localStorage.getItem('userInfo'))
     userInfo.value.id = loginData.id

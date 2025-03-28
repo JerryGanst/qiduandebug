@@ -11,18 +11,18 @@
     </div>
     <div class="content_list" v-if="pageType === 'query' || pageType === 'it'">
       <div class="list_item">
-        <div class="list_title">今日热搜</div>
+        <div class="list_title">近期热搜</div>
         <div class="list_tip">深度搜索您关心的问题</div>
         <div class="list_arry">
           <div v-for="(item, index) in arrList" class="arr_item" v-if="pageType === 'query'">
             <span>{{ index + 1 }}.</span>
-            <span class="item_hover" @click="submitQuestionCurrent(item)">
-              {{ item }}
+            <span class="item_hover" @click="submitQuestionCurrent(item.name)">
+              {{ item.name }}
             </span>
           </div>
           <div v-for="(item, index) in itList" class="arr_item" v-if="pageType === 'it'">
             <span>{{ index + 1 }}.</span>
-            <span class="item_hover" @click="submitQuestionCurrent(item)">{{ item }}</span>
+            <span class="item_hover" @click="submitQuestionCurrent(item.name)">{{ item.name }}</span>
           </div>
         </div>
       </div>
@@ -34,7 +34,7 @@
             <div class="image"><img src="../../../assets/1.png" /></div>
             <div class="img_text">
               <div class="text_title">翻译</div>
-              <div class="text_content">准确将各国语言翻译成中文</div>
+              <div class="text_content">准确翻译成多国语言</div>
             </div>
           </div>
           <div class="img_item" style="margin-top: 10px" @click="changeType('final')">
@@ -56,13 +56,13 @@
     </div>
     <div class="content_list" v-if="pageType === 'sample'">
       <div class="list_item">
-        <div class="list_title">今日热搜</div>
+        <div class="list_title">近期热搜</div>
         <div class="list_tip">深度搜索您关心的问题</div>
         <div class="list_arry">
           <div v-for="(item, index) in historyList" class="arr_item">
             <span>{{ index + 1 }}.</span>
-            <span class="item_hover" @click="submitSampleTitle(item)">
-              {{ item }}
+            <span class="item_hover" @click="submitSampleTitle(item.name)">
+              {{ item.name }}
             </span>
           </div>
         </div>
@@ -75,7 +75,7 @@
             <div class="image"><img src="../../../assets/1.png" /></div>
             <div class="img_text">
               <div class="text_title">翻译</div>
-              <div class="text_content">准确将各国语言翻译成中文</div>
+              <div class="text_content">准确翻译成多国语言</div>
             </div>
           </div>
           <div class="img_item" style="margin-top: 10px" @click="changeType('final')">
@@ -379,9 +379,72 @@ const {
   dots
 } = useShared()
 
-const arrList = ref([])
-const itList = ref([])
-const historyList = ref([])
+const arrList = ref([
+  {
+    index: 1,
+    name: '我进入立讯技术后如何选择导师'
+  },
+  {
+    index: 2,
+    name: '员工延假与销假如何进行'
+  },
+  {
+    index: 3,
+    name: '公司实习生的待遇怎么样'
+  },
+  {
+    index: 4,
+    name: '亲属回避包括哪些等级'
+  },
+  {
+    index: 5,
+    name: '工人是否有宗教信仰的自由'
+  }
+])
+const itList = ref([
+  {
+    index: 1,
+    name: 'mes系统的基础数据怎么维护'
+  },
+  {
+    index: 2,
+    name: 'mes操作的常见异常处理'
+  },
+  {
+    index: 3,
+    name: '会议室建设标准'
+  },
+  {
+    index: 4,
+    name: '桌面云规划怎么做？'
+  },
+  {
+    index: 5,
+    name: '产线设备数据采集怎么做？'
+  }
+])
+const historyList = ref([
+  {
+    index: 1,
+    name: '工作中遇到棘手问题怎么办'
+  },
+  {
+    index: 2,
+    name: '国务院发布的2025年法定节假日安排'
+  },
+  {
+    index: 3,
+    name: '如何锻炼身体'
+  },
+  {
+    index: 4,
+    name: '如何缓解工作压力'
+  },
+  {
+    index: 5,
+    name: '平常该如何注意营养搭配'
+  }
+])
 const lanList = ref(['中文', '英文', '西班牙语', '越南语'])
 const tranPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
@@ -445,32 +508,32 @@ const changeType = val => {
   finalQuest.value = ''
   pageType.value = val
 }
-const getTopQuestion = val => {
-  request
-    .post('/Message/getTopQuestion?type=' + val)
-    .then(res => {
-      if (res.status) {
-        if (val === '人资行政专题') {
-          arrList.value = res.data
-        } else if (val === '通用模式') {
-          historyList.value = res.data
-        } else if (val === 'IT专题') {
-          itList.value = res.data
-        }
-      }
-    })
-    .catch(err => {
-      console.error(err)
-    })
-}
+// const getTopQuestion = val => {
+//   request
+//     .post('/Message/getTopQuestion?type=' + val)
+//     .then(res => {
+//       if (res.status) {
+//         if (val === '人资行政专题') {
+//           arrList.value = res.data
+//         } else if (val === '通用模式') {
+//           historyList.value = res.data
+//         } else if (val === 'IT专题') {
+//           itList.value = res.data
+//         }
+//       }
+//     })
+//     .catch(err => {
+//       console.error(err)
+//     })
+// }
 
 // 组件挂载后初始化
 onMounted(() => {
   nextTick(() => {
     adjustTextareaHeight(textareaInputSample.value) // 初始调整高度
-    getTopQuestion('通用模式')
-    getTopQuestion('人资行政专题')
-    getTopQuestion('IT专题')
+    // getTopQuestion('通用模式')
+    // getTopQuestion('人资行政专题')
+    // getTopQuestion('IT专题')
   })
 })
 </script>

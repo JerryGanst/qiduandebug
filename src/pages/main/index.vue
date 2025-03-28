@@ -115,7 +115,7 @@
             <div class="sample_item" ref="messageContainer">
               <div
                 class="sample_chat"
-                v-if="pageType === 'sample' && chatQuery.messages.length > 0"
+                v-if="pageType === 'sample' && chatQuery.messages.length > 0 && !limitLoading"
                 v-for="(item, index) in chatQuery.messages"
               >
                 <div
@@ -129,7 +129,7 @@
               </div>
               <div
                 class="sample_chat"
-                v-if="pageType === 'sample' && limitLoading && chatCurrent.messages.length > 0"
+                v-if="pageType === 'sample' && limitLoading && chatCurrent.messages.length > 0 && limitLoading"
                 v-for="(item, index) in chatCurrent.messages"
               >
                 <div
@@ -140,6 +140,28 @@
                   {{ item.content }}
                 </div>
                 <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" />
+              </div>
+            </div>
+
+            <div class="query_common" v-if="pageType === 'sample' && !limitLoading && chatQuery.messages.length > 0">
+              <div>
+                <img
+                  src="../../assets/refresh.png"
+                  style="margin-left: 10px"
+                  class="query_common_img"
+                  @click="refreshData"
+                />
+              </div>
+              <div>
+                <img src="../../assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+              </div>
+              <div>
+                <img
+                  src="../../assets/down.png"
+                  style="margin-left: 15px"
+                  @click="downCommon"
+                  class="query_common_img"
+                />
               </div>
             </div>
           </div>
@@ -602,6 +624,9 @@ const refreshData = () => {
     submitTran(transQuest.value, true)
   } else if (pageType.value === 'final') {
     submitFinal(finalQuest.value, true)
+  } else if (pageType.value === 'sample') {
+    console.log(chatQuery.messages.length)
+    submitSample(chatQuery.messages[chatQuery.messages.length - 2].content, true)
   }
 }
 const upCommon = async () => {
@@ -723,7 +748,7 @@ const autoScroll = () => {
     }
   })
 }
-const submitSample = async val => {
+const submitSample = async (val, isRefresh) => {
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return
@@ -733,7 +758,6 @@ const submitSample = async val => {
     ElMessage.warning('请输入您的问题再发送')
     return
   }
-
   if (val && !isObject(val)) {
     newQuestion.value = val
   }
@@ -741,18 +765,21 @@ const submitSample = async val => {
     ElMessage.warning('请输入您的问题再发送')
     return
   }
-
   currentQuestion.value = true
   isSampleStop.value = false
   dynamicRows.value = 1
   isSampleLoad.value = true
   limitLoading.value = true
+  console.log(val)
   const currentData = {
     role: 'user',
     content: newQuestion.value
   }
   let mes = {
     messages: []
+  }
+  if (isRefresh) {
+    chatQuery.messages.length -= 2
   }
   mes = JSON.parse(JSON.stringify(chatQuery))
   mes.messages.push(currentData)
@@ -769,7 +796,7 @@ const submitSample = async val => {
   const queryValue = newQuestion.value
   tipQuery.value = queryValue
   newQuestion.value = ''
-  if (questions.value.includes(queryValue + '(sample)')) {
+  if (questions.value.includes(queryValue + '(sample)') && !isRefresh) {
     const qData = queryValue + '(sample)'
     for (var ms = 0; ms < questions.value.length; ms++) {
       if (qData === questions.value[ms]) {
@@ -779,6 +806,23 @@ const submitSample = async val => {
     asizeRef.value.queryAn(qData, '')
     isSampleLoad.value = false
     return
+  }
+
+  if (questions.value.includes(queryValue + '(sample)') && isRefresh) {
+    const qData = queryValue + '(sample)'
+    const index = questions.value.findIndex(item => item === qData)
+    const idx = answerList.value.findIndex(item => item.title === qData)
+    const targetId = answerList.value.find(item => item.title === qData)?.id
+    if (index !== -1) {
+      questions.value.splice(index, 1)
+    }
+    if (idx !== -1) {
+      answerList.value.splice(index, 1)
+    }
+
+    // chatQuery.messages = mes.messages
+    // console.log(mes.messages)
+    await asizeRef.value.deleteData(targetId, isRefresh)
   }
 
   const anList = JSON.parse(JSON.stringify(answerList.value))
@@ -814,7 +858,7 @@ const submitSample = async val => {
       messageContainer.value.scrollTop = messageContainer.value.scrollHeight
     }
   })
-  currentRequestUrl.value = '/AI/chatStream'
+  // currentRequestUrl.value = '/AI/chatStream'
   const controller = new AbortController()
   const assistantMsg = { role: 'assistant', content: '' }
   mes.messages.push(assistantMsg)
@@ -860,6 +904,18 @@ const submitSample = async val => {
         limitId.value = ''
         currentRequestUrl.value = ''
         chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
+        nextTick(() => {
+          // 滚动到底部
+          if (messageContainer.value) {
+            const messages = messageContainer.value.children
+            if (messages.length > 0) {
+              const lastMessage = messages[messages.length - 2]
+              // 滚动到最后一个消息的开头部分
+              lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+            // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+          }
+        })
         postSample(id)
         break
       }
@@ -871,18 +927,9 @@ const submitSample = async val => {
         // 优化正则匹配以保留原始符号（包括换行符和嵌套结构）[3,4](@ref)
         const jsonMatch = chunk.match(/data:\s*([\s\S]*?)(?=\ndata:|\n\n|$)/)
         if (jsonMatch) {
-          nextTick(() => {
-            // 滚动到底部
-            if (messageContainer.value) {
-              const messages = messageContainer.value.children
-              if (messages.length > 0) {
-                const lastMessage = messages[messages.length - 2]
-                // 滚动到最后一个消息的开头部分
-                lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }
-              // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
-            }
-          })
+          if (messageContainer.value) {
+            messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+          }
           try {
             const { content, role } = JSON.parse(jsonMatch[1])
             // 直接拼接原始内容（不处理空格/换行符）[2,4](@ref)
@@ -1364,7 +1411,6 @@ const getHistory = async (id, page, val) => {
                   // 滚动到最后一个消息的开头部分
                   lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
-                // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
               }
             })
           }
@@ -1412,12 +1458,10 @@ const cancelCurrentRequest = val => {
   if (val === 'sample') {
     isSampleLoad.value = false
     limitLoading.value = false
-    limitId.value = ''
     isSampleStop.value = true
     chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
-    // activeIndex.value = ''
-    // chatCurrent.messages.pop()
-    // getHistory()
+    postSample(limitId.value)
+    limitId.value = ''
   }
   if (val === 'query') {
     isSampleLoad.value = false
@@ -1606,6 +1650,7 @@ onUnmounted(() => {
         overflow-y: auto;
         overflow-x: hidden;
         margin-top: 10px;
+        scroll-behavior: smooth;
         .sample_chat {
           font-size: 14px;
           letter-spacing: 1px;
