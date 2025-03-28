@@ -145,7 +145,7 @@
       <span v-if="!finalData.title">{{ dots }}</span>
     </div>
     <div class="title_final_tip">
-      <div class="title_final_query" v-if="pageType === 'final'" :style="{ padding: finalQuest ? '10px 15px' : '0px' }">
+      <div class="title_final_query" v-if="pageType === 'final'" :style="{ padding: finalQuest ? '13px 15px' : '0px' }">
         <div>{{ finalQuest }}</div>
       </div>
     </div>
@@ -202,12 +202,26 @@
         @keyup.shift.enter="handleShiftEnter"
         ref="textareaInputQuery"
         type="textarea"
+        :maxlength="4096"
         :rows="dynamicRows"
         @input="adjustTextareaHeight('textareaInputQuery')"
       />
       <!-- 发送图标 -->
-      <div class="send-icon" @click="submitQuestionSend">
-        <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" />
+      <div class="send-icon">
+        <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
+          <el-upload
+            action="#"
+            :http-request="handleUpload"
+            :before-upload="beforeUpload"
+            :show-file-list="false"
+            :accept="allowedTypes"
+          >
+            <el-icon class="upload-icon" :size="42">
+              <Document />
+            </el-icon>
+          </el-upload>
+        </el-tooltip> -->
+        <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitQuestionSend" />
       </div>
     </div>
     <div class="textarea" v-if="pageType === 'sample'">
@@ -221,12 +235,26 @@
         @keyup.shift.enter="handleShiftEnter"
         ref="textareaInputSample"
         type="textarea"
+        :maxlength="4096"
         :rows="dynamicRows"
         @input="adjustTextareaHeight('textareaInputSample')"
       />
       <!-- 发送图标 -->
-      <div class="send-icon" @click="submitSampleSend">
-        <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" />
+      <div class="send-icon">
+        <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
+          <el-upload
+            action="#"
+            :http-request="handleUpload"
+            :before-upload="beforeUpload"
+            :show-file-list="false"
+            :accept="allowedTypes"
+          >
+            <el-icon class="upload-icon" :size="42">
+              <Document />
+            </el-icon>
+          </el-upload>
+        </el-tooltip> -->
+        <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitSampleSend" />
       </div>
     </div>
     <div class="tran_select" v-if="pageType === 'tran'">
@@ -246,12 +274,26 @@
         @keyup.shift.enter="handleShiftEnter"
         ref="textareaInputTran"
         type="textarea"
+        :maxlength="4096"
         :rows="dynamicRows"
         @input="adjustTextareaHeight('textareaInputTran')"
       />
       <!-- 发送图标 -->
-      <div class="send-icon" @click="submitTranSend">
-        <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" />
+      <div class="send-icon">
+        <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
+          <el-upload
+            action="#"
+            :http-request="handleUpload"
+            :before-upload="beforeUpload"
+            :show-file-list="false"
+            :accept="allowedTypes"
+          >
+            <el-icon class="upload-icon" :size="42">
+              <Document />
+            </el-icon>
+          </el-upload>
+        </el-tooltip> -->
+        <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitTranSend" />
       </div>
     </div>
 
@@ -266,12 +308,26 @@
         @keyup.shift.enter="handleShiftEnter"
         ref="textareaInputFinal"
         type="textarea"
+        :maxlength="4096"
         :rows="dynamicRows"
         @input="adjustTextareaHeight('textareaInputFinal')"
       />
       <!-- 发送图标 -->
-      <div class="send-icon" @click="submitFinalSend">
-        <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" />
+      <div class="send-icon">
+        <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
+          <el-upload
+            action="#"
+            :http-request="handleUpload"
+            :before-upload="beforeUpload"
+            :show-file-list="false"
+            :accept="allowedTypes"
+          >
+            <el-icon class="upload-icon" :size="42">
+              <Document />
+            </el-icon>
+          </el-upload>
+        </el-tooltip> -->
+        <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitFinalSend" />
       </div>
     </div>
   </div>

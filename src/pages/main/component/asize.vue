@@ -140,6 +140,7 @@ const {
   queryTypes,
   chatQuery,
   isLogin,
+  limitId,
   finalIng,
   dynamicRows,
   isSampleLoad,
@@ -226,6 +227,7 @@ const startNewConversation = () => {
   dynamicRows.value = 1
   activeIndex.value = ''
   chatQuery.messages = []
+  chatQuery.isLoading = false
   currentId.value = ''
   pageType.value = 'sample'
   selectedMode.value = '通用模式'
@@ -239,6 +241,7 @@ const handleLogout = () => {
   queryTypes.value = []
   answerList.value = []
   chatQuery.messages = []
+  chatQuery.isLoading = false
   currentId.value = ''
   currentQuestion.value = false
   isLogin.value = false
@@ -321,6 +324,7 @@ const deleteData = async (id, isRefresh) => {
         if (!isRefresh) {
           ElMessage.success('删除成功！')
           chatQuery.messages = []
+          chatQuery.isLoading = false
           transQuest.value = ''
           transData.value = ''
           pageType.value = 'sample'
@@ -342,15 +346,16 @@ const queryAn = (val, index, data) => {
   isSampleStop.value = false
   isQueryStop.value = false
   limitLoading.value = false
+  console.log(val)
   val = index || index === 0 ? questions.value[index] : val
   const queryList = questions.value
-  console.log(answerList.value)
   const anList = JSON.parse(JSON.stringify(answerList.value))
-  console.log(anList)
   const queryLimit = []
+  const queryIt = []
   const querySample = []
   const queryTran = []
   const queryFinal = []
+  console.log(val)
   for (var j = 0; j < anList.length; j++) {
     if (anList[j].type === '人资行政专题') {
       queryLimit.push(anList[j].title)
@@ -359,14 +364,16 @@ const queryAn = (val, index, data) => {
         pageType.value = 'query'
         selectedMode.value = '人资行政专题'
         currentObj.value.messages = anList[j].data.answer
+        console.log(selectedMode.value)
       }
     } else if (anList[j].type === 'IT专题') {
-      queryLimit.push(anList[j].title)
+      queryIt.push(anList[j].title)
       if (val == anList[j].title) {
         currentId.value = anList[j].id
         pageType.value = 'it'
         selectedMode.value = 'IT专题'
         currentObj.value.messages = anList[j].data.answer
+        console.log(selectedMode.value)
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
@@ -374,6 +381,7 @@ const queryAn = (val, index, data) => {
         pageType.value = 'sample'
         selectedMode.value = '通用模式'
         chatQuery.messages = anList[j].data
+        chatQuery.isLoading = false
         currentId.value = anList[j].id
       }
     } else if (anList[j].type === '翻译') {
@@ -412,11 +420,18 @@ const queryAn = (val, index, data) => {
       } else if (pageType.value === 'sample') {
         const hasName = anList.some(item => item.title === val)
         if (hasName) {
-          limitLoading.value = false
+          if (currentId.value === limitId.value) {
+            selectedMode.value = '通用模式'
+            limitLoading.value = true
+          } else {
+            selectedMode.value = '通用模式'
+            limitLoading.value = false
+          }
         } else {
           nextTick(() => {
+            selectedMode.value = '通用模式'
             limitLoading.value = true
-            chatQuery.messages = limitSample.value.messages
+            // chatQuery.messages = limitSample.value.messages
           })
         }
       } else if (pageType.value === 'tran') {
@@ -437,11 +452,12 @@ const queryAn = (val, index, data) => {
   if (pageType.value === 'query' && !queryLimit.includes(val)) {
     currentObj.value.messages = {}
   }
-  if (pageType.value === 'it' && !queryLimit.includes(val)) {
+  if (pageType.value === 'it' && !queryIt.includes(val)) {
     currentObj.value.messages = {}
   }
   if (pageType.value === 'sample' && !querySample.includes(val)) {
     chatQuery.messages = []
+    chatQuery.isLoading = false
   }
   if (pageType.value === 'tran' && !queryTran.includes(val)) {
     transData.value = ''

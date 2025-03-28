@@ -10,18 +10,18 @@
 
 <script>
 export default {
-  name: 'App',
-};
+  name: 'App'
+}
 </script>
 <style lang="less">
 body {
   margin: 0px;
-  background-color: #EAEAEA;
+  background-color: #eaeaea;
 }
-*{
+* {
   box-sizing: content-box;
 }
-.el-menu{
+.el-menu {
   max-height: 620px;
   overflow-y: auto;
 }
@@ -44,25 +44,24 @@ body {
 .el-menu::-webkit-scrollbar-thumb:hover {
   background: #555; /* 滑块悬停时的颜色 */
 }
-.el-textarea__inner{
+.el-textarea__inner {
   padding: 18px 60px 18px 15px !important;
   letter-spacing: 1px; /* 设置字间距 */
 }
-.el-menu--vertical:not(.el-menu--collapse):not(.el-menu--popup-container) .el-menu-item{
+.el-menu--vertical:not(.el-menu--collapse):not(.el-menu--popup-container) .el-menu-item {
   height: 40px;
   padding: 0 25px 0 15px !important;
 }
-.el-menu-item span{
+.el-menu-item span {
   height: 40px;
   line-height: 40px;
 }
 
-.el-textarea__inner{
+.el-textarea__inner {
   background-color: #fff !important;
 }
-.el-textarea__inner{
+.el-textarea__inner {
   border-radius: 16px !important;
-  
 }
 /* WebKit 浏览器滚动条样式 */
 .el-textarea__inner::-webkit-scrollbar {
@@ -91,5 +90,8 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.el-icon {
+  color: #707070 !important;
 }
 </style>

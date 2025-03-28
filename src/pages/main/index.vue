@@ -100,7 +100,7 @@
                 {{
                   isSampleStop
                     ? '请重新提出您的问题'
-                    : chatQuery.messages.length > 0 && !limitLoading
+                    : chatQuery.messages.length > 0 && chatQuery.isLoading === false && !limitLoading
                       ? '最佳答案已生成'
                       : '开始总结答案...'
                 }}
@@ -111,11 +111,26 @@
               <span>正在为您解答,请稍等</span>
               <span>{{ dots }}</span>
             </div>
+
             <div class="sample_item" ref="messageContainer">
               <div
                 class="sample_chat"
                 v-if="pageType === 'sample' && chatQuery.messages.length > 0"
                 v-for="(item, index) in chatQuery.messages"
+              >
+                <div
+                  v-if="index % 2 === 0"
+                  class="sample_chat_query"
+                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                >
+                  {{ item.content }}
+                </div>
+                <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" />
+              </div>
+              <div
+                class="sample_chat"
+                v-if="pageType === 'sample' && limitLoading && chatCurrent.messages.length > 0"
+                v-for="(item, index) in chatCurrent.messages"
               >
                 <div
                   v-if="index % 2 === 0"
@@ -146,13 +161,31 @@
                 @keydown="summitPost"
                 @keyup.shift.enter="handleShiftEnter"
                 type="textarea"
+                :maxlength="4096"
                 ref="textareaInputQuery"
                 :rows="dynamicRows"
                 @input="adjustTextareaHeight('textareaInputQuery')"
               />
               <!-- 发送图标 -->
-              <div class="send-icon" @click="submitQuestionSend">
-                <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" />
+              <div class="send-icon">
+                <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
+                  <el-upload
+                    action="#"
+                    :http-request="handleUpload"
+                    :before-upload="beforeUpload"
+                    :show-file-list="false"
+                    :accept="allowedTypes"
+                  >
+                    <el-icon class="upload-icon" :size="42">
+                      <Document />
+                    </el-icon>
+                  </el-upload>
+                </el-tooltip> -->
+                <img
+                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                  class="arrow"
+                  @click="submitQuestionSend"
+                />
               </div>
             </div>
             <div class="textarea" v-if="pageType === 'sample'">
@@ -165,13 +198,31 @@
                 @keydown="samplePost"
                 @keyup.shift.enter="handleShiftEnter"
                 ref="textareaInputSample"
+                :maxlength="4096"
                 type="textarea"
                 :rows="dynamicRows"
                 @input="adjustTextareaHeight('textareaInputSample')"
               />
               <!-- 发送图标 -->
-              <div class="send-icon" @click="submitSampleSend">
-                <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" />
+              <div class="send-icon">
+                <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
+                  <el-upload
+                    action="#"
+                    :http-request="handleUpload"
+                    :before-upload="beforeUpload"
+                    :show-file-list="false"
+                    :accept="allowedTypes"
+                  >
+                    <el-icon class="upload-icon" :size="42">
+                      <Document />
+                    </el-icon>
+                  </el-upload>
+                </el-tooltip> -->
+                <img
+                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                  class="arrow"
+                  @click="submitSampleSend"
+                />
               </div>
             </div>
           </div>
@@ -201,6 +252,7 @@
 // 10.180.248.140
 import AsizeComponent from './component/asize.vue'
 import Entry from './component/entry.vue'
+import { Document } from '@element-plus/icons-vue' // 引入需要的图标
 import { useShared } from '../../utils/useShared'
 import { ElButton, ElMessage } from 'element-plus' // 引入 ElMessage
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
@@ -245,6 +297,8 @@ const {
   transQuest,
   finalQuest,
   finalData,
+  chatCurrent,
+  limitId,
   dots
 } = useShared()
 
@@ -266,6 +320,34 @@ const isDisabled = ref(false)
 const limitQuery = ref('')
 const currentRequestUrl = ref('')
 let interval
+
+// 允许的 MIME 类型映射
+const allowedTypes = [
+  'text/plain',
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/msword'
+].join(',')
+
+// 文件验证
+const beforeUpload = file => {
+  const isValidType = allowedTypes.includes(file.type)
+  if (!isValidType) {
+    ElMessage.error('文件格式不支持')
+    return false
+  }
+  return true
+}
+
+// 自定义上传逻辑
+const fileName = ref('')
+const handleUpload = ({ file }) => {
+  // 模拟上传成功
+  setTimeout(() => {
+    fileName.value = file.name
+    ElMessage.success('上传成功')
+  }, 1000)
+}
 
 // 函数区域
 const removeItemById = (arr, id) => {
@@ -592,14 +674,15 @@ const submitCommon = async () => {
 
 const submitQuestionSend = () => {
   if (isSampleLoad.value) {
-    stopQuery()
+    stopQuery('query')
     return
   }
   submitQuestion()
 }
 const submitSampleSend = () => {
   if (isSampleLoad.value) {
-    cancelCurrentRequest('sample')
+    stopQuery('sample')
+    // cancelCurrentRequest('sample')
     return
   }
   submitSample()
@@ -619,17 +702,26 @@ const submitSampleTitle = val => {
   }
   submitSample(val)
 }
-const stopQuery = async () => {
+const stopQuery = async type => {
   request
     .post('/AI/stop?userId=' + userInfo.value.id, {
       // showLoading: true
     })
     .then(res => {
       if (res.status) {
-        cancelCurrentRequest('query')
+        cancelCurrentRequest(type)
       }
     })
     .catch(err => {})
+}
+// 自动滚动
+const autoScroll = () => {
+  nextTick(() => {
+    const container = document.querySelector('.message-container')
+    if (container) {
+      container.scrollTop = container.scrollHeight + 100
+    }
+  })
 }
 const submitSample = async val => {
   if (!isLogin.value) {
@@ -673,6 +765,7 @@ const submitSample = async val => {
       params.messages[j].role = 'assistant'
     }
   }
+  params.userId = userInfo.value.id
   const queryValue = newQuestion.value
   tipQuery.value = queryValue
   newQuestion.value = ''
@@ -697,6 +790,7 @@ const submitSample = async val => {
   }
   if (hasId) {
     id = currentId.value
+    limitId.value = id
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
 
@@ -714,48 +808,135 @@ const submitSample = async val => {
   }
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   interval = setInterval(updateDots, 500)
-  // 使用一个对象记录哪些 content 已经有 user 了
-  chatQuery.messages = mes.messages
+
   nextTick(() => {
     if (messageContainer.value) {
       messageContainer.value.scrollTop = messageContainer.value.scrollHeight
     }
   })
-  currentRequestUrl.value = '/AI/chat'
-  request
-    .post('/AI/chat', JSON.stringify(params))
-    .then(res => {
-      clearInterval(interval)
-      isSampleLoad.value = false
-      limitLoading.value = false
-      currentRequestUrl.value = ''
-      if (res.status) {
-        limitSample.value = {
-          messages: []
-        }
-        const newMessage = { ...res.data.message } //
-        mes.messages.push(newMessage)
-        chatQuery.messages = mes.messages
-        nextTick(() => {
-          // 滚动到底部
-          if (messageContainer.value) {
-            const messages = messageContainer.value.children
-            if (messages.length > 0) {
-              const lastMessage = messages[messages.length - 2]
-              // 滚动到最后一个消息的开头部分
-              lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
-            // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
-          }
-        })
+  currentRequestUrl.value = '/AI/chatStream'
+  const controller = new AbortController()
+  const assistantMsg = { role: 'assistant', content: '' }
+  mes.messages.push(assistantMsg)
+  // 使用一个对象记录哪些 content 已经有 user 了
+  chatCurrent.messages = mes.messages
+  chatQuery.isLoading = true
+  try {
+    // 替换为实际的后端接口地址
+    const res = await fetch('http://10.180.248.141:8080/AI/chatStream', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(params)
+    })
+    // 处理流式数据
+    const reader = res.body.getReader()
+    if (res.status === 429) {
+      ElMessage.error('服务器繁忙,请稍后再试')
+      return
+    }
+    const decoder = new TextDecoder() // 启用流模式解码
+    let buffer = '' // 缓冲区用于存储不完整的数据
+    let isFirstChunk = true // 标记是否为第一个数据块
+
+    // 新增防抖更新机制
+    let updateTimer
+    const scheduleUpdate = () => {
+      clearTimeout(updateTimer)
+      updateTimer = setTimeout(() => {
+        chatCurrent.messages.splice(chatCurrent.messages.length - 1, 1, { ...assistantMsg })
+        autoScroll()
+      }, 100) // 100ms更新间隔
+    }
+
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) {
+        clearInterval(interval)
+        isSampleLoad.value = false
+        limitLoading.value = false
+        chatQuery.isLoading = false
+        limitId.value = ''
+        currentRequestUrl.value = ''
+        chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
         postSample(id)
+        break
       }
-    })
-    .catch(err => {
-      currentRequestUrl.value = ''
-      clearInterval(interval)
-      console.error(err)
-    })
+      buffer += decoder.decode(value, { stream: true })
+      // 使用更安全的分割方式（避免截断 JSON 结构）[3](@ref)
+      const chunks = buffer.split(/(?=data:)/g)
+      buffer = chunks.pop() || ''
+      chunks.forEach(chunk => {
+        // 优化正则匹配以保留原始符号（包括换行符和嵌套结构）[3,4](@ref)
+        const jsonMatch = chunk.match(/data:\s*([\s\S]*?)(?=\ndata:|\n\n|$)/)
+        if (jsonMatch) {
+          nextTick(() => {
+            // 滚动到底部
+            if (messageContainer.value) {
+              const messages = messageContainer.value.children
+              if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 2]
+                // 滚动到最后一个消息的开头部分
+                lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+              // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+            }
+          })
+          try {
+            const { content, role } = JSON.parse(jsonMatch[1])
+            // 直接拼接原始内容（不处理空格/换行符）[2,4](@ref)
+            assistantMsg.content += content
+            chatCurrent.messages.splice(chatCurrent.messages.length - 1, 1, { ...assistantMsg })
+          } catch (e) {
+            ElMessage.error('数据格式异常')
+          }
+        }
+      })
+    }
+  } catch (error) {
+    console.error('获取回复失败:', error)
+    chatQuery.isLoading = false
+    isSampleLoad.value = false
+    limitId.value = ''
+    queryIng.value = false
+    ElMessage.error('服务器繁忙,请稍后再试')
+  }
+
+  // request
+  //   .post('/AI/chat', JSON.stringify(params))
+  //   .then(res => {
+  //     clearInterval(interval)
+  //     isSampleLoad.value = false
+  //     limitLoading.value = false
+  //     currentRequestUrl.value = ''
+  //     if (res.status) {
+  //       limitSample.value = {
+  //         messages: []
+  //       }
+  //       const newMessage = { ...res.data.message } //
+  //       mes.messages.push(newMessage)
+  //       chatQuery.messages = mes.messages
+  //       nextTick(() => {
+  //         // 滚动到底部
+  //         if (messageContainer.value) {
+  //           const messages = messageContainer.value.children
+  //           if (messages.length > 0) {
+  //             const lastMessage = messages[messages.length - 2]
+  //             // 滚动到最后一个消息的开头部分
+  //             lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  //           }
+  //           // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+  //         }
+  //       })
+  //       postSample(id)
+  //     }
+  //   })
+  //   .catch(err => {
+  //     currentRequestUrl.value = ''
+  //     clearInterval(interval)
+  //     console.error(err)
+  //   })
 }
 const submitTran = async (val, isRefresh) => {
   if (!isLogin.value) {
@@ -894,6 +1075,7 @@ const submitQuestion = async (val, isRefresh) => {
   newQuestion.value = ''
   queryIng.value = true
   isSampleLoad.value = true
+  const pgType = pageType.value
   const addTitle = pageType.value === 'query' ? '(query)' : '(it)'
   if (questions.value.includes(queryValue + addTitle) && !isRefresh) {
     queryIng.value = false
@@ -981,7 +1163,7 @@ const submitQuestion = async (val, isRefresh) => {
           // loadingInstance.close();
           currentObj.value.messages = JSON.parse(element)
           currentObj.value.messages.isHistory = true
-          postQuestion(JSON.parse(element), queryValue, pageType.value, isRefresh)
+          postQuestion(JSON.parse(element), queryValue, pgType, isRefresh)
         } else {
           currentObj.value.messageList.push(JSON.parse(element))
         }
@@ -1170,17 +1352,47 @@ const getHistory = async (id, page, val) => {
         }
         for (var s = 0; s < answerList.value.length; s++) {
           if (id === answerList.value[s].id) {
+            currentQuestion.value = true
             activeIndex.value = s
+            selectedMode.value = answerList.value[0].type
+            nextTick(() => {
+              // 滚动到底部
+              if (messageContainer.value) {
+                const messages = messageContainer.value.children
+                if (messages.length > 0) {
+                  const lastMessage = messages[messages.length - 2]
+                  // 滚动到最后一个消息的开头部分
+                  lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }
+                // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+              }
+            })
           }
         }
         if (page) {
           pageType.value = page
+          const type =
+            page === 'query'
+              ? '人资行政专题'
+              : page === 'it'
+                ? 'IT专题'
+                : page === 'sample'
+                  ? '通用模式'
+                  : page === 'tran'
+                    ? '翻译'
+                    : '总结'
           if (page === 'query' || page === 'it' || page === 'tran' || page === 'final') {
             for (var h = 0; h < answerList.value.length; h++) {
-              if (val === answerList.value[h].title.replace(/\([^)]*\)/g, '')) {
+              if (val === answerList.value[h].title.replace(/\([^)]*\)/g, '') && type === answerList.value[h].type) {
                 activeIndex.value = h
+                console.log(answerList.value[0].type)
+                selectedMode.value = answerList.value[0].type
                 if (page === 'query' || page === 'it') {
+                  currentQuestion.value = true
                   tipQuery.value = answerList.value[h].title.replace(/\([^)]*\)/g, '')
+                }
+                if (page === 'tran' || page === 'final') {
+                  currentQuestion.value = false
                 }
               }
             }
@@ -1200,10 +1412,12 @@ const cancelCurrentRequest = val => {
   if (val === 'sample') {
     isSampleLoad.value = false
     limitLoading.value = false
+    limitId.value = ''
     isSampleStop.value = true
-    chatQuery.messages.pop()
-    activeIndex.value = ''
-    getHistory()
+    chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
+    // activeIndex.value = ''
+    // chatCurrent.messages.pop()
+    // getHistory()
   }
   if (val === 'query') {
     isSampleLoad.value = false
@@ -1233,19 +1447,17 @@ const cancelCurrentRequest = val => {
   }
 }
 
-watch(isSampleLoad, newValue => {
-  if (newValue) {
-  } else {
-    if (activeIndex.value !== '') {
-      selectedMode.value =
-        queryTypes.value[activeIndex.value].type === 'sample'
-          ? '通用模式'
-          : queryTypes.value[activeIndex.value].type === 'query'
-            ? '人资行政专题'
-            : 'IT专题'
-    }
-  }
-})
+// watch(isSampleLoad, newValue => {
+//   if (newValue) {
+//   } else {
+//     if (activeIndex.value !== '') {
+//       nextTick(() => {
+//         console.log(answerList.value)
+//         selectedMode.value = answerList.value[0].type
+//       })
+//     }
+//   }
+// })
 
 // 组件卸载时关闭 SSE 连接
 onUnmounted(() => {
@@ -1529,6 +1741,7 @@ onUnmounted(() => {
           color: #fff;
           margin-top: 35px;
           max-width: 600px;
+          line-height: 24px;
           overflow: hidden;
           text-overflow: ellipsis;
           font-size: 14px;
@@ -1580,8 +1793,13 @@ onUnmounted(() => {
             .arr_item {
               line-height: 36px;
               cursor: pointer;
+              display: flex;
               .item_hover {
                 padding-left: 3px;
+                display: -webkit-box;
+                -webkit-line-clamp: 1; /* 显示行数 */
+                -webkit-box-orient: vertical;
+                overflow: hidden;
               }
               .item_hover:hover {
                 color: #409eff;
@@ -1668,6 +1886,7 @@ onUnmounted(() => {
     bottom: 3px;
     cursor: pointer;
     transition: color 0.3s;
+    display: flex;
   }
   .send-icon img {
     width: 44px;

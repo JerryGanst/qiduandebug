@@ -29,6 +29,10 @@ const chatQuery = reactive({
   //通用模式数据对象
   messages: []
 })
+const chatCurrent = reactive({
+  //通用模式数据对象
+  messages: []
+})
 const isLogin = ref(false) // 判断是否登录
 const dynamicRows = ref(1) // 问答文本域的动态行数（高度）
 const isSampleLoad = ref(false) // 判断是否正在问答状态
@@ -50,7 +54,8 @@ const selectedLan = ref('中文')
 const transData = ref('')
 const transQuest = ref('')
 const dots = ref('.') // 初始点号
-// 动态调整 textarea 高度的方法
+const limitId = ref('')
+
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -60,37 +65,74 @@ const adjustTextareaHeight = val => {
         : val === 'textareaInputTran'
           ? textareaInputTran
           : textareaInputFinal
-  const textarea = textareaRef.value?.textarea // 获取 textarea 元素
+  const textarea = textareaRef.value?.textarea
+
   if (textarea) {
-    // 重置行高，以便重新计算
-    textarea.style.height = 'auto'
-    // 获取计算后的样式
+    // 强制重置高度（核心修改点）
+    textarea.style.height = '0px' // 先压缩到最小高度
     const computedStyle = window.getComputedStyle(textarea)
-    // 计算 lineHeight（考虑 Element Plus 的默认 line-height: 1.5）
-    const lineHeight = parseFloat(computedStyle.lineHeight)
-    // 计算 paddingTop 和 paddingBottom
-    const paddingTop = parseFloat(computedStyle.paddingTop)
-    const paddingBottom = parseFloat(computedStyle.paddingBottom)
-    // 计算内容高度（减去 padding）
-    const scrollHeight = textarea.scrollHeight - paddingTop - paddingBottom
-    // 计算行数
-    const rows = Math.floor(scrollHeight / lineHeight)
 
-    // 只有当行数变化时，才更新 dynamicRows
-    if (rows !== dynamicRows.value) {
-      dynamicRows.value = Math.min(Math.max(rows, 1), 4) // 限制行数在 1 到 4 之间
-    }
+    // 计算行高（兼容 Element Plus 默认 line-height: 1.5）
+    const lineHeight = parseFloat(computedStyle.lineHeight) || 24 // 默认24px备用
+    const padding = parseFloat(computedStyle.paddingTop) + parseFloat(computedStyle.paddingBottom)
 
-    // 根据行数动态设置 overflow-y
-    if (rows > 4) {
-      textarea.style.overflowY = 'auto' // 超过 4 行时显示滚动条
-    } else {
-      textarea.style.overflowY = 'hidden' // 小于等于 4 行时隐藏滚动条
-    }
+    // 计算实际内容高度（含滚动高度）
+    const scrollHeight = textarea.scrollHeight
+
+    // 计算行数（四舍五入代替 Math.floor）
+    const rows = Math.round((scrollHeight - padding) / lineHeight)
+    const clampedRows = Math.min(Math.max(rows, 1), 4) // 限制1-4行
+
+    // 直接设置高度（无论行数是否变化）
+    textarea.style.height = `${lineHeight * clampedRows + padding}px`
+
+    // 滚动条逻辑（保留原有逻辑）
+    textarea.style.overflowY = rows > 4 ? 'auto' : 'hidden'
   }
 }
+// 动态调整 textarea 高度的方法
+// const adjustTextareaHeight = val => {
+//   console.log(1)
+//   const textareaRef =
+//     val === 'textareaInputQuery'
+//       ? textareaInputQuery
+//       : val === 'textareaInputSample'
+//         ? textareaInputSample
+//         : val === 'textareaInputTran'
+//           ? textareaInputTran
+//           : textareaInputFinal
+//   const textarea = textareaRef.value?.textarea // 获取 textarea 元素
+//   if (textarea) {
+//     // 重置行高，以便重新计算
+//     textarea.style.height = 'auto'
+//     // 获取计算后的样式
+//     const computedStyle = window.getComputedStyle(textarea)
+//     // 计算 lineHeight（考虑 Element Plus 的默认 line-height: 1.5）
+//     const lineHeight = parseFloat(computedStyle.lineHeight)
+//     // 计算 paddingTop 和 paddingBottom
+//     const paddingTop = parseFloat(computedStyle.paddingTop)
+//     const paddingBottom = parseFloat(computedStyle.paddingBottom)
+//     // 计算内容高度（减去 padding）
+//     const scrollHeight = textarea.scrollHeight - paddingTop - paddingBottom
+//     // 计算行数
+//     const rows = Math.floor(scrollHeight / lineHeight)
+
+//     // 只有当行数变化时，才更新 dynamicRows
+//     if (rows !== dynamicRows.value) {
+//       dynamicRows.value = Math.min(Math.max(rows, 1), 4) // 限制行数在 1 到 4 之间
+//     }
+
+//     // 根据行数动态设置 overflow-y
+//     if (rows > 4) {
+//       textarea.style.overflowY = 'auto' // 超过 4 行时显示滚动条
+//     } else {
+//       textarea.style.overflowY = 'hidden' // 小于等于 4 行时隐藏滚动条
+//     }
+//   }
+// }
+
 const changeMode = val => {
-  console.log(val)
+  // console.log(val)
   currentQuestion.value = false
   activeIndex.value = ''
   newQuestion.value = ''
@@ -155,6 +197,10 @@ export function useShared() {
   const updateChatQuery = newName => {
     chatQuery.messages = newName
   }
+  const updateChatCurrent = newName => {
+    chatCurrent.messages = newName
+  }
+
   const updateIsLogin = newName => {
     isLogin.value = newName
   }
@@ -192,13 +238,16 @@ export function useShared() {
   const updateDots = newName => {
     dots.value = newName
   }
-
+  const updateLimitId = newName => {
+    limitId.value = newName
+  }
   return {
     currentQuestion,
     newQuestion,
     isSampleStop,
     isQueryStop,
     limitLoading,
+    limitId,
     questions,
     answerList,
     currentId,
@@ -225,6 +274,7 @@ export function useShared() {
     textareaInputFinal,
     transQuest,
     dots,
+    chatCurrent,
     changeMode,
     updateCurrentQuestion,
     updateNewQuestion,
@@ -254,6 +304,8 @@ export function useShared() {
     updateSelectedLan,
     updateTransData,
     updateTransQuest,
-    updateDots
+    updateDots,
+    updateChatCurrent,
+    updateLimitId
   }
 }
