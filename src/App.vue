@@ -8,10 +8,42 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'App'
-}
+<script setup>
+// import { onMounted, onBeforeUnmount, ref } from 'vue'
+// const message = ref('')
+// let ws = null
+// let reconnectTimeout = null
+// const heartbeatInterval = 30000 // 30秒发送一次
+// const connectWebSocket = () => {
+//   ws = new WebSocket(import.meta.env.VITE_API_WS_URL) // 替换为实际地址
+//   ws.onopen = () => {}
+//   ws.onmessage = event => (message.value = event.data)
+//   ws.onerror = error => {}
+//   ws.onclose = () => handleReconnect()
+// }
+
+// const handleReconnect = () => {
+//   if (!reconnectTimeout) {
+//     reconnectTimeout = setTimeout(() => {
+//       connectWebSocket()
+//       reconnectTimeout = null
+//     }, 20000) // 20秒后重连
+//   }
+// }
+
+// const sendHeartbeat = () => {
+//   if (ws?.readyState === WebSocket.OPEN) {
+//     ws.send('heart')
+//   }
+// }
+// onMounted(() => {
+//   connectWebSocket()
+//   setInterval(sendHeartbeat, heartbeatInterval)
+// })
+
+// // 组件挂载时连接
+// // 销毁时关闭连接
+// onBeforeUnmount(() => ws?.close())
 </script>
 <style lang="less">
 body {

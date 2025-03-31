@@ -1,7 +1,7 @@
 <template>
   <el-aside :width="isCollapsed ? '60px' : '280px'" class="aside">
     <div class="aside_left">
-      <img src="../../../assets/fold.png" @click="toggleCollapse" class="aside_left_img" />
+      <img src="@/assets/fold.png" @click="toggleCollapse" class="aside_left_img" />
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
         <el-avatar
@@ -43,7 +43,7 @@
       }"
     >
       <div class="aside_right_content">
-        <img src="../../../assets/lux.png" />
+        <img src="@/assets/lux.png" />
       </div>
       <div class="aside_right_btn">
         <el-button type="primary" @click="startNewConversation" class="back_set">
@@ -71,11 +71,11 @@
             >
               <!-- 触发元素：图标 -->
               <template #reference>
-                <img src="../../../assets/delete.png" class="aside_right_img" />
+                <img src="@/assets/delete.png" class="aside_right_img" />
               </template>
             </el-popconfirm>
             <img
-              src="../../../assets/edit.png"
+              src="@/assets/edit.png"
               class="aside_right_img"
               style="right: 32px"
               @click="handleEdit(question, index)"
@@ -126,12 +126,12 @@
 </template>
 <script setup>
 import { ref, onMounted, computed, nextTick } from 'vue'
-import { useShared } from '../../../utils/useShared'
+import { useShared } from '@/utils/useShared'
 import { ElButton, ElDivider, ElMessage, ElPopover } from 'element-plus' // 引入 ElMessage
 import { useRoute } from 'vue-router'
 import { Lock, View } from '@element-plus/icons-vue' // 引入需要的图标
-import photo from '../../../assets/chat.deepseek.com_.png'
-import request from '../../../utils/request' // 导入封装的 axios 方法
+import photo from '@/assets/chat.deepseek.com_.png'
+import request from '@/utils/request' // 导入封装的 axios 方法
 const isCollapsed = ref(false) // 左上角折叠控制
 const showPopup = ref(false) // 是否展示左下角用户信息弹窗
 const dialogVisible = ref(false) // 是否展示登录弹窗
@@ -421,9 +421,6 @@ const queryAn = (val, index, data) => {
   limitLoading.value = false
   val = index || index === 0 ? questions.value[index] : val
   const queryList = questions.value
-  console.log(queryList)
-  console.log(val)
-  console.log(answerList.value)
   const anList = JSON.parse(JSON.stringify(answerList.value))
   const queryLimit = []
   const queryIt = []
@@ -488,7 +485,7 @@ const queryAn = (val, index, data) => {
         pageType.value = result
       }
       if (pageType.value === 'query' || pageType.value === 'it') {
-        tipQuery.value = val.replace(/\([^)]*\)/g, '')
+        tipQuery.value = anList[i].data.question
       } else if (pageType.value === 'sample') {
         const hasName = anList.some(item => item.title === val)
         if (hasName) {
@@ -508,10 +505,10 @@ const queryAn = (val, index, data) => {
         }
       } else if (pageType.value === 'tran') {
         currentQuestion.value = false
-        transQuest.value = val.replace(/\([^)]*\)/g, '')
+        transQuest.value = anList[i].data.question
       } else if (pageType.value === 'final') {
         currentQuestion.value = false
-        finalQuest.value = val.replace(/\([^)]*\)/g, '')
+        finalQuest.value = anList[i].data.question
       }
     }
   }
@@ -624,7 +621,7 @@ defineExpose({ queryAn, deleteData })
     .aside_right_btn {
       padding: 22px 10px 10px 10px;
       .back_set {
-        background-image: url('../../../assets/start.png');
+        background-image: url('@/assets/start.png');
         background-repeat: no-repeat;
         padding-left: 35px;
         background-size: 12px 12px;

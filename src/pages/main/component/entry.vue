@@ -1,7 +1,7 @@
 <template>
   <div class="main_content">
     <div class="title" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
-      <img src="../../../assets/chat.deepseek.com_.png" class="title_src" />
+      <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 33px">Hello!我是立讯技术百事通，有什么问题欢迎咨询</div>
         <div class="title_item">
@@ -31,21 +31,21 @@
         <div class="list_tip">办公学习必备</div>
         <div class="img_list">
           <div class="img_item" @click="changeType('tran')">
-            <div class="image"><img src="../../../assets/1.png" /></div>
+            <div class="image"><img src="@/assets/1.png" /></div>
             <div class="img_text">
               <div class="text_title">翻译</div>
               <div class="text_content">准确翻译成多国语言</div>
             </div>
           </div>
           <div class="img_item" style="margin-top: 10px" @click="changeType('final')">
-            <div class="image"><img src="../../../assets/2.png" /></div>
+            <div class="image"><img src="@/assets/2.png" /></div>
             <div class="img_text">
               <div class="text_title">总结</div>
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
           <div class="img_item" style="margin-top: 10px">
-            <div class="image"><img src="../../../assets/3.png" /></div>
+            <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
               <div class="text_title">更多功能</div>
               <div class="text_content">开发中,敬请期待</div>
@@ -72,21 +72,21 @@
         <div class="list_tip">办公学习必备</div>
         <div class="img_list">
           <div class="img_item" @click="changeType('tran')">
-            <div class="image"><img src="../../../assets/1.png" /></div>
+            <div class="image"><img src="@/assets/1.png" /></div>
             <div class="img_text">
               <div class="text_title">翻译</div>
               <div class="text_content">准确翻译成多国语言</div>
             </div>
           </div>
           <div class="img_item" style="margin-top: 10px" @click="changeType('final')">
-            <div class="image"><img src="../../../assets/2.png" /></div>
+            <div class="image"><img src="@/assets/2.png" /></div>
             <div class="img_text">
               <div class="text_title">总结</div>
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
           <div class="img_item" style="margin-top: 10px">
-            <div class="image"><img src="../../../assets/3.png" /></div>
+            <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
               <div class="text_title">更多功能</div>
               <div class="text_content">开发中,敬请期待</div>
@@ -96,7 +96,7 @@
       </div>
     </div>
     <div class="title" v-if="pageType === 'tran'">
-      <img src="../../../assets/chat.deepseek.com_.png" class="title_src" />
+      <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 33px">立讯技术AI翻译专家</div>
         <div class="title_top">熟练掌握翻译技巧～您的翻译好帮手</div>
@@ -118,23 +118,18 @@
 
     <div class="query_common" v-if="pageType === 'tran' && transData">
       <div>
-        <img
-          src="../../../assets/refresh.png"
-          style="margin-left: 10px"
-          class="query_common_img"
-          @click="refreshData"
-        />
+        <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
       <div>
-        <img src="../../../assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+        <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
       </div>
       <div>
-        <img src="../../../assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
+        <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
       </div>
     </div>
 
     <div class="title" v-if="pageType === 'final'">
-      <img src="../../../assets/chat.deepseek.com_.png" class="title_src" />
+      <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 33px">立讯技术AI智能总结</div>
         <div class="title_top">精准概括，助您快速理解长文本</div>
@@ -167,18 +162,13 @@
     </div>
     <div class="query_common" v-if="pageType === 'final' && finalData.title">
       <div>
-        <img
-          src="../../../assets/refresh.png"
-          style="margin-left: 10px"
-          class="query_common_img"
-          @click="refreshData"
-        />
+        <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
       <div>
-        <img src="../../../assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+        <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
       </div>
       <div>
-        <img src="../../../assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
+        <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
       </div>
     </div>
   </div>
@@ -336,10 +326,10 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { useShared } from '../../../utils/useShared'
-import imageB from '../../../assets/arrow_blue.png'
-import imageA from '../../../assets/arrow_gray.png'
-import imageC from '../../../assets/stop.png'
-import request from '../../../utils/request' // 导入封装的 axios 方法
+import imageB from '@/assets/arrow_blue.png'
+import imageA from '@/assets/arrow_gray.png'
+import imageC from '@/assets/stop.png'
+import request from '@/utils/request' // 导入封装的 axios 方法
 const emit = defineEmits([
   'submit-tran',
   'submit-final',

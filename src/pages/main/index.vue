@@ -25,7 +25,7 @@
         <div v-else class="center-container" style="padding-top: 0px">
           <div class="main_content" style="width: 860px">
             <div class="text_item" v-if="pageType === 'query' || pageType === 'it'">
-              <img src="../../assets/chat.deepseek.com_.png" class="title_src" />
+              <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
               <div class="title_final">
                 {{
                   isQueryStop ? '请重新提出您的问题' : currentObj.messages.type ? '最佳答案已生成' : '开始总结答案...'
@@ -75,27 +75,22 @@
             >
               <div>
                 <img
-                  src="../../assets/refresh.png"
+                  src="@/assets/refresh.png"
                   style="margin-left: 10px"
                   class="query_common_img"
                   @click="refreshData"
                 />
               </div>
               <div>
-                <img src="../../assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+                <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
               </div>
               <div>
-                <img
-                  src="../../assets/down.png"
-                  style="margin-left: 15px"
-                  @click="downCommon"
-                  class="query_common_img"
-                />
+                <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
               </div>
             </div>
 
             <div class="text_item" v-if="pageType === 'sample'">
-              <img src="../../assets/chat.deepseek.com_.png" class="title_src" />
+              <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
               <div>
                 {{
                   isSampleStop
@@ -146,22 +141,17 @@
             <div class="query_common" v-if="pageType === 'sample' && !limitLoading && chatQuery.messages.length > 0">
               <div>
                 <img
-                  src="../../assets/refresh.png"
+                  src="@/assets/refresh.png"
                   style="margin-left: 10px"
                   class="query_common_img"
                   @click="refreshData"
                 />
               </div>
               <div>
-                <img src="../../assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+                <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
               </div>
               <div>
-                <img
-                  src="../../assets/down.png"
-                  style="margin-left: 15px"
-                  @click="downCommon"
-                  class="query_common_img"
-                />
+                <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
               </div>
             </div>
           </div>
@@ -275,13 +265,13 @@
 import AsizeComponent from './component/asize.vue'
 import Entry from './component/entry.vue'
 import { Document } from '@element-plus/icons-vue' // 引入需要的图标
-import { useShared } from '../../utils/useShared'
+import { useShared } from '@/utils/useShared'
 import { ElButton, ElMessage } from 'element-plus' // 引入 ElMessage
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import imageB from '../../assets/arrow_blue.png'
-import imageA from '../..//assets/arrow_gray.png'
-import imageC from '../../assets/stop.png'
-import request from '../../utils/request' // 导入封装的 axios 方法
+import imageB from '@/assets/arrow_blue.png'
+import imageA from '@/assets/arrow_gray.png'
+import imageC from '@/assets/stop.png'
+import request from '@/utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './component/markdown.vue' // 引入 Markdown 渲染组件
 // 静态导入图片
 
@@ -944,41 +934,6 @@ const submitSample = async (val, isRefresh) => {
     queryIng.value = false
     ElMessage.error('服务器繁忙,请稍后再试')
   }
-
-  // request
-  //   .post('/AI/chat', JSON.stringify(params))
-  //   .then(res => {
-  //     clearInterval(interval)
-  //     isSampleLoad.value = false
-  //     limitLoading.value = false
-  //     currentRequestUrl.value = ''
-  //     if (res.status) {
-  //       limitSample.value = {
-  //         messages: []
-  //       }
-  //       const newMessage = { ...res.data.message } //
-  //       mes.messages.push(newMessage)
-  //       chatQuery.messages = mes.messages
-  //       nextTick(() => {
-  //         // 滚动到底部
-  //         if (messageContainer.value) {
-  //           const messages = messageContainer.value.children
-  //           if (messages.length > 0) {
-  //             const lastMessage = messages[messages.length - 2]
-  //             // 滚动到最后一个消息的开头部分
-  //             lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  //           }
-  //           // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
-  //         }
-  //       })
-  //       postSample(id)
-  //     }
-  //   })
-  //   .catch(err => {
-  //     currentRequestUrl.value = ''
-  //     clearInterval(interval)
-  //     console.error(err)
-  //   })
 }
 const submitTran = async (val, isRefresh) => {
   if (!isLogin.value) {
@@ -1065,8 +1020,10 @@ const submitTran = async (val, isRefresh) => {
       clearInterval(interval)
       if (res.status) {
         transData.value = res.data
+        // transQuest.value = res.data.answer
+        // console.log(transQuest.value)
         const passData = {
-          question: limitQuery.value,
+          question: transQuest.value,
           answer: res.data
         }
         postTran(passData)
@@ -1264,7 +1221,8 @@ const postQuestion = async (obj, val, type) => {
     })
     .then(res => {
       if (res.status) {
-        getHistory('', type, val)
+        console.log(res.data)
+        getHistory('', type, val, res.data)
       }
     })
     .catch(err => {
@@ -1288,7 +1246,8 @@ const postTran = async obj => {
     })
     .then(res => {
       if (res.status) {
-        getHistory('', 'tran', obj.question)
+        console.log(res.data)
+        getHistory('', 'tran', obj.question, res.data)
       }
     })
     .catch(err => {
@@ -1314,7 +1273,7 @@ const postFinal = async obj => {
     })
     .then(res => {
       if (res.status) {
-        getHistory('', 'final', obj.question)
+        getHistory('', 'final', obj.question, res.data)
       }
     })
     .catch(err => {
@@ -1322,7 +1281,7 @@ const postFinal = async obj => {
     })
 }
 
-const getHistory = async (id, page, val) => {
+const getHistory = async (id, page, val, ids) => {
   request
     .post('/Message/getMessageByUserId', {
       userId: userInfo.value.id
@@ -1423,8 +1382,10 @@ const getHistory = async (id, page, val) => {
                     ? '翻译'
                     : '总结'
           if (page === 'query' || page === 'it' || page === 'tran' || page === 'final') {
+            console.log(ids)
+            console.log(answerList.value)
             for (var h = 0; h < answerList.value.length; h++) {
-              if (val === answerList.value[h].title.replace(/\([^)]*\)/g, '') && type === answerList.value[h].type) {
+              if (ids === answerList.value[h].id) {
                 activeIndex.value = h
                 selectedMode.value = answerList.value[0].type
                 if (page === 'query' || page === 'it') {
