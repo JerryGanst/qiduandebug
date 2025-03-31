@@ -74,6 +74,12 @@
                 <img src="../../../assets/delete.png" class="aside_right_img" />
               </template>
             </el-popconfirm>
+            <img
+              src="../../../assets/edit.png"
+              class="aside_right_img"
+              style="right: 32px"
+              @click="handleEdit(question, index)"
+            />
           </el-menu-item>
         </el-tooltip>
       </el-menu>
@@ -103,6 +109,20 @@
       </el-form-item>
     </el-form>
   </el-dialog>
+  <el-dialog v-model="titleVisible" title="编辑名称" width="40%" :before-close="handleTitleClose">
+    <el-input
+      v-model="titleQuestion"
+      placeholder="请输入标题名称"
+      style="width: 100%"
+      clearable
+      type="textarea"
+      rows="5"
+    />
+    <div class="button-item_common">
+      <el-button @click="titleVisible = false" style="width: 100px; height: 40px; margin-left: 15px">取消</el-button>
+      <el-button type="primary" @click="submitTitle" style="width: 100px; height: 40px">确定</el-button>
+    </div>
+  </el-dialog>
 </template>
 <script setup>
 import { ref, onMounted, computed, nextTick } from 'vue'
@@ -122,6 +142,8 @@ const loginForm = ref({
   password: ''
 })
 const avatarUrl = ref(photo) // 左下角用户头像
+const titleQuestion = ref('')
+const titleIndex = ref('')
 const {
   currentQuestion,
   newQuestion,
@@ -157,12 +179,17 @@ const rules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 const passwordVisible = ref(false)
+const titleVisible = ref(false)
 // 当前url的路由信息(由luxshare传来的参数)
 const queryParams = route.query
 const emit = defineEmits(['change-history'])
 // 左上角折叠控制函数
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
+}
+const handleTitleClose = done => {
+  // 这里可以添加一些关闭前的逻辑
+  done()
 }
 //获取用户信息接口
 const getUserInfo = async id => {
@@ -181,6 +208,52 @@ const getUserInfo = async id => {
       console.error(err)
     })
 }
+const extractLastBracket = str => {
+  const lastOpenIndex = str.lastIndexOf('(')
+  const lastCloseIndex = str.lastIndexOf(')')
+  if (lastOpenIndex !== -1 && lastCloseIndex > lastOpenIndex) {
+    return str.slice(lastOpenIndex + 1, lastCloseIndex)
+  }
+  return null
+}
+const handleEdit = (val, index) => {
+  if (isSampleLoad.value || finalIng.value) {
+    ElMessage.warning('有问题正在回答中，请稍后再修改')
+    return
+  }
+  titleVisible.value = true
+  titleQuestion.value = val
+  titleIndex.value = index
+}
+const submitTitle = val => {
+  const result = extractLastBracket(questions.value[titleIndex.value]) // 输出：状态:正常
+  let params = titleQuestion.value + '(' + result + ')'
+  params = params.replace(/\r\n|\n|\r/gm, '')
+  questions.value[titleIndex.value] = params
+  answerList.value[titleIndex.value].title = params
+  titleVisible.value = false
+  changeTitle(answerList.value[titleIndex.value].id, params)
+}
+const changeTitle = async (id, val) => {
+  request
+    .post('/Message/changeTitle?id=' + id + '&title=' + val.replace(/\([^)]*\)/g, ''))
+    .then(res => {
+      if (res.status) {
+        titleQuestion.value = ''
+        titleIndex.value = ''
+        ElMessage.success('修改标题成功')
+      } else {
+        titleQuestion.value = ''
+        titleIndex.value = ''
+      }
+    })
+    .catch(err => {
+      titleQuestion.value = ''
+      titleIndex.value = ''
+      console.error(err)
+    })
+}
+
 // 登录密码框 眼睛和锁的切换
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value
@@ -348,6 +421,9 @@ const queryAn = (val, index, data) => {
   limitLoading.value = false
   val = index || index === 0 ? questions.value[index] : val
   const queryList = questions.value
+  console.log(queryList)
+  console.log(val)
+  console.log(answerList.value)
   const anList = JSON.parse(JSON.stringify(answerList.value))
   const queryLimit = []
   const queryIt = []

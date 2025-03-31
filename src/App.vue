@@ -50,7 +50,7 @@ body {
 }
 .el-menu--vertical:not(.el-menu--collapse):not(.el-menu--popup-container) .el-menu-item {
   height: 40px;
-  padding: 0 25px 0 15px !important;
+  padding: 0 50px 0 15px !important;
 }
 .el-menu-item span {
   height: 40px;

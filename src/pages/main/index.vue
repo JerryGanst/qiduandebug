@@ -135,7 +135,7 @@
                 <div
                   v-if="index % 2 === 0"
                   class="sample_chat_query"
-                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                  :style="{ marginTop: index === 0 ? '30px' : '40px' }"
                 >
                   {{ item.content }}
                 </div>
@@ -167,7 +167,7 @@
           </div>
           <div class="query_content">
             <div class="tran_select" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
-              <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)" :disabled="isSampleLoad">
+              <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
                 <el-radio label="通用模式">通用模式</el-radio>
                 <el-radio label="人资行政专题">人资行政专题</el-radio>
                 <el-radio label="IT专题">IT专题</el-radio>
@@ -625,7 +625,6 @@ const refreshData = () => {
   } else if (pageType.value === 'final') {
     submitFinal(finalQuest.value, true)
   } else if (pageType.value === 'sample') {
-    console.log(chatQuery.messages.length)
     submitSample(chatQuery.messages[chatQuery.messages.length - 2].content, true)
   }
 }
@@ -770,7 +769,6 @@ const submitSample = async (val, isRefresh) => {
   dynamicRows.value = 1
   isSampleLoad.value = true
   limitLoading.value = true
-  console.log(val)
   const currentData = {
     role: 'user',
     content: newQuestion.value
@@ -819,9 +817,6 @@ const submitSample = async (val, isRefresh) => {
     if (idx !== -1) {
       answerList.value.splice(index, 1)
     }
-
-    // chatQuery.messages = mes.messages
-    // console.log(mes.messages)
     await asizeRef.value.deleteData(targetId, isRefresh)
   }
 
@@ -1431,7 +1426,6 @@ const getHistory = async (id, page, val) => {
             for (var h = 0; h < answerList.value.length; h++) {
               if (val === answerList.value[h].title.replace(/\([^)]*\)/g, '') && type === answerList.value[h].type) {
                 activeIndex.value = h
-                console.log(answerList.value[0].type)
                 selectedMode.value = answerList.value[0].type
                 if (page === 'query' || page === 'it') {
                   currentQuestion.value = true

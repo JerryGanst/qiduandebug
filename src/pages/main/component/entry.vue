@@ -184,7 +184,7 @@
   </div>
   <div class="select_content">
     <div class="tran_select" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
-      <el-radio-group v-model="selectedMode" @change="changeMode(selectedMode)" :disabled="isSampleLoad">
+      <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
         <el-radio label="通用模式">通用模式</el-radio>
         <el-radio label="人资行政专题">人资行政专题</el-radio>
         <el-radio label="IT专题">IT专题</el-radio>
@@ -334,7 +334,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useShared } from '../../../utils/useShared'
 import imageB from '../../../assets/arrow_blue.png'
 import imageA from '../../../assets/arrow_gray.png'
@@ -528,14 +528,14 @@ const changeType = val => {
 // }
 
 // 组件挂载后初始化
-onMounted(() => {
-  nextTick(() => {
-    adjustTextareaHeight(textareaInputSample.value) // 初始调整高度
-    // getTopQuestion('通用模式')
-    // getTopQuestion('人资行政专题')
-    // getTopQuestion('IT专题')
-  })
-})
+// onMounted(() => {
+//   nextTick(() => {
+//     adjustTextareaHeight(textareaInputSample.value) // 初始调整高度
+//     // getTopQuestion('通用模式')
+//     // getTopQuestion('人资行政专题')
+//     // getTopQuestion('IT专题')
+//   })
+// })
 </script>
 
 <style lang="less" scoped></style>

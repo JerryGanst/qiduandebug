@@ -66,7 +66,6 @@ const adjustTextareaHeight = val => {
           ? textareaInputTran
           : textareaInputFinal
   const textarea = textareaRef.value?.textarea
-
   if (textarea) {
     // 强制重置高度（核心修改点）
     textarea.style.height = '0px' // 先压缩到最小高度
@@ -90,48 +89,8 @@ const adjustTextareaHeight = val => {
     textarea.style.overflowY = rows > 4 ? 'auto' : 'hidden'
   }
 }
-// 动态调整 textarea 高度的方法
-// const adjustTextareaHeight = val => {
-//   console.log(1)
-//   const textareaRef =
-//     val === 'textareaInputQuery'
-//       ? textareaInputQuery
-//       : val === 'textareaInputSample'
-//         ? textareaInputSample
-//         : val === 'textareaInputTran'
-//           ? textareaInputTran
-//           : textareaInputFinal
-//   const textarea = textareaRef.value?.textarea // 获取 textarea 元素
-//   if (textarea) {
-//     // 重置行高，以便重新计算
-//     textarea.style.height = 'auto'
-//     // 获取计算后的样式
-//     const computedStyle = window.getComputedStyle(textarea)
-//     // 计算 lineHeight（考虑 Element Plus 的默认 line-height: 1.5）
-//     const lineHeight = parseFloat(computedStyle.lineHeight)
-//     // 计算 paddingTop 和 paddingBottom
-//     const paddingTop = parseFloat(computedStyle.paddingTop)
-//     const paddingBottom = parseFloat(computedStyle.paddingBottom)
-//     // 计算内容高度（减去 padding）
-//     const scrollHeight = textarea.scrollHeight - paddingTop - paddingBottom
-//     // 计算行数
-//     const rows = Math.floor(scrollHeight / lineHeight)
 
-//     // 只有当行数变化时，才更新 dynamicRows
-//     if (rows !== dynamicRows.value) {
-//       dynamicRows.value = Math.min(Math.max(rows, 1), 4) // 限制行数在 1 到 4 之间
-//     }
-
-//     // 根据行数动态设置 overflow-y
-//     if (rows > 4) {
-//       textarea.style.overflowY = 'auto' // 超过 4 行时显示滚动条
-//     } else {
-//       textarea.style.overflowY = 'hidden' // 小于等于 4 行时隐藏滚动条
-//     }
-//   }
-// }
-
-const changeMode = val => {
+const changeMode = () => {
   // console.log(val)
   currentQuestion.value = false
   activeIndex.value = ''
