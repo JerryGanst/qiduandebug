@@ -867,7 +867,7 @@ const submitSample = async (val, isRefresh) => {
   chatQuery.isLoading = true
   try {
     // 替换为实际的后端接口地址
-    const res = await fetch('http://10.180.248.141:8080/AI/chatStream', {
+    const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/chatStream', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -1169,7 +1169,7 @@ const submitQuestion = async (val, isRefresh) => {
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   try {
     // 替换为实际的后端接口地址
-    const res = await fetch('http://10.180.248.141:8080/AI/query', {
+    const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/query', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

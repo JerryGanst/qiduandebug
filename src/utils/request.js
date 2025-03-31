@@ -42,7 +42,7 @@ class Request {
             if (response.data.code === 429) {
               ElMessage.error({
                 message: '服务器繁忙,请稍后再试',
-                duration: 2000 // 显示3秒
+                duration: 3000 // 显示3秒
               })
             } else {
               return Promise.reject(new Error(response.data.message || 'Request failed'))
@@ -124,7 +124,7 @@ class Request {
 // 测试服务器 10.180.248.141
 // 金浩 10.180.16.84
 const request = new Request({
-  baseURL: 'http://10.180.248.141:8080',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 180000,
   headers: {
     'Content-Type': 'application/json'
