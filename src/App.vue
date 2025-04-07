@@ -56,6 +56,29 @@ body {
 .el-menu {
   max-height: 620px;
   overflow-y: auto;
+  :deep(.el-popover) {
+    min-width: 120px !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+
+    .action-menu {
+      padding: 6px 0;
+
+      div {
+        padding: 8px 16px;
+        line-height: 1.5;
+        cursor: pointer;
+
+        &:hover {
+          background: #f5f7fa;
+        }
+
+        &.danger {
+          color: #f56c6c;
+        }
+      }
+    }
+  }
 }
 /* WebKit 浏览器滚动条样式 */
 .el-menu::-webkit-scrollbar {
@@ -87,6 +110,7 @@ body {
 .el-menu-item span {
   height: 40px;
   line-height: 40px;
+  width: 156px;
 }
 
 .el-textarea__inner {
@@ -125,5 +149,23 @@ body {
 }
 .el-icon {
   color: #707070 !important;
+}
+.el-radio__input.is-checked .el-radio__inner {
+  background: #1b6cff !important;
+  border-color: #1b6cff !important;
+}
+.el-radio__input.is-checked + .el-radio__label {
+  color: #1b6cff !important;
+}
+// .el-menu-item.is-active {
+//   color: #1b6cff !important;
+// }
+
+.el-button {
+  --el-button-hover-text-color: #1b6cff !important;
+}
+.el-button--primary {
+  --el-button-bg-color: #1b6cff !important;
+  --el-button-hover-text-color: #fff !important;
 }
 </style>

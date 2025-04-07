@@ -1,7 +1,7 @@
 <template>
   <el-aside :width="isCollapsed ? '60px' : '280px'" class="aside">
     <div class="aside_left">
-      <img src="@/assets/fold.png" @click="toggleCollapse" class="aside_left_img" />
+      <img @click="toggleCollapse" class="aside_left_img" :src="isCollapsed ? foldRight : foldLeft" />
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
         <el-avatar
@@ -46,9 +46,9 @@
         <img src="@/assets/lux.png" />
       </div>
       <div class="aside_right_btn">
-        <el-button type="primary" @click="startNewConversation" class="back_set">
+        <div @click="startNewConversation" class="back_set">
           {{ isCollapsed ? '' : '开启新对话' }}
-        </el-button>
+        </div>
       </div>
       <el-menu :default-active="activeIndex" @select="handleSelect" class="el_menu">
         <el-tooltip
@@ -58,18 +58,19 @@
           placement="right"
           popper-class="custom-tooltip"
         >
-          <el-menu-item :index="index.toString()" @click="queryAn(question, index)" style="position: relative">
-            <span>{{ isCollapsed ? 'Q' : question }}</span>
+          <el-menu-item style="position: relative" @click="handleClick('param', $event)" :index="null">
+            <span @click="querySelect(question, index)" :class="{ 'active-span': activeIndex == index.toString() }">
+              {{ isCollapsed ? 'Q' : question }}
+            </span>
             <el-popconfirm
               title="确定要删除吗？"
               confirm-button-text="确定"
               cancel-button-text="取消"
               icon="el-icon-warning"
               icon-color="red"
-              @confirm="handleConfirmDelete(question)"
+              @confirm="handleConfirmDelete(question, index)"
               @cancel="handleCancel"
             >
-              <!-- 触发元素：图标 -->
               <template #reference>
                 <img src="@/assets/delete.png" class="aside_right_img" />
               </template>
@@ -131,6 +132,8 @@ import { ElButton, ElDivider, ElMessage, ElPopover } from 'element-plus' // 引�
 import { useRoute } from 'vue-router'
 import { Lock, View } from '@element-plus/icons-vue' // 引入需要的图标
 import photo from '@/assets/chat.deepseek.com_.png'
+import foldLeft from '@/assets/fold.png'
+import foldRight from '@/assets/fold_right.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 const isCollapsed = ref(false) // 左上角折叠控制
 const showPopup = ref(false) // 是否展示左下角用户信息弹窗
@@ -144,6 +147,7 @@ const loginForm = ref({
 const avatarUrl = ref(photo) // 左下角用户头像
 const titleQuestion = ref('')
 const titleIndex = ref('')
+
 const {
   currentQuestion,
   newQuestion,
@@ -171,7 +175,8 @@ const {
   transQuest,
   selectedLan,
   finalData,
-  finalQuest
+  finalQuest,
+  messageContainer
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -216,6 +221,9 @@ const extractLastBracket = str => {
   }
   return null
 }
+const handleClick = (param, e) => {
+  // e.stopPropagation() // 正确获取事件对象
+}
 const handleEdit = (val, index) => {
   if (isSampleLoad.value || finalIng.value) {
     ElMessage.warning('有问题正在回答中，请稍后再修改')
@@ -241,6 +249,11 @@ const changeTitle = async (id, val) => {
       if (res.status) {
         titleQuestion.value = ''
         titleIndex.value = ''
+        // for (var i = 0; i < answerList.value.length; i++) {
+        //   if (id === answerList.value[i].id) {
+        //     answerList.value[i].title = val.replace(/\([^)]*\)/g, '')
+        //   }
+        // }
         ElMessage.success('修改标题成功')
       } else {
         titleQuestion.value = ''
@@ -347,7 +360,7 @@ const handleClose = done => {
 }
 
 // 点击确定删除历史记录
-const handleConfirmDelete = val => {
+const handleConfirmDelete = (val, index) => {
   const queryData =
     selectedMode.value === '人资行政专题'
       ? '(query)'
@@ -369,20 +382,21 @@ const handleConfirmDelete = val => {
   const queryLimit = []
   const anList = JSON.parse(JSON.stringify(answerList.value))
   for (var i = 0; i < anList.length; i++) {
-    if (anList[i].type === '人资行政专题' || anList[i].type === 'IT专题') {
-      queryLimit.push(anList[i].title)
-      if (anList[i].title === val) {
-        id = anList[i].id
-      }
-    } else if (anList[i].type === '通用模式') {
-      if (anList[i].title === val) {
-        id = anList[i].id
-      }
-    } else if (anList[i].type === '翻译' || anList[i].type === '总结') {
-      if (anList[i].title === val) {
-        id = anList[i].id
-      }
-    }
+    id = anList[index].id
+    // if (anList[i].type === '人资行政专题' || anList[i].type === 'IT专题') {
+    //   queryLimit.push(anList[i].title)
+    //   if (anList[i].title === val) {
+    //     id = anList[i].id
+    //   }
+    // } else if (anList[i].type === '通用模式') {
+    //   if (anList[i].title === val) {
+    //     id = anList[i].id
+    //   }
+    // } else if (anList[i].type === '翻译' || anList[i].type === '总结') {
+    //   if (anList[i].title === val) {
+    //     id = anList[i].id
+    //   }
+    // }
   }
   deleteData(id)
 }
@@ -411,6 +425,11 @@ const deleteData = async (id, isRefresh) => {
     .catch(err => {
       console.error(err)
     })
+}
+
+const querySelect = (val, index) => {
+  activeIndex.value = index
+  queryAn(val, index)
 }
 // 点击切换左侧栏，控制左侧栏和右侧面板的数据
 const queryAn = (val, index, data) => {
@@ -452,6 +471,17 @@ const queryAn = (val, index, data) => {
         chatQuery.messages = anList[j].data
         chatQuery.isLoading = false
         currentId.value = anList[j].id
+        nextTick(() => {
+          // 滚动到底部
+          if (messageContainer.value) {
+            const messages = messageContainer.value.children
+            if (messages.length > 0) {
+              const lastMessage = messages[messages.length - 2]
+              // 滚动到最后一个消息的开头部分
+              lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          }
+        })
       }
     } else if (anList[j].type === '翻译') {
       queryTran.push(anList[j].title)
@@ -563,6 +593,9 @@ const processedQuerys = computed(() => {
 defineExpose({ queryAn, deleteData })
 </script>
 <style lang="less" scoped>
+.active-span {
+  color: #1b6cff !important;
+}
 .aside {
   background-color: #f5f5f5;
   transition: width 0.3s;
@@ -584,7 +617,7 @@ defineExpose({ queryAn, deleteData })
       font-size: 14px;
       cursor: pointer;
       position: fixed;
-      color: #409eff;
+      color: #1b6cff;
       bottom: 30px;
       left: 8px;
     }
@@ -623,9 +656,24 @@ defineExpose({ queryAn, deleteData })
       .back_set {
         background-image: url('@/assets/start.png');
         background-repeat: no-repeat;
-        padding-left: 35px;
-        background-size: 12px 12px;
-        background-position: 15px 9px;
+        padding-left: 42px;
+        width: 112px;
+        height: 36px;
+        line-height: 36px;
+        background-size: 16px 16px;
+        background-position: 16px 11px;
+        letter-spacing: 1px;
+        background-color: #1b6cff;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+        // background-color: #e6f2ff;
+        border-radius: 10px;
+        // font-size: 16px;
+        // letter-spacing: 1px;
+        // color: #1b6cff;
+        // border-color: #e6f2ff;
+        // opacity: 1;
       }
     }
     .el_menu {

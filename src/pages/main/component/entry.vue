@@ -3,7 +3,9 @@
     <div class="title" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
       <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
       <div>
-        <div class="title_top" style="line-height: 33px">Hello!我是立讯技术百事通，有什么问题欢迎咨询</div>
+        <div class="title_top" style="line-height: 33px; font-weight: bold">
+          Hello!我是立讯技术百事通，有什么问题欢迎咨询
+        </div>
         <div class="title_item">
           <span>我可以帮您做这些事情</span>
         </div>
@@ -37,14 +39,14 @@
               <div class="text_content">准确翻译成多国语言</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 10px" @click="changeType('final')">
+          <div class="img_item" style="margin-top: 15px" @click="changeType('final')">
             <div class="image"><img src="@/assets/2.png" /></div>
             <div class="img_text">
               <div class="text_title">总结</div>
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 10px">
+          <div class="img_item" style="margin-top: 15px">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
               <div class="text_title">更多功能</div>
@@ -78,14 +80,14 @@
               <div class="text_content">准确翻译成多国语言</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 10px" @click="changeType('final')">
+          <div class="img_item" style="margin-top: 15px" @click="changeType('final')">
             <div class="image"><img src="@/assets/2.png" /></div>
             <div class="img_text">
               <div class="text_title">总结</div>
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 10px">
+          <div class="img_item" style="margin-top: 15px">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
               <div class="text_title">更多功能</div>
@@ -98,8 +100,10 @@
     <div class="title" v-if="pageType === 'tran'">
       <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
       <div>
-        <div class="title_top" style="line-height: 33px">立讯技术AI翻译专家</div>
-        <div class="title_top">熟练掌握翻译技巧～您的翻译好帮手</div>
+        <div class="title_top" style="line-height: 30px; font-weight: bold">立讯技术AI翻译专家</div>
+        <div class="title_top" style="font-size: 16px; font-weight: 400; line-height: 36px">
+          熟练掌握翻译技巧～您的翻译好帮手
+        </div>
       </div>
     </div>
     <div v-if="pageType === 'tran' && finalIng" class="title_wait">
@@ -131,8 +135,10 @@
     <div class="title" v-if="pageType === 'final'">
       <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
       <div>
-        <div class="title_top" style="line-height: 33px">立讯技术AI智能总结</div>
-        <div class="title_top">精准概括，助您快速理解长文本</div>
+        <div class="title_top" style="line-height: 30px; font-weight: bold">立讯技术AI智能总结</div>
+        <div class="title_top" style="font-size: 16px; font-weight: 400; line-height: 36px">
+          精准概括，助您快速理解长文本
+        </div>
       </div>
     </div>
     <div v-if="pageType === 'final' && finalIng" class="title_wait">
@@ -265,18 +271,20 @@
         ref="textareaInputTran"
         type="textarea"
         :maxlength="4096"
-        :rows="dynamicRows"
+        :rows="dynamicRowFinal"
         @input="adjustTextareaHeight('textareaInputTran')"
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
+        <!-- <el-tooltip content="仅支持 txt/doc/docx 格式" placement="top">
           <el-upload
             action="#"
-            :http-request="handleUpload"
+            :multiple="true"
+            :http-request="handleAutoUpload"
             :before-upload="beforeUpload"
             :show-file-list="false"
             :accept="allowedTypes"
+            :auto-upload="true"
           >
             <el-icon class="upload-icon" :size="42">
               <Document />
@@ -299,18 +307,20 @@
         ref="textareaInputFinal"
         type="textarea"
         :maxlength="4096"
-        :rows="dynamicRows"
+        :rows="dynamicRowFinal"
         @input="adjustTextareaHeight('textareaInputFinal')"
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
+        <!-- <el-tooltip content="仅支持 txt/doc/docx 格式" placement="top">
           <el-upload
             action="#"
-            :http-request="handleUpload"
+            :multiple="true"
+            :http-request="handleAutoUpload"
             :before-upload="beforeUpload"
             :show-file-list="false"
             :accept="allowedTypes"
+            :auto-upload="true"
           >
             <el-icon class="upload-icon" :size="42">
               <Document />
@@ -325,7 +335,8 @@
 
 <script setup>
 import { ref, nextTick } from 'vue'
-import { useShared } from '../../../utils/useShared'
+import { ElMessage } from 'element-plus' // 引入 ElMessage
+import { useShared } from '@/utils/useShared'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
 import imageC from '@/assets/stop.png'
@@ -436,6 +447,59 @@ const historyList = ref([
   }
 ])
 const lanList = ref(['中文', '英文', '西班牙语', '越南语'])
+const dynamicRowFinal = ref(1)
+// 文件验证
+// const allowedTypes =
+//   '.txt,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+// // 文件类型验证
+// const beforeUpload = file => {
+//   const isValidType = ['doc', 'docx', 'txt'].some(ext => file.name.toLowerCase().endsWith(`.${ext}`))
+//   const maxSize = 1 * 1024 * 1024
+//   if (!isValidType) {
+//     ElMessage.error('仅支持 txt/doc/docx 格式!')
+//     return false
+//   }
+//   if (file.size > maxSize) {
+//     ElMessage.error('文件大小不能超过1MB')
+//     return false
+//   }
+//   return true
+// }
+
+// const handleAutoUpload = ({ file }) => {
+//   const formData = new FormData()
+//   formData.append('files', file) // 字段名需与后端匹配[1,6](@ref)
+
+//   request
+//     .post('/AI/fileUpload', formData, {
+//       headers: {
+//         'Content-Type': 'multipart/form-data' // 必须设置[3,5](@ref)
+//       }
+//     })
+//     .then(res => {
+//       if (res.status) {
+//         ElMessage.success('上传成功')
+//       }
+//     })
+//     .catch(err => {
+//       // loadingInstance.close();
+//       ElMessage.error('上传失败')
+//       // botMessage.text = '抱歉，暂时无法获取回复';
+//     })
+
+//   // try {
+//   //   await axios.post('http://10.180.17.77:8080/upload', formData, {
+//   //     headers: {
+//   //       'Content-Type': 'multipart/form-data' // 必须设置[3,5](@ref)
+//   //     }
+//   //   })
+//   //   ElMessage.success(`${file.name} 上传成功`)
+//   // } catch (err) {
+//   //   ElMessage.error(`${file.name} 上传失败: ${err.message}`)
+//   // }
+// }
+
 const tranPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
@@ -498,6 +562,10 @@ const changeType = val => {
   finalQuest.value = ''
   pageType.value = val
 }
+const changeDynamicRows = () => {
+  dynamicRowFinal.value = 1
+}
+
 // const getTopQuestion = val => {
 //   request
 //     .post('/Message/getTopQuestion?type=' + val)
@@ -526,6 +594,7 @@ const changeType = val => {
 //     // getTopQuestion('IT专题')
 //   })
 // })
+defineExpose({ changeDynamicRows })
 </script>
 
 <style lang="less" scoped></style>

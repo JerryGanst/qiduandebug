@@ -20,6 +20,7 @@
             @refresh-data="refreshData"
             @submit-questionSend="submitQuestionSend"
             @submit-sampleSend="submitSampleSend"
+            ref="entryRef"
           ></Entry>
         </div>
         <div v-else class="center-container" style="padding-top: 0px">
@@ -248,6 +249,7 @@
     <el-input
       v-model="commonQuestion"
       placeholder="请输入您的宝贵建议"
+      :maxlength="4096"
       style="width: 100%"
       clearable
       type="textarea"
@@ -311,15 +313,16 @@ const {
   finalData,
   chatCurrent,
   limitId,
-  dots
+  checkData,
+  dots,
+  messageContainer
 } = useShared()
 
 const queryIng = ref(false)
 const asizeRef = ref(null)
-const messageContainer = ref(null)
+const entryRef = ref(null)
+
 const sampleData = ref('')
-const isTranStop = ref(false)
-const isFinalStop = ref(false)
 
 const commonQuestion = ref('')
 // 当前显示的消息内容
@@ -332,34 +335,6 @@ const isDisabled = ref(false)
 const limitQuery = ref('')
 const currentRequestUrl = ref('')
 let interval
-
-// 允许的 MIME 类型映射
-const allowedTypes = [
-  'text/plain',
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/msword'
-].join(',')
-
-// 文件验证
-const beforeUpload = file => {
-  const isValidType = allowedTypes.includes(file.type)
-  if (!isValidType) {
-    ElMessage.error('文件格式不支持')
-    return false
-  }
-  return true
-}
-
-// 自定义上传逻辑
-const fileName = ref('')
-const handleUpload = ({ file }) => {
-  // 模拟上传成功
-  setTimeout(() => {
-    fileName.value = file.name
-    ElMessage.success('上传成功')
-  }, 1000)
-}
 
 // 函数区域
 const removeItemById = (arr, id) => {
@@ -457,10 +432,6 @@ const processedData = computed(() => {
   return result
 })
 
-const isObject = variable => {
-  const type = Object.prototype.toString.call(variable)
-  return type === '[object PointerEvent]' || type === '[object KeyboardEvent]'
-}
 // 逐个字显示消息内容的函数
 const displayMessage = async message => {
   return new Promise(resolve => {
@@ -489,29 +460,14 @@ const displayMessagesSequentially = async () => {
 }
 
 const submitFinal = async (val, isRefresh) => {
-  if (!isLogin.value) {
-    ElMessage.warning('请先登录再使用')
+  if (finalIng.value) {
+    ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
-  if (isObject(val) && !newQuestion.value) {
-    val = ''
-    ElMessage.warning('请输入您的问题再发送')
+  if (!checkData(val)) {
     return
   }
 
-  if (val && !isObject(val)) {
-    newQuestion.value = val
-  }
-  if (!newQuestion.value) {
-    ElMessage.warning('请输入您的问题再发送')
-    return
-  }
-  isFinalStop.value = false
-  dynamicRows.value = 1
-  const data = {
-    user_id: userInfo.value.id,
-    question: newQuestion.value
-  }
   limitQuery.value = newQuestion.value
   newQuestion.value = ''
   finalData.value = {
@@ -520,6 +476,16 @@ const submitFinal = async (val, isRefresh) => {
   }
   finalQuest.value = ''
   finalIng.value = true
+  let title = ''
+  if (isRefresh) {
+    for (var m = 0; m < answerList.value.length; m++) {
+      if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
+        const id = answerList.value[m].id
+        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+        await asizeRef.value.deleteData(id, true)
+      }
+    }
+  }
   if (questions.value.includes(limitQuery.value + '(final)') && !isRefresh) {
     const qData = limitQuery.value + '(final)'
     for (var ms = 0; ms < questions.value.length; ms++) {
@@ -545,7 +511,7 @@ const submitFinal = async (val, isRefresh) => {
     await asizeRef.value.deleteData(targetId, isRefresh)
   }
 
-  if (!questions.value.includes(limitQuery.value + '(final)')) {
+  if (!questions.value.includes(limitQuery.value + '(final)') && !title) {
     const qData = limitQuery.value + '(final)'
     questions.value.unshift(qData)
   }
@@ -565,7 +531,9 @@ const submitFinal = async (val, isRefresh) => {
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   currentRequestUrl.value = '/AI/summarize'
+
   finalQuest.value = limitQuery.value
+  entryRef.value.changeDynamicRows()
   request
     .post('/AI/summarize', {
       user_id: userInfo.value.id,
@@ -576,6 +544,9 @@ const submitFinal = async (val, isRefresh) => {
       finalIng.value = false
       currentRequestUrl.value = ''
       clearInterval(interval)
+      nextTick(() => {
+        adjustTextareaHeight('textareaInputFinal')
+      })
       if (res.status) {
         finalData.value.title = res.data.summary
 
@@ -586,13 +557,15 @@ const submitFinal = async (val, isRefresh) => {
           question: finalQuest.value,
           answer: finalData.value
         }
-        postFinal(obj)
+        postFinal(obj, title)
       }
     })
     .catch(err => {
-      console.error(err)
       finalIng.value = false
       clearInterval(interval)
+      nextTick(() => {
+        adjustTextareaHeight('textareaInputFinal')
+      })
     })
 }
 const samplePost = event => {
@@ -738,20 +711,7 @@ const autoScroll = () => {
   })
 }
 const submitSample = async (val, isRefresh) => {
-  if (!isLogin.value) {
-    ElMessage.warning('请先登录再使用')
-    return
-  }
-  if (isObject(val) && !newQuestion.value) {
-    val = ''
-    ElMessage.warning('请输入您的问题再发送')
-    return
-  }
-  if (val && !isObject(val)) {
-    newQuestion.value = val
-  }
-  if (!newQuestion.value) {
-    ElMessage.warning('请输入您的问题再发送')
+  if (!checkData(val)) {
     return
   }
   currentQuestion.value = true
@@ -784,6 +744,19 @@ const submitSample = async (val, isRefresh) => {
   const queryValue = newQuestion.value
   tipQuery.value = queryValue
   newQuestion.value = ''
+  let title = ''
+  if (isRefresh) {
+    for (var m = 0; m < answerList.value.length; m++) {
+      if (
+        answerList.value[m].type === '通用模式' &&
+        queryValue === answerList.value[m].data[answerList.value[m].data.length - 2].content
+      ) {
+        const id = answerList.value[m].id
+        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+        await asizeRef.value.deleteData(id, true)
+      }
+    }
+  }
   if (questions.value.includes(queryValue + '(sample)') && !isRefresh) {
     const qData = queryValue + '(sample)'
     for (var ms = 0; ms < questions.value.length; ms++) {
@@ -820,6 +793,11 @@ const submitSample = async (val, isRefresh) => {
   if (hasId) {
     id = currentId.value
     limitId.value = id
+    for (var k = 0; k < answerList.value.length; k++) {
+      if (id === answerList.value[k].id) {
+        title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
+      }
+    }
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
 
@@ -889,7 +867,9 @@ const submitSample = async (val, isRefresh) => {
         limitId.value = ''
         currentRequestUrl.value = ''
         chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
+
         nextTick(() => {
+          adjustTextareaHeight('textareaInputSample')
           // 滚动到底部
           if (messageContainer.value) {
             const messages = messageContainer.value.children
@@ -901,7 +881,7 @@ const submitSample = async (val, isRefresh) => {
             // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
           }
         })
-        postSample(id)
+        postSample(id, title)
         break
       }
       buffer += decoder.decode(value, { stream: true })
@@ -927,40 +907,41 @@ const submitSample = async (val, isRefresh) => {
       })
     }
   } catch (error) {
-    console.error('获取回复失败:', error)
     chatQuery.isLoading = false
     isSampleLoad.value = false
     limitId.value = ''
     queryIng.value = false
+    nextTick(() => {
+      adjustTextareaHeight('textareaInputSample')
+    })
     ElMessage.error('服务器繁忙,请稍后再试')
   }
 }
 const submitTran = async (val, isRefresh) => {
-  if (!isLogin.value) {
-    ElMessage.warning('请先登录再使用')
+  if (finalIng.value) {
+    ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
-  if (isObject(val) && !newQuestion.value) {
-    val = ''
-    ElMessage.warning('请输入您的问题再发送')
+  if (!checkData(val)) {
     return
   }
-
-  if (val && !isObject(val)) {
-    newQuestion.value = val
-  }
-  if (!newQuestion.value) {
-    ElMessage.warning('请输入您的问题再发送')
-    return
-  }
-  isTranStop.value = false
-  dynamicRows.value = 1
   finalIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   limitQuery.value = newQuestion.value
+
   newQuestion.value = ''
   transQuest.value = ''
   transData.value = ''
+  let title = ''
+  if (isRefresh) {
+    for (var m = 0; m < answerList.value.length; m++) {
+      if (answerList.value[m].type === '翻译' && limitQuery.value === answerList.value[m].data.question) {
+        const id = answerList.value[m].id
+        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+        await asizeRef.value.deleteData(id, true)
+      }
+    }
+  }
   if (questions.value.includes(limitQuery.value + '(tran)') && !isRefresh) {
     const qData = limitQuery.value + '(tran)'
     for (var ms = 0; ms < questions.value.length; ms++) {
@@ -968,9 +949,15 @@ const submitTran = async (val, isRefresh) => {
         activeIndex.value = ms
       }
     }
-    asizeRef.value.queryAn(qData, '')
-    finalIng.value = false
-    return
+    if (selectedLan.value === answerList.value[activeIndex.value].data.target) {
+      asizeRef.value.queryAn(qData, '')
+      finalIng.value = false
+      return
+    } else {
+      const idx = answerList.value.findIndex(item => item.title === qData)
+      const targetId = answerList.value.find(item => item.title === qData)?.id
+      await asizeRef.value.deleteData(targetId, true)
+    }
   }
   if (questions.value.includes(limitQuery.value + '(tran)') && isRefresh) {
     const qData = limitQuery.value + '(tran)'
@@ -986,7 +973,7 @@ const submitTran = async (val, isRefresh) => {
     await asizeRef.value.deleteData(targetId, isRefresh)
   }
 
-  if (!questions.value.includes(limitQuery.value + '(tran)')) {
+  if (!questions.value.includes(limitQuery.value + '(tran)') && !title) {
     const qData = limitQuery.value + '(tran)'
     questions.value.unshift(qData)
   }
@@ -1014,25 +1001,28 @@ const submitTran = async (val, isRefresh) => {
       // showLoading: true
     })
     .then(res => {
-      finalIng.value = false
       currentRequestUrl.value = ''
 
       clearInterval(interval)
+      nextTick(() => {
+        adjustTextareaHeight('textareaInputTran')
+      })
       if (res.status) {
         transData.value = res.data
-        // transQuest.value = res.data.answer
-        // console.log(transQuest.value)
         const passData = {
           question: transQuest.value,
           answer: res.data
         }
-        postTran(passData)
+        postTran(passData, title)
       }
     })
 
     .catch(err => {
       finalIng.value = false
       clearInterval(interval)
+      nextTick(() => {
+        adjustTextareaHeight('textareaInputTran')
+      })
     })
 }
 const summitPost = event => {
@@ -1044,26 +1034,13 @@ const summitPost = event => {
 
 const submitQuestion = async (val, isRefresh) => {
   if (queryIng.value) {
+    ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
-  if (!isLogin.value) {
-    ElMessage.warning('请先登录再使用')
-    return
-  }
-  if (isObject(val) && !newQuestion.value) {
-    val = ''
-    ElMessage.warning('请输入您的问题再发送')
-    return
-  }
-  if (val && !isObject(val)) {
-    newQuestion.value = val
-  }
-  if (!newQuestion.value) {
-    ElMessage.warning('请输入您的问题再发送')
+  if (!checkData(val)) {
     return
   }
   currentQuestion.value = true
-  limitQuery.value = newQuestion.value
   isQueryStop.value = false
   dynamicRows.value = 1
   currentMessageIndex.value = 0
@@ -1076,6 +1053,16 @@ const submitQuestion = async (val, isRefresh) => {
   isSampleLoad.value = true
   const pgType = pageType.value
   const addTitle = pageType.value === 'query' ? '(query)' : '(it)'
+  let title = ''
+  if (isRefresh) {
+    for (var m = 0; m < answerList.value.length; m++) {
+      if (answerList.value[m].type === '人资行政专题' && queryValue === answerList.value[m].data.question) {
+        const id = answerList.value[m].id
+        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+        await asizeRef.value.deleteData(id, true)
+      }
+    }
+  }
   if (questions.value.includes(queryValue + addTitle) && !isRefresh) {
     queryIng.value = false
     const qData = queryValue + addTitle
@@ -1101,7 +1088,7 @@ const submitQuestion = async (val, isRefresh) => {
     }
     await asizeRef.value.deleteData(targetId, isRefresh)
   }
-  if (!questions.value.includes(queryValue)) {
+  if (!questions.value.includes(queryValue) && !title) {
     questions.value.unshift(queryValue + addTitle)
     activeIndex.value = '0'
   }
@@ -1119,6 +1106,7 @@ const submitQuestion = async (val, isRefresh) => {
     }
   }
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
+
   try {
     // 替换为实际的后端接口地址
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/query', {
@@ -1143,7 +1131,12 @@ const submitQuestion = async (val, isRefresh) => {
     const set = new Set()
     while (true) {
       const { value, done } = await reader.read()
-      if (done) break
+      if (done) {
+        nextTick(() => {
+          adjustTextareaHeight('textareaInputQuery')
+        })
+        break
+      }
       // 将二进制数据解码并添加到缓冲区
       buffer += decoder.decode(value, { stream: true })
       //处理buffer数据
@@ -1158,11 +1151,16 @@ const submitQuestion = async (val, isRefresh) => {
         const type = JSON.parse(element).type
         if (type === 'final_answer') {
           queryIng.value = false
-          isSampleLoad.value = false
+
           // loadingInstance.close();
           currentObj.value.messages = JSON.parse(element)
           currentObj.value.messages.isHistory = true
-          postQuestion(JSON.parse(element), queryValue, pgType, isRefresh)
+          const query = title ? title : queryValue
+          const paramsQuery = {
+            title: title ? title : queryValue,
+            queryValue: queryValue
+          }
+          postQuestion(JSON.parse(element), paramsQuery, pgType, isRefresh)
         } else {
           currentObj.value.messageList.push(JSON.parse(element))
         }
@@ -1177,21 +1175,23 @@ const submitQuestion = async (val, isRefresh) => {
       await displayMessagesSequentially()
     }
   } catch (error) {
-    console.error('获取回复失败:', error)
     isSampleLoad.value = false
     queryIng.value = false
+    nextTick(() => {
+      adjustTextareaHeight('textareaInputQuery')
+    })
     ElMessage.error('服务器繁忙,请稍后再试')
   }
 }
 
-const postSample = async ids => {
+const postSample = async (ids, title) => {
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
       type: '通用模式',
       id: ids,
       data: chatQuery.messages,
-      title: chatQuery.messages[0].content
+      title: title ? title : chatQuery.messages[0].content
       // showLoading: true
     })
     .then(res => {
@@ -1211,56 +1211,63 @@ const postQuestion = async (obj, val, type) => {
     .post('/Message/save', {
       userId: userInfo.value.id,
       type: type === 'query' ? '人资行政专题' : 'IT专题',
-      title: val,
+      title: val.title,
       id: '',
       data: {
-        question: val,
+        question: val.queryValue,
         answer: obj
       }
       // showLoading: true
     })
     .then(res => {
       if (res.status) {
-        console.log(res.data)
+        isSampleLoad.value = false
         getHistory('', type, val, res.data)
+      } else {
+        isSampleLoad.value = false
       }
     })
     .catch(err => {
+      isSampleLoad.value = false
       console.error('获取回复失败:', err)
     })
 }
 
-const postTran = async obj => {
+const postTran = async (obj, title) => {
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
       type: '翻译',
-      title: obj.question,
+      title: title ? title : obj.question,
       id: '',
       data: {
         question: obj.question,
         answer: obj.answer,
-        target: selectedLan.value
+        target: selectedLan.value,
+        files: []
       }
       // showLoading: true
     })
     .then(res => {
       if (res.status) {
-        console.log(res.data)
+        finalIng.value = false
         getHistory('', 'tran', obj.question, res.data)
+      } else {
+        finalIng.value = false
       }
     })
     .catch(err => {
+      finalIng.value = false
       console.error('获取回复失败:', err)
     })
 }
 
-const postFinal = async obj => {
+const postFinal = async (obj, title) => {
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
       type: '总结',
-      title: obj.question,
+      title: title ? title : obj.question,
       id: '',
       data: {
         question: obj.question,
@@ -1283,10 +1290,7 @@ const postFinal = async obj => {
 
 const getHistory = async (id, page, val, ids) => {
   request
-    .post('/Message/getMessageByUserId', {
-      userId: userInfo.value.id
-      // showLoading: true
-    })
+    .post('/Message/getMessageByUserId?userId=' + userInfo.value.id)
     .then(res => {
       if (res.status) {
         answerList.value = res.data
@@ -1382,8 +1386,6 @@ const getHistory = async (id, page, val, ids) => {
                     ? '翻译'
                     : '总结'
           if (page === 'query' || page === 'it' || page === 'tran' || page === 'final') {
-            console.log(ids)
-            console.log(answerList.value)
             for (var h = 0; h < answerList.value.length; h++) {
               if (ids === answerList.value[h].id) {
                 activeIndex.value = h
@@ -1415,7 +1417,20 @@ const cancelCurrentRequest = val => {
     limitLoading.value = false
     isSampleStop.value = true
     chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
-    postSample(limitId.value)
+    let title = ''
+    for (var i = 0; i < answerList.value.length; i++) {
+      if (answerList.value[i].type === '通用模式') {
+        if (
+          chatQuery.messages[chatQuery.messages.length - 2].content ===
+          answerList.value[i].data[answerList.value[i].data.length - 2].content
+        ) {
+          title = answerList.value[i].title
+        }
+      }
+    }
+    const id = limitId.value
+    console.log(title)
+    postSample(id, title.replace(/\([^)]*\)/g, ''))
     limitId.value = ''
   }
   if (val === 'query') {
@@ -1436,27 +1451,13 @@ const cancelCurrentRequest = val => {
     finalIng.value = false
     transQuest.value = ''
     transData.value = ''
-    isTranStop.value = true
   }
   if (val === 'final') {
     finalIng.value = false
     finalData.value.title = ''
     finalData.value.data = []
-    isFinalStop.value = true
   }
 }
-
-// watch(isSampleLoad, newValue => {
-//   if (newValue) {
-//   } else {
-//     if (activeIndex.value !== '') {
-//       nextTick(() => {
-//         console.log(answerList.value)
-//         selectedMode.value = answerList.value[0].type
-//       })
-//     }
-//   }
-// })
 
 // 组件卸载时关闭 SSE 连接
 onUnmounted(() => {
@@ -1521,7 +1522,7 @@ onUnmounted(() => {
     }
     .href_source {
       margin-top: 10px;
-      color: #409eff;
+      color: #1b6cff;
       cursor: pointer;
       padding: 0 10px;
       font-size: 14px;
@@ -1611,7 +1612,7 @@ onUnmounted(() => {
           letter-spacing: 1px;
           width: 100%;
           .sample_chat_query {
-            background-color: #409eff;
+            background-color: #1b6cff;
             border-radius: 10px;
             padding: 13px 15px;
             float: right;
@@ -1663,7 +1664,7 @@ onUnmounted(() => {
         width: 100%;
         margin-top: 40px;
         .title_tiQuery_text {
-          background-color: #409eff;
+          background-color: #1b6cff;
           border-radius: 10px;
           padding: 13px 15px;
           float: right;
@@ -1684,11 +1685,11 @@ onUnmounted(() => {
         .title_src {
           width: 60px;
           height: 60px;
-          margin-right: 10px;
+          margin-right: 15px;
         }
         .title_top {
           font-size: 20px;
-          font-weight: bold;
+          color: #262626;
         }
         .title_item {
           height: 20px;
@@ -1696,6 +1697,7 @@ onUnmounted(() => {
           margin-top: 7px;
           display: flex;
           line-height: 18px;
+          color: #262626;
         }
       }
       .title_wait {
@@ -1709,7 +1711,7 @@ onUnmounted(() => {
         display: flex;
         flex-direction: row-reverse;
         .title_final_query {
-          background-color: #409eff;
+          background-color: #1b6cff;
           border-radius: 10px;
           float: right;
           color: #fff;
@@ -1735,7 +1737,7 @@ onUnmounted(() => {
         display: flex;
         flex-direction: row-reverse;
         div {
-          background-color: #409eff;
+          background-color: #1b6cff;
           border-radius: 10px;
           float: right;
           color: #fff;
@@ -1763,31 +1765,34 @@ onUnmounted(() => {
         width: 100%;
         .list_item {
           flex: 1;
-          height: 300px;
+          height: 326px;
           border-radius: 12px;
-          background: linear-gradient(
-            to bottom,
-            rgba(135, 206, 235, 0.3),
-            /* 淡蓝色，透明度 60% */ rgba(224, 247, 250, 0.3) /* 更淡的蓝色，透明度 60% */
-          );
+          background-image: url('@/assets/arr.png');
+          background-size: 100% 100%;
+          // background: linear-gradient(
+          //   to bottom,
+          //   rgba(135, 206, 235, 0.3),
+          //   /* 淡蓝色，透明度 60% */ rgba(224, 247, 250, 0.3) /* 更淡的蓝色，透明度 60% */
+          // );
           .list_title {
             padding-left: 20px;
-            font-size: 16px;
-            color: #000;
+            font-size: 18px;
+            color: #262626;
             font-weight: bold;
             margin-top: 25px;
+            letter-spacing: 1px;
           }
           .list_tip {
             padding-left: 20px;
-            font-size: 12px;
-            color: #333;
+            font-size: 14px;
+            color: #646464;
             margin-top: 10px;
             letter-spacing: 1px;
           }
           .list_arry {
             padding-left: 20px;
             margin-top: 20px;
-            color: #333;
+            color: #252525;
             font-size: 14px;
             line-height: 20px;
             .arr_item {
@@ -1802,7 +1807,7 @@ onUnmounted(() => {
                 overflow: hidden;
               }
               .item_hover:hover {
-                color: #409eff;
+                color: #1b6cff;
               }
             }
           }
@@ -1813,7 +1818,7 @@ onUnmounted(() => {
             width: 100%;
             box-sizing: border-box;
             .img_item:hover {
-              border: 1px solid #409eff;
+              border: 1px solid #1b6cff;
             }
             .img_item {
               display: flex;
@@ -1822,12 +1827,13 @@ onUnmounted(() => {
               height: 56px;
               cursor: pointer;
               flex-direction: row;
-              border: 1px solid #fff;
+              border: 1px solid #e6f2ff;
+
               .image {
-                width: 36px;
-                height: 36px;
-                margin-top: 10px;
-                margin-left: 15px;
+                width: 40px;
+                height: 40px;
+                margin-top: 6px;
+                margin-left: 12px;
                 img {
                   width: 100%;
                   height: 100%;
@@ -1835,18 +1841,20 @@ onUnmounted(() => {
               }
               .img_text {
                 height: 30px;
-                padding-left: 10px;
+                padding-left: 8px;
                 padding-top: 10px;
+                letter-spacing: 1px;
                 .text_title {
                   font-size: 14px;
+                  color: #252525;
                   font-weight: bold;
-                  line-height: 20px;
+                  line-height: 18px;
                 }
                 .text_content {
                   font-size: 12px;
                   line-height: 15px;
-                  max-width: 180px;
-                  color: #333;
+                  max-width: 220px;
+                  color: #646464;
                   white-space: nowrap; /* 强制文本不换行 */
                   overflow: hidden; /* 隐藏超出容器的内容 */
                   text-overflow: ellipsis; /* 超出部分显示省略号 */
@@ -1862,7 +1870,7 @@ onUnmounted(() => {
 
 .container {
   height: 100vh;
-  font-family: 'Microsoft YaHei', Arial, sans-serif;
+  font-family: 'Source Han Sans CN';
 }
 
 .el-aside {
@@ -1882,15 +1890,15 @@ onUnmounted(() => {
   }
   .send-icon {
     position: absolute;
-    right: 8px;
-    bottom: 3px;
+    right: 20px;
+    bottom: 13px;
     cursor: pointer;
     transition: color 0.3s;
     display: flex;
   }
   .send-icon img {
-    width: 44px;
-    height: 44px;
+    width: 30px;
+    height: 30px;
   }
 }
 

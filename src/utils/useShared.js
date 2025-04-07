@@ -1,4 +1,5 @@
 import { ref, reactive } from 'vue'
+import { ElMessage } from 'element-plus' // 引入 ElMessage
 const currentQuestion = ref('') // 控制页面展示问答页还是介绍页
 const newQuestion = ref('') // 文本域输入值
 const isSampleStop = ref(false) // 控制通用模式 终止之后的状态
@@ -25,6 +26,7 @@ const userInfo = ref({
   id: '',
   name: ''
 })
+const messageContainer = ref(null)
 const chatQuery = reactive({
   //通用模式数据对象
   messages: []
@@ -84,14 +86,34 @@ const adjustTextareaHeight = val => {
 
     // 直接设置高度（无论行数是否变化）
     textarea.style.height = `${lineHeight * clampedRows + padding}px`
-
     // 滚动条逻辑（保留原有逻辑）
     textarea.style.overflowY = rows > 4 ? 'auto' : 'hidden'
   }
 }
-
+const isObject = variable => {
+  const type = Object.prototype.toString.call(variable)
+  return type === '[object PointerEvent]' || type === '[object KeyboardEvent]'
+}
+const checkData = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  if (isObject(val) && !newQuestion.value) {
+    val = ''
+    ElMessage.warning('请输入您的问题再发送')
+    return false
+  }
+  if (val && !isObject(val)) {
+    newQuestion.value = val
+  }
+  if (!newQuestion.value) {
+    ElMessage.warning('请输入您的问题再发送')
+    return false
+  }
+  return true
+}
 const changeMode = () => {
-  // console.log(val)
   currentQuestion.value = false
   activeIndex.value = ''
   newQuestion.value = ''
@@ -200,6 +222,10 @@ export function useShared() {
   const updateLimitId = newName => {
     limitId.value = newName
   }
+  const updateMessageContainer = newName => {
+    messageContainer.value = newName
+  }
+
   return {
     currentQuestion,
     newQuestion,
@@ -234,6 +260,7 @@ export function useShared() {
     transQuest,
     dots,
     chatCurrent,
+    messageContainer,
     changeMode,
     updateCurrentQuestion,
     updateNewQuestion,
@@ -265,6 +292,8 @@ export function useShared() {
     updateTransQuest,
     updateDots,
     updateChatCurrent,
-    updateLimitId
+    updateLimitId,
+    checkData,
+    updateMessageContainer
   }
 }
