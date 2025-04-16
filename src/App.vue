@@ -46,6 +46,19 @@
 // onBeforeUnmount(() => ws?.close())
 </script>
 <style lang="less">
+.el-upload-dragger .el-upload__text em {
+  color: #1b6cff !important;
+}
+.right-aligned-popover {
+  max-width: 100px !important;
+  width: 100px !important;
+  min-width: 100px !important;
+  .el-popper {
+    width: 100px !important;
+    min-width: 100px !important;
+  }
+}
+
 body {
   margin: 0px;
   background-color: #eaeaea;
@@ -53,8 +66,17 @@ body {
 * {
   box-sizing: content-box;
 }
+.el-progress__text {
+  padding-left: 10px !important;
+  font-size: 12px !important;
+  min-width: 20px !important;
+  .el-icon {
+    display: none;
+  }
+}
+
 .el-menu {
-  max-height: 620px;
+  max-height: 680px;
   overflow-y: auto;
   :deep(.el-popover) {
     min-width: 120px !important;
@@ -100,17 +122,17 @@ body {
   background: #555; /* 滑块悬停时的颜色 */
 }
 .el-textarea__inner {
-  padding: 18px 60px 18px 15px !important;
+  padding: 18px 100px 18px 15px !important;
   letter-spacing: 1px; /* 设置字间距 */
 }
 .el-menu--vertical:not(.el-menu--collapse):not(.el-menu--popup-container) .el-menu-item {
   height: 40px;
-  padding: 0 50px 0 15px !important;
+  padding: 0 0px 0 15px !important;
 }
 .el-menu-item span {
   height: 40px;
   line-height: 40px;
-  width: 156px;
+  width: 165px;
 }
 
 .el-textarea__inner {
@@ -157,6 +179,10 @@ body {
 .el-radio__input.is-checked + .el-radio__label {
   color: #1b6cff !important;
 }
+.el-radio-button.is-active .el-radio-button__original-radio:not(:disabled) + .el-radio-button__inner {
+  background: #1b6cff !important;
+  border-color: #1b6cff !important;
+}
 // .el-menu-item.is-active {
 //   color: #1b6cff !important;
 // }
@@ -167,5 +193,8 @@ body {
 .el-button--primary {
   --el-button-bg-color: #1b6cff !important;
   --el-button-hover-text-color: #fff !important;
+}
+.el-button--danger {
+  --el-button-bg-color: #ff4d4f !important;
 }
 </style>

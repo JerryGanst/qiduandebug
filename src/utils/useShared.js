@@ -1,4 +1,4 @@
-import { ref, reactive } from 'vue'
+import { ref, reactive, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 const currentQuestion = ref('') // 控制页面展示问答页还是介绍页
 const newQuestion = ref('') // 文本域输入值
@@ -12,6 +12,7 @@ const pageType = ref('sample') // 当前页面类型
 const selectedMode = ref('通用模式') // 模式
 const currentObj = ref({
   // 人资模式数据对象
+  list: {},
   messages: {},
   messageList: []
 })
@@ -42,9 +43,33 @@ const finalData = ref({
   title: '',
   data: []
 })
-const handleShiftEnter = () => {
-  // Shift + Enter 时允许换行
-  newQuestion.value += '\n'
+const handleShiftEnter = val => {
+  const textareaRef =
+    val === 'textareaInputQuery'
+      ? textareaInputQuery
+      : val === 'textareaInputSample'
+        ? textareaInputSample
+        : val === 'textareaInputTran'
+          ? textareaInputTran
+          : textareaInputFinal
+  const textarea = textareaRef.value?.textarea
+  if (textarea) {
+    const startPos = textarea.selectionStart
+    const endPos = textarea.selectionEnd
+
+    // 直接操作 DOM 插入单个换行
+    textarea.value = textarea.value.substring(0, startPos) + '\n' + textarea.value.substring(endPos)
+
+    // 同步到 v-model
+    newQuestion.value = textarea.value
+
+    // 调整光标位置
+    const newPos = startPos + 1
+    nextTick(() => {
+      textarea.setSelectionRange(newPos, newPos)
+      adjustTextareaHeight(val) // 手动触发高度调整
+    })
+  }
 }
 const textareaInputQuery = ref(null) // 获取 textarea 元素的引用
 const textareaInputSample = ref(null) // 获取 textarea 元素的引用
@@ -57,7 +82,9 @@ const transData = ref('')
 const transQuest = ref('')
 const dots = ref('.') // 初始点号
 const limitId = ref('')
-
+const fileObj = ref('')
+const deepType = ref(false)
+const docIng = ref(false)
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -68,6 +95,7 @@ const adjustTextareaHeight = val => {
           ? textareaInputTran
           : textareaInputFinal
   const textarea = textareaRef.value?.textarea
+
   if (textarea) {
     // 强制重置高度（核心修改点）
     textarea.style.height = '0px' // 先压缩到最小高度
@@ -131,6 +159,14 @@ const changeMode = () => {
             : 'final'
   chatQuery.messages = []
 }
+const checkDeepType = () => {
+  if (isSampleLoad.value || finalIng.value) {
+    ElMessage.warning('有问题正在回答中，请稍后再切换')
+    return
+  }
+  deepType.value = !deepType.value
+}
+
 export function useShared() {
   const updateCurrentQuestion = newName => {
     currentQuestion.value = newName
@@ -225,7 +261,25 @@ export function useShared() {
   const updateMessageContainer = newName => {
     messageContainer.value = newName
   }
+  const updateFileObj = newName => {
+    fileObj.value = newName
+  }
+  const updateDeepType = newName => {
+    deepType.value = newName
+  }
+  const updateDocIng = newName => {
+    docIng.value = newName
+  }
 
+  watch(
+    newQuestion,
+    newVal => {
+      if (!newVal.trim()) {
+        newQuestion.value = ''
+      }
+    },
+    { deep: true }
+  )
   return {
     currentQuestion,
     newQuestion,
@@ -245,6 +299,7 @@ export function useShared() {
     queryTypes,
     chatQuery,
     isLogin,
+    fileObj,
     dynamicRows,
     isSampleLoad,
     limitSample,
@@ -261,6 +316,8 @@ export function useShared() {
     dots,
     chatCurrent,
     messageContainer,
+    deepType,
+    docIng,
     changeMode,
     updateCurrentQuestion,
     updateNewQuestion,
@@ -294,6 +351,10 @@ export function useShared() {
     updateChatCurrent,
     updateLimitId,
     checkData,
-    updateMessageContainer
+    updateMessageContainer,
+    updateFileObj,
+    updateDeepType,
+    checkDeepType,
+    updateDocIng
   }
 }

@@ -15,6 +15,7 @@
             @sample-post="samplePost"
             @summit-post="summitPost"
             @submit-tranSend="submitTranSend"
+            @submit-finalSend="submitFinalSend"
             @up-common="upCommon"
             @down-common="downCommon"
             @refresh-data="refreshData"
@@ -25,25 +26,36 @@
         </div>
         <div v-else class="center-container" style="padding-top: 0px">
           <div class="main_content" style="width: 860px">
-            <div class="text_item" v-if="pageType === 'query' || pageType === 'it'">
+            <!-- <div class="text_item" v-if="pageType === 'query' || pageType === 'it'">
               <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
               <div class="title_final">
                 {{
-                  isQueryStop ? '请重新提出您的问题' : currentObj.messages.type ? '最佳答案已生成' : '开始总结答案...'
+                  isQueryStop ? '请重新提出您的问题' : currentObj.messages.type ? '最佳答案已生成' : '正在总结答案...'
                 }}
               </div>
-            </div>
-            <div class="title_float" v-if="pageType === 'query' || pageType === 'it'">
-              <div>
-                {{ currentObj.messages.isHistory ? '' : currentMessage }}
-              </div>
-            </div>
+            </div> -->
+
             <div v-if="pageType === 'query' || pageType === 'it'" class="title_tiQuery">
               <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
                 {{ tipQuery }}
               </div>
             </div>
-
+            <div class="title_float" v-if="pageType === 'query' || pageType === 'it'">
+              <span v-if="!currentObj.messages.type">
+                <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
+              </span>
+              <span style="padding-left: 10px" v-if="!currentObj.messages.type">
+                {{ currentObj.messages.isHistory ? '' : currentMessage }}
+              </span>
+            </div>
+            <div
+              class="title_float"
+              v-if="(pageType === 'query' || pageType === 'it') && currentObj.messages.type === 'final_answer'"
+            >
+              <span>
+                {{ currentObj.list?.content }}
+              </span>
+            </div>
             <MarkdownRenderer
               v-if="(pageType === 'query' || pageType === 'it') && currentObj.messages.type === 'final_answer'"
               :markdown="currentObj.messages.content"
@@ -90,7 +102,7 @@
               </div>
             </div>
 
-            <div class="text_item" v-if="pageType === 'sample'">
+            <!-- <div class="text_item" v-if="pageType === 'sample'">
               <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
               <div>
                 {{
@@ -98,15 +110,10 @@
                     ? '请重新提出您的问题'
                     : chatQuery.messages.length > 0 && chatQuery.isLoading === false && !limitLoading
                       ? '最佳答案已生成'
-                      : '开始总结答案...'
+                      : '正在总结答案...'
                 }}
               </div>
-            </div>
-
-            <div class="tip_load" v-if="pageType === 'sample' && isSampleLoad && limitLoading">
-              <span>正在为您解答,请稍等</span>
-              <span>{{ dots }}</span>
-            </div>
+            </div> -->
 
             <div class="sample_item" ref="messageContainer">
               <div
@@ -121,7 +128,29 @@
                 >
                   {{ item.content }}
                 </div>
-                <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" />
+                <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
+                <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
+                  <!-- 前半部分 -->
+                  <!-- <MarkdownRenderer
+                    :markdown="item.before"
+                    :class="{ 'dimmed-text': item.hasSplit }"
+                    style="font-size: 12px"
+                  /> -->
+                  <MarkdownRenderer
+                    :markdown="item.before"
+                    class="normal-text"
+                    style="
+                      font-size: 13px;
+                      line-height: 24px;
+                      padding: 0px 10px;
+                      background-color: transparent;
+                      color: #666;
+                    "
+                  />
+                  <!-- 后半部分 -->
+                  <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
+                </div>
+                <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
               </div>
               <div
                 class="sample_chat"
@@ -131,11 +160,37 @@
                 <div
                   v-if="index % 2 === 0"
                   class="sample_chat_query"
-                  :style="{ marginTop: index === 0 ? '30px' : '40px' }"
+                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
                 >
                   {{ item.content }}
                 </div>
-                <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" />
+                <div class="tip_load" v-if="index === chatCurrent.messages.length - 1">
+                  <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
+                  <span style="padding-left: 10px">正在为您解答,请稍等</span>
+                  <span>{{ dots }}</span>
+                </div>
+                <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
+                <div v-if="index % 2 !== 0" class="stream-response">
+                  <!-- 前半部分 -->
+                  <!-- <MarkdownRenderer
+                    :markdown="item.before"
+                    :class="{ 'dimmed-text': item.hasSplit }"
+                    style="font-size: 12px"
+                  /> -->
+                  <MarkdownRenderer
+                    :markdown="item.before"
+                    class="normal-text"
+                    style="
+                      font-size: 13px;
+                      line-height: 24px;
+                      padding: 0px 10px;
+                      background-color: transparent;
+                      color: #666;
+                    "
+                  />
+                  <!-- 后半部分 -->
+                  <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
+                </div>
               </div>
             </div>
 
@@ -159,11 +214,10 @@
           <div class="query_content">
             <div class="tran_select" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
               <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
-                <el-radio label="通用模式">通用模式</el-radio>
-                <el-radio label="人资行政专题">人资行政专题</el-radio>
-                <el-radio label="IT专题">IT专题</el-radio>
+                <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
+                <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
+                <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
               </el-radio-group>
-              <div class="mode_title">模式选择 :</div>
             </div>
             <div class="textarea" v-if="pageType === 'query' || pageType === 'it'">
               <el-input
@@ -171,8 +225,8 @@
                 placeholder="请输入您的问题,换行请按下Shift+Enter"
                 class="custom-input"
                 style="width: 100%"
-                @keydown="summitPost"
-                @keyup.shift.enter="handleShiftEnter"
+                @keydown.enter.prevent="summitPost"
+                @keyup.shift.enter.prevent="handleShiftEnter('textareaInputQuery')"
                 type="textarea"
                 :maxlength="4096"
                 ref="textareaInputQuery"
@@ -194,6 +248,33 @@
                     </el-icon>
                   </el-upload>
                 </el-tooltip> -->
+                <!-- <img
+                  :src="deepType ? deepSelect : deep"
+                  class="arrow"
+                  @mouseenter="() => hoverDeep(true)"
+                  @mouseleave="() => hoverDeep(false)"
+                  @click="checkDeepType"
+                  style="margin-right: 10px"
+                /> -->
+                <div
+                  class="tooltip-wrapper"
+                  @mouseenter="showFileTip = true"
+                  @mouseleave="showFileTip = false"
+                  v-if="pageType === 'it'"
+                >
+                  <img
+                    :src="deepType ? deepSelect : deep"
+                    class="arrow"
+                    @click="checkDeepType"
+                    style="margin-right: 10px"
+                  />
+
+                  <transition name="fade">
+                    <div v-if="showFileTip" class="tooltip">
+                      {{ !deepType ? '切换成深度思考模式' : '切换成普通模式' }}
+                    </div>
+                  </transition>
+                </div>
                 <img
                   :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
                   class="arrow"
@@ -208,8 +289,8 @@
                 style="width: 100%"
                 class="custom-input"
                 clearable
-                @keydown="samplePost"
-                @keyup.shift.enter="handleShiftEnter"
+                @keydown.enter.prevent="samplePost"
+                @keyup.shift.enter.prevent="handleShiftEnter('textareaInputSample')"
                 ref="textareaInputSample"
                 :maxlength="4096"
                 type="textarea"
@@ -231,6 +312,28 @@
                     </el-icon>
                   </el-upload>
                 </el-tooltip> -->
+                <!-- <img
+                  :src="deepType ? deepSelect : deep"
+                  class="arrow"
+                  @mouseenter="() => hoverDeep(true)"
+                  @mouseleave="() => hoverDeep(false)"
+                  @click="checkDeepType"
+                  style="margin-right: 10px"
+                /> -->
+                <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+                  <img
+                    :src="deepType ? deepSelect : deep"
+                    class="arrow"
+                    @click="checkDeepType"
+                    style="margin-right: 10px"
+                  />
+
+                  <transition name="fade">
+                    <div v-if="showFileTip" class="tooltip">
+                      {{ !deepType ? '切换成深度思考模式' : '切换成普通模式' }}
+                    </div>
+                  </transition>
+                </div>
                 <img
                   :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
                   class="arrow"
@@ -269,10 +372,13 @@ import Entry from './component/entry.vue'
 import { Document } from '@element-plus/icons-vue' // 引入需要的图标
 import { useShared } from '@/utils/useShared'
 import { ElButton, ElMessage } from 'element-plus' // 引入 ElMessage
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, toRaw } from 'vue'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
 import imageC from '@/assets/stop.png'
+import deep from '@/assets/deep.png'
+import deepSelect from '@/assets/deepSelect.png'
+
 import request from '@/utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './component/markdown.vue' // 引入 Markdown 渲染组件
 // 静态导入图片
@@ -315,7 +421,10 @@ const {
   limitId,
   checkData,
   dots,
-  messageContainer
+  messageContainer,
+  deepType,
+  checkDeepType,
+  docIng
 } = useShared()
 
 const queryIng = ref(false)
@@ -366,9 +475,9 @@ const removeItemByType = (arr, name) => {
 }
 
 // 点击取消
-const handleCancel = () => {
-  // ElMessage.info('已取消删除');
-}
+// const handleCancel = () => {
+//   // ElMessage.info('已取消删除');
+// }
 
 // 点号变化逻辑
 const updateDots = () => {
@@ -378,6 +487,10 @@ const updateDots = () => {
     dots.value += '.' // 增加一个点
   }
 }
+const hoverDeep = () => {
+  console.log(123)
+}
+
 const toDoc = async data => {
   request
     .post('/Files/getFileInfoByName', {
@@ -459,12 +572,12 @@ const displayMessagesSequentially = async () => {
   }
 }
 
-const submitFinal = async (val, isRefresh) => {
+const submitFinal = async (val, isRefresh, ob) => {
   if (finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
-  if (!checkData(val)) {
+  if (!ob && !checkData(val)) {
     return
   }
 
@@ -476,17 +589,59 @@ const submitFinal = async (val, isRefresh) => {
   }
   finalQuest.value = ''
   finalIng.value = true
+  docIng.value = true
   let title = ''
-  if (isRefresh) {
+  if (!isRefresh && ob) {
+    const qData = ob.originalFileName + '(final)'
+    questions.value.unshift(qData)
+  }
+  if (isRefresh && !ob) {
     for (var m = 0; m < answerList.value.length; m++) {
       if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
         const id = answerList.value[m].id
         title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+        const index = questions.value.findIndex(item => item === title + '(final)')
+        if (index !== -1) {
+          questions.value.splice(index, 1)
+        }
+        const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
+        if (idx !== -1) {
+          answerList.value.splice(index, 1)
+        }
         await asizeRef.value.deleteData(id, true)
+        activeIndex.value = 0
+        const limit =
+          limitQuery.value.length > 20 ? limitQuery.value.substring(0, 20) + '(final)' : limitQuery.value + '(final)'
+        questions.value.unshift(limit)
       }
     }
   }
-  if (questions.value.includes(limitQuery.value + '(final)') && !isRefresh) {
+  if (isRefresh && ob) {
+    for (var m = 0; m < answerList.value.length; m++) {
+      if (
+        answerList.value[m].type === '总结' &&
+        answerList.value[m].data.files &&
+        ob.originalFileName === answerList.value[m].data.files.originalFileName
+      ) {
+        const id = answerList.value[m].id
+        title = answerList.value[m].title
+        const index = questions.value.findIndex(item => item === title)
+        if (index !== -1) {
+          questions.value.splice(index, 1)
+        }
+        const idx = answerList.value.findIndex(
+          item => item.data.files && item.data.files.originalFileName === ob.originalFileName
+        )
+        if (idx !== -1) {
+          answerList.value.splice(index, 1)
+        }
+        await asizeRef.value.deleteData(id, true)
+        activeIndex.value = 0
+        questions.value.unshift(title)
+      }
+    }
+  }
+  if (questions.value.includes(limitQuery.value + '(final)') && !isRefresh && !ob) {
     const qData = limitQuery.value + '(final)'
     for (var ms = 0; ms < questions.value.length; ms++) {
       if (qData === questions.value[ms]) {
@@ -495,9 +650,10 @@ const submitFinal = async (val, isRefresh) => {
     }
     asizeRef.value.queryAn(qData, '')
     finalIng.value = false
+    docIng.value = false
     return
   }
-  if (questions.value.includes(limitQuery.value + '(final)') && isRefresh) {
+  if (questions.value.includes(limitQuery.value + '(final)') && isRefresh && !ob) {
     const qData = limitQuery.value + '(final)'
     const index = questions.value.findIndex(item => item === qData)
     const idx = answerList.value.findIndex(item => item.title === qData)
@@ -511,7 +667,7 @@ const submitFinal = async (val, isRefresh) => {
     await asizeRef.value.deleteData(targetId, isRefresh)
   }
 
-  if (!questions.value.includes(limitQuery.value + '(final)') && !title) {
+  if (!questions.value.includes(limitQuery.value + '(final)') && !title && !ob) {
     const qData = limitQuery.value + '(final)'
     questions.value.unshift(qData)
   }
@@ -531,17 +687,24 @@ const submitFinal = async (val, isRefresh) => {
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   currentRequestUrl.value = '/AI/summarize'
-
-  finalQuest.value = limitQuery.value
+  finalQuest.value = ob ? ob.originalFileName : limitQuery.value
+  const passQuery = ob ? ob.originalFileName : limitQuery.value
   entryRef.value.changeDynamicRows()
+  nextTick(() => {
+    if (entryRef.value?.fileRef) {
+      entryRef.value.fileRef.closeFile()
+    }
+  })
   request
     .post('/AI/summarize', {
       user_id: userInfo.value.id,
-      question: limitQuery.value
+      question: passQuery,
+      file: ob ? ob.fileId : ''
       // showLoading: true
     })
     .then(res => {
       finalIng.value = false
+      docIng.value = false
       currentRequestUrl.value = ''
       clearInterval(interval)
       nextTick(() => {
@@ -554,14 +717,16 @@ const submitFinal = async (val, isRefresh) => {
           finalData.value.data = res.data.key_points
         }
         const obj = {
-          question: finalQuest.value,
+          question: passQuery,
           answer: finalData.value
         }
-        postFinal(obj, title)
+
+        postFinal(obj, title, ob)
       }
     })
     .catch(err => {
       finalIng.value = false
+      docIng.value = false
       clearInterval(interval)
       nextTick(() => {
         adjustTextareaHeight('textareaInputFinal')
@@ -580,13 +745,27 @@ const samplePost = event => {
 }
 
 const refreshData = () => {
+  if (isSampleLoad.value || finalIng.value) {
+    ElMessage.warning('有问答正在进行中,请稍后再试')
+    return
+  }
   if (pageType.value === 'query' || pageType.value === 'it') {
     queryIng.value = false
     submitQuestion(tipQuery.value, true)
   } else if (pageType.value === 'tran') {
-    submitTran(transQuest.value, true)
+    let obj = ''
+    if (activeIndex.value || activeIndex.value == 0) {
+      obj = answerList.value[activeIndex.value]?.data?.files
+    }
+    const val = transQuest.value
+    submitTran(val, true, obj)
   } else if (pageType.value === 'final') {
-    submitFinal(finalQuest.value, true)
+    let obj = ''
+    if (activeIndex.value || activeIndex.value == 0) {
+      obj = answerList.value[activeIndex.value]?.data?.files
+    }
+    const val = finalQuest.value
+    submitFinal(finalQuest.value, true, obj)
   } else if (pageType.value === 'sample') {
     submitSample(chatQuery.messages[chatQuery.messages.length - 2].content, true)
   }
@@ -646,6 +825,7 @@ const submitCommon = async () => {
       // showLoading: true
     })
     .then(res => {
+      console.log(res)
       if (res.status) {
         ElMessage.success('评价成功,我们会继续努力的！')
         commonVisible.value = false
@@ -680,6 +860,13 @@ const submitTranSend = () => {
     return
   }
   submitTran()
+}
+const submitFinalSend = () => {
+  if (finalIng.value) {
+    cancelCurrentRequest('final')
+    return
+  }
+  submitFinal()
 }
 
 const submitSampleTitle = val => {
@@ -741,11 +928,12 @@ const submitSample = async (val, isRefresh) => {
     }
   }
   params.userId = userInfo.value.id
+  params.model = deepType.value ? 1 : 0
   const queryValue = newQuestion.value
   tipQuery.value = queryValue
   newQuestion.value = ''
   let title = ''
-  if (isRefresh) {
+  if (!questions.value.includes(queryValue + '(sample)') && isRefresh) {
     for (var m = 0; m < answerList.value.length; m++) {
       if (
         answerList.value[m].type === '通用模式' &&
@@ -753,7 +941,13 @@ const submitSample = async (val, isRefresh) => {
       ) {
         const id = answerList.value[m].id
         title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+        const index = questions.value.findIndex(item => item === title + '(sample)')
+        if (index !== -1) {
+          questions.value.splice(index, 1)
+        }
         await asizeRef.value.deleteData(id, true)
+        questions.value.unshift(title + '(sample)')
+        activeIndex.value = 0
       }
     }
   }
@@ -768,7 +962,16 @@ const submitSample = async (val, isRefresh) => {
     isSampleLoad.value = false
     return
   }
-
+  if (!isRefresh) {
+    for (var s = 0; s < answerList.value.length; s++) {
+      if (answerList.value[s].type === '通用模式' && queryValue === answerList.value[s].data[0].content) {
+        activeIndex.value = s
+        asizeRef.value.queryAn(queryValue + '(sample)', '')
+        isSampleLoad.value = false
+        return
+      }
+    }
+  }
   if (questions.value.includes(queryValue + '(sample)') && isRefresh) {
     const qData = queryValue + '(sample)'
     const index = questions.value.findIndex(item => item === qData)
@@ -823,11 +1026,12 @@ const submitSample = async (val, isRefresh) => {
   })
   // currentRequestUrl.value = '/AI/chatStream'
   const controller = new AbortController()
-  const assistantMsg = { role: 'assistant', content: '' }
+  const assistantMsg = { role: 'assistant', content: '', before: '', after: '', hasSplit: false, isNewData: true }
   mes.messages.push(assistantMsg)
   // 使用一个对象记录哪些 content 已经有 user 了
   chatCurrent.messages = mes.messages
   chatQuery.isLoading = true
+  const isThink = deepType.value
   try {
     // 替换为实际的后端接口地址
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/chatStream', {
@@ -881,7 +1085,7 @@ const submitSample = async (val, isRefresh) => {
             // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
           }
         })
-        postSample(id, title)
+        postSample(id, title, isThink)
         break
       }
       buffer += decoder.decode(value, { stream: true })
@@ -889,22 +1093,66 @@ const submitSample = async (val, isRefresh) => {
       const chunks = buffer.split(/(?=data:)/g)
       buffer = chunks.pop() || ''
       chunks.forEach(chunk => {
-        // 优化正则匹配以保留原始符号（包括换行符和嵌套结构）[3,4](@ref)
-        const jsonMatch = chunk.match(/data:\s*([\s\S]*?)(?=\ndata:|\n\n|$)/)
+        // 1. 修复正则匹配语法
+        const jsonMatch = chunk.match(/data:\s*({[\s\S]*?})(?=\ndata:|\n\n|$)/)
+
+        // 2. 添加条件判断包裹
         if (jsonMatch) {
           if (messageContainer.value) {
             messageContainer.value.scrollTop = messageContainer.value.scrollHeight
           }
           try {
-            const { content, role } = JSON.parse(jsonMatch[1])
-            // 直接拼接原始内容（不处理空格/换行符）[2,4](@ref)
-            assistantMsg.content += content
-            chatCurrent.messages.splice(chatCurrent.messages.length - 1, 1, { ...assistantMsg })
+            const { content } = JSON.parse(jsonMatch[1])
+
+            // 核心逻辑：逐字处理
+            if (assistantMsg.hasSplit) {
+              // 已遇到分隔符，内容追加到后半部分
+              assistantMsg.after += content
+            } else {
+              const sp = isThink ? '</think>' : ''
+              // 检查当前数据块是否包含分隔符
+              const splitIndex = content.indexOf(sp)
+              if (splitIndex === -1) {
+                // 未找到分隔符，全部追加到前半部分
+                assistantMsg.before += content
+              } else {
+                // 找到分隔符，分割内容
+                assistantMsg.before += content.slice(0, splitIndex)
+                assistantMsg.after += content.slice(splitIndex + sp.length)
+                assistantMsg.hasSplit = true
+              }
+            }
+
+            // 立即更新视图（无需防抖）
+            chatCurrent.messages.splice(-1, 1, {
+              ...toRaw(assistantMsg),
+              before: assistantMsg.before,
+              after: assistantMsg.after,
+              content: assistantMsg.before + assistantMsg.after // 兼容旧字段
+            })
           } catch (e) {
+            console.error('JSON 解析失败:', jsonMatch[1], '错误:', e)
             ElMessage.error('数据格式异常')
           }
         }
       })
+      // chunks.forEach(chunk => {
+      //   // 优化正则匹配以保留原始符号（包括换行符和嵌套结构）[3,4](@ref)
+      //   const jsonMatch = chunk.match(/data:\s*([\s\S]*?)(?=\ndata:|\n\n|$)/)
+      //   if (jsonMatch) {
+      //     if (messageContainer.value) {
+      //       messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+      //     }
+      //     try {
+      //       const { content, role } = JSON.parse(jsonMatch[1])
+      //       // 直接拼接原始内容（不处理空格/换行符）[2,4](@ref)
+      //       assistantMsg.content += content
+      //       chatCurrent.messages.splice(chatCurrent.messages.length - 1, 1, { ...assistantMsg })
+      //     } catch (e) {
+      //       ElMessage.error('数据格式异常')
+      //     }
+      //   }
+      // })
     }
   } catch (error) {
     chatQuery.isLoading = false
@@ -917,15 +1165,16 @@ const submitSample = async (val, isRefresh) => {
     ElMessage.error('服务器繁忙,请稍后再试')
   }
 }
-const submitTran = async (val, isRefresh) => {
+const submitTran = async (val, isRefresh, obj) => {
   if (finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
-  if (!checkData(val)) {
+  if (!obj && !checkData(val)) {
     return
   }
   finalIng.value = true
+  docIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   limitQuery.value = newQuestion.value
 
@@ -933,16 +1182,71 @@ const submitTran = async (val, isRefresh) => {
   transQuest.value = ''
   transData.value = ''
   let title = ''
-  if (isRefresh) {
+  if (!isRefresh && obj) {
+    const qData = obj.originalFileName + '(tran)'
+    questions.value.unshift(qData)
+  }
+  // if (isRefresh && obj) {
+  //   const qData = obj.originalFileName + '(tran)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   if (idx !== -1) {
+  //     answerList.value.splice(index, 1)
+  //   }
+  //   await asizeRef.value.deleteData(targetId, isRefresh)
+  //   questions.value.unshift(qData)
+  // }
+  if (isRefresh && !obj) {
     for (var m = 0; m < answerList.value.length; m++) {
       if (answerList.value[m].type === '翻译' && limitQuery.value === answerList.value[m].data.question) {
         const id = answerList.value[m].id
         title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+        const index = questions.value.findIndex(item => item === title + '(tran)')
+        if (index !== -1) {
+          questions.value.splice(index, 1)
+        }
+        const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
+        if (idx !== -1) {
+          answerList.value.splice(index, 1)
+        }
         await asizeRef.value.deleteData(id, true)
+        activeIndex.value = 0
+        const limit =
+          limitQuery.value.length > 20 ? limitQuery.value.substring(0, 20) + '(tran)' : limitQuery.value + '(tran)'
+        questions.value.unshift(limit)
       }
     }
   }
-  if (questions.value.includes(limitQuery.value + '(tran)') && !isRefresh) {
+  if (isRefresh && obj) {
+    for (var m = 0; m < answerList.value.length; m++) {
+      if (
+        answerList.value[m].type === '翻译' &&
+        answerList.value[m].data.files &&
+        obj.originalFileName === answerList.value[m].data.files.originalFileName
+      ) {
+        const id = answerList.value[m].id
+        title = answerList.value[m].title
+        const index = questions.value.findIndex(item => item === title)
+        if (index !== -1) {
+          questions.value.splice(index, 1)
+        }
+        const idx = answerList.value.findIndex(
+          item => item.data.files && item.data.files.originalFileName === obj.originalFileName
+        )
+        if (idx !== -1) {
+          answerList.value.splice(index, 1)
+        }
+        await asizeRef.value.deleteData(id, true)
+        activeIndex.value = 0
+        questions.value.unshift(title)
+      }
+    }
+  }
+  if (questions.value.includes(limitQuery.value + '(tran)') && !isRefresh && !obj) {
     const qData = limitQuery.value + '(tran)'
     for (var ms = 0; ms < questions.value.length; ms++) {
       if (qData === questions.value[ms]) {
@@ -952,6 +1256,7 @@ const submitTran = async (val, isRefresh) => {
     if (selectedLan.value === answerList.value[activeIndex.value].data.target) {
       asizeRef.value.queryAn(qData, '')
       finalIng.value = false
+      docIng.value = false
       return
     } else {
       const idx = answerList.value.findIndex(item => item.title === qData)
@@ -959,7 +1264,7 @@ const submitTran = async (val, isRefresh) => {
       await asizeRef.value.deleteData(targetId, true)
     }
   }
-  if (questions.value.includes(limitQuery.value + '(tran)') && isRefresh) {
+  if (questions.value.includes(limitQuery.value + '(tran)') && isRefresh && !obj) {
     const qData = limitQuery.value + '(tran)'
     const index = questions.value.findIndex(item => item === qData)
     const idx = answerList.value.findIndex(item => item.title === qData)
@@ -973,7 +1278,7 @@ const submitTran = async (val, isRefresh) => {
     await asizeRef.value.deleteData(targetId, isRefresh)
   }
 
-  if (!questions.value.includes(limitQuery.value + '(tran)') && !title) {
+  if (!questions.value.includes(limitQuery.value + '(tran)') && !title && !obj) {
     const qData = limitQuery.value + '(tran)'
     questions.value.unshift(qData)
   }
@@ -991,18 +1296,24 @@ const submitTran = async (val, isRefresh) => {
     }
   }
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
-  transQuest.value = limitQuery.value
+  transQuest.value = obj ? obj.originalFileName : limitQuery.value
+  const passQuery = obj ? obj.originalFileName : limitQuery.value
   currentRequestUrl.value = '/AI/translate'
+  nextTick(() => {
+    if (entryRef.value?.fileRef) {
+      entryRef.value.fileRef.closeFile()
+    }
+  })
   request
     .post('/AI/translate', {
       user_id: userInfo.value.id,
-      source_text: limitQuery.value,
-      target_language: selectedLan.value
+      source_text: obj ? '' : limitQuery.value,
+      target_language: selectedLan.value,
+      file: obj ? obj.fileId : ''
       // showLoading: true
     })
     .then(res => {
       currentRequestUrl.value = ''
-
       clearInterval(interval)
       nextTick(() => {
         adjustTextareaHeight('textareaInputTran')
@@ -1010,15 +1321,20 @@ const submitTran = async (val, isRefresh) => {
       if (res.status) {
         transData.value = res.data
         const passData = {
-          question: transQuest.value,
+          question: passQuery,
           answer: res.data
         }
-        postTran(passData, title)
+        console.log(title)
+        postTran(passData, title, obj)
+      } else {
+        ElMessage.warning(res.message)
       }
     })
 
     .catch(err => {
+      ElMessage.error('翻译失败' + err.message)
       finalIng.value = false
+      docIng.value = false
       clearInterval(interval)
       nextTick(() => {
         adjustTextareaHeight('textareaInputTran')
@@ -1044,6 +1360,7 @@ const submitQuestion = async (val, isRefresh) => {
   isQueryStop.value = false
   dynamicRows.value = 1
   currentMessageIndex.value = 0
+  currentObj.value.list = {}
   currentObj.value.messages = {}
   currentObj.value.messageList = []
   const queryValue = newQuestion.value
@@ -1054,12 +1371,24 @@ const submitQuestion = async (val, isRefresh) => {
   const pgType = pageType.value
   const addTitle = pageType.value === 'query' ? '(query)' : '(it)'
   let title = ''
-  if (isRefresh) {
+  if (addTitle === '(query)') {
+    deepType.value = 0
+  }
+  if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
     for (var m = 0; m < answerList.value.length; m++) {
-      if (answerList.value[m].type === '人资行政专题' && queryValue === answerList.value[m].data.question) {
+      if (
+        (answerList.value[m].type === '人资行政专题' || answerList.value[m].type === 'IT专题') &&
+        queryValue === answerList.value[m].data.question
+      ) {
         const id = answerList.value[m].id
         title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+        const index = questions.value.findIndex(item => item === title + addTitle)
+        if (index !== -1) {
+          questions.value.splice(index, 1)
+        }
+        activeIndex.value = 0
         await asizeRef.value.deleteData(id, true)
+        questions.value.unshift(title + addTitle)
       }
     }
   }
@@ -1074,6 +1403,24 @@ const submitQuestion = async (val, isRefresh) => {
     asizeRef.value.queryAn(qData, '')
     isSampleLoad.value = false
     return
+  }
+  if (!isRefresh) {
+    for (var s = 0; s < answerList.value.length; s++) {
+      if (answerList.value[s].type === '人资行政专题' && queryValue === answerList.value[s].data.question) {
+        activeIndex.value = s
+        asizeRef.value.queryAn(queryValue + '(query)', '')
+        queryIng.value = false
+        isSampleLoad.value = false
+        return
+      }
+      if (answerList.value[s].type === 'IT专题' && queryValue === answerList.value[s].data.question) {
+        activeIndex.value = s
+        asizeRef.value.queryAn(queryValue + '(it)', '')
+        queryIng.value = false
+        isSampleLoad.value = false
+        return
+      }
+    }
   }
   if (questions.value.includes(queryValue + addTitle) && isRefresh) {
     const qData = queryValue + addTitle
@@ -1106,7 +1453,8 @@ const submitQuestion = async (val, isRefresh) => {
     }
   }
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
-
+  const isThink = deepType.value === true ? true : false
+  let list = {}
   try {
     // 替换为实际的后端接口地址
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/query', {
@@ -1117,6 +1465,7 @@ const submitQuestion = async (val, isRefresh) => {
       body: JSON.stringify({
         question: queryValue,
         user_id: userInfo.value.id,
+        model: deepType.value ? 1 : 0,
         type: pageType.value === 'query' ? '人资行政专题' : 'IT专题'
       })
     })
@@ -1146,21 +1495,30 @@ const submitQuestion = async (val, isRefresh) => {
       const jsonStr = buffer.split('\n\n')
       // 如果最后一个部分不完整，保留在缓冲区中
       buffer = jsonStr.pop() || ''
+      let finalAnswer = {}
 
       jsonStr.forEach(element => {
         const type = JSON.parse(element).type
+        if (type === 'reasoning') {
+          currentObj.value.list = JSON.parse(element)
+          list = JSON.parse(JSON.stringify(currentObj.value.list))
+        }
         if (type === 'final_answer') {
           queryIng.value = false
 
           // loadingInstance.close();
           currentObj.value.messages = JSON.parse(element)
+          finalAnswer = JSON.parse(element)
           currentObj.value.messages.isHistory = true
           const query = title ? title : queryValue
           const paramsQuery = {
             title: title ? title : queryValue,
             queryValue: queryValue
           }
-          postQuestion(JSON.parse(element), paramsQuery, pgType, isRefresh)
+          setTimeout(() => {
+            const think = isThink ? JSON.parse(JSON.stringify(list)) : {}
+            postQuestion(think, finalAnswer, paramsQuery, pgType, isThink)
+          }, 200)
         } else {
           currentObj.value.messageList.push(JSON.parse(element))
         }
@@ -1184,13 +1542,14 @@ const submitQuestion = async (val, isRefresh) => {
   }
 }
 
-const postSample = async (ids, title) => {
+const postSample = async (ids, title, isThink) => {
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
       type: '通用模式',
       id: ids,
       data: chatQuery.messages,
+      isThink: isThink ? true : false,
       title: title ? title : chatQuery.messages[0].content
       // showLoading: true
     })
@@ -1206,14 +1565,16 @@ const postSample = async (ids, title) => {
     })
 }
 
-const postQuestion = async (obj, val, type) => {
+const postQuestion = async (think, obj, val, type, isThink) => {
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
       type: type === 'query' ? '人资行政专题' : 'IT专题',
       title: val.title,
       id: '',
+      isThink: isThink,
       data: {
+        think: think,
         question: val.queryValue,
         answer: obj
       }
@@ -1233,7 +1594,7 @@ const postQuestion = async (obj, val, type) => {
     })
 }
 
-const postTran = async (obj, title) => {
+const postTran = async (obj, title, ob) => {
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
@@ -1244,25 +1605,28 @@ const postTran = async (obj, title) => {
         question: obj.question,
         answer: obj.answer,
         target: selectedLan.value,
-        files: []
+        files: ob ? ob : ''
       }
       // showLoading: true
     })
     .then(res => {
       if (res.status) {
         finalIng.value = false
+        docIng.value = false
         getHistory('', 'tran', obj.question, res.data)
       } else {
         finalIng.value = false
+        docIng.value = false
       }
     })
     .catch(err => {
       finalIng.value = false
+      docIng.value = false
       console.error('获取回复失败:', err)
     })
 }
 
-const postFinal = async (obj, title) => {
+const postFinal = async (obj, title, ob) => {
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
@@ -1274,7 +1638,8 @@ const postFinal = async (obj, title) => {
         answer: {
           key_points: obj.answer.data,
           summary: obj.answer.title
-        }
+        },
+        files: ob ? ob : ''
       }
       // showLoading: true
     })
@@ -1288,11 +1653,23 @@ const postFinal = async (obj, title) => {
     })
 }
 
+// const getMessageTitle = () => {
+//   request
+//     .post('/Message/getMessageTitleByUserId?userId=' + userInfo.value.id)
+//     .then(res => {
+//       if (res.status) {
+//       }
+//     })
+//     .catch(err => {
+//       console.error('获取回复失败:', err)
+//     })
+// }
 const getHistory = async (id, page, val, ids) => {
   request
     .post('/Message/getMessageByUserId?userId=' + userInfo.value.id)
     .then(res => {
       if (res.status) {
+        // getMessageTitle()
         answerList.value = res.data
         questions.value = []
         const limitData = JSON.parse(JSON.stringify(queryTypes.value))
@@ -1300,12 +1677,15 @@ const getHistory = async (id, page, val, ids) => {
           for (var i = 0; i < res.data.length; i++) {
             if (res.data[i].type === '人资行政专题') {
               answerList.value[i].title = answerList.value[i].title + '(query)'
+
               questions.value.push(answerList.value[i].title)
             } else if (res.data[i].type === 'IT专题') {
               answerList.value[i].title = answerList.value[i].title + '(it)'
+
               questions.value.push(answerList.value[i].title)
             } else if (res.data[i].type === '通用模式') {
               answerList.value[i].title = answerList.value[i].title + '(sample)'
+
               questions.value.push(answerList.value[i].title)
             } else if (res.data[i].type === '翻译') {
               answerList.value[i].title = answerList.value[i].title + '(tran)'
@@ -1392,10 +1772,16 @@ const getHistory = async (id, page, val, ids) => {
                 selectedMode.value = answerList.value[0].type
                 if (page === 'query' || page === 'it') {
                   currentQuestion.value = true
-                  tipQuery.value = answerList.value[h].title.replace(/\([^)]*\)/g, '')
+                  tipQuery.value = answerList.value[h].data.question
+                  currentObj.value.list = answerList.value[h].data.think
                 }
-                if (page === 'tran' || page === 'final') {
+                if (page === 'tran') {
                   currentQuestion.value = false
+                  transQuest.value = answerList.value[h].data.question
+                }
+                if (page === 'final') {
+                  currentQuestion.value = false
+                  finalQuest.value = answerList.value[h].data.question
                 }
               }
             }
@@ -1411,6 +1797,7 @@ const getHistory = async (id, page, val, ids) => {
 // 终止请求方法
 const cancelCurrentRequest = val => {
   request.cancelRequest(currentRequestUrl.value)
+  console.log(val)
   ElMessage.success('请求已中止')
   if (val === 'sample') {
     isSampleLoad.value = false
@@ -1429,14 +1816,14 @@ const cancelCurrentRequest = val => {
       }
     }
     const id = limitId.value
-    console.log(title)
-    postSample(id, title.replace(/\([^)]*\)/g, ''))
+    postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value)
     limitId.value = ''
   }
   if (val === 'query') {
     isSampleLoad.value = false
     limitLoading.value = false
     isQueryStop.value = true
+    currentObj.value.list = {}
     currentObj.value.messages = {}
     currentObj.value.messageList = []
     tipQuery.value = ''
@@ -1448,14 +1835,20 @@ const cancelCurrentRequest = val => {
     getHistory()
   }
   if (val === 'tran') {
+    console.log(questions.value)
     finalIng.value = false
-    transQuest.value = ''
+    docIng.value = false
+    // transQuest.value = ''
     transData.value = ''
+    getHistory()
   }
   if (val === 'final') {
+    console.log(questions.value)
     finalIng.value = false
+    docIng.value = false
     finalData.value.title = ''
     finalData.value.data = []
+    getHistory()
   }
 }
 
@@ -1468,6 +1861,47 @@ onUnmounted(() => {
 </script>
 
 <style lang="less">
+.tooltip-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 添加淡入淡出动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 可选：现代浏览器箭头实现 */
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #000;
+}
 .button-item_common {
   display: flex;
   width: 100%;
@@ -1582,6 +2016,7 @@ onUnmounted(() => {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
+      margin-bottom: 10px;
       /* WebKit 浏览器滚动条样式 */
 
       .sample_item::-webkit-scrollbar {
@@ -1626,10 +2061,9 @@ onUnmounted(() => {
       }
       .tip_load {
         font-size: 12px;
-        margin-top: 10px;
+        padding-left: 5px;
         letter-spacing: 1px;
-        height: 30px;
-        padding-left: 37px;
+        line-height: 20px;
       }
       .text_item {
         margin-top: 75px;
@@ -1650,19 +2084,19 @@ onUnmounted(() => {
         }
       }
       .title_float {
-        width: 100%;
-        font-size: 12px;
+        width: calc(100% - 10px);
+        font-size: 13px;
         display: flex;
-        flex-direction: column;
-        height: 30px;
-        margin-top: 10px;
-        padding-left: 37px;
+        padding: 4px 10px;
+        letter-spacing: 1px;
+        line-height: 24px;
+        color: #666;
       }
       .title_tiQuery {
         display: flex;
         flex-direction: row-reverse;
         width: 100%;
-        margin-top: 40px;
+        margin-top: 80px;
         .title_tiQuery_text {
           background-color: #1b6cff;
           border-radius: 10px;
@@ -1701,15 +2135,17 @@ onUnmounted(() => {
         }
       }
       .title_wait {
-        font-size: 14px;
-        margin-top: 30px;
+        margin-top: 10px;
         letter-spacing: 1px;
         font-size: 12px;
+        line-height: 20px;
       }
       .title_final_tip {
         width: 100%;
         display: flex;
         flex-direction: row-reverse;
+        font-size: 14px;
+        letter-spacing: 1px;
         .title_final_query {
           background-color: #1b6cff;
           border-radius: 10px;

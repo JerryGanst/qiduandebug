@@ -42,15 +42,15 @@
         display: isCollapsed ? 'none' : 'block'
       }"
     >
-      <div class="aside_right_content">
+      <!-- <div class="aside_right_content">
         <img src="@/assets/lux.png" />
-      </div>
+      </div> -->
       <div class="aside_right_btn">
         <div @click="startNewConversation" class="back_set">
           {{ isCollapsed ? '' : '开启新对话' }}
         </div>
       </div>
-      <el-menu :default-active="activeIndex" @select="handleSelect" class="el_menu">
+      <!-- <el-menu :default-active="activeIndex" @select="handleSelect" class="el_menu">
         <el-tooltip
           v-for="(question, index) in processedQuerys"
           :key="index"
@@ -69,7 +69,6 @@
               icon="el-icon-warning"
               icon-color="red"
               @confirm="handleConfirmDelete(question, index)"
-              @cancel="handleCancel"
             >
               <template #reference>
                 <img src="@/assets/delete.png" class="aside_right_img" />
@@ -83,6 +82,80 @@
             />
           </el-menu-item>
         </el-tooltip>
+      </el-menu> -->
+
+      <el-menu :default-active="activeIndex" class="el_menu">
+        <el-menu-item
+          v-for="(question, index) in processedQuerys"
+          :key="index"
+          style="position: relative"
+          @mouseenter="() => handleHover(index, true)"
+          @mouseleave="() => handleHover(index, false)"
+        >
+          <!-- 文本区域：el-tooltip 仅作用于此处 -->
+          <el-tooltip
+            :content="question"
+            placement="right"
+            popper-class="custom-tooltip"
+            :disabled="popoverVisible[index]"
+          >
+            <span
+              @click="querySelect(question, index)"
+              :class="{ 'active-span': activeIndex == index.toString() }"
+              :style="{ width: hoverStates[index] ? '140px' : '180px' }"
+            >
+              {{ isCollapsed ? 'Q' : question }}
+            </span>
+          </el-tooltip>
+
+          <!-- 独立弹窗触发器 -->
+          <el-popover
+            v-model:visible="popoverVisible[index]"
+            popper-class="right-aligned-popover"
+            placement="right"
+            :popper-options="{
+              modifiers: [
+                {
+                  name: 'offset',
+                  options: { offset: [0, 20] } // 向右偏移 20px，向下偏移 10px
+                },
+                {
+                  name: 'flip',
+                  enabled: false // 禁用自动翻转
+                }
+              ],
+              strategy: 'fixed'
+            }"
+            trigger="manual"
+          >
+            <template #reference>
+              <div class="more" @click.stop="togglePopover(index)" v-if="hoverStates[index]">
+                <img src="@/assets/more.png" class="aside_right_img" style="right: 10px" />
+              </div>
+            </template>
+            <div class="popover-content">
+              <el-popconfirm
+                title="确定要删除吗？"
+                confirm-button-text="确定"
+                cancel-button-text="取消"
+                icon="el-icon-warning"
+                icon-color="red"
+                @confirm="handleConfirmDelete(question, index)"
+              >
+                <template #reference>
+                  <div class="edit_img">
+                    <img src="@/assets/delete.png" class="aside_right_img" />
+                    <div style="color: #d81e06; width: 60px; text-align: left; margin-left: 6px">删除</div>
+                  </div>
+                </template>
+              </el-popconfirm>
+              <div class="edit_img" style="margin-top: 10px" @click="handleEdit(question, index)">
+                <img src="@/assets/edit.png" class="aside_right_img" />
+                <div style="width: 60px; text-align: left; margin-left: 6px">重命名</div>
+              </div>
+            </div>
+          </el-popover>
+        </el-menu-item>
       </el-menu>
     </div>
   </el-aside>
@@ -126,14 +199,14 @@
   </el-dialog>
 </template>
 <script setup>
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed, nextTick, reactive } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElButton, ElDivider, ElMessage, ElPopover } from 'element-plus' // 引入 ElMessage
 import { useRoute } from 'vue-router'
 import { Lock, View } from '@element-plus/icons-vue' // 引入需要的图标
 import photo from '@/assets/chat.deepseek.com_.png'
-import foldLeft from '@/assets/fold.png'
-import foldRight from '@/assets/fold_right.png'
+import foldLeft from '@/assets/fold.svg'
+import foldRight from '@/assets/fold_right.svg'
 import request from '@/utils/request' // 导入封装的 axios 方法
 const isCollapsed = ref(false) // 左上角折叠控制
 const showPopup = ref(false) // 是否展示左下角用户信息弹窗
@@ -147,7 +220,7 @@ const loginForm = ref({
 const avatarUrl = ref(photo) // 左下角用户头像
 const titleQuestion = ref('')
 const titleIndex = ref('')
-
+const hoverStates = ref({}) // 悬停状态
 const {
   currentQuestion,
   newQuestion,
@@ -168,6 +241,7 @@ const {
   isLogin,
   limitId,
   finalIng,
+  docIng,
   dynamicRows,
   isSampleLoad,
   limitSample,
@@ -176,7 +250,9 @@ const {
   selectedLan,
   finalData,
   finalQuest,
-  messageContainer
+  messageContainer,
+  deepType,
+  fileObj
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -195,6 +271,19 @@ const toggleCollapse = () => {
 const handleTitleClose = done => {
   // 这里可以添加一些关闭前的逻辑
   done()
+}
+const popoverVisible = reactive({})
+// 鼠标悬停处理
+const handleHover = (index, isHovering) => {
+  hoverStates.value = {
+    ...hoverStates.value,
+
+    [index]: isHovering
+  }
+}
+
+const togglePopover = index => {
+  popoverVisible[index] = !popoverVisible[index]
 }
 //获取用户信息接口
 const getUserInfo = async id => {
@@ -255,6 +344,7 @@ const changeTitle = async (id, val) => {
         //   }
         // }
         ElMessage.success('修改标题成功')
+        emit('change-history')
       } else {
         titleQuestion.value = ''
         titleIndex.value = ''
@@ -314,6 +404,7 @@ const startNewConversation = () => {
   activeIndex.value = ''
   chatQuery.messages = []
   chatQuery.isLoading = false
+  fileObj.value = ''
   currentId.value = ''
   pageType.value = 'sample'
   selectedMode.value = '通用模式'
@@ -335,7 +426,7 @@ const handleLogout = () => {
 // 由luxshare带token进来,校验luxshare的合法性
 const checkToken = async token => {
   request
-    .post('/Message/save', {
+    .post('/UserInfo/luxlinkLogin', {
       access_key: '76eb4367-a19d-4485-aadb-cea65fa8fbbe',
       tokenId: token
     })
@@ -442,35 +533,49 @@ const queryAn = (val, index, data) => {
   const queryList = questions.value
   const anList = JSON.parse(JSON.stringify(answerList.value))
   const queryLimit = []
+  const queryLimitQs = []
   const queryIt = []
+  const queryItQs = []
   const querySample = []
   const queryTran = []
+  const queryTranQs = []
   const queryFinal = []
+  const queryFinalQs = []
   for (var j = 0; j < anList.length; j++) {
     if (anList[j].type === '人资行政专题') {
       queryLimit.push(anList[j].title)
-      if (val == anList[j].title) {
+      queryLimitQs.push(anList[j].data.question + '(query)')
+      if (val == anList[j].title || val == anList[j].data.question + '(query)') {
         currentId.value = anList[j].id
         pageType.value = 'query'
         selectedMode.value = '人资行政专题'
+
         currentObj.value.messages = anList[j].data.answer
+        currentObj.value.list = anList[j].data?.think
+        console.log(currentObj.value.messages)
+        deepType.value = anList[j].isThink
       }
     } else if (anList[j].type === 'IT专题') {
       queryIt.push(anList[j].title)
-      if (val == anList[j].title) {
+      queryItQs.push(anList[j].data.question + '(it)')
+      if (val == anList[j].title || val == anList[j].data.question + '(it)') {
         currentId.value = anList[j].id
         pageType.value = 'it'
         selectedMode.value = 'IT专题'
+        tipQuery.value = anList[j].data.question
         currentObj.value.messages = anList[j].data.answer
+        currentObj.value.list = anList[j].data?.think
+        deepType.value = anList[j].isThink
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
-      if (val == anList[j].title) {
+      if (val == anList[j].title || val == anList[j].data[0].content + '(sample)') {
         pageType.value = 'sample'
         selectedMode.value = '通用模式'
         chatQuery.messages = anList[j].data
         chatQuery.isLoading = false
         currentId.value = anList[j].id
+        deepType.value = anList[j].isThink
         nextTick(() => {
           // 滚动到底部
           if (messageContainer.value) {
@@ -485,24 +590,26 @@ const queryAn = (val, index, data) => {
       }
     } else if (anList[j].type === '翻译') {
       queryTran.push(anList[j].title)
+      queryTranQs.push(anList[j].data.question + '(tran)')
       if (val == anList[j].title) {
         currentQuestion.value = false
         pageType.value = 'tran'
         selectedMode.value = '翻译'
         transData.value = anList[j].data.answer
-        transQuest.value = anList[j].data.question
+        transQuest.value = anList[j].data.files ? anList[j].data.files.originalFileName : anList[j].data.question
         selectedLan.value = anList[j].data.target
         currentId.value = anList[j].id
       }
     } else if (anList[j].type === '总结') {
       queryFinal.push(anList[j].title)
+      queryFinalQs.push(anList[j].data.question + '(final)')
       if (val == anList[j].title) {
         currentQuestion.value = false
         pageType.value = 'final'
         selectedMode.value = '总结'
         finalData.value.data = anList[j].data.answer.key_points
         finalData.value.title = anList[j].data.answer.summary
-        finalQuest.value = anList[j].data.question
+        finalQuest.value = anList[j].data.files ? anList[j].data.files.originalFileName : anList[j].data.question
         currentId.value = anList[j].id
       }
     }
@@ -515,7 +622,19 @@ const queryAn = (val, index, data) => {
         pageType.value = result
       }
       if (pageType.value === 'query' || pageType.value === 'it') {
-        tipQuery.value = anList[i].data.question
+        if (anList.length === queryList.length) {
+          tipQuery.value = anList[i].data.question
+          // currentObj.value.messages = anList[j].data.answer
+          // currentObj.value.list = anList[j].data?.think
+        } else {
+          tipQuery.value = queryList[i].replace(/\([^)]*\)/g, '')
+          // if (i === 0) {
+          //   tipQuery.value = anList[0].data.question
+          // } else {
+          //   tipQuery.value = queryList[0].replace(/\([^)]*\)/g, '')
+          //   console.log(tipQuery.value)
+          // }
+        }
       } else if (pageType.value === 'sample') {
         const hasName = anList.some(item => item.title === val)
         if (hasName) {
@@ -535,10 +654,32 @@ const queryAn = (val, index, data) => {
         }
       } else if (pageType.value === 'tran') {
         currentQuestion.value = false
-        transQuest.value = anList[i].data.question
+        if (anList.length === queryList.length) {
+          transQuest.value = anList[i].data.question
+        } else {
+          transQuest.value = queryList[i].replace(/\([^)]*\)/g, '')
+          // transData.value = ''
+          // if (i === 0) {
+          //   transQuest.value = queryList[0].replace(/\([^)]*\)/g, '')
+          // } else {
+          //   transQuest.value = anList[i - 1].data.question
+          // }
+          // // transQuest.value = queryList[i - 1].replace(/\([^)]*\)/g, '')
+        }
       } else if (pageType.value === 'final') {
         currentQuestion.value = false
-        finalQuest.value = anList[i].data.question
+        if (anList.length === queryList.length) {
+          finalQuest.value = anList[i].data.question
+        } else {
+          finalQuest.value = queryList[i].replace(/\([^)]*\)/g, '')
+          // finalData.value.data = ''
+          // if (i === 0) {
+          //   finalQuest.value = queryList[0].replace(/\([^)]*\)/g, '')
+          // } else {
+          //   finalQuest.value = anList[i - 1].data.question
+          // }
+          // finalQuest.value = queryList[i + 1].replace(/\([^)]*\)/g, '')
+        }
       }
     }
   }
@@ -548,21 +689,30 @@ const queryAn = (val, index, data) => {
       pageType.value = limitData[k].type
     }
   }
-  if (pageType.value === 'query' && !queryLimit.includes(val)) {
+  if (pageType.value === 'query' && !queryLimit.includes(val) && !queryLimitQs.includes(val)) {
     currentObj.value.messages = {}
   }
-  if (pageType.value === 'it' && !queryIt.includes(val)) {
+  if (pageType.value === 'it' && !queryIt.includes(val) && !queryItQs.includes(val)) {
     currentObj.value.messages = {}
   }
-  if (pageType.value === 'sample' && !querySample.includes(val)) {
-    chatQuery.messages = []
-    chatQuery.isLoading = false
-  }
-  if (pageType.value === 'tran' && !queryTran.includes(val)) {
+  // if (pageType.value === 'sample' && !querySample.includes(val)) {
+  //   console.log('abcd')
+  //   chatQuery.messages = []
+  //   chatQuery.isLoading = false
+  // }
+  if (pageType.value === 'tran' && !queryTran.includes(val) && !queryTranQs.includes(val)) {
+    docIng.value = true
     transData.value = ''
   }
-  if (pageType.value === 'final' && !queryFinal.includes(val)) {
+  if (pageType.value === 'tran' && (queryTran.includes(val) || queryTranQs.includes(val))) {
+    docIng.value = false
+  }
+  if (pageType.value === 'final' && !queryFinal.includes(val) && !queryFinalQs.includes(val)) {
+    docIng.value = true
     finalData.value.data = ''
+  }
+  if (pageType.value === 'final' && (queryFinal.includes(val) || queryFinalQs.includes(val))) {
+    docIng.value = false
   }
 }
 
@@ -593,6 +743,22 @@ const processedQuerys = computed(() => {
 defineExpose({ queryAn, deleteData })
 </script>
 <style lang="less" scoped>
+.popover-content {
+  display: flex;
+  flex-direction: column;
+  .edit_img {
+    display: flex;
+    flex-direction: row;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    img {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
 .active-span {
   color: #1b6cff !important;
 }
@@ -603,7 +769,7 @@ defineExpose({ queryAn, deleteData })
   .aside_left {
     width: 60px;
     height: 44px;
-    margin-top: 10px;
+    margin-top: 14px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -657,7 +823,7 @@ defineExpose({ queryAn, deleteData })
         background-image: url('@/assets/start.png');
         background-repeat: no-repeat;
         padding-left: 42px;
-        width: 112px;
+        width: 100px;
         height: 36px;
         line-height: 36px;
         background-size: 16px 16px;
@@ -678,11 +844,18 @@ defineExpose({ queryAn, deleteData })
     }
     .el_menu {
       border-right: none;
-      .aside_right_img {
-        width: 14px;
-        height: 14px;
-        position: absolute;
-        right: 10px;
+      .more {
+        width: 55px;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        .aside_right_img {
+          width: 20px;
+          height: 6px;
+          position: absolute;
+          top: 19px;
+        }
       }
     }
   }

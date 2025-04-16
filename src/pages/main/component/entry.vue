@@ -106,16 +106,41 @@
         </div>
       </div>
     </div>
-    <div v-if="pageType === 'tran' && finalIng" class="title_wait">
-      <span>正在为您翻译,请稍等</span>
-      <span v-if="!transData">{{ dots }}</span>
-    </div>
-    <div class="title_tran_tip">
-      <div v-if="pageType === 'tran'" :style="{ padding: transQuest ? '13px 15px' : '0px' }">
+
+    <div class="title_tran_tip" v-if="pageType === 'tran'">
+      <div
+        v-if="
+          (transQuest.includes('txt') && transQuest.endsWith('txt')) ||
+          (transQuest.includes('doc') && transQuest.endsWith('doc')) ||
+          (transQuest.includes('docx') && transQuest.endsWith('docx'))
+        "
+        :style="{
+          padding: transQuest ? '7px 15px' : '0px'
+        }"
+        @click="showFile('tran')"
+        style="color: #333; background-color: #fdfdfd; display: flex; align-items: center; cursor: pointer"
+      >
+        <span style="display: flex; align-items: center">
+          <img :src="transQuest.endsWith('txt') ? text : word" style="width: 24px; height: 30px" />
+        </span>
+        <span style="padding-left: 10px">{{ transQuest }}</span>
+      </div>
+      <div
+        v-else
+        :style="{
+          padding: transQuest ? '10px 15px' : '0px'
+        }"
+      >
         {{ transQuest }}
       </div>
     </div>
-
+    <div v-if="pageType === 'tran' && finalIng && docIng" class="title_wait">
+      <span>
+        <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
+      </span>
+      <span style="padding-left: 10px">正在为您翻译,请稍等</span>
+      <span v-if="!transData">{{ dots }}</span>
+    </div>
     <div class="title_tran_data" v-if="pageType === 'tran'" :style="{ padding: transData ? '0px 15px' : '0px' }">
       <p>{{ transData }}</p>
     </div>
@@ -141,14 +166,43 @@
         </div>
       </div>
     </div>
-    <div v-if="pageType === 'final' && finalIng" class="title_wait">
-      <span>正在为您总结,请稍等</span>
-      <span v-if="!finalData.title">{{ dots }}</span>
-    </div>
-    <div class="title_final_tip">
-      <div class="title_final_query" v-if="pageType === 'final'" :style="{ padding: finalQuest ? '13px 15px' : '0px' }">
+
+    <div class="title_final_tip" v-if="pageType === 'final'">
+      <div
+        v-if="
+          (finalQuest.includes('txt') && finalQuest.endsWith('txt')) ||
+          (finalQuest.includes('doc') && finalQuest.endsWith('doc')) ||
+          (finalQuest.includes('docx') && finalQuest.endsWith('docx'))
+        "
+        @click="showFile('final')"
+        :style="{
+          padding: finalQuest ? '7px 15px' : '0px'
+        }"
+        style="
+          color: #333;
+          background-color: #fdfdfd;
+          display: flex;
+          align-items: center;
+          margin-top: 34px;
+          border-radius: 10px;
+          cursor: pointer;
+        "
+      >
+        <span style="display: flex; align-items: center">
+          <img :src="finalQuest.endsWith('txt') ? text : word" style="width: 24px; height: 30px" />
+        </span>
+        <span style="padding-left: 10px">{{ finalQuest }}</span>
+      </div>
+      <div v-else class="title_final_query" :style="{ padding: finalQuest ? '10px 15px' : '0px' }">
         <div>{{ finalQuest }}</div>
       </div>
+    </div>
+    <div v-if="pageType === 'final' && docIng" class="title_wait">
+      <span>
+        <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
+      </span>
+      <span style="padding-left: 10px">正在为您总结,请稍等</span>
+      <span v-if="!finalData.title">{{ dots }}</span>
     </div>
     <div
       class="title_final_data"
@@ -181,11 +235,10 @@
   <div class="select_content">
     <div class="tran_select" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
       <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
-        <el-radio label="通用模式">通用模式</el-radio>
-        <el-radio label="人资行政专题">人资行政专题</el-radio>
-        <el-radio label="IT专题">IT专题</el-radio>
+        <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
+        <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
+        <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
       </el-radio-group>
-      <div class="mode_title">模式选择 :</div>
     </div>
     <div class="textarea" v-if="pageType === 'query' || pageType === 'it'">
       <el-input
@@ -194,8 +247,8 @@
         style="width: 100%"
         class="custom-input"
         clearable
-        @keydown="summitPost"
-        @keyup.shift.enter="handleShiftEnter"
+        @keydown.enter.prevent="summitPost"
+        @keyup.shift.enter.prevent="handleShiftEnter('textareaInputQuery')"
         ref="textareaInputQuery"
         type="textarea"
         :maxlength="4096"
@@ -217,6 +270,25 @@
             </el-icon>
           </el-upload>
         </el-tooltip> -->
+        <!-- <img
+          :src="deepType ? deepSelect : deep"
+          class="arrow"
+          @click="checkDeepType"
+          style="margin-right: 10px"
+          v-if="pageType === 'it'"
+        /> -->
+        <div
+          class="tooltip-wrapper"
+          @mouseenter="showFileTip = true"
+          @mouseleave="showFileTip = false"
+          v-if="pageType === 'it'"
+        >
+          <img :src="deepType ? deepSelect : deep" class="arrow" @click="checkDeepType" style="margin-right: 10px" />
+
+          <transition name="fade">
+            <div v-if="showFileTip" class="tooltip">{{ !deepType ? '切换成深度思考模式' : '切换成普通模式' }}</div>
+          </transition>
+        </div>
         <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitQuestionSend" />
       </div>
     </div>
@@ -227,8 +299,8 @@
         style="width: 100%"
         class="custom-input"
         clearable
-        @keydown="samplePost"
-        @keyup.shift.enter="handleShiftEnter"
+        @keydown.enter.prevent="samplePost"
+        @keyup.shift.enter.prevent="handleShiftEnter('textareaInputSample')"
         ref="textareaInputSample"
         type="textarea"
         :maxlength="4096"
@@ -250,14 +322,26 @@
             </el-icon>
           </el-upload>
         </el-tooltip> -->
+        <!-- <img
+          :src="deepType ? deepSelect : deep"
+          class="arrow"
+          @click="checkDeepType"
+          style="margin-right: 10px; position: relative"
+        /> -->
+        <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+          <img :src="deepType ? deepSelect : deep" class="arrow" @click="checkDeepType" style="margin-right: 10px" />
+
+          <transition name="fade">
+            <div v-if="showFileTip" class="tooltip">{{ !deepType ? '切换成深度思考模式' : '切换成普通模式' }}</div>
+          </transition>
+        </div>
         <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitSampleSend" />
       </div>
     </div>
     <div class="tran_select" v-if="pageType === 'tran'">
       <el-radio-group v-model="selectedLan">
-        <el-radio v-for="item in lanList" :label="item">{{ item }}</el-radio>
+        <el-radio-button v-for="item in lanList" :label="item" :value="item">{{ item }}</el-radio-button>
       </el-radio-group>
-      <div class="mode_title">翻译成 :</div>
     </div>
     <div class="textarea" v-if="pageType === 'tran'">
       <el-input
@@ -266,8 +350,8 @@
         style="width: 100%"
         class="custom-input"
         clearable
-        @keydown="tranPost"
-        @keyup.shift.enter="handleShiftEnter"
+        @keydown.enter.prevent="tranPost"
+        @keyup.shift.enter.prevent="handleShiftEnter('textareaInputTran')"
         ref="textareaInputTran"
         type="textarea"
         :maxlength="4096"
@@ -291,6 +375,16 @@
             </el-icon>
           </el-upload>
         </el-tooltip> -->
+        <!-- <el-icon class="upload-icon" :size="30" @click="showFile('tran')" style="margin-right: 10px">
+          <Document />
+        </el-icon> -->
+        <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+          <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
+
+          <transition name="fade">
+            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M且文本长度不超过9000字</div>
+          </transition>
+        </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitTranSend" />
       </div>
     </div>
@@ -302,8 +396,8 @@
         style="width: 100%"
         class="custom-input"
         clearable
-        @keydown="finalPost"
-        @keyup.shift.enter="handleShiftEnter"
+        @keydown.enter.prevent="finalPost"
+        @keyup.shift.enter.prevent="handleShiftEnter('textareaInputFinal')"
         ref="textareaInputFinal"
         type="textarea"
         :maxlength="4096"
@@ -327,19 +421,37 @@
             </el-icon>
           </el-upload>
         </el-tooltip> -->
+
+        <!-- <el-icon class="upload-icon" :size="30" @click="showFile('final')" style="margin-right: 10px">
+          <Document />
+        </el-icon> -->
+        <!-- <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" /> -->
+        <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+          <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
+
+          <transition name="fade">
+            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M且文本长度不超过9000字</div>
+          </transition>
+        </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitFinalSend" />
       </div>
     </div>
   </div>
+  <FileUpload ref="fileRef" @submit-tran="submitFileTran" @submit-final="submitFileFinal"></FileUpload>
 </template>
 
 <script setup>
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
+import FileUpload from './fileUploadModal.vue'
 import { useShared } from '@/utils/useShared'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
 import imageC from '@/assets/stop.png'
+import deep from '@/assets/deep.png'
+import deepSelect from '@/assets/deepSelect.png'
+import word from '@/assets/w.png'
+import text from '@/assets/text.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 const emit = defineEmits([
   'submit-tran',
@@ -350,6 +462,7 @@ const emit = defineEmits([
   'sample-post',
   'summit-post',
   'submit-tranSend',
+  'submit-finalSend',
   'up-common',
   'down-common',
   'refresh-data',
@@ -362,6 +475,7 @@ const {
   pageType,
   dynamicRows,
   finalData,
+  answerList,
   handleShiftEnter,
   adjustTextareaHeight,
   textareaInputQuery,
@@ -369,6 +483,7 @@ const {
   textareaInputTran,
   textareaInputFinal,
   finalIng,
+  docIng,
   isSampleLoad,
   updateFinalQuest,
   selectedLan,
@@ -377,9 +492,12 @@ const {
   activeIndex,
   finalQuest,
   transQuest,
-  dots
+  dots,
+  fileObj,
+  deepType,
+  checkDeepType
 } = useShared()
-
+const fileRef = ref(null)
 const arrList = ref([
   {
     index: 1,
@@ -448,6 +566,8 @@ const historyList = ref([
 ])
 const lanList = ref(['中文', '英文', '西班牙语', '越南语'])
 const dynamicRowFinal = ref(1)
+const isDeepShow = ref(false)
+const showFileTip = ref(false)
 // 文件验证
 // const allowedTypes =
 //   '.txt,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -506,12 +626,30 @@ const tranPost = event => {
     emit('submit-tran')
   }
 }
+const submitFileTran = obj => {
+  emit('submit-tran', '', false, obj)
+}
+const submitFileFinal = obj => {
+  emit('submit-final', '', false, obj)
+}
 
+const showFile = val => {
+  console.log(activeIndex.value)
+  if (activeIndex.value || activeIndex.value == 0) {
+    fileObj.value = answerList.value[activeIndex.value]?.data?.files
+  } else {
+    fileObj.value = ''
+  }
+  fileRef.value.openFile(val)
+}
 const finalPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
     emit('submit-final')
   }
+}
+const hoverDeep = val => {
+  isDeepShow.value = val
 }
 const samplePost = event => {
   emit('sample-post', event)
@@ -546,12 +684,8 @@ const submitSampleSend = () => {
   emit('submit-sampleSend')
 }
 
-const submitFinalSend = () => {
-  if (finalIng.value) {
-    emit('cancel-currentRequest', 'final')
-    return
-  }
-  emit('submit-final')
+const submitFinalSend = val => {
+  emit('submit-finalSend', val)
 }
 const changeType = val => {
   activeIndex.value = ''
@@ -594,7 +728,49 @@ const changeDynamicRows = () => {
 //     // getTopQuestion('IT专题')
 //   })
 // })
-defineExpose({ changeDynamicRows })
+defineExpose({ changeDynamicRows, fileRef })
 </script>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.tooltip-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 添加淡入淡出动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 可选：现代浏览器箭头实现 */
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #000;
+}
+</style>
