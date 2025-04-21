@@ -20,6 +20,7 @@
             @down-common="downCommon"
             @refresh-data="refreshData"
             @submit-questionSend="submitQuestionSend"
+            @submit-itSend="submitITSend"
             @submit-sampleSend="submitSampleSend"
             ref="entryRef"
           ></Entry>
@@ -57,7 +58,11 @@
               </span>
             </div>
             <MarkdownRenderer
-              v-if="(pageType === 'query' || pageType === 'it') && currentObj.messages.type === 'final_answer'"
+              v-if="
+                (pageType === 'query' || pageType === 'it') &&
+                currentObj.messages.type === 'final_answer' &&
+                currentObj.messages.content
+              "
               :markdown="currentObj.messages.content"
             />
             <div
@@ -278,7 +283,14 @@
                 <img
                   :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
                   class="arrow"
+                  v-if="pageType === 'query'"
                   @click="submitQuestionSend"
+                />
+                <img
+                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                  class="arrow"
+                  v-if="pageType === 'it'"
+                  @click="submitITSend"
                 />
               </div>
             </div>
@@ -381,6 +393,7 @@ import deepSelect from '@/assets/deepSelect.png'
 
 import request from '@/utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './component/markdown.vue' // 引入 Markdown 渲染组件
+
 // 静态导入图片
 
 // 变量区域
@@ -424,7 +437,9 @@ const {
   messageContainer,
   deepType,
   checkDeepType,
-  docIng
+  docIng,
+  limitAry,
+  fileObj
 } = useShared()
 
 const queryIng = ref(false)
@@ -486,9 +501,6 @@ const updateDots = () => {
   } else {
     dots.value += '.' // 增加一个点
   }
-}
-const hoverDeep = () => {
-  console.log(123)
 }
 
 const toDoc = async data => {
@@ -582,6 +594,7 @@ const submitFinal = async (val, isRefresh, ob) => {
   }
 
   limitQuery.value = newQuestion.value
+  limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
   finalData.value = {
     title: '',
@@ -596,12 +609,15 @@ const submitFinal = async (val, isRefresh, ob) => {
     questions.value.unshift(qData)
   }
   if (isRefresh && !ob) {
+    console.log(123)
     for (var m = 0; m < answerList.value.length; m++) {
       if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
         const id = answerList.value[m].id
         title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
         const index = questions.value.findIndex(item => item === title + '(final)')
+        let limitTitle = ''
         if (index !== -1) {
+          limitTitle = questions.value[index]
           questions.value.splice(index, 1)
         }
         const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
@@ -610,8 +626,13 @@ const submitFinal = async (val, isRefresh, ob) => {
         }
         await asizeRef.value.deleteData(id, true)
         activeIndex.value = 0
-        const limit =
-          limitQuery.value.length > 20 ? limitQuery.value.substring(0, 20) + '(final)' : limitQuery.value + '(final)'
+        const limit = limitTitle
+          ? limitTitle.length > 15
+            ? limitQuery.value.substring(0, 15) + '(final)'
+            : limitTitle + '(final)'
+          : limitQuery.value.length > 15
+            ? limitQuery.value.substring(0, 15) + '(final)'
+            : limitQuery.value + '(final)'
         questions.value.unshift(limit)
       }
     }
@@ -721,7 +742,7 @@ const submitFinal = async (val, isRefresh, ob) => {
           answer: finalData.value
         }
 
-        postFinal(obj, title, ob)
+        postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
       }
     })
     .catch(err => {
@@ -825,7 +846,6 @@ const submitCommon = async () => {
       // showLoading: true
     })
     .then(res => {
-      console.log(res)
       if (res.status) {
         ElMessage.success('评价成功,我们会继续努力的！')
         commonVisible.value = false
@@ -846,6 +866,14 @@ const submitQuestionSend = () => {
   }
   submitQuestion()
 }
+const submitITSend = () => {
+  if (isSampleLoad.value) {
+    stopQuery('it')
+    return
+  }
+  submitQuestion()
+}
+
 const submitSampleSend = () => {
   if (isSampleLoad.value) {
     stopQuery('sample')
@@ -1177,7 +1205,7 @@ const submitTran = async (val, isRefresh, obj) => {
   docIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   limitQuery.value = newQuestion.value
-
+  limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
   transQuest.value = ''
   transData.value = ''
@@ -1206,17 +1234,25 @@ const submitTran = async (val, isRefresh, obj) => {
         const id = answerList.value[m].id
         title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
         const index = questions.value.findIndex(item => item === title + '(tran)')
+        let limitTitle = ''
         if (index !== -1) {
+          limitTitle = questions.value[index]
           questions.value.splice(index, 1)
         }
         const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
         if (idx !== -1) {
           answerList.value.splice(index, 1)
         }
+
         await asizeRef.value.deleteData(id, true)
         activeIndex.value = 0
-        const limit =
-          limitQuery.value.length > 20 ? limitQuery.value.substring(0, 20) + '(tran)' : limitQuery.value + '(tran)'
+        const limit = limitTitle
+          ? limitTitle.length > 15
+            ? limitQuery.value.substring(0, 15) + '(tran)'
+            : limitTitle + '(tran)'
+          : limitQuery.value.length > 15
+            ? limitQuery.value.substring(0, 15) + '(tran)'
+            : limitQuery.value + '(tran)'
         questions.value.unshift(limit)
       }
     }
@@ -1324,8 +1360,7 @@ const submitTran = async (val, isRefresh, obj) => {
           question: passQuery,
           answer: res.data
         }
-        console.log(title)
-        postTran(passData, title, obj)
+        postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
       } else {
         ElMessage.warning(res.message)
       }
@@ -1374,6 +1409,7 @@ const submitQuestion = async (val, isRefresh) => {
   if (addTitle === '(query)') {
     deepType.value = 0
   }
+  limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
     for (var m = 0; m < answerList.value.length; m++) {
       if (
@@ -1430,6 +1466,7 @@ const submitQuestion = async (val, isRefresh) => {
     if (index !== -1) {
       questions.value.splice(index, 1)
     }
+    limitAry.value = JSON.parse(JSON.stringify(answerList.value))
     if (idx !== -1) {
       answerList.value.splice(index, 1)
     }
@@ -1795,9 +1832,8 @@ const getHistory = async (id, page, val, ids) => {
 }
 
 // 终止请求方法
-const cancelCurrentRequest = val => {
+const cancelCurrentRequest = async val => {
   request.cancelRequest(currentRequestUrl.value)
-  console.log(val)
   ElMessage.success('请求已中止')
   if (val === 'sample') {
     isSampleLoad.value = false
@@ -1819,36 +1855,65 @@ const cancelCurrentRequest = val => {
     postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value)
     limitId.value = ''
   }
-  if (val === 'query') {
+  if (val === 'query' || val === 'it') {
     isSampleLoad.value = false
     limitLoading.value = false
     isQueryStop.value = true
-    currentObj.value.list = {}
-    currentObj.value.messages = {}
-    currentObj.value.messageList = []
-    tipQuery.value = ''
     queryIng.value = false
-    activeIndex.value = ''
-    setTimeout(() => {
-      currentMessage.value = ''
-    }, 3000)
-    getHistory()
+    let title = ''
+    for (var i = 0; i < answerList.value.length; i++) {
+      if (answerList.value[i].type === '人资行政专题' || answerList.value[i].type === 'IT专题') {
+        if (answerList.value[i].data.question === tipQuery.value) {
+          title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+        }
+      }
+    }
+    const paramsQuery = {
+      title: title ? title : tipQuery.value,
+      queryValue: tipQuery.value
+    }
+    currentObj.value.messages.type = 'final_answer'
+    const isThink = deepType.value === true ? true : false
+    postQuestion({}, { type: 'final_answer' }, paramsQuery, val, isThink)
   }
   if (val === 'tran') {
-    console.log(questions.value)
     finalIng.value = false
     docIng.value = false
-    // transQuest.value = ''
-    transData.value = ''
-    getHistory()
+    let title = ''
+    let obj = fileObj.value
+    for (var i = 0; i < answerList.value.length; i++) {
+      if (answerList.value[i].type === '翻译') {
+        if (answerList.value[i].data.question === transQuest.value) {
+          title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+        }
+      }
+    }
+    const passData = {
+      question: transQuest.value,
+      answer: ''
+    }
+    postTran(passData, title, obj)
   }
   if (val === 'final') {
-    console.log(questions.value)
     finalIng.value = false
     docIng.value = false
-    finalData.value.title = ''
-    finalData.value.data = []
-    getHistory()
+    let title = ''
+    let ob = fileObj.value
+    for (var i = 0; i < answerList.value.length; i++) {
+      if (answerList.value[i].type === '总结') {
+        if (answerList.value[i].data.question === finalQuest.value) {
+          title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+        }
+      }
+    }
+    const obj = {
+      question: finalQuest.value,
+      answer: {
+        title: '',
+        data: []
+      }
+    }
+    postFinal(obj, title, ob)
   }
 }
 
@@ -1941,6 +2006,7 @@ onUnmounted(() => {
         display: flex;
         flex-direction: row-reverse;
         margin-bottom: 10px;
+        margin-left: 12px;
         .mode_title {
           padding-right: 10px;
           line-height: 32px;
@@ -1984,6 +2050,7 @@ onUnmounted(() => {
         display: flex;
         flex-direction: row-reverse;
         margin-bottom: 10px;
+        margin-left: 12px;
         .mode_title {
           padding-right: 10px;
           line-height: 32px;

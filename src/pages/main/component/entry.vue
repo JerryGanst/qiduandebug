@@ -110,9 +110,9 @@
     <div class="title_tran_tip" v-if="pageType === 'tran'">
       <div
         v-if="
-          (transQuest.includes('txt') && transQuest.endsWith('txt')) ||
-          (transQuest.includes('doc') && transQuest.endsWith('doc')) ||
-          (transQuest.includes('docx') && transQuest.endsWith('docx'))
+          (transQuest && transQuest.includes('txt') && transQuest.endsWith('txt')) ||
+          (transQuest && transQuest.includes('doc') && transQuest.endsWith('doc')) ||
+          (transQuest && transQuest.includes('docx') && transQuest.endsWith('docx'))
         "
         :style="{
           padding: transQuest ? '7px 15px' : '0px'
@@ -145,7 +145,7 @@
       <p>{{ transData }}</p>
     </div>
 
-    <div class="query_common" v-if="pageType === 'tran' && transData">
+    <div class="query_common" v-if="pageType === 'tran' && transQuest && !docIng">
       <div>
         <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
@@ -170,9 +170,9 @@
     <div class="title_final_tip" v-if="pageType === 'final'">
       <div
         v-if="
-          (finalQuest.includes('txt') && finalQuest.endsWith('txt')) ||
-          (finalQuest.includes('doc') && finalQuest.endsWith('doc')) ||
-          (finalQuest.includes('docx') && finalQuest.endsWith('docx'))
+          (finalQuest && finalQuest.includes('txt') && finalQuest.endsWith('txt')) ||
+          (finalQuest && finalQuest.includes('doc') && finalQuest.endsWith('doc')) ||
+          (finalQuest && finalQuest.includes('docx') && finalQuest.endsWith('docx'))
         "
         @click="showFile('final')"
         :style="{
@@ -220,7 +220,7 @@
         </div>
       </div>
     </div>
-    <div class="query_common" v-if="pageType === 'final' && finalData.title">
+    <div class="query_common" v-if="pageType === 'final' && finalQuest && !docIng">
       <div>
         <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
@@ -289,7 +289,18 @@
             <div v-if="showFileTip" class="tooltip">{{ !deepType ? '切换成深度思考模式' : '切换成普通模式' }}</div>
           </transition>
         </div>
-        <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitQuestionSend" />
+        <img
+          :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+          class="arrow"
+          @click="submitQuestionSend"
+          v-if="pageType === 'query'"
+        />
+        <img
+          :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+          class="arrow"
+          @click="submitItSend"
+          v-if="pageType === 'it'"
+        />
       </div>
     </div>
     <div class="textarea" v-if="pageType === 'sample'">
@@ -467,7 +478,8 @@ const emit = defineEmits([
   'down-common',
   'refresh-data',
   'submit-questionSend',
-  'submit-sampleSend'
+  'submit-sampleSend',
+  'submit-itSend'
 ])
 const {
   selectedMode,
@@ -680,6 +692,10 @@ const submitTranSend = val => {
 const submitQuestionSend = () => {
   emit('submit-questionSend')
 }
+const submitItSend = () => {
+  emit('submit-itSend')
+}
+
 const submitSampleSend = () => {
   emit('submit-sampleSend')
 }

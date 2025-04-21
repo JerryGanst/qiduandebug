@@ -38,8 +38,7 @@
       class="aside_right"
       :style="{
         width: isCollapsed ? '0px' : '220px',
-        borderRight: isCollapsed ? 'none' : '2px solid #EAEAEA',
-        display: isCollapsed ? 'none' : 'block'
+        borderRight: isCollapsed ? 'none' : '2px solid #EAEAEA'
       }"
     >
       <!-- <div class="aside_right_content">
@@ -252,7 +251,8 @@ const {
   finalQuest,
   messageContainer,
   deepType,
-  fileObj
+  fileObj,
+  limitAry
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -522,6 +522,13 @@ const querySelect = (val, index) => {
   activeIndex.value = index
   queryAn(val, index)
 }
+const getMatchingIndexes = (arr1, val) => {
+  for (var i = 0; i < arr1.length; i++) {
+    if (val === arr1[i].title) {
+      return arr1[i].data.files ? arr1[i].data.files.originalFileName : arr1[i].data.question
+    }
+  }
+}
 // 点击切换左侧栏，控制左侧栏和右侧面板的数据
 const queryAn = (val, index, data) => {
   currentQuestion.value = val
@@ -552,7 +559,6 @@ const queryAn = (val, index, data) => {
 
         currentObj.value.messages = anList[j].data.answer
         currentObj.value.list = anList[j].data?.think
-        console.log(currentObj.value.messages)
         deepType.value = anList[j].isThink
       }
     } else if (anList[j].type === 'IT专题') {
@@ -627,7 +633,8 @@ const queryAn = (val, index, data) => {
           // currentObj.value.messages = anList[j].data.answer
           // currentObj.value.list = anList[j].data?.think
         } else {
-          tipQuery.value = queryList[i].replace(/\([^)]*\)/g, '')
+          const data = getMatchingIndexes(limitAry.value, queryList[i])
+          tipQuery.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
           // if (i === 0) {
           //   tipQuery.value = anList[0].data.question
           // } else {
@@ -657,7 +664,10 @@ const queryAn = (val, index, data) => {
         if (anList.length === queryList.length) {
           transQuest.value = anList[i].data.question
         } else {
-          transQuest.value = queryList[i].replace(/\([^)]*\)/g, '')
+          // transQuest.value = queryList[i].replace(/\([^)]*\)/g, '')
+          const data = getMatchingIndexes(limitAry.value, queryList[i])
+          transQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
+          // console.log(transQuest.value)
           // transData.value = ''
           // if (i === 0) {
           //   transQuest.value = queryList[0].replace(/\([^)]*\)/g, '')
@@ -671,7 +681,8 @@ const queryAn = (val, index, data) => {
         if (anList.length === queryList.length) {
           finalQuest.value = anList[i].data.question
         } else {
-          finalQuest.value = queryList[i].replace(/\([^)]*\)/g, '')
+          const data = getMatchingIndexes(limitAry.value, queryList[i])
+          finalQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
           // finalData.value.data = ''
           // if (i === 0) {
           //   finalQuest.value = queryList[0].replace(/\([^)]*\)/g, '')
@@ -764,17 +775,19 @@ defineExpose({ queryAn, deleteData })
 }
 .aside {
   background-color: #f5f5f5;
-  transition: width 0.3s;
+  transition: width 0.3s ease-in-out; /* 添加缓动函数 */
   display: flex;
+  position: relative; /* 为子元素绝对定位提供参考 */
+  overflow: hidden; /* 隐藏溢出的内容 */
   .aside_left {
     width: 60px;
     height: 44px;
-    margin-top: 14px;
+    margin-top: 15px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-
+    flex-shrink: 0; /* 防止折叠时被压缩 */
     .aside_left_img {
       width: 24px;
       height: 24px;
@@ -807,6 +820,11 @@ defineExpose({ queryAn, deleteData })
     width: 220px;
     background-color: #fff;
     border-right: 2px solid #eaeaea;
+    flex-shrink: 0;
+    overflow: hidden;
+    white-space: nowrap; /* 防止文字换行 */
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out;
     .aside_right_content {
       width: 200px;
       height: 62px;
@@ -844,6 +862,7 @@ defineExpose({ queryAn, deleteData })
     }
     .el_menu {
       border-right: none;
+      width: 220px; /* 保持固定宽度 */
       .more {
         width: 55px;
         height: 100%;
@@ -858,6 +877,9 @@ defineExpose({ queryAn, deleteData })
         }
       }
     }
+  }
+  .aside_right.collapsed {
+    transform: translateX(-100%);
   }
 }
 .login-form {

@@ -116,9 +116,9 @@
 import { ref, computed, nextTick, watch } from 'vue'
 import axios from 'axios'
 import mammoth from 'mammoth'
+import { useShared } from '@/utils/useShared'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
-import { useShared } from '@/utils/useShared'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import { Close } from '@element-plus/icons-vue'
 import request from '@/utils/request' // 导入封装的 axios 方法
@@ -129,7 +129,7 @@ const previewType = ref('')
 const previewFileId = ref(null)
 const type = ref('tran')
 const emit = defineEmits(['submit-tran', 'submit-final'])
-const { fileObj } = useShared()
+const { fileObj, isSampleLoad, finalIng } = useShared()
 // 常量定义
 const STATUS = {
   PENDING: 'pending',
@@ -182,6 +182,10 @@ const startUpload = async file => {
     ElMessage.warning('请先上传文件再提交')
     return
   }
+  if (isSampleLoad.value || finalIng.value) {
+    ElMessage.warning('有问题正在回答中，请稍后再修改')
+    return
+  }
   const CancelToken = axios.CancelToken
   const source = CancelToken.source()
 
@@ -205,14 +209,12 @@ const startUpload = async file => {
         }
       })
       .then(res => {
-        console.log(res)
         if (res.data.status) {
-          console.log(1)
           file.status = STATUS.SUCCESS
           file.progress = 100
+          fileObj.value = res.data?.data[0]
           emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', res.data?.data[0])
         } else {
-          console.log(2)
           ElMessage.error(res.data.message)
           file.status = STATUS.ERROR
           previewFileId.value = null

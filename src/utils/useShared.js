@@ -85,6 +85,7 @@ const limitId = ref('')
 const fileObj = ref('')
 const deepType = ref(false)
 const docIng = ref(false)
+const limitAry = ref([])
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -270,6 +271,9 @@ export function useShared() {
   const updateDocIng = newName => {
     docIng.value = newName
   }
+  const updateLimitAry = newName => {
+    limitAry.value = newName
+  }
 
   watch(
     newQuestion,
@@ -318,6 +322,7 @@ export function useShared() {
     messageContainer,
     deepType,
     docIng,
+    limitAry,
     changeMode,
     updateCurrentQuestion,
     updateNewQuestion,
@@ -355,6 +360,7 @@ export function useShared() {
     updateFileObj,
     updateDeepType,
     checkDeepType,
-    updateDocIng
+    updateDocIng,
+    updateLimitAry
   }
 }
