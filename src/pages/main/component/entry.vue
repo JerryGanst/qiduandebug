@@ -112,7 +112,8 @@
         v-if="
           (transQuest && transQuest.includes('txt') && transQuest.endsWith('txt')) ||
           (transQuest && transQuest.includes('doc') && transQuest.endsWith('doc')) ||
-          (transQuest && transQuest.includes('docx') && transQuest.endsWith('docx'))
+          (transQuest && transQuest.includes('docx') && transQuest.endsWith('docx')) ||
+          (transQuest && transQuest.includes('pdf') && transQuest.endsWith('pdf'))
         "
         :style="{
           padding: transQuest ? '7px 15px' : '0px'
@@ -121,7 +122,10 @@
         style="color: #333; background-color: #fdfdfd; display: flex; align-items: center; cursor: pointer"
       >
         <span style="display: flex; align-items: center">
-          <img :src="transQuest.endsWith('txt') ? text : word" style="width: 24px; height: 30px" />
+          <img
+            :src="transQuest.endsWith('txt') ? text : transQuest.endsWith('pdf') ? pdf : word"
+            style="width: 24px; height: 30px"
+          />
         </span>
         <span style="padding-left: 10px">{{ transQuest }}</span>
       </div>
@@ -172,7 +176,8 @@
         v-if="
           (finalQuest && finalQuest.includes('txt') && finalQuest.endsWith('txt')) ||
           (finalQuest && finalQuest.includes('doc') && finalQuest.endsWith('doc')) ||
-          (finalQuest && finalQuest.includes('docx') && finalQuest.endsWith('docx'))
+          (finalQuest && finalQuest.includes('docx') && finalQuest.endsWith('docx')) ||
+          (finalQuest && finalQuest.includes('pdf') && finalQuest.endsWith('pdf'))
         "
         @click="showFile('final')"
         :style="{
@@ -189,7 +194,10 @@
         "
       >
         <span style="display: flex; align-items: center">
-          <img :src="finalQuest.endsWith('txt') ? text : word" style="width: 24px; height: 30px" />
+          <img
+            :src="finalQuest.endsWith('txt') ? text : finalQuest.endsWith('pdf') ? pdf : word"
+            style="width: 24px; height: 30px"
+          />
         </span>
         <span style="padding-left: 10px">{{ finalQuest }}</span>
       </div>
@@ -257,36 +265,11 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
-          <el-upload
-            action="#"
-            :http-request="handleUpload"
-            :before-upload="beforeUpload"
-            :show-file-list="false"
-            :accept="allowedTypes"
-          >
-            <el-icon class="upload-icon" :size="42">
-              <Document />
-            </el-icon>
-          </el-upload>
-        </el-tooltip> -->
-        <!-- <img
-          :src="deepType ? deepSelect : deep"
-          class="arrow"
-          @click="checkDeepType"
-          style="margin-right: 10px"
-          v-if="pageType === 'it'"
-        /> -->
-        <div
-          class="tooltip-wrapper"
-          @mouseenter="showFileTip = true"
-          @mouseleave="showFileTip = false"
-          v-if="pageType === 'it'"
-        >
+        <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
           <img :src="deepType ? deepSelect : deep" class="arrow" @click="checkDeepType" style="margin-right: 10px" />
 
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">{{ !deepType ? '切换成深度思考模式' : '切换成普通模式' }}</div>
+            <div v-if="showModelTip" class="tooltip">{{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}</div>
           </transition>
         </div>
         <img
@@ -320,30 +303,17 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
-          <el-upload
-            action="#"
-            :http-request="handleUpload"
-            :before-upload="beforeUpload"
-            :show-file-list="false"
-            :accept="allowedTypes"
-          >
-            <el-icon class="upload-icon" :size="42">
-              <Document />
-            </el-icon>
-          </el-upload>
-        </el-tooltip> -->
-        <!-- <img
-          :src="deepType ? deepSelect : deep"
-          class="arrow"
-          @click="checkDeepType"
-          style="margin-right: 10px; position: relative"
-        /> -->
         <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+          <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
+          <transition name="fade">
+            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+          </transition>
+        </div>
+        <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
           <img :src="deepType ? deepSelect : deep" class="arrow" @click="checkDeepType" style="margin-right: 10px" />
 
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">{{ !deepType ? '切换成深度思考模式' : '切换成普通模式' }}</div>
+            <div v-if="showModelTip" class="tooltip">{{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}</div>
           </transition>
         </div>
         <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitSampleSend" />
@@ -393,7 +363,7 @@
           <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
 
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M且文本长度不超过9000字</div>
+            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitTranSend" />
@@ -441,7 +411,7 @@
           <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
 
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M且文本长度不超过9000字</div>
+            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitFinalSend" />
@@ -463,6 +433,7 @@ import deep from '@/assets/deep.png'
 import deepSelect from '@/assets/deepSelect.png'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
+import pdf from '@/assets/pdf.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 const emit = defineEmits([
   'submit-tran',
@@ -507,7 +478,11 @@ const {
   dots,
   fileObj,
   deepType,
-  checkDeepType
+  checkDeepType,
+  questions,
+  currentQuestion,
+  showFileTip,
+  showModelTip
 } = useShared()
 const fileRef = ref(null)
 const arrList = ref([
@@ -579,7 +554,7 @@ const historyList = ref([
 const lanList = ref(['中文', '英文', '西班牙语', '越南语'])
 const dynamicRowFinal = ref(1)
 const isDeepShow = ref(false)
-const showFileTip = ref(false)
+
 // 文件验证
 // const allowedTypes =
 //   '.txt,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -646,9 +621,21 @@ const submitFileFinal = obj => {
 }
 
 const showFile = val => {
-  console.log(activeIndex.value)
   if (activeIndex.value || activeIndex.value == 0) {
-    fileObj.value = answerList.value[activeIndex.value]?.data?.files
+    if (val === 'tran') {
+      for (var i = 0; i < answerList.value.length; i++) {
+        if (transQuest.value === answerList.value[i].data.question) {
+          fileObj.value = answerList.value[i]?.data?.files
+        }
+      }
+    }
+    if (val === 'final') {
+      for (var i = 0; i < answerList.value.length; i++) {
+        if (finalQuest.value === answerList.value[i].data.question) {
+          fileObj.value = answerList.value[i]?.data?.files
+        }
+      }
+    }
   } else {
     fileObj.value = ''
   }

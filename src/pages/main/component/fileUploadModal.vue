@@ -10,7 +10,9 @@
       <!-- 左侧文件列表 -->
       <div class="file-list">
         <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
-          <div class="file_img"><img :src="file.extension === 'txt' ? text : word" /></div>
+          <div class="file_img">
+            <img :src="file.extension === 'txt' ? text : file.extension === 'pdf' ? pdf : word" />
+          </div>
           <div class="file-info">
             <span class="filename">{{ file.name }}</span>
             <div class="file-actions">
@@ -91,6 +93,9 @@
             <pre>{{ previewContent }}</pre>
           </div>
           <div v-else-if="previewType === 'html'" class="html-preview" v-html="previewContent"></div>
+          <div v-else-if="previewType === 'pdf'">
+            <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
+          </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>
         <div v-else="previewFileId" class="preview-container">
@@ -102,9 +107,9 @@
       <el-button @click="dialogVisible = false" style="width: 100px; height: 40px; margin-left: 15px">取消</el-button>
       <el-button
         type="primary"
-        @click="startUpload(fileQueue[0])"
+        @click="startUpload(type === 'sample' ? fileQueue : fileQueue[0])"
         style="width: 100px; height: 40px"
-        :disabled="!hasPendingFiles"
+        :disabled="!hasPendingFiles || !isLogin"
       >
         提交
       </el-button>
@@ -119,6 +124,7 @@ import mammoth from 'mammoth'
 import { useShared } from '@/utils/useShared'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
+import pdf from '@/assets/pdf.png'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import { Close } from '@element-plus/icons-vue'
 import request from '@/utils/request' // 导入封装的 axios 方法
@@ -129,7 +135,7 @@ const previewType = ref('')
 const previewFileId = ref(null)
 const type = ref('tran')
 const emit = defineEmits(['submit-tran', 'submit-final'])
-const { fileObj, isSampleLoad, finalIng } = useShared()
+const { fileObj, isSampleLoad, finalIng, isLogin } = useShared()
 // 常量定义
 const STATUS = {
   PENDING: 'pending',
@@ -139,7 +145,7 @@ const STATUS = {
   ERROR: 'error'
 }
 
-const allowedFileTypes = '.doc,.docx,.txt'
+const allowedFileTypes = '.doc,.docx,.txt,.pdf'
 
 // 颜色映射
 const statusColors = {
@@ -221,7 +227,6 @@ const startUpload = async file => {
         }
       })
   } catch (error) {
-    console.log(error)
     previewFileId.value = null
     if (axios.isCancel(error)) {
       file.status = STATUS.PAUSED
@@ -336,6 +341,14 @@ const handlePreview = async file => {
 
       // 处理图片显示（如果需要）
       result.messages.forEach(message => {})
+    } else if (['pdf'].includes(file.extension)) {
+      // 生成PDF的Blob URL并预览
+      const pdfUrl = URL.createObjectURL(file.raw)
+      previewContent.value = pdfUrl
+      previewType.value = 'pdf'
+
+      // 在组件销毁或关闭预览时记得释放URL
+      // 例如在onUnmounted或关闭弹窗的方法中调用 URL.revokeObjectURL(pdfUrl)
     } else {
       previewContent.value = '不支持此文件预览'
       previewType.value = 'unsupported'
@@ -453,6 +466,21 @@ defineExpose({ openFile, closeFile })
 </script>
 
 <style scoped lang="less">
+.pdf-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.pdf-frame {
+  width: 100%;
+  height: 500px;
+  border: 0;
+  box-shadow: none !important;
+  outline: none !important;
+}
 .delete-icon {
   margin-right: 5px;
   width: 24px;

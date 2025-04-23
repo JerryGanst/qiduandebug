@@ -31,7 +31,7 @@
           </div>
         </el-popover>
       </div>
-      <div class="noLogin" v-if="!isLogin" @click="dialogVisible = true">未登录</div>
+      <div class="noLogin" v-if="!isLogin" @click="dialogVisible = true">登录</div>
     </div>
 
     <div
@@ -798,7 +798,7 @@ defineExpose({ queryAn, deleteData })
       position: fixed;
       color: #1b6cff;
       bottom: 30px;
-      left: 8px;
+      left: 15px;
     }
     .user-avatar-container {
       position: fixed;
@@ -885,8 +885,6 @@ defineExpose({ queryAn, deleteData })
 .login-form {
   padding: 20px;
   :deep(.el-form-item__label) {
-    text-align: right;
-    width: 80px !important; /* 调整 label 的宽度 */
     padding-right: 8px; /* 调整 label 和输入框的间距 */
   }
 

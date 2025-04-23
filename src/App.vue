@@ -9,41 +9,71 @@
 </template>
 
 <script setup>
-// import { onMounted, onBeforeUnmount, ref } from 'vue'
-// const message = ref('')
-// let ws = null
-// let reconnectTimeout = null
-// const heartbeatInterval = 30000 // 30秒发送一次
-// const connectWebSocket = () => {
-//   ws = new WebSocket(import.meta.env.VITE_API_WS_URL) // 替换为实际地址
-//   ws.onopen = () => {}
-//   ws.onmessage = event => (message.value = event.data)
-//   ws.onerror = error => {}
-//   ws.onclose = () => handleReconnect()
-// }
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import request from '@/utils/request' // 导入封装的 axios 方法
+const startTime = ref(null)
+const endTime = ref(null)
+const formatDateTimeUTC = isoString => {
+  const date = new Date(isoString)
 
-// const handleReconnect = () => {
-//   if (!reconnectTimeout) {
-//     reconnectTimeout = setTimeout(() => {
-//       connectWebSocket()
-//       reconnectTimeout = null
-//     }, 20000) // 20秒后重连
-//   }
-// }
+  // 提取 UTC 时间并手动加 8 小时（避免本地时区干扰）
+  const year = date.getUTCFullYear()
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0') // 月份从 0 开始
+  const day = String(date.getUTCDate()).padStart(2, '0')
+  const hours = String(date.getUTCHours() + 8).padStart(2, '0') // 加 8 小时
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0')
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0')
 
-// const sendHeartbeat = () => {
-//   if (ws?.readyState === WebSocket.OPEN) {
-//     ws.send('heart')
-//   }
-// }
-// onMounted(() => {
-//   connectWebSocket()
-//   setInterval(sendHeartbeat, heartbeatInterval)
-// })
+  // 处理跨天（例如 UTC 16:00 → 北京 00:00，日期+1）
+  if (hours >= 24) {
+    hours = String(hours - 24).padStart(2, '0')
+    const newDate = new Date(date)
+    newDate.setUTCDate(date.getUTCDate() + 1)
+    return `${newDate.getUTCFullYear()}-${String(newDate.getUTCMonth() + 1).padStart(2, '0')}-${String(newDate.getUTCDate()).padStart(2, '0')} ${hours}:${minutes}:${seconds}`
+  }
 
-// // 组件挂载时连接
-// // 销毁时关闭连接
-// onBeforeUnmount(() => ws?.close())
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+// 记录开始时间
+onMounted(() => {
+  startTime.value = new Date() // 页面加载时间
+  window.addEventListener('beforeunload', handleBeforeUnload)
+})
+
+// 清理事件监听
+onBeforeUnmount(() => {
+  if (localStorage.getItem('userInfo')) {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+  }
+})
+
+// 处理页面关闭前的逻辑
+const handleBeforeUnload = () => {
+  endTime.value = new Date() // 页面关闭时间
+  // 使用 sendBeacon 发送数据到后端（确保可靠传输）
+  const data = {
+    startTime: formatDateTimeUTC(startTime.value.toISOString()),
+    endTime: formatDateTimeUTC(endTime.value.toISOString())
+  }
+  request
+    .post('/Data/saveSession', {
+      startTime: data.startTime,
+      endTime: data.endTime,
+      userId: JSON.parse(localStorage.getItem('userInfo')).id
+    })
+    .then(res => {
+      if (res.status) {
+      }
+    })
+    .catch(err => {
+      // loadingInstance.close();
+      console.error('获取回复失败:', err)
+      // botMessage.text = '抱歉，暂时无法获取回复';
+    })
+
+  // navigator.sendBeacon('/api/save-session', JSON.stringify(data))
+}
 </script>
 <style lang="less">
 .el-upload-dragger .el-upload__text em {

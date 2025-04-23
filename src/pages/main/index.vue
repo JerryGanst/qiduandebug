@@ -240,33 +240,7 @@
               />
               <!-- 发送图标 -->
               <div class="send-icon">
-                <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
-                  <el-upload
-                    action="#"
-                    :http-request="handleUpload"
-                    :before-upload="beforeUpload"
-                    :show-file-list="false"
-                    :accept="allowedTypes"
-                  >
-                    <el-icon class="upload-icon" :size="42">
-                      <Document />
-                    </el-icon>
-                  </el-upload>
-                </el-tooltip> -->
-                <!-- <img
-                  :src="deepType ? deepSelect : deep"
-                  class="arrow"
-                  @mouseenter="() => hoverDeep(true)"
-                  @mouseleave="() => hoverDeep(false)"
-                  @click="checkDeepType"
-                  style="margin-right: 10px"
-                /> -->
-                <div
-                  class="tooltip-wrapper"
-                  @mouseenter="showFileTip = true"
-                  @mouseleave="showFileTip = false"
-                  v-if="pageType === 'it'"
-                >
+                <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
                   <img
                     :src="deepType ? deepSelect : deep"
                     class="arrow"
@@ -275,8 +249,8 @@
                   />
 
                   <transition name="fade">
-                    <div v-if="showFileTip" class="tooltip">
-                      {{ !deepType ? '切换成深度思考模式' : '切换成普通模式' }}
+                    <div v-if="showModelTip" class="tooltip">
+                      {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
                     </div>
                   </transition>
                 </div>
@@ -311,28 +285,13 @@
               />
               <!-- 发送图标 -->
               <div class="send-icon">
-                <!-- <el-tooltip content="仅支持 text/pdf/excel/doc 格式" placement="top">
-                  <el-upload
-                    action="#"
-                    :http-request="handleUpload"
-                    :before-upload="beforeUpload"
-                    :show-file-list="false"
-                    :accept="allowedTypes"
-                  >
-                    <el-icon class="upload-icon" :size="42">
-                      <Document />
-                    </el-icon>
-                  </el-upload>
-                </el-tooltip> -->
-                <!-- <img
-                  :src="deepType ? deepSelect : deep"
-                  class="arrow"
-                  @mouseenter="() => hoverDeep(true)"
-                  @mouseleave="() => hoverDeep(false)"
-                  @click="checkDeepType"
-                  style="margin-right: 10px"
-                /> -->
                 <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+                  <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
+                  <transition name="fade">
+                    <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+                  </transition>
+                </div>
+                <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
                   <img
                     :src="deepType ? deepSelect : deep"
                     class="arrow"
@@ -341,8 +300,8 @@
                   />
 
                   <transition name="fade">
-                    <div v-if="showFileTip" class="tooltip">
-                      {{ !deepType ? '切换成深度思考模式' : '切换成普通模式' }}
+                    <div v-if="showModelTip" class="tooltip">
+                      {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
                     </div>
                   </transition>
                 </div>
@@ -439,7 +398,9 @@ const {
   checkDeepType,
   docIng,
   limitAry,
-  fileObj
+  fileObj,
+  showFileTip,
+  showModelTip
 } = useShared()
 
 const queryIng = ref(false)
@@ -606,10 +567,22 @@ const submitFinal = async (val, isRefresh, ob) => {
   let title = ''
   if (!isRefresh && ob) {
     const qData = ob.originalFileName + '(final)'
+    const index = questions.value.findIndex(item => item === qData)
+    // const idx = answerList.value.findIndex(item => item.title === qData)
+
+    const targetId = answerList.value.find(item => item.title === qData)?.id
+    if (index !== -1) {
+      questions.value.splice(index, 1)
+    }
+    // if (idx !== -1) {
+    //   answerList.value.splice(index, 1)
+    // }
+    if (targetId) {
+      asizeRef.value.deleteData(targetId, true)
+    }
     questions.value.unshift(qData)
   }
   if (isRefresh && !ob) {
-    console.log(123)
     for (var m = 0; m < answerList.value.length; m++) {
       if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
         const id = answerList.value[m].id
@@ -647,6 +620,7 @@ const submitFinal = async (val, isRefresh, ob) => {
         const id = answerList.value[m].id
         title = answerList.value[m].title
         const index = questions.value.findIndex(item => item === title)
+        let limitObj = {}
         if (index !== -1) {
           questions.value.splice(index, 1)
         }
@@ -654,11 +628,13 @@ const submitFinal = async (val, isRefresh, ob) => {
           item => item.data.files && item.data.files.originalFileName === ob.originalFileName
         )
         if (idx !== -1) {
-          answerList.value.splice(index, 1)
+          limitObj = answerList.value[idx]
+          answerList.value.splice(idx, 1)
         }
         await asizeRef.value.deleteData(id, true)
         activeIndex.value = 0
         questions.value.unshift(title)
+        answerList.value.unshift(limitObj)
       }
     }
   }
@@ -792,6 +768,10 @@ const refreshData = () => {
   }
 }
 const upCommon = async () => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
   if (isDisabled.value) return // 如果按钮已禁用，直接返回
   let id = ''
   if (currentId.value) {
@@ -826,6 +806,10 @@ const downCommon = () => {
   commonVisible.value = true
 }
 const submitCommon = async () => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
   let id = ''
   if (currentId.value) {
     id = currentId.value
@@ -1212,22 +1196,20 @@ const submitTran = async (val, isRefresh, obj) => {
   let title = ''
   if (!isRefresh && obj) {
     const qData = obj.originalFileName + '(tran)'
+    const index = questions.value.findIndex(item => item === qData)
+    // const idx = answerList.value.findIndex(item => item.title === qData)
+    const targetId = answerList.value.find(item => item.title === qData)?.id
+    if (index !== -1) {
+      questions.value.splice(index, 1)
+    }
+    // if (idx !== -1) {
+    //   answerList.value.splice(index, 1)
+    // }
+    if (targetId) {
+      asizeRef.value.deleteData(targetId, true)
+    }
     questions.value.unshift(qData)
   }
-  // if (isRefresh && obj) {
-  //   const qData = obj.originalFileName + '(tran)'
-  //   const index = questions.value.findIndex(item => item === qData)
-  //   const idx = answerList.value.findIndex(item => item.title === qData)
-  //   const targetId = answerList.value.find(item => item.title === qData)?.id
-  //   if (index !== -1) {
-  //     questions.value.splice(index, 1)
-  //   }
-  //   if (idx !== -1) {
-  //     answerList.value.splice(index, 1)
-  //   }
-  //   await asizeRef.value.deleteData(targetId, isRefresh)
-  //   questions.value.unshift(qData)
-  // }
   if (isRefresh && !obj) {
     for (var m = 0; m < answerList.value.length; m++) {
       if (answerList.value[m].type === '翻译' && limitQuery.value === answerList.value[m].data.question) {
@@ -1267,6 +1249,7 @@ const submitTran = async (val, isRefresh, obj) => {
         const id = answerList.value[m].id
         title = answerList.value[m].title
         const index = questions.value.findIndex(item => item === title)
+        let limitObj = {}
         if (index !== -1) {
           questions.value.splice(index, 1)
         }
@@ -1274,11 +1257,13 @@ const submitTran = async (val, isRefresh, obj) => {
           item => item.data.files && item.data.files.originalFileName === obj.originalFileName
         )
         if (idx !== -1) {
-          answerList.value.splice(index, 1)
+          limitObj = answerList.value[idx]
+          answerList.value.splice(idx, 1)
         }
         await asizeRef.value.deleteData(id, true)
         activeIndex.value = 0
         questions.value.unshift(title)
+        answerList.value.unshift(limitObj)
       }
     }
   }
@@ -1406,9 +1391,9 @@ const submitQuestion = async (val, isRefresh) => {
   const pgType = pageType.value
   const addTitle = pageType.value === 'query' ? '(query)' : '(it)'
   let title = ''
-  if (addTitle === '(query)') {
-    deepType.value = 0
-  }
+  // if (addTitle === '(query)') {
+  //   deepType.value = 0
+  // }
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
     for (var m = 0; m < answerList.value.length; m++) {
@@ -1777,6 +1762,7 @@ const getHistory = async (id, page, val, ids) => {
             currentQuestion.value = true
             activeIndex.value = s
             selectedMode.value = answerList.value[0].type
+            deepType.value = answerList.value[s].isThink
             nextTick(() => {
               // 滚动到底部
               if (messageContainer.value) {
@@ -1811,6 +1797,7 @@ const getHistory = async (id, page, val, ids) => {
                   currentQuestion.value = true
                   tipQuery.value = answerList.value[h].data.question
                   currentObj.value.list = answerList.value[h].data.think
+                  deepType.value = answerList.value[h].isThink
                 }
                 if (page === 'tran') {
                   currentQuestion.value = false
