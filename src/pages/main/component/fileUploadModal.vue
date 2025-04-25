@@ -9,71 +9,77 @@
     <div class="upload-layout">
       <!-- 左侧文件列表 -->
       <div class="file-list">
-        <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
-          <div class="file_img">
-            <img :src="file.extension === 'txt' ? text : file.extension === 'pdf' ? pdf : word" />
-          </div>
-          <div class="file-info">
-            <span class="filename">{{ file.name }}</span>
-            <div class="file-actions">
-              <span
-                @click="handleDelete(index)"
-                style="width: 20px; height: 20px; cursor: pointer"
-                :style="{ marginRight: file.status === 'pending' ? '0px' : '10px' }"
-              >
-                <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
-              </span>
-              <span
-                v-if="file.status === 'uploading'"
-                @click.stop="pauseUpload(file)"
-                style="width: 20px; height: 20px; cursor: pointer"
-              >
-                <img src="@/assets/continue.svg" style="width: 100%; height: 100%" />
-              </span>
-              <!-- <span
+        <div class="file_item">
+          <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
+            <div class="file_img">
+              <img :src="file.extension === 'txt' ? text : file.extension === 'pdf' ? pdf : word" />
+            </div>
+            <div class="file-info">
+              <span class="filename">{{ file.name }}</span>
+              <div class="file-actions">
+                <span
+                  @click="handleDelete(index)"
+                  style="width: 20px; height: 20px; cursor: pointer"
+                  :style="{ marginRight: file.status === 'pending' ? '0px' : '10px' }"
+                >
+                  <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
+                </span>
+                <span
+                  v-if="file.status === 'uploading'"
+                  @click.stop="pauseUpload(file)"
+                  style="width: 20px; height: 20px; cursor: pointer"
+                >
+                  <img src="@/assets/continue.svg" style="width: 100%; height: 100%" />
+                </span>
+                <!-- <span
                 v-if="file.status === 'padding'"
                 @click.stop="pauseUpload(file)"
                 style="width: 20px; height: 20px; cursor: pointer"
               >
                 <img src="@/assets/continue.svg" style="width: 100%; height: 100%" />
               </span> -->
-              <span
-                v-else-if="file.status === 'paused'"
-                @click.stop="resumeUpload(file)"
-                style="width: 20px; height: 20px; cursor: pointer"
-              >
-                <img src="@/assets/pause.svg" style="width: 100%; height: 100%" />
-              </span>
-              <span
-                v-else-if="file.status === 'error'"
-                @click.stop="retryUpload(file)"
-                style="width: 20px; height: 20px; cursor: pointer"
-              >
-                <img src="@/assets/refreshFile.svg" style="width: 100%; height: 100%" />
-              </span>
-              <span v-else-if="file.status === 'success'" style="width: 20px; height: 20px">
-                <img src="@/assets/doneFile.svg" style="width: 100%; height: 100%" />
-              </span>
+                <span
+                  v-else-if="file.status === 'paused'"
+                  @click.stop="resumeUpload(file)"
+                  style="width: 20px; height: 20px; cursor: pointer"
+                >
+                  <img src="@/assets/pause.svg" style="width: 100%; height: 100%" />
+                </span>
+                <span
+                  v-else-if="file.status === 'error'"
+                  @click.stop="retryUpload(file)"
+                  style="width: 20px; height: 20px; cursor: pointer"
+                >
+                  <img src="@/assets/refreshFile.svg" style="width: 100%; height: 100%" />
+                </span>
+                <span v-else-if="file.status === 'success'" style="width: 20px; height: 20px">
+                  <img src="@/assets/doneFile.svg" style="width: 100%; height: 100%" />
+                </span>
+              </div>
+              <!-- <span class="file-type">{{ file.extension }}</span> -->
             </div>
-            <!-- <span class="file-type">{{ file.extension }}</span> -->
+            <div style="font-size: 12px; color: #bebebe; margin-top: 2px; margin-bottom: 4px">
+              {{ file.size ? (file.size / 1024).toFixed(1) : 0 }}KB
+            </div>
+            <el-progress
+              :percentage="file.progress"
+              :color="customProgressColor(file)"
+              :status="getStatusType(file.status)"
+            />
           </div>
-          <div style="font-size: 12px; color: #bebebe; margin-top: 2px; margin-bottom: 4px">
-            {{ file.size ? (file.size / 1024).toFixed(1) : 0 }}KB
-          </div>
-          <el-progress
-            :percentage="file.progress"
-            :color="customProgressColor(file)"
-            :status="getStatusType(file.status)"
-          />
         </div>
+
         <div class="upload_list">
           <el-upload
             drag
             :auto-upload="false"
+            :multiple="type === 'sample' ? true : false"
             :accept="allowedFileTypes"
             :on-change="handleFileAdd"
+            :on-exceed="handleExceed"
             :show-file-list="false"
             :before-upload="checkFileSize"
+            :limit="5"
           >
             <i class="el-icon-upload" />
             <div class="el-upload__text">
@@ -122,6 +128,7 @@ import { ref, computed, nextTick, watch } from 'vue'
 import axios from 'axios'
 import mammoth from 'mammoth'
 import { useShared } from '@/utils/useShared'
+import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
@@ -135,7 +142,7 @@ const previewType = ref('')
 const previewFileId = ref(null)
 const type = ref('tran')
 const emit = defineEmits(['submit-tran', 'submit-final'])
-const { fileObj, isSampleLoad, finalIng, isLogin } = useShared()
+const { fileObj, isSampleLoad, finalIng, isLogin, fileAry } = useShared()
 // 常量定义
 const STATUS = {
   PENDING: 'pending',
@@ -164,11 +171,13 @@ const handleDelete = index => {
     previewContent.value = null
     previewType.value = ''
   }
-
   // 强制 DOM 更新（关键修复）
   nextTick(() => {
     // 通过重新赋值触发响应式更新
     fileQueue.value = [...fileQueue.value]
+    fileQueue.value.forEach(item => {
+      item.status = 'pending'
+    })
   })
 
   // 取消上传（原有逻辑）
@@ -177,7 +186,15 @@ const handleDelete = index => {
   }
 
   // 从队列中移除
-  fileQueue.value.splice(index, 1)
+
+  if (type.value === 'sample') {
+    // 提取array2的name集合
+    // 过滤array1，排除name存在于array2中的对象
+    fileAry.value = fileAry.value.filter(item => item.originalFileName !== fileQueue.value[index].name)
+    fileQueue.value.splice(index, 1)
+  } else {
+    fileQueue.value.splice(index, 1)
+  }
 }
 // 计算属性
 const hasPendingFiles = computed(() => {
@@ -194,50 +211,101 @@ const startUpload = async file => {
   }
   const CancelToken = axios.CancelToken
   const source = CancelToken.source()
+  if (type.value === 'sample') {
+    let ary = []
+    for (var i = 0; i < fileQueue.value.length; i++) {
+      file[i].status = STATUS.UPLOADING
+      file[i].source = source
+      file[i].cancel = source.cancel
+      // 清除旧预览状态
+      previewFileId.value = null
+      previewContent.value = null
+      previewType.value = ''
+      try {
+        previewFileId.value = file[i].uid
+        const formData = new FormData()
+        formData.append('files', file[i].raw)
 
-  file.status = STATUS.UPLOADING
-  file.source = source
-  file.cancel = source.cancel
-  // 清除旧预览状态
-  previewFileId.value = null
-  previewContent.value = null
-  previewType.value = ''
-  try {
-    previewFileId.value = file.uid
-    const formData = new FormData()
-    formData.append('files', file.raw)
-
-    await axios
-      .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
-        cancelToken: source.token,
-        onUploadProgress: progressEvent => {
-          file.progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-        }
-      })
-      .then(res => {
-        if (res.data.status) {
-          file.status = STATUS.SUCCESS
-          file.progress = 100
-          fileObj.value = res.data?.data[0]
-          emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', res.data?.data[0])
+        await axios
+          .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
+            cancelToken: source.token,
+            onUploadProgress: progressEvent => {
+              file[i].progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+            }
+          })
+          .then(res => {
+            if (res.data.status) {
+              file[i].status = STATUS.SUCCESS
+              file[i].progress = 100
+              ary.push(res.data?.data[0])
+              if (i === fileQueue.value.length - 1) {
+                eventBus.emit('submit-sampleFile', ary)
+              }
+            } else {
+              ElMessage.error(res.data.message)
+              file[i].status = STATUS.ERROR
+              previewFileId.value = null
+            }
+          })
+      } catch (error) {
+        previewFileId.value = null
+        if (axios.isCancel(error)) {
+          file[i].status = STATUS.PAUSED
         } else {
-          ElMessage.error(res.data.message)
-          file.status = STATUS.ERROR
-          previewFileId.value = null
+          file[i].status = STATUS.ERROR
+          console.error('Upload failed:', error)
         }
-      })
-  } catch (error) {
-    previewFileId.value = null
-    if (axios.isCancel(error)) {
-      file.status = STATUS.PAUSED
-    } else {
-      file.status = STATUS.ERROR
-      console.error('Upload failed:', error)
+        throw error
+      }
     }
-    throw error
+  } else {
+    file.status = STATUS.UPLOADING
+    file.source = source
+    file.cancel = source.cancel
+    // 清除旧预览状态
+    previewFileId.value = null
+    previewContent.value = null
+    previewType.value = ''
+    try {
+      previewFileId.value = file.uid
+      const formData = new FormData()
+      formData.append('files', file.raw)
+
+      await axios
+        .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
+          cancelToken: source.token,
+          onUploadProgress: progressEvent => {
+            file.progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+          }
+        })
+        .then(res => {
+          if (res.data.status) {
+            file.status = STATUS.SUCCESS
+            file.progress = 100
+            fileObj.value = res.data?.data[0]
+            emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', res.data?.data[0])
+          } else {
+            ElMessage.error(res.data.message)
+            file.status = STATUS.ERROR
+            previewFileId.value = null
+          }
+        })
+    } catch (error) {
+      previewFileId.value = null
+      if (axios.isCancel(error)) {
+        file.status = STATUS.PAUSED
+      } else {
+        file.status = STATUS.ERROR
+        console.error('Upload failed:', error)
+      }
+      throw error
+    }
   }
 }
-
+// 处理超出限制
+const handleExceed = (files, fileList) => {
+  ElMessage.warning('最多只能上传5个文件')
+}
 // 进度条颜色计算
 const customProgressColor = file => {
   return statusColors[file.status] || '#409EFF'
@@ -274,9 +342,16 @@ const handleFileAdd = uploadFile => {
     return
   }
   previewFileId.value = file.uid
-  fileQueue.value = []
+  if (type.value !== 'sample') {
+    fileQueue.value = []
+  }
+
   fileQueue.value.push(file)
-  handlePreview(file)
+  if (fileQueue.value.length > 5) {
+    fileQueue.value = fileQueue.value.slice(-5)
+  }
+
+  handlePreview(type.value === 'sample' ? fileQueue.value[0] : file)
 }
 
 // 暂停上传
@@ -363,11 +438,14 @@ const handlePreview = async file => {
 const openFile = val => {
   dialogVisible.value = true
   type.value = val
-
-  if (fileObj.value) {
-    getFile()
+  if (val === 'sample') {
+    getFileAry()
   } else {
-    fileQueue.value = []
+    if (fileObj.value) {
+      getFile()
+    } else {
+      fileQueue.value = []
+    }
   }
 }
 
@@ -376,6 +454,49 @@ const getTextAfterLastDot = str => {
   if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
   return str.slice(lastDotIndex + 1)
 }
+const getFileAry = () => {
+  fileQueue.value = []
+  for (var i = 0; i < fileAry.value.length; i++) {
+    const name = fileAry.value[i].originalFileName
+    fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById?id=' + fileAry.value[i].fileId, {
+      method: 'POST'
+    })
+      .then(response => {
+        // 从 Content-Disposition 中解析文件名
+        const disposition = response.headers.get('Content-Disposition')
+        let filename = 'default_filename' // 默认文件名
+        if (disposition && disposition.indexOf('filename=') !== -1) {
+          filename = disposition.split('filename=')[1].replace(/"/g, '')
+        }
+
+        // 获取二进制数据
+        return response.blob().then(blob => ({ blob, filename }))
+      })
+      .then(({ blob, filename }) => {
+        // 将 Blob 转换为 File 对象（类似 file.raw）
+        const file = new File([blob], filename, { type: blob.type })
+        const fileOther = {
+          raw: file,
+          uid: file.lastModified,
+          size: file.size,
+          name: decodeURIComponent(file.name),
+          extension: getTextAfterLastDot(name),
+          progress: 100,
+          status: STATUS.SUCCESS,
+          cancel: null,
+          source: null
+        }
+        previewFileId.value = fileOther.uid
+        // 此时可以像处理 el-upload 的 file.raw 一样处理 file
+
+        fileQueue.value.push(fileOther)
+        handlePreview(fileQueue.value[0])
+      })
+      .catch(error => {
+        console.error('获取文件失败:', error)
+      })
+  }
+}
 const getFile = () => {
   // 使用 POST 请求（与后端 @PostMapping 匹配）
   fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById?id=' + fileObj.value.fileId, {
@@ -383,7 +504,6 @@ const getFile = () => {
   })
     .then(response => {
       // 从 Content-Disposition 中解析文件名
-
       const disposition = response.headers.get('Content-Disposition')
       let filename = 'default_filename' // 默认文件名
       if (disposition && disposition.indexOf('filename=') !== -1) {
@@ -412,38 +532,10 @@ const getFile = () => {
       fileQueue.value = []
       fileQueue.value.push(fileOther)
       handlePreview(fileOther)
-      // 示例：预览图片或上传到其他服务
-      // if (file.type.startsWith('image/')) {
-      //   const previewUrl = URL.createObjectURL(file)
-      //   // 显示预览
-      //   const img = document.createElement('img')
-      //   img.src = previewUrl
-      //   document.body.appendChild(img)
-      // }
     })
     .catch(error => {
       console.error('获取文件失败:', error)
     })
-
-  // fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById?id=' + fileObj.value.fileId, {
-  //   method: 'POST'
-  // })
-  //   .then(response => {
-  //     // 从 Content-Disposition 头中获取文件名
-  //     console.log(response)
-  //     const filename = response.headers.get('Content-Disposition').split('filename=')[1].replace(/"/g, '')
-
-  //     // 将响应转换为 Blob
-  //     return response.blob().then(blob => {
-  //       // 构造类似 file.raw 的 File 对象
-  //       const file = new File([blob], filename, { type: blob.type })
-  //       return file
-  //     })
-  //   })
-  //   .then(file => {
-  //     // 使用 file 对象，例如上传到其他接口
-  //     console.log('File raw data:', file)
-  //   })
 }
 const closeFile = () => {
   dialogVisible.value = false
@@ -508,12 +600,17 @@ defineExpose({ openFile, closeFile })
   height: 538px;
   border-radius: 4px;
 
-  overflow-y: auto;
+  overflow-y: hidden;
   padding-right: 15px;
   display: flex;
   position: relative;
   flex-direction: column;
   border: 1px solid #dcdfe6;
+  .file_item {
+    width: 100%;
+    height: 400px;
+    overflow-y: auto;
+  }
   .upload_list {
     width: calc(100% - 30px);
     margin-left: 15px;

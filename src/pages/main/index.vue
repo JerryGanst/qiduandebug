@@ -2,6 +2,7 @@
   <el-container class="container">
     <!-- 左侧栏 -->
     <AsizeComponent @change-history="getHistory" ref="asizeRef"></AsizeComponent>
+
     <!-- 右侧内容 -->
     <el-container>
       <el-main>
@@ -27,15 +28,6 @@
         </div>
         <div v-else class="center-container" style="padding-top: 0px">
           <div class="main_content" style="width: 860px">
-            <!-- <div class="text_item" v-if="pageType === 'query' || pageType === 'it'">
-              <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
-              <div class="title_final">
-                {{
-                  isQueryStop ? '请重新提出您的问题' : currentObj.messages.type ? '最佳答案已生成' : '正在总结答案...'
-                }}
-              </div>
-            </div> -->
-
             <div v-if="pageType === 'query' || pageType === 'it'" class="title_tiQuery">
               <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
                 {{ tipQuery }}
@@ -107,19 +99,6 @@
               </div>
             </div>
 
-            <!-- <div class="text_item" v-if="pageType === 'sample'">
-              <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
-              <div>
-                {{
-                  isSampleStop
-                    ? '请重新提出您的问题'
-                    : chatQuery.messages.length > 0 && chatQuery.isLoading === false && !limitLoading
-                      ? '最佳答案已生成'
-                      : '正在总结答案...'
-                }}
-              </div>
-            </div> -->
-
             <div class="sample_item" ref="messageContainer">
               <div
                 class="sample_chat"
@@ -127,20 +106,38 @@
                 v-for="(item, index) in chatQuery.messages"
               >
                 <div
+                  v-if="index % 2 === 0 && item.files"
+                  class="sample_chat_file"
+                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                >
+                  <div v-for="its in item.files" class="item_files">
+                    <span style="display: flex; align-items: center">
+                      <img
+                        :src="
+                          its.originalFileName.endsWith('txt')
+                            ? text
+                            : its.originalFileName.endsWith('pdf')
+                              ? pdf
+                              : word
+                        "
+                        style="width: 24px; height: 30px"
+                      />
+                    </span>
+                    <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                  </div>
+                </div>
+                <div
                   v-if="index % 2 === 0"
                   class="sample_chat_query"
-                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                  :style="{
+                    marginTop: item.files ? '15px' : index === 0 ? '70px' : '40px',
+                    padding: item.content ? '13px 15px' : '0px'
+                  }"
                 >
                   {{ item.content }}
                 </div>
                 <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
                 <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
-                  <!-- 前半部分 -->
-                  <!-- <MarkdownRenderer
-                    :markdown="item.before"
-                    :class="{ 'dimmed-text': item.hasSplit }"
-                    style="font-size: 12px"
-                  /> -->
                   <MarkdownRenderer
                     :markdown="item.before"
                     class="normal-text"
@@ -165,7 +162,7 @@
                 <div
                   v-if="index % 2 === 0"
                   class="sample_chat_query"
-                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                  :style="{ marginTop: index === 0 ? '70px' : '40px', padding: item.content ? '13px 15px' : '0px' }"
                 >
                   {{ item.content }}
                 </div>
@@ -176,12 +173,6 @@
                 </div>
                 <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
                 <div v-if="index % 2 !== 0" class="stream-response">
-                  <!-- 前半部分 -->
-                  <!-- <MarkdownRenderer
-                    :markdown="item.before"
-                    :class="{ 'dimmed-text': item.hasSplit }"
-                    style="font-size: 12px"
-                  /> -->
                   <MarkdownRenderer
                     :markdown="item.before"
                     class="normal-text"
@@ -268,7 +259,7 @@
                 />
               </div>
             </div>
-            <div class="textarea" v-if="pageType === 'sample'">
+            <div class="textarea sampleArea" v-if="pageType === 'sample'">
               <el-input
                 v-model="newQuestion"
                 placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -286,7 +277,12 @@
               <!-- 发送图标 -->
               <div class="send-icon">
                 <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
-                  <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
+                  <img
+                    src="@/assets/file.png"
+                    class="arrow"
+                    @click="showFileSample('sample')"
+                    style="margin-right: 10px"
+                  />
                   <transition name="fade">
                     <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
                   </transition>
@@ -314,6 +310,7 @@
             </div>
           </div>
         </div>
+        <FileUpload ref="fileRefs"></FileUpload>
       </el-main>
     </el-container>
   </el-container>
@@ -340,16 +337,20 @@
 // 10.180.248.140
 import AsizeComponent from './component/asize.vue'
 import Entry from './component/entry.vue'
+import FileUpload from './component/fileUploadModal.vue'
 import { Document } from '@element-plus/icons-vue' // 引入需要的图标
 import { useShared } from '@/utils/useShared'
+import eventBus from '@/utils/eventBus'
 import { ElButton, ElMessage } from 'element-plus' // 引入 ElMessage
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, toRaw } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, toRaw, onBeforeUnmount } from 'vue'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
 import imageC from '@/assets/stop.png'
 import deep from '@/assets/deep.png'
 import deepSelect from '@/assets/deepSelect.png'
-
+import word from '@/assets/w.png'
+import text from '@/assets/text.png'
+import pdf from '@/assets/pdf.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './component/markdown.vue' // 引入 Markdown 渲染组件
 
@@ -400,7 +401,8 @@ const {
   limitAry,
   fileObj,
   showFileTip,
-  showModelTip
+  showModelTip,
+  fileAry
 } = useShared()
 
 const queryIng = ref(false)
@@ -419,6 +421,7 @@ const currentMessageIndex = ref(0)
 const isDisabled = ref(false)
 const limitQuery = ref('')
 const currentRequestUrl = ref('')
+const fileRefs = ref(null)
 let interval
 
 // 函数区域
@@ -449,7 +452,11 @@ const removeItemByType = (arr, name) => {
   }
   return arr
 }
-
+const showFileSample = val => {
+  nextTick(() => {
+    fileRefs.value.openFile(val)
+  })
+}
 // 点击取消
 // const handleCancel = () => {
 //   // ElMessage.info('已取消删除');
@@ -880,6 +887,30 @@ const submitFinalSend = () => {
   }
   submitFinal()
 }
+const submitSampleFile = val => {
+  nextTick(() => {
+    fileRefs.value.closeFile()
+    currentQuestion.value = true
+    fileAry.value = val
+    if (chatQuery.messages.length === 0) {
+      let currentObj = {
+        content: '',
+        role: 'user',
+        files: val
+      }
+      chatQuery.messages.push(currentObj)
+    } else {
+      if (chatQuery.messages[chatQuery.messages.length - 1].role === 'user') {
+        chatQuery.messages[chatQuery.messages.length - 1].files = val
+      } else {
+        chatQuery.messages[chatQuery.messages.length - 2].files = val
+      }
+    }
+
+    console.log(chatQuery.messages)
+  })
+  console.log(val)
+}
 
 const submitSampleTitle = val => {
   if (isSampleLoad.value) {
@@ -920,7 +951,8 @@ const submitSample = async (val, isRefresh) => {
   limitLoading.value = true
   const currentData = {
     role: 'user',
-    content: newQuestion.value
+    content: newQuestion.value,
+    files: fileAry.value
   }
   let mes = {
     messages: []
@@ -1828,6 +1860,7 @@ const cancelCurrentRequest = async val => {
     isSampleStop.value = true
     chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
     let title = ''
+    // let obj = fileAry.value
     for (var i = 0; i < answerList.value.length; i++) {
       if (answerList.value[i].type === '通用模式') {
         if (
@@ -1840,6 +1873,7 @@ const cancelCurrentRequest = async val => {
     }
     const id = limitId.value
     postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value)
+    // postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value, obj)
     limitId.value = ''
   }
   if (val === 'query' || val === 'it') {
@@ -1903,7 +1937,14 @@ const cancelCurrentRequest = async val => {
     postFinal(obj, title, ob)
   }
 }
-
+// 组件挂载时订阅事件
+onMounted(() => {
+  eventBus.on('submit-sampleFile', submitSampleFile)
+})
+// 组件卸载时关闭 SSE 连接
+onBeforeUnmount(() => {
+  eventBus.off('submit-sampleFile', submitSampleFile)
+})
 // 组件卸载时关闭 SSE 连接
 onUnmounted(() => {
   if (interval) {
@@ -1913,6 +1954,11 @@ onUnmounted(() => {
 </script>
 
 <style lang="less">
+.sampleArea {
+  .el-textarea__inner {
+    padding: 18px 135px 18px 15px !important;
+  }
+}
 .tooltip-wrapper {
   position: relative;
   display: flex;
@@ -2100,6 +2146,35 @@ onUnmounted(() => {
           font-size: 14px;
           letter-spacing: 1px;
           width: 100%;
+          .sample_chat_file {
+            display: flex;
+            flex-wrap: nowrap; /* 不允许换行 */
+            gap: 10px 20px; /* 元素间距(可选) */
+            justify-content: end; /* 左对齐(默认) */
+            flex-direction: row-reverse;
+            .item_files {
+              display: flex;
+              font-size: 14px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              padding: 7px 15px;
+              color: rgb(51, 51, 51);
+              background-color: rgb(253, 253, 253);
+              display: flex;
+              align-items: center;
+              border-radius: 10px;
+              cursor: pointer;
+              box-sizing: border-box;
+              flex: 1 0 calc(20% - 25px); /* 基础宽度25% 减间距 */
+              max-width: calc(20% - 25px); /* 防止内容撑破 */
+              .file_name {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+            }
+          }
           .sample_chat_query {
             background-color: #1b6cff;
             border-radius: 10px;
@@ -2378,6 +2453,7 @@ onUnmounted(() => {
   .custom-input textarea {
     resize: none; /* 禁用调整大小功能 */
   }
+
   .send-icon {
     position: absolute;
     right: 20px;

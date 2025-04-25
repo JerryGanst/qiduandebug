@@ -286,7 +286,7 @@
         />
       </div>
     </div>
-    <div class="textarea" v-if="pageType === 'sample'">
+    <div class="textarea sampleArea" v-if="pageType === 'sample'">
       <el-input
         v-model="newQuestion"
         placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -341,24 +341,6 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <!-- <el-tooltip content="仅支持 txt/doc/docx 格式" placement="top">
-          <el-upload
-            action="#"
-            :multiple="true"
-            :http-request="handleAutoUpload"
-            :before-upload="beforeUpload"
-            :show-file-list="false"
-            :accept="allowedTypes"
-            :auto-upload="true"
-          >
-            <el-icon class="upload-icon" :size="42">
-              <Document />
-            </el-icon>
-          </el-upload>
-        </el-tooltip> -->
-        <!-- <el-icon class="upload-icon" :size="30" @click="showFile('tran')" style="margin-right: 10px">
-          <Document />
-        </el-icon> -->
         <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
 
@@ -387,26 +369,6 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <!-- <el-tooltip content="仅支持 txt/doc/docx 格式" placement="top">
-          <el-upload
-            action="#"
-            :multiple="true"
-            :http-request="handleAutoUpload"
-            :before-upload="beforeUpload"
-            :show-file-list="false"
-            :accept="allowedTypes"
-            :auto-upload="true"
-          >
-            <el-icon class="upload-icon" :size="42">
-              <Document />
-            </el-icon>
-          </el-upload>
-        </el-tooltip> -->
-
-        <!-- <el-icon class="upload-icon" :size="30" @click="showFile('final')" style="margin-right: 10px">
-          <Document />
-        </el-icon> -->
-        <!-- <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" /> -->
         <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
 
@@ -477,6 +439,7 @@ const {
   transQuest,
   dots,
   fileObj,
+  fileAry,
   deepType,
   checkDeepType,
   questions,
@@ -555,58 +518,6 @@ const lanList = ref(['中文', '英文', '西班牙语', '越南语'])
 const dynamicRowFinal = ref(1)
 const isDeepShow = ref(false)
 
-// 文件验证
-// const allowedTypes =
-//   '.txt,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-
-// // 文件类型验证
-// const beforeUpload = file => {
-//   const isValidType = ['doc', 'docx', 'txt'].some(ext => file.name.toLowerCase().endsWith(`.${ext}`))
-//   const maxSize = 1 * 1024 * 1024
-//   if (!isValidType) {
-//     ElMessage.error('仅支持 txt/doc/docx 格式!')
-//     return false
-//   }
-//   if (file.size > maxSize) {
-//     ElMessage.error('文件大小不能超过1MB')
-//     return false
-//   }
-//   return true
-// }
-
-// const handleAutoUpload = ({ file }) => {
-//   const formData = new FormData()
-//   formData.append('files', file) // 字段名需与后端匹配[1,6](@ref)
-
-//   request
-//     .post('/AI/fileUpload', formData, {
-//       headers: {
-//         'Content-Type': 'multipart/form-data' // 必须设置[3,5](@ref)
-//       }
-//     })
-//     .then(res => {
-//       if (res.status) {
-//         ElMessage.success('上传成功')
-//       }
-//     })
-//     .catch(err => {
-//       // loadingInstance.close();
-//       ElMessage.error('上传失败')
-//       // botMessage.text = '抱歉，暂时无法获取回复';
-//     })
-
-//   // try {
-//   //   await axios.post('http://10.180.17.77:8080/upload', formData, {
-//   //     headers: {
-//   //       'Content-Type': 'multipart/form-data' // 必须设置[3,5](@ref)
-//   //     }
-//   //   })
-//   //   ElMessage.success(`${file.name} 上传成功`)
-//   // } catch (err) {
-//   //   ElMessage.error(`${file.name} 上传失败: ${err.message}`)
-//   // }
-// }
-
 const tranPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
@@ -619,8 +530,13 @@ const submitFileTran = obj => {
 const submitFileFinal = obj => {
   emit('submit-final', '', false, obj)
 }
+// const submitSampleFile = obj => {
+//   console.log(obj)
+//   emit('submit-sampleFile', obj)
+// }
 
 const showFile = val => {
+  console.log(val)
   if (activeIndex.value || activeIndex.value == 0) {
     if (val === 'tran') {
       for (var i = 0; i < answerList.value.length; i++) {
@@ -636,8 +552,19 @@ const showFile = val => {
         }
       }
     }
+    if (val === 'sample') {
+      // for (var i = 0; i < answerList.value.length; i++) {
+      //   if (
+      //     answerList.value[i].data[0].question &&
+      //     chatQuery.messages[0].question === answerList.value[i].data[0].question
+      //   ) {
+      //     fileAry.value = answerList.value[i].data[0].files
+      //   }
+      // }
+    }
   } else {
     fileObj.value = ''
+    fileAry.value = ''
   }
   fileRef.value.openFile(val)
 }
@@ -735,6 +662,11 @@ defineExpose({ changeDynamicRows, fileRef })
 </script>
 
 <style lang="less" scoped>
+.sampleArea {
+  .el-textarea__inner {
+    padding: 18px 135px 18px 15px !important;
+  }
+}
 .tooltip-wrapper {
   position: relative;
   display: flex;

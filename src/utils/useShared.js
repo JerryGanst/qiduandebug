@@ -83,6 +83,7 @@ const transQuest = ref('')
 const dots = ref('.') // 初始点号
 const limitId = ref('')
 const fileObj = ref('')
+const fileAry = ref([])
 const deepType = ref(false)
 const docIng = ref(false)
 const limitAry = ref([])
@@ -268,6 +269,10 @@ export function useShared() {
   const updateFileObj = newName => {
     fileObj.value = newName
   }
+  const updateFileAry = newName => {
+    fileAry.value = newName
+  }
+
   const updateDeepType = newName => {
     deepType.value = newName
   }
@@ -313,6 +318,7 @@ export function useShared() {
     chatQuery,
     isLogin,
     fileObj,
+    fileAry,
     dynamicRows,
     isSampleLoad,
     limitSample,
@@ -374,6 +380,7 @@ export function useShared() {
     updateDocIng,
     updateLimitAry,
     updateShowFileTip,
-    updateShowModelTip
+    updateShowModelTip,
+    updateFileAry
   }
 }
