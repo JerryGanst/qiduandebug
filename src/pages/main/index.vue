@@ -106,11 +106,11 @@
                 v-for="(item, index) in chatQuery.messages"
               >
                 <div
-                  v-if="index % 2 === 0 && item.files"
+                  v-if="index % 2 === 0 && item.files && item.files.length > 0"
                   class="sample_chat_file"
-                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                  :style="{ marginTop: index === 0 ? '68px' : '40px' }"
                 >
-                  <div v-for="its in item.files" class="item_files">
+                  <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
                     <span style="display: flex; align-items: center">
                       <img
                         :src="
@@ -130,7 +130,13 @@
                   v-if="index % 2 === 0"
                   class="sample_chat_query"
                   :style="{
-                    marginTop: item.files ? '15px' : index === 0 ? '70px' : '40px',
+                    marginTop: item.content
+                      ? item.files && item.files.length > 0
+                        ? '15px'
+                        : index === 0
+                          ? '70px'
+                          : '40px'
+                      : '0px',
                     padding: item.content ? '13px 15px' : '0px'
                   }"
                 >
@@ -160,9 +166,39 @@
                 v-for="(item, index) in chatCurrent.messages"
               >
                 <div
+                  v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                  class="sample_chat_file"
+                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                >
+                  <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
+                    <span style="display: flex; align-items: center">
+                      <img
+                        :src="
+                          its.originalFileName.endsWith('txt')
+                            ? text
+                            : its.originalFileName.endsWith('pdf')
+                              ? pdf
+                              : word
+                        "
+                        style="width: 24px; height: 30px"
+                      />
+                    </span>
+                    <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                  </div>
+                </div>
+                <div
                   v-if="index % 2 === 0"
                   class="sample_chat_query"
-                  :style="{ marginTop: index === 0 ? '70px' : '40px', padding: item.content ? '13px 15px' : '0px' }"
+                  :style="{
+                    marginTop: item.content
+                      ? item.files && item.files.length > 0
+                        ? '15px'
+                        : index === 0
+                          ? '70px'
+                          : '40px'
+                      : '0px',
+                    padding: item.content ? '13px 15px' : '0px'
+                  }"
                 >
                   {{ item.content }}
                 </div>
@@ -259,7 +295,11 @@
                 />
               </div>
             </div>
-            <div class="textarea sampleArea" v-if="pageType === 'sample'">
+            <div
+              class="textarea"
+              :class="[fileInputAry && fileInputAry.length > 0 ? 'sampleAreaAry' : 'sampleArea']"
+              v-if="pageType === 'sample'"
+            >
               <el-input
                 v-model="newQuestion"
                 placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -274,6 +314,41 @@
                 :rows="dynamicRows"
                 @input="adjustTextareaHeight('textareaInputSample')"
               />
+              <div class="filesList" v-if="fileInputAry && fileInputAry.length > 0">
+                <div v-for="(item, index) in fileInputAry" :style="{ marginLeft: index === 0 ? '5px' : '10px' }">
+                  <span style="display: flex; align-items: center">
+                    <img
+                      :src="
+                        item.originalFileName.endsWith('txt')
+                          ? text
+                          : item.originalFileName.endsWith('pdf')
+                            ? pdf
+                            : word
+                      "
+                      style="width: 22px; height: 28px"
+                    />
+                  </span>
+                  <span style="padding-left: 10px; width: 50px; overflow: hidden; padding-top: 8px" class="file_name">
+                    {{ item.originalFileName }}
+                  </span>
+                  <span
+                    style="
+                      position: absolute;
+                      width: 16px;
+                      height: 16px;
+                      right: 0px;
+                      top: 0px;
+                      cursor: pointer;
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                    "
+                    @click="deleteImg(index)"
+                  >
+                    <img src="@/assets/close.png" style="width: 10px; height: 10px" />
+                  </span>
+                </div>
+              </div>
               <!-- 发送图标 -->
               <div class="send-icon">
                 <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
@@ -302,7 +377,7 @@
                   </transition>
                 </div>
                 <img
-                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                  :src="isSampleLoad ? imageC : newQuestion || fileInputAry.length > 0 ? imageB : imageA"
                   class="arrow"
                   @click="submitSampleSend"
                 />
@@ -402,7 +477,8 @@ const {
   fileObj,
   showFileTip,
   showModelTip,
-  fileAry
+  fileAry,
+  fileInputAry
 } = useShared()
 
 const queryIng = ref(false)
@@ -452,9 +528,15 @@ const removeItemByType = (arr, name) => {
   }
   return arr
 }
+
+const showListFile = val => {
+  fileAry.value = []
+  fileAry.value.push(val)
+  fileRefs.value.openFile('sample')
+}
 const showFileSample = val => {
   nextTick(() => {
-    fileRefs.value.openFile(val)
+    fileRefs.value.openFile(val, fileInputAry.value)
   })
 }
 // 点击取消
@@ -771,6 +853,20 @@ const refreshData = () => {
     const val = finalQuest.value
     submitFinal(finalQuest.value, true, obj)
   } else if (pageType.value === 'sample') {
+    let ary = []
+    if (activeIndex.value || activeIndex.value == 0) {
+      const length = answerList.value[activeIndex.value].data.length
+      if (length === 1) {
+        ary = answerList.value[activeIndex.value].data[0].files
+      } else if (length > 1) {
+        if (answerList.value[activeIndex.value].data[length - 1].role === 'user') {
+          ary = answerList.value[activeIndex.value].data[length - 1].files
+        } else {
+          ary = answerList.value[activeIndex.value].data[length - 2].files
+        }
+      }
+    }
+    fileInputAry.value = ary
     submitSample(chatQuery.messages[chatQuery.messages.length - 2].content, true)
   }
 }
@@ -887,29 +983,24 @@ const submitFinalSend = () => {
   }
   submitFinal()
 }
-const submitSampleFile = val => {
-  nextTick(() => {
-    fileRefs.value.closeFile()
-    currentQuestion.value = true
-    fileAry.value = val
-    if (chatQuery.messages.length === 0) {
-      let currentObj = {
-        content: '',
-        role: 'user',
-        files: val
-      }
-      chatQuery.messages.push(currentObj)
-    } else {
-      if (chatQuery.messages[chatQuery.messages.length - 1].role === 'user') {
-        chatQuery.messages[chatQuery.messages.length - 1].files = val
-      } else {
-        chatQuery.messages[chatQuery.messages.length - 2].files = val
-      }
-    }
 
-    console.log(chatQuery.messages)
+const deleteImg = index => {
+  fileInputAry.value.splice(index, 1)
+  if (!fileInputAry.value || fileInputAry.value.length === 0) {
+    fileInputAry.value = []
+    nextTick(() => {
+      adjustTextareaHeight('textareaInputSample')
+    })
+  }
+}
+const submitSampleFile = val => {
+  fileRefs.value.closeFile()
+  currentQuestion.value = true
+  fileAry.value = val
+  fileInputAry.value = JSON.parse(JSON.stringify(val))
+  nextTick(() => {
+    adjustTextareaHeight('textareaInputSample')
   })
-  console.log(val)
 }
 
 const submitSampleTitle = val => {
@@ -941,18 +1032,34 @@ const autoScroll = () => {
   })
 }
 const submitSample = async (val, isRefresh) => {
-  if (!checkData(val)) {
-    return
+  const fileInput = fileInputAry.value
+  if (fileInput.length === 0 || !fileInput) {
+    if (!checkData(val)) {
+      return
+    }
+  }
+  if (val) {
+    newQuestion.value = val
   }
   currentQuestion.value = true
+  const queryValue = newQuestion.value
   isSampleStop.value = false
   dynamicRows.value = 1
   isSampleLoad.value = true
   limitLoading.value = true
+  if (chatQuery.messages.length === 1 && chatQuery.messages[0].files) {
+    chatQuery.messages = []
+  }
+  let filesSample = []
+  if (fileInput && fileInput.length > 0) {
+    for (var me = 0; me < fileInput.length; me++) {
+      filesSample.push(fileInput[me].fileId)
+    }
+  }
   const currentData = {
     role: 'user',
-    content: newQuestion.value,
-    files: fileAry.value
+    content: queryValue ? queryValue : '',
+    files: toRaw(JSON.parse(JSON.stringify(fileInput)))
   }
   let mes = {
     messages: []
@@ -973,15 +1080,18 @@ const submitSample = async (val, isRefresh) => {
   }
   params.userId = userInfo.value.id
   params.model = deepType.value ? 1 : 0
-  const queryValue = newQuestion.value
+  params.files = filesSample
+
   tipQuery.value = queryValue
   newQuestion.value = ''
   let title = ''
-  if (!questions.value.includes(queryValue + '(sample)') && isRefresh) {
+  if (!questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
+    console.log(1)
     for (var m = 0; m < answerList.value.length; m++) {
       if (
         answerList.value[m].type === '通用模式' &&
-        queryValue === answerList.value[m].data[answerList.value[m].data.length - 2].content
+        queryValue === answerList.value[m].data[answerList.value[m].data.length - 2].content &&
+        answerList.value[m].data[answerList.value[m].data.length - 2].files.length === 0
       ) {
         const id = answerList.value[m].id
         title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
@@ -995,7 +1105,8 @@ const submitSample = async (val, isRefresh) => {
       }
     }
   }
-  if (questions.value.includes(queryValue + '(sample)') && !isRefresh) {
+  if (questions.value.includes(queryValue + '(sample)') && !isRefresh && mes.messages.length === 1) {
+    console.log(4)
     const qData = queryValue + '(sample)'
     for (var ms = 0; ms < questions.value.length; ms++) {
       if (qData === questions.value[ms]) {
@@ -1006,9 +1117,15 @@ const submitSample = async (val, isRefresh) => {
     isSampleLoad.value = false
     return
   }
-  if (!isRefresh) {
+  if (!isRefresh && mes.messages.length === 1) {
+    console.log(queryValue)
+    console.log(answerList.value)
     for (var s = 0; s < answerList.value.length; s++) {
-      if (answerList.value[s].type === '通用模式' && queryValue === answerList.value[s].data[0].content) {
+      if (
+        answerList.value[s].type === '通用模式' &&
+        answerList.value[s].data[0].content &&
+        queryValue === answerList.value[s].data[0].content
+      ) {
         activeIndex.value = s
         asizeRef.value.queryAn(queryValue + '(sample)', '')
         isSampleLoad.value = false
@@ -1016,7 +1133,8 @@ const submitSample = async (val, isRefresh) => {
       }
     }
   }
-  if (questions.value.includes(queryValue + '(sample)') && isRefresh) {
+  if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
+    console.log(3)
     const qData = queryValue + '(sample)'
     const index = questions.value.findIndex(item => item === qData)
     const idx = answerList.value.findIndex(item => item.title === qData)
@@ -1034,7 +1152,11 @@ const submitSample = async (val, isRefresh) => {
   const hasId = anList.some(item => item.id === currentId.value)
   let id = ''
   if (!hasId) {
-    questions.value.unshift(queryValue + '(sample)')
+    let titleStr = ''
+    for (var i = 0; i < fileInput.length; i++) {
+      titleStr += fileInput[i].originalFileName + ','
+    }
+    questions.value.unshift(queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)')
     activeIndex.value = '0'
   }
   if (hasId) {
@@ -1076,6 +1198,8 @@ const submitSample = async (val, isRefresh) => {
   chatCurrent.messages = mes.messages
   chatQuery.isLoading = true
   const isThink = deepType.value
+  fileInputAry.value = []
+  fileAry.value = []
   try {
     // 替换为实际的后端接口地址
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/chatStream', {
@@ -1129,7 +1253,7 @@ const submitSample = async (val, isRefresh) => {
             // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
           }
         })
-        postSample(id, title, isThink)
+        postSample(id, title, isThink, filesSample)
         break
       }
       buffer += decoder.decode(value, { stream: true })
@@ -1180,23 +1304,6 @@ const submitSample = async (val, isRefresh) => {
           }
         }
       })
-      // chunks.forEach(chunk => {
-      //   // 优化正则匹配以保留原始符号（包括换行符和嵌套结构）[3,4](@ref)
-      //   const jsonMatch = chunk.match(/data:\s*([\s\S]*?)(?=\ndata:|\n\n|$)/)
-      //   if (jsonMatch) {
-      //     if (messageContainer.value) {
-      //       messageContainer.value.scrollTop = messageContainer.value.scrollHeight
-      //     }
-      //     try {
-      //       const { content, role } = JSON.parse(jsonMatch[1])
-      //       // 直接拼接原始内容（不处理空格/换行符）[2,4](@ref)
-      //       assistantMsg.content += content
-      //       chatCurrent.messages.splice(chatCurrent.messages.length - 1, 1, { ...assistantMsg })
-      //     } catch (e) {
-      //       ElMessage.error('数据格式异常')
-      //     }
-      //   }
-      // })
     }
   } catch (error) {
     chatQuery.isLoading = false
@@ -1596,7 +1703,16 @@ const submitQuestion = async (val, isRefresh) => {
   }
 }
 
-const postSample = async (ids, title, isThink) => {
+const postSample = async (ids, title, isThink, postSample) => {
+  let titleStr = ''
+  if (chatQuery.messages[0].files && chatQuery.messages[0].files.length > 0) {
+    for (var i = 0; i < chatQuery.messages[0].files.length; i++) {
+      titleStr += chatQuery.messages[0].files[i].originalFileName + ','
+    }
+    titleStr = titleStr.substring(0, titleStr.length - 1)
+  }
+  console.log(title)
+  console.log(titleStr)
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
@@ -1604,7 +1720,7 @@ const postSample = async (ids, title, isThink) => {
       id: ids,
       data: chatQuery.messages,
       isThink: isThink ? true : false,
-      title: title ? title : chatQuery.messages[0].content
+      title: title ? title : chatQuery.messages[0].content ? chatQuery.messages[0].content + titleStr : titleStr
       // showLoading: true
     })
     .then(res => {
@@ -1860,7 +1976,6 @@ const cancelCurrentRequest = async val => {
     isSampleStop.value = true
     chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
     let title = ''
-    // let obj = fileAry.value
     for (var i = 0; i < answerList.value.length; i++) {
       if (answerList.value[i].type === '通用模式') {
         if (
@@ -1873,7 +1988,6 @@ const cancelCurrentRequest = async val => {
     }
     const id = limitId.value
     postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value)
-    // postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value, obj)
     limitId.value = ''
   }
   if (val === 'query' || val === 'it') {
@@ -1957,6 +2071,32 @@ onUnmounted(() => {
 .sampleArea {
   .el-textarea__inner {
     padding: 18px 135px 18px 15px !important;
+  }
+}
+.sampleAreaAry {
+  .el-textarea__inner {
+    padding: 56px 135px 18px 15px !important;
+  }
+}
+.filesList {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  font-size: 12px;
+  div {
+    margin-left: 10px;
+
+    max-width: 80px;
+    white-space: nowrap; /* 禁止换行 */
+    overflow: hidden; /* 隐藏溢出内容 */
+    text-overflow: ellipsis; /* 超出部分显示... */ /* 必须设置宽度（或父容器有明确宽度） */
+    display: flex;
+    align-items: center;
+    background-color: #f5f5f5;
+    padding: 6px 10px;
+    border-radius: 6px;
+    position: relative;
   }
 }
 .tooltip-wrapper {

@@ -316,7 +316,11 @@
             <div v-if="showModelTip" class="tooltip">{{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}</div>
           </transition>
         </div>
-        <img :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitSampleSend" />
+        <img
+          :src="isSampleLoad ? imageC : newQuestion || fileInputAry.length > 0 ? imageB : imageA"
+          class="arrow"
+          @click="submitSampleSend"
+        />
       </div>
     </div>
     <div class="tran_select" v-if="pageType === 'tran'">
@@ -445,7 +449,8 @@ const {
   questions,
   currentQuestion,
   showFileTip,
-  showModelTip
+  showModelTip,
+  fileInputAry
 } = useShared()
 const fileRef = ref(null)
 const arrList = ref([
@@ -536,7 +541,6 @@ const submitFileFinal = obj => {
 // }
 
 const showFile = val => {
-  console.log(val)
   if (activeIndex.value || activeIndex.value == 0) {
     if (val === 'tran') {
       for (var i = 0; i < answerList.value.length; i++) {

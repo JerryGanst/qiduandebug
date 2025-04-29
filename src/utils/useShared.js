@@ -89,7 +89,7 @@ const docIng = ref(false)
 const limitAry = ref([])
 const showFileTip = ref(false)
 const showModelTip = ref(false)
-
+const fileInputAry = ref([])
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -115,12 +115,13 @@ const adjustTextareaHeight = val => {
 
     // 计算行数（四舍五入代替 Math.floor）
     const rows = Math.round((scrollHeight - padding) / lineHeight)
-    const clampedRows = Math.min(Math.max(rows, 1), 4) // 限制1-4行
+    const clampedRows = Math.min(Math.max(rows, 1), 5) // 限制1-5行
 
     // 直接设置高度（无论行数是否变化）
     textarea.style.height = `${lineHeight * clampedRows + padding}px`
+
     // 滚动条逻辑（保留原有逻辑）
-    textarea.style.overflowY = rows > 4 ? 'auto' : 'hidden'
+    textarea.style.overflowY = rows > 5 ? 'auto' : 'hidden'
   }
 }
 const isObject = variable => {
@@ -288,6 +289,9 @@ export function useShared() {
   const updateShowModelTip = newName => {
     showModelTip.value = newName
   }
+  const updateFileInputAry = newName => {
+    fileInputAry.value = newName
+  }
 
   watch(
     newQuestion,
@@ -340,6 +344,7 @@ export function useShared() {
     limitAry,
     showFileTip,
     showModelTip,
+    fileInputAry,
     changeMode,
     updateCurrentQuestion,
     updateNewQuestion,
@@ -381,6 +386,7 @@ export function useShared() {
     updateLimitAry,
     updateShowFileTip,
     updateShowModelTip,
-    updateFileAry
+    updateFileAry,
+    updateFileInputAry
   }
 }

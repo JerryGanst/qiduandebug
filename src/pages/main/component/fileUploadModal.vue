@@ -78,6 +78,7 @@
             :on-change="handleFileAdd"
             :on-exceed="handleExceed"
             :show-file-list="false"
+            :file-list="fileQueue"
             :before-upload="checkFileSize"
             :limit="5"
           >
@@ -151,9 +152,7 @@ const STATUS = {
   SUCCESS: 'success',
   ERROR: 'error'
 }
-
 const allowedFileTypes = '.doc,.docx,.txt,.pdf'
-
 // 颜色映射
 const statusColors = {
   [STATUS.PENDING]: '#EDEDED',
@@ -164,6 +163,7 @@ const statusColors = {
 }
 // 新增删除处理函数
 const handleDelete = index => {
+  console.log(index)
   const deletedFile = fileQueue.value[index]
   // 清除关联预览（同步操作）
   if (previewFileId.value === deletedFile.uid) {
@@ -178,6 +178,7 @@ const handleDelete = index => {
     fileQueue.value.forEach(item => {
       item.status = 'pending'
     })
+    console.log(fileQueue.value)
   })
 
   // 取消上传（原有逻辑）
@@ -192,6 +193,12 @@ const handleDelete = index => {
     // 过滤array1，排除name存在于array2中的对象
     fileAry.value = fileAry.value.filter(item => item.originalFileName !== fileQueue.value[index].name)
     fileQueue.value.splice(index, 1)
+    console.log(fileQueue.value)
+    nextTick(() => {
+      // 通过重新赋值触发响应式更新
+      console.log(fileQueue.value)
+      handlePreview(fileQueue.value[0])
+    })
   } else {
     fileQueue.value.splice(index, 1)
   }
@@ -303,9 +310,10 @@ const startUpload = async file => {
   }
 }
 // 处理超出限制
-const handleExceed = (files, fileList) => {
-  ElMessage.warning('最多只能上传5个文件')
-}
+// const handleExceed = (files, fileList) => {
+//   console.log(fileQueue.value)
+//   ElMessage.warning('最多只能上传5个文件')
+// }
 // 进度条颜色计算
 const customProgressColor = file => {
   return statusColors[file.status] || '#409EFF'
@@ -435,10 +443,13 @@ const handlePreview = async file => {
   }
 }
 
-const openFile = val => {
+const openFile = (val, ary) => {
   dialogVisible.value = true
   type.value = val
   if (val === 'sample') {
+    if (ary) {
+      fileAry.value = ary
+    }
     getFileAry()
   } else {
     if (fileObj.value) {
@@ -531,6 +542,7 @@ const getFile = () => {
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
       fileQueue.value = []
       fileQueue.value.push(fileOther)
+      console.log(1234)
       handlePreview(fileOther)
     })
     .catch(error => {

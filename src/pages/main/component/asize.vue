@@ -252,7 +252,9 @@ const {
   messageContainer,
   deepType,
   fileObj,
-  limitAry
+  limitAry,
+  fileAry,
+  fileInputAry
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -405,6 +407,7 @@ const startNewConversation = () => {
   chatQuery.messages = []
   chatQuery.isLoading = false
   fileObj.value = ''
+  fileAry.value = ''
   currentId.value = ''
   pageType.value = 'sample'
   selectedMode.value = '通用模式'
@@ -548,6 +551,7 @@ const queryAn = (val, index, data) => {
   const queryTranQs = []
   const queryFinal = []
   const queryFinalQs = []
+  fileInputAry.value = []
   for (var j = 0; j < anList.length; j++) {
     if (anList[j].type === '人资行政专题') {
       queryLimit.push(anList[j].title)
@@ -556,7 +560,6 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'query'
         selectedMode.value = '人资行政专题'
-
         currentObj.value.messages = anList[j].data.answer
         currentObj.value.list = anList[j].data?.think
         deepType.value = anList[j].isThink
