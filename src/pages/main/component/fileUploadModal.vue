@@ -490,11 +490,12 @@ const getFileAry = () => {
       .then(({ blob, filename }) => {
         // 将 Blob 转换为 File 对象（类似 file.raw）
         const file = new File([blob], filename, { type: blob.type })
+        const firstDecode = decodeURIComponent(file.name)
         const fileOther = {
           raw: file,
           uid: file.lastModified,
           size: file.size,
-          name: decodeURIComponent(file.name),
+          name: decodeURIComponent(firstDecode),
           extension: getTextAfterLastDot(name),
           progress: 100,
           status: STATUS.SUCCESS,

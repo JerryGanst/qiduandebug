@@ -1150,8 +1150,6 @@ const submitSample = async (val, isRefresh) => {
       queryValue +
       answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',') +
       '(sample)'
-    console.log(qData)
-    console.log(answerList.value)
     const index = questions.value.findIndex(item => item === qData)
     const idx = answerList.value.findIndex(item => item.title === qData)
     const targetId = answerList.value.find(item => item.title === qData)?.id
