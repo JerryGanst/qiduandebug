@@ -578,7 +578,13 @@ const queryAn = (val, index, data) => {
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
-      if (val == anList[j].title || val == anList[j].data[0].content + '(sample)') {
+      if (
+        val == anList[j].title ||
+        val ==
+          anList[j].data[0].content +
+            answerList.value[j].data[0].files.map(item => item.originalFileName).join(',') +
+            '(sample)'
+      ) {
         pageType.value = 'sample'
         selectedMode.value = '通用模式'
         chatQuery.messages = anList[j].data

@@ -1090,6 +1090,7 @@ const submitSample = async (val, isRefresh) => {
   newQuestion.value = ''
   let title = ''
   if (!questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
+    console.log('b')
     for (var m = 0; m < answerList.value.length; m++) {
       if (
         answerList.value[m].type === '通用模式' &&
@@ -1145,7 +1146,12 @@ const submitSample = async (val, isRefresh) => {
     }
   }
   if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
-    const qData = queryValue + '(sample)'
+    const qData =
+      queryValue +
+      answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',') +
+      '(sample)'
+    console.log(qData)
+    console.log(answerList.value)
     const index = questions.value.findIndex(item => item === qData)
     const idx = answerList.value.findIndex(item => item.title === qData)
     const targetId = answerList.value.find(item => item.title === qData)?.id
