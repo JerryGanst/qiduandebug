@@ -163,7 +163,6 @@ const statusColors = {
 }
 // 新增删除处理函数
 const handleDelete = index => {
-  console.log(index)
   const deletedFile = fileQueue.value[index]
   // 清除关联预览（同步操作）
   if (previewFileId.value === deletedFile.uid) {
@@ -178,7 +177,6 @@ const handleDelete = index => {
     fileQueue.value.forEach(item => {
       item.status = 'pending'
     })
-    console.log(fileQueue.value)
   })
 
   // 取消上传（原有逻辑）
@@ -191,12 +189,14 @@ const handleDelete = index => {
   if (type.value === 'sample') {
     // 提取array2的name集合
     // 过滤array1，排除name存在于array2中的对象
-    fileAry.value = fileAry.value.filter(item => item.originalFileName !== fileQueue.value[index].name)
+    if (fileAry.value && fileAry.value.length > 0) {
+      fileAry.value = fileAry.value.filter(item => item.originalFileName !== fileQueue.value[index].name)
+    }
+
     fileQueue.value.splice(index, 1)
-    console.log(fileQueue.value)
+
     nextTick(() => {
       // 通过重新赋值触发响应式更新
-      console.log(fileQueue.value)
       handlePreview(fileQueue.value[0])
     })
   } else {
@@ -384,6 +384,9 @@ const retryUpload = file => {
 
 // 文件预览处理
 const handlePreview = async file => {
+  if (!file) {
+    return
+  }
   try {
     if (['txt'].includes(file.extension)) {
       // 处理文本文件
@@ -392,6 +395,7 @@ const handlePreview = async file => {
         previewContent.value = e.target.result
         previewType.value = 'text'
       }
+
       reader.readAsText(file.raw)
     } else if (['docx', 'doc'].includes(file.extension)) {
       // 处理Word文档
@@ -542,7 +546,6 @@ const getFile = () => {
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
       fileQueue.value = []
       fileQueue.value.push(fileOther)
-      console.log(1234)
       handlePreview(fileOther)
     })
     .catch(error => {
@@ -667,13 +670,12 @@ defineExpose({ openFile, closeFile })
 }
 
 .filename {
-  max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #333;
   font-size: 14px;
-  max-width: 200px;
+  width: 200px;
 }
 
 .file-type {

@@ -996,6 +996,10 @@ const deleteImg = index => {
 const submitSampleFile = val => {
   fileRefs.value.closeFile()
   currentQuestion.value = true
+  for (var i = 0; i < val.length; i++) {
+    val[i].fileName = decodeURIComponent(val[i].fileName)
+    val[i].originalFileName = decodeURIComponent(val[i].originalFileName)
+  }
   fileAry.value = val
   fileInputAry.value = JSON.parse(JSON.stringify(val))
   nextTick(() => {
@@ -1086,7 +1090,6 @@ const submitSample = async (val, isRefresh) => {
   newQuestion.value = ''
   let title = ''
   if (!questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
-    console.log(1)
     for (var m = 0; m < answerList.value.length; m++) {
       if (
         answerList.value[m].type === '通用模式' &&
@@ -1106,25 +1109,33 @@ const submitSample = async (val, isRefresh) => {
     }
   }
   if (questions.value.includes(queryValue + '(sample)') && !isRefresh && mes.messages.length === 1) {
-    console.log(4)
-    const qData = queryValue + '(sample)'
+    let titleStr = ''
+    for (var i = 0; i < fileInput.length; i++) {
+      titleStr += fileInput[i].originalFileName + ','
+    }
+    const qData = queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)'
     for (var ms = 0; ms < questions.value.length; ms++) {
       if (qData === questions.value[ms]) {
         activeIndex.value = ms
+        asizeRef.value.queryAn(qData, '')
+        isSampleLoad.value = false
+        return
       }
     }
-    asizeRef.value.queryAn(qData, '')
-    isSampleLoad.value = false
-    return
   }
   if (!isRefresh && mes.messages.length === 1) {
-    console.log(queryValue)
-    console.log(answerList.value)
+    let titleStr = ''
+    let titleFile = ''
+    for (var i = 0; i < fileInput.length; i++) {
+      titleStr += fileInput[i].originalFileName + ','
+    }
     for (var s = 0; s < answerList.value.length; s++) {
       if (
         answerList.value[s].type === '通用模式' &&
         answerList.value[s].data[0].content &&
-        queryValue === answerList.value[s].data[0].content
+        queryValue + titleStr.substring(0, titleStr.length - 1) ===
+          answerList.value[s].data[0].content +
+            answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
       ) {
         activeIndex.value = s
         asizeRef.value.queryAn(queryValue + '(sample)', '')
@@ -1134,7 +1145,6 @@ const submitSample = async (val, isRefresh) => {
     }
   }
   if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
-    console.log(3)
     const qData = queryValue + '(sample)'
     const index = questions.value.findIndex(item => item === qData)
     const idx = answerList.value.findIndex(item => item.title === qData)
@@ -1711,8 +1721,6 @@ const postSample = async (ids, title, isThink, postSample) => {
     }
     titleStr = titleStr.substring(0, titleStr.length - 1)
   }
-  console.log(title)
-  console.log(titleStr)
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
