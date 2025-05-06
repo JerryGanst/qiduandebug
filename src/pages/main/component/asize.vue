@@ -101,7 +101,7 @@
             <span
               @click="querySelect(question, index)"
               :class="{ 'active-span': activeIndex == index.toString() }"
-              :style="{ width: hoverStates[index] ? '140px' : '180px' }"
+              :style="{ width: hoverStates[index] ? '165px' : '180px' }"
             >
               {{ isCollapsed ? 'Q' : question }}
             </span>
@@ -116,7 +116,7 @@
               modifiers: [
                 {
                   name: 'offset',
-                  options: { offset: [0, 20] } // 向右偏移 20px，向下偏移 10px
+                  options: { offset: [0, 15] } // 向右偏移 20px，向下偏移 10px
                 },
                 {
                   name: 'flip',
@@ -129,7 +129,7 @@
           >
             <template #reference>
               <div class="more" @click.stop="togglePopover(index)" v-if="hoverStates[index]">
-                <img src="@/assets/more.png" class="aside_right_img" style="right: 10px" />
+                <img src="@/assets/more.png" class="aside_right_img" style="right: 15px" />
               </div>
             </template>
             <div class="popover-content">
@@ -142,13 +142,13 @@
                 @confirm="handleConfirmDelete(question, index)"
               >
                 <template #reference>
-                  <div class="edit_img">
+                  <div class="edit_img delete_img">
                     <img src="@/assets/delete.png" class="aside_right_img" />
                     <div style="color: #d81e06; width: 60px; text-align: left; margin-left: 6px">删除</div>
                   </div>
                 </template>
               </el-popconfirm>
-              <div class="edit_img" style="margin-top: 10px" @click="handleEdit(question, index)">
+              <div class="edit_img rename_img" @click="handleEdit(question, index)">
                 <img src="@/assets/edit.png" class="aside_right_img" />
                 <div style="width: 60px; text-align: left; margin-left: 6px">重命名</div>
               </div>
@@ -578,7 +578,13 @@ const queryAn = (val, index, data) => {
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
-      if (val == anList[j].title || val == anList[j].data[0].content + '(sample)') {
+      if (
+        val == anList[j].title ||
+        val ==
+          anList[j].data[0].content +
+            answerList.value[j].data[0].files.map(item => item.originalFileName).join(',') +
+            '(sample)'
+      ) {
         pageType.value = 'sample'
         selectedMode.value = '通用模式'
         chatQuery.messages = anList[j].data
@@ -767,10 +773,21 @@ defineExpose({ queryAn, deleteData })
     display: flex;
     align-items: center;
     cursor: pointer;
+    padding: 5px;
     img {
       width: 16px;
       height: 16px;
     }
+  }
+  .delete_img:hover {
+    background: #fff2f0;
+  }
+  .rename_img:hover {
+    background: #ededed;
+  }
+  :deep(.right-aligned-popover .el-popper) {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
   }
 }
 .active-span {
@@ -873,10 +890,10 @@ defineExpose({ queryAn, deleteData })
         justify-content: center;
         align-items: center;
         .aside_right_img {
-          width: 20px;
-          height: 6px;
+          width: 4px;
+          height: 13px;
           position: absolute;
-          top: 19px;
+          top: 13px;
         }
       }
     }
