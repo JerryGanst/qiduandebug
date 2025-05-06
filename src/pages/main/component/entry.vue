@@ -145,9 +145,15 @@
       <span style="padding-left: 10px">正在为您翻译,请稍等</span>
       <span v-if="!transData">{{ dots }}</span>
     </div>
-    <div class="title_tran_data" v-if="pageType === 'tran'" :style="{ padding: transData ? '0px 15px' : '0px' }">
+    <MarkdownRenderer
+      class="title_tran_data"
+      v-if="pageType === 'tran'"
+      :style="{ padding: transData ? '0px 15px' : '0px' }"
+      :markdown="transData"
+    />
+    <!-- <div class="title_tran_data" v-if="pageType === 'tran'" :style="{ padding: transData ? '0px 15px' : '0px' }">
       <p>{{ transData }}</p>
-    </div>
+    </div> -->
 
     <div class="query_common" v-if="pageType === 'tran' && transQuest && !docIng">
       <div>
@@ -401,6 +407,7 @@ import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
+import MarkdownRenderer from './markdown.vue' // 引入 Markdown 渲染组件
 const emit = defineEmits([
   'submit-tran',
   'submit-final',

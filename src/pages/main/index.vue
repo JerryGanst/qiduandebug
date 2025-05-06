@@ -1141,7 +1141,9 @@ const submitSample = async (val, isRefresh) => {
         answerList.value[s].data[0].content &&
         queryValue + titleStr.substring(0, titleStr.length - 1) ===
           answerList.value[s].data[0].content +
-            answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
+            (answerList.value[s].data[0].files
+              ? answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
+              : '')
       ) {
         activeIndex.value = s
         asizeRef.value.queryAn(queryValue + '(sample)', '')
@@ -1153,7 +1155,9 @@ const submitSample = async (val, isRefresh) => {
   if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
     const qData =
       queryValue +
-      answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',') +
+      (answerList.value[activeIndex.value].data[0].files
+        ? answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',')
+        : '') +
       '(sample)'
     const index = questions.value.findIndex(item => item === qData)
     const idx = answerList.value.findIndex(item => item.title === qData)

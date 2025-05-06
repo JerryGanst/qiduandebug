@@ -582,7 +582,9 @@ const queryAn = (val, index, data) => {
         val == anList[j].title ||
         val ==
           anList[j].data[0].content +
-            answerList.value[j].data[0].files.map(item => item.originalFileName).join(',') +
+            (answerList.value[j].data[0].files
+              ? answerList.value[j].data[0].files.map(item => item.originalFileName).join(',')
+              : '') +
             '(sample)'
       ) {
         pageType.value = 'sample'
