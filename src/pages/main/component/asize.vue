@@ -460,11 +460,13 @@ const handleConfirmDelete = (val, index) => {
       ? '(query)'
       : selectedMode.value === 'IT专题'
         ? '(it)'
-        : selectedMode.value === '通用模式'
-          ? '(sample)'
-          : selectedMode.value === '翻译'
-            ? '(tran)'
-            : '(final)'
+        : selectedMode.value === '法务专题'
+          ? '(law)'
+          : selectedMode.value === '通用模式'
+            ? '(sample)'
+            : selectedMode.value === '翻译'
+              ? '(tran)'
+              : '(final)'
   val = val + queryData
 
   if (isSampleLoad.value || finalIng.value) {
@@ -546,6 +548,8 @@ const queryAn = (val, index, data) => {
   const queryLimitQs = []
   const queryIt = []
   const queryItQs = []
+  const queryLaw = []
+  const queryLawQs = []
   const querySample = []
   const queryTran = []
   const queryTranQs = []
@@ -576,13 +580,27 @@ const queryAn = (val, index, data) => {
         currentObj.value.list = anList[j].data?.think
         deepType.value = anList[j].isThink
       }
+    } else if (anList[j].type === '法务专题') {
+      queryLaw.push(anList[j].title)
+      queryLawQs.push(anList[j].data.question + '(law)')
+      if (val == anList[j].title || val == anList[j].data.question + '(law)') {
+        currentId.value = anList[j].id
+        pageType.value = 'law'
+        selectedMode.value = '法务专题'
+        tipQuery.value = anList[j].data.question
+        currentObj.value.messages = anList[j].data.answer
+        currentObj.value.list = anList[j].data?.think
+        deepType.value = anList[j].isThink
+      }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
       if (
         val == anList[j].title ||
         val ==
           anList[j].data[0].content +
-            answerList.value[j].data[0].files.map(item => item.originalFileName).join(',') +
+            (answerList.value[j].data[0].files
+              ? answerList.value[j].data[0].files.map(item => item.originalFileName).join(',')
+              : '') +
             '(sample)'
       ) {
         pageType.value = 'sample'
@@ -636,20 +654,12 @@ const queryAn = (val, index, data) => {
         const result = match[1]
         pageType.value = result
       }
-      if (pageType.value === 'query' || pageType.value === 'it') {
+      if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
         if (anList.length === queryList.length) {
           tipQuery.value = anList[i].data.question
-          // currentObj.value.messages = anList[j].data.answer
-          // currentObj.value.list = anList[j].data?.think
         } else {
           const data = getMatchingIndexes(limitAry.value, queryList[i])
           tipQuery.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
-          // if (i === 0) {
-          //   tipQuery.value = anList[0].data.question
-          // } else {
-          //   tipQuery.value = queryList[0].replace(/\([^)]*\)/g, '')
-          //   console.log(tipQuery.value)
-          // }
         }
       } else if (pageType.value === 'sample') {
         const hasName = anList.some(item => item.title === val)
@@ -673,17 +683,8 @@ const queryAn = (val, index, data) => {
         if (anList.length === queryList.length) {
           transQuest.value = anList[i].data.question
         } else {
-          // transQuest.value = queryList[i].replace(/\([^)]*\)/g, '')
           const data = getMatchingIndexes(limitAry.value, queryList[i])
           transQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
-          // console.log(transQuest.value)
-          // transData.value = ''
-          // if (i === 0) {
-          //   transQuest.value = queryList[0].replace(/\([^)]*\)/g, '')
-          // } else {
-          //   transQuest.value = anList[i - 1].data.question
-          // }
-          // // transQuest.value = queryList[i - 1].replace(/\([^)]*\)/g, '')
         }
       } else if (pageType.value === 'final') {
         currentQuestion.value = false
@@ -692,13 +693,6 @@ const queryAn = (val, index, data) => {
         } else {
           const data = getMatchingIndexes(limitAry.value, queryList[i])
           finalQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
-          // finalData.value.data = ''
-          // if (i === 0) {
-          //   finalQuest.value = queryList[0].replace(/\([^)]*\)/g, '')
-          // } else {
-          //   finalQuest.value = anList[i - 1].data.question
-          // }
-          // finalQuest.value = queryList[i + 1].replace(/\([^)]*\)/g, '')
         }
       }
     }
@@ -713,6 +707,9 @@ const queryAn = (val, index, data) => {
     currentObj.value.messages = {}
   }
   if (pageType.value === 'it' && !queryIt.includes(val) && !queryItQs.includes(val)) {
+    currentObj.value.messages = {}
+  }
+  if (pageType.value === 'law' && !queryLaw.includes(val) && !queryLawQs.includes(val)) {
     currentObj.value.messages = {}
   }
   // if (pageType.value === 'sample' && !querySample.includes(val)) {

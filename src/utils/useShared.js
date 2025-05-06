@@ -160,9 +160,11 @@ const changeMode = () => {
         ? 'query'
         : selectedMode.value === 'IT专题'
           ? 'it'
-          : selectedMode.value === '翻译'
-            ? 'tran'
-            : 'final'
+          : selectedMode.value === '法务专题'
+            ? 'law'
+            : selectedMode.value === '翻译'
+              ? 'tran'
+              : 'final'
   chatQuery.messages = []
 }
 const checkDeepType = () => {

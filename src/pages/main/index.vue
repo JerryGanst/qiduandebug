@@ -22,18 +22,19 @@
             @refresh-data="refreshData"
             @submit-questionSend="submitQuestionSend"
             @submit-itSend="submitITSend"
+            @submit-lawSend="submitLawSend"
             @submit-sampleSend="submitSampleSend"
             ref="entryRef"
           ></Entry>
         </div>
         <div v-else class="center-container" style="padding-top: 0px">
           <div class="main_content" style="width: 860px">
-            <div v-if="pageType === 'query' || pageType === 'it'" class="title_tiQuery">
+            <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'" class="title_tiQuery">
               <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
                 {{ tipQuery }}
               </div>
             </div>
-            <div class="title_float" v-if="pageType === 'query' || pageType === 'it'">
+            <div class="title_float" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
               <span v-if="!currentObj.messages.type">
                 <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
               </span>
@@ -43,7 +44,10 @@
             </div>
             <div
               class="title_float"
-              v-if="(pageType === 'query' || pageType === 'it') && currentObj.messages.type === 'final_answer'"
+              v-if="
+                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                currentObj.messages.type === 'final_answer'
+              "
             >
               <span>
                 {{ currentObj.list?.content }}
@@ -51,7 +55,7 @@
             </div>
             <MarkdownRenderer
               v-if="
-                (pageType === 'query' || pageType === 'it') &&
+                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
                 currentObj.messages.type === 'final_answer' &&
                 currentObj.messages.content
               "
@@ -59,7 +63,7 @@
             />
             <div
               v-if="
-                (pageType === 'query' || pageType === 'it') &&
+                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
                 currentObj.messages.type === 'final_answer' &&
                 currentObj.messages.sources
               "
@@ -71,7 +75,7 @@
               class="href_source"
               v-for="(it, index) in processedData"
               v-if="
-                (pageType === 'query' || pageType === 'it') &&
+                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
                 currentObj.messages.type === 'final_answer' &&
                 currentObj.messages.sources
               "
@@ -81,7 +85,10 @@
             </a>
             <div
               class="query_common"
-              v-if="(pageType === 'query' || pageType === 'it') && currentObj.messages.type === 'final_answer'"
+              v-if="
+                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                currentObj.messages.type === 'final_answer'
+              "
             >
               <div>
                 <img
@@ -244,14 +251,18 @@
             </div>
           </div>
           <div class="query_content">
-            <div class="tran_select" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
+            <div
+              class="tran_select"
+              v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'"
+            >
               <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
                 <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
                 <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
                 <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
+                <!-- <el-radio-button label="法务专题" value="法务专题">法务专题</el-radio-button> -->
               </el-radio-group>
             </div>
-            <div class="textarea" v-if="pageType === 'query' || pageType === 'it'">
+            <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
               <el-input
                 v-model="newQuestion"
                 placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -292,6 +303,12 @@
                   class="arrow"
                   v-if="pageType === 'it'"
                   @click="submitITSend"
+                />
+                <img
+                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                  class="arrow"
+                  v-if="pageType === 'law'"
+                  @click="submitLawSend"
                 />
               </div>
             </div>
@@ -359,7 +376,7 @@
                     style="margin-right: 10px"
                   />
                   <transition name="fade">
-                    <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+                    <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过10M</div>
                   </transition>
                 </div>
                 <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -838,7 +855,7 @@ const refreshData = () => {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
-  if (pageType.value === 'query' || pageType.value === 'it') {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
     queryIng.value = false
     submitQuestion(tipQuery.value, true)
   } else if (pageType.value === 'tran') {
@@ -962,6 +979,13 @@ const submitQuestionSend = () => {
 const submitITSend = () => {
   if (isSampleLoad.value) {
     stopQuery('it')
+    return
+  }
+  submitQuestion()
+}
+const submitLawSend = () => {
+  if (isSampleLoad.value) {
+    stopQuery('law')
     return
   }
   submitQuestion()
@@ -1141,7 +1165,9 @@ const submitSample = async (val, isRefresh) => {
         answerList.value[s].data[0].content &&
         queryValue + titleStr.substring(0, titleStr.length - 1) ===
           answerList.value[s].data[0].content +
-            answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
+            (answerList.value[s].data[0].files
+              ? answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
+              : '')
       ) {
         activeIndex.value = s
         asizeRef.value.queryAn(queryValue + '(sample)', '')
@@ -1153,7 +1179,9 @@ const submitSample = async (val, isRefresh) => {
   if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
     const qData =
       queryValue +
-      answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',') +
+      (answerList.value[activeIndex.value].data[0].files
+        ? answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',')
+        : '') +
       '(sample)'
     const index = questions.value.findIndex(item => item === qData)
     const idx = answerList.value.findIndex(item => item.title === qData)
@@ -1550,7 +1578,7 @@ const submitQuestion = async (val, isRefresh) => {
   queryIng.value = true
   isSampleLoad.value = true
   const pgType = pageType.value
-  const addTitle = pageType.value === 'query' ? '(query)' : '(it)'
+  const addTitle = pageType.value === 'query' ? '(query)' : pageType.value === 'it' ? '(it)' : '(law)'
   let title = ''
   // if (addTitle === '(query)') {
   //   deepType.value = 0
@@ -1559,7 +1587,9 @@ const submitQuestion = async (val, isRefresh) => {
   if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
     for (var m = 0; m < answerList.value.length; m++) {
       if (
-        (answerList.value[m].type === '人资行政专题' || answerList.value[m].type === 'IT专题') &&
+        (answerList.value[m].type === '人资行政专题' ||
+          answerList.value[m].type === 'IT专题' ||
+          answerList.value[m].type === '法务专题') &&
         queryValue === answerList.value[m].data.question
       ) {
         const id = answerList.value[m].id
@@ -1598,6 +1628,13 @@ const submitQuestion = async (val, isRefresh) => {
       if (answerList.value[s].type === 'IT专题' && queryValue === answerList.value[s].data.question) {
         activeIndex.value = s
         asizeRef.value.queryAn(queryValue + '(it)', '')
+        queryIng.value = false
+        isSampleLoad.value = false
+        return
+      }
+      if (answerList.value[s].type === '法务专题' && queryValue === answerList.value[s].data.question) {
+        activeIndex.value = s
+        asizeRef.value.queryAn(queryValue + '(law)', '')
         queryIng.value = false
         isSampleLoad.value = false
         return
@@ -1649,7 +1686,7 @@ const submitQuestion = async (val, isRefresh) => {
         question: queryValue,
         user_id: userInfo.value.id,
         model: deepType.value ? 1 : 0,
-        type: pageType.value === 'query' ? '人资行政专题' : 'IT专题'
+        type: pageType.value === 'query' ? '人资行政专题' : pageType.value === 'it' ? 'IT专题' : '法务专题'
       })
     })
     // 处理流式数据
@@ -1759,7 +1796,7 @@ const postQuestion = async (think, obj, val, type, isThink) => {
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
-      type: type === 'query' ? '人资行政专题' : 'IT专题',
+      type: type === 'query' ? '人资行政专题' : type === 'it' ? 'IT专题' : '法务专题',
       title: val.title,
       id: '',
       isThink: isThink,
@@ -1843,17 +1880,6 @@ const postFinal = async (obj, title, ob) => {
     })
 }
 
-// const getMessageTitle = () => {
-//   request
-//     .post('/Message/getMessageTitleByUserId?userId=' + userInfo.value.id)
-//     .then(res => {
-//       if (res.status) {
-//       }
-//     })
-//     .catch(err => {
-//       console.error('获取回复失败:', err)
-//     })
-// }
 const getHistory = async (id, page, val, ids) => {
   request
     .post('/Message/getMessageByUserId?userId=' + userInfo.value.id)
@@ -1867,15 +1893,15 @@ const getHistory = async (id, page, val, ids) => {
           for (var i = 0; i < res.data.length; i++) {
             if (res.data[i].type === '人资行政专题') {
               answerList.value[i].title = answerList.value[i].title + '(query)'
-
               questions.value.push(answerList.value[i].title)
             } else if (res.data[i].type === 'IT专题') {
               answerList.value[i].title = answerList.value[i].title + '(it)'
-
+              questions.value.push(answerList.value[i].title)
+            } else if (res.data[i].type === '法务专题') {
+              answerList.value[i].title = answerList.value[i].title + '(law)'
               questions.value.push(answerList.value[i].title)
             } else if (res.data[i].type === '通用模式') {
               answerList.value[i].title = answerList.value[i].title + '(sample)'
-
               questions.value.push(answerList.value[i].title)
             } else if (res.data[i].type === '翻译') {
               answerList.value[i].title = answerList.value[i].title + '(tran)'
@@ -1902,11 +1928,13 @@ const getHistory = async (id, page, val, ids) => {
                 ? 'query'
                 : answerList.value[k].type === 'IT专题'
                   ? 'it'
-                  : answerList.value[k].type === '通用模式'
-                    ? 'sample'
-                    : answerList.value[k].type === '翻译'
-                      ? 'tran'
-                      : 'final'
+                  : answerList.value[k].type === '法务专题'
+                    ? 'law'
+                    : answerList.value[k].type === '通用模式'
+                      ? 'sample'
+                      : answerList.value[k].type === '翻译'
+                        ? 'tran'
+                        : 'final'
             const hasVal = limitData.some(item => item.name === obj.name)
             if (!hasVal) {
               limitData.push(obj)
@@ -1915,7 +1943,7 @@ const getHistory = async (id, page, val, ids) => {
           queryTypes.value = JSON.parse(JSON.stringify(limitData))
         }
         for (var j = 0; j < answerList.value.length; j++) {
-          if (res.data[j].type === '人资行政专题' || res.data[j].type === 'IT专题') {
+          if (res.data[j].type === '人资行政专题' || res.data[j].type === 'IT专题' || res.data[j].type === '法务专题') {
             answerList.value[j].data.answer.isHistory = true
           } else {
             answerList.value[j].data.isHistory = true
@@ -1951,17 +1979,19 @@ const getHistory = async (id, page, val, ids) => {
               ? '人资行政专题'
               : page === 'it'
                 ? 'IT专题'
-                : page === 'sample'
-                  ? '通用模式'
-                  : page === 'tran'
-                    ? '翻译'
-                    : '总结'
-          if (page === 'query' || page === 'it' || page === 'tran' || page === 'final') {
+                : page === 'law'
+                  ? '法务专题'
+                  : page === 'sample'
+                    ? '通用模式'
+                    : page === 'tran'
+                      ? '翻译'
+                      : '总结'
+          if (page === 'query' || page === 'it' || page === 'law' || page === 'tran' || page === 'final') {
             for (var h = 0; h < answerList.value.length; h++) {
               if (ids === answerList.value[h].id) {
                 activeIndex.value = h
                 selectedMode.value = answerList.value[0].type
-                if (page === 'query' || page === 'it') {
+                if (page === 'query' || page === 'it' || page === 'law') {
                   currentQuestion.value = true
                   tipQuery.value = answerList.value[h].data.question
                   currentObj.value.list = answerList.value[h].data.think
@@ -2010,14 +2040,18 @@ const cancelCurrentRequest = async val => {
     postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value)
     limitId.value = ''
   }
-  if (val === 'query' || val === 'it') {
+  if (val === 'query' || val === 'it' || val === 'law') {
     isSampleLoad.value = false
     limitLoading.value = false
     isQueryStop.value = true
     queryIng.value = false
     let title = ''
     for (var i = 0; i < answerList.value.length; i++) {
-      if (answerList.value[i].type === '人资行政专题' || answerList.value[i].type === 'IT专题') {
+      if (
+        answerList.value[i].type === '人资行政专题' ||
+        answerList.value[i].type === 'IT专题' ||
+        answerList.value[i].type === '法务专题'
+      ) {
         if (answerList.value[i].data.question === tipQuery.value) {
           title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
         }
@@ -2378,7 +2412,7 @@ onUnmounted(() => {
         width: calc(100% - 10px);
         font-size: 13px;
         display: flex;
-        padding: 4px 10px;
+        padding: 0px 10px;
         letter-spacing: 1px;
         line-height: 24px;
         color: #666;

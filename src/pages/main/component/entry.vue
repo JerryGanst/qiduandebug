@@ -1,6 +1,6 @@
 <template>
   <div class="main_content">
-    <div class="title" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
+    <div class="title" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'">
       <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 33px; font-weight: bold">
@@ -11,7 +11,7 @@
         </div>
       </div>
     </div>
-    <div class="content_list" v-if="pageType === 'query' || pageType === 'it'">
+    <div class="content_list" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
       <div class="list_item">
         <div class="list_title">近期热搜</div>
         <div class="list_tip">深度搜索您关心的问题</div>
@@ -145,9 +145,15 @@
       <span style="padding-left: 10px">正在为您翻译,请稍等</span>
       <span v-if="!transData">{{ dots }}</span>
     </div>
-    <div class="title_tran_data" v-if="pageType === 'tran'" :style="{ padding: transData ? '0px 15px' : '0px' }">
+    <MarkdownRenderer
+      class="title_tran_data"
+      v-if="pageType === 'tran'"
+      :style="{ padding: transData ? '0px 15px' : '0px' }"
+      :markdown="transData"
+    />
+    <!-- <div class="title_tran_data" v-if="pageType === 'tran'" :style="{ padding: transData ? '0px 15px' : '0px' }">
       <p>{{ transData }}</p>
-    </div>
+    </div> -->
 
     <div class="query_common" v-if="pageType === 'tran' && transQuest && !docIng">
       <div>
@@ -241,14 +247,18 @@
     </div>
   </div>
   <div class="select_content">
-    <div class="tran_select" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it'">
+    <div
+      class="tran_select"
+      v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'"
+    >
       <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
         <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
         <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
         <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
+        <!-- <el-radio-button label="法务专题" value="法务专题">法务专题</el-radio-button> -->
       </el-radio-group>
     </div>
-    <div class="textarea" v-if="pageType === 'query' || pageType === 'it'">
+    <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
       <el-input
         v-model="newQuestion"
         placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -284,6 +294,12 @@
           @click="submitItSend"
           v-if="pageType === 'it'"
         />
+        <img
+          :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+          class="arrow"
+          @click="submitLawSend"
+          v-if="pageType === 'law'"
+        />
       </div>
     </div>
     <div class="textarea sampleArea" v-if="pageType === 'sample'">
@@ -306,7 +322,7 @@
         <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+            <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过10M</div>
           </transition>
         </div>
         <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -401,6 +417,7 @@ import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
+import MarkdownRenderer from './markdown.vue' // 引入 Markdown 渲染组件
 const emit = defineEmits([
   'submit-tran',
   'submit-final',
@@ -416,7 +433,8 @@ const emit = defineEmits([
   'refresh-data',
   'submit-questionSend',
   'submit-sampleSend',
-  'submit-itSend'
+  'submit-itSend',
+  'submit-lawSend'
 ])
 const {
   selectedMode,
@@ -541,9 +559,6 @@ const submitFileFinal = obj => {
 // }
 
 const showFile = val => {
-  console.log(activeIndex.value)
-  console.log(transQuest.value)
-  console.log(answerList.value)
   if (activeIndex.value || activeIndex.value == 0) {
     if (val === 'tran') {
       for (var i = 0; i < answerList.value.length; i++) {
@@ -615,6 +630,9 @@ const submitQuestionSend = () => {
 }
 const submitItSend = () => {
   emit('submit-itSend')
+}
+const submitLawSend = () => {
+  emit('submit-lawSend')
 }
 
 const submitSampleSend = () => {
