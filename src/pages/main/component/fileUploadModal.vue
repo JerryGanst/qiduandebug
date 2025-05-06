@@ -76,7 +76,6 @@
             :multiple="type === 'sample' ? true : false"
             :accept="allowedFileTypes"
             :on-change="handleFileAdd"
-            :on-exceed="handleExceed"
             :show-file-list="false"
             :file-list="fileQueue"
             :before-upload="checkFileSize"
@@ -86,7 +85,12 @@
             <div class="el-upload__text">
               拖拽文件到此或
               <em>点击上传</em>
-              <div class="el-upload__subtext">支持格式：{{ allowedFileTypes }}</div>
+              <div class="el-upload__subtext">
+                <span>支持格式：{{ allowedFileTypes }}</span>
+              </div>
+              <div class="el-upload__subtext" v-if="type === 'sample'">
+                <span style="color: rgb(216, 30, 6)">一次性最多上传五个文件</span>
+              </div>
             </div>
           </el-upload>
         </div>
@@ -324,6 +328,7 @@ const checkFileSize = file => {
   if (!isLt10M) {
     ElMessage.warning('文件大小不能超过50MB!')
   }
+
   return isLt10M
 }
 
