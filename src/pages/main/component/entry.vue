@@ -541,6 +541,9 @@ const submitFileFinal = obj => {
 // }
 
 const showFile = val => {
+  console.log(activeIndex.value)
+  console.log(transQuest.value)
+  console.log(answerList.value)
   if (activeIndex.value || activeIndex.value == 0) {
     if (val === 'tran') {
       for (var i = 0; i < answerList.value.length; i++) {

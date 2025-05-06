@@ -642,7 +642,6 @@ const submitFinal = async (val, isRefresh, ob) => {
   if (!ob && !checkData(val)) {
     return
   }
-
   limitQuery.value = newQuestion.value
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
@@ -811,6 +810,10 @@ const submitFinal = async (val, isRefresh, ob) => {
       }
     })
     .catch(err => {
+      if (err.message !== 'canceled') {
+        ElMessage.error('总结失败' + err.message)
+      }
+
       finalIng.value = false
       docIng.value = false
       clearInterval(interval)
@@ -840,15 +843,18 @@ const refreshData = () => {
     submitQuestion(tipQuery.value, true)
   } else if (pageType.value === 'tran') {
     let obj = ''
+    console.log(answerList.value)
     if (activeIndex.value || activeIndex.value == 0) {
-      obj = answerList.value[activeIndex.value]?.data?.files
+      const idx = answerList.value.findIndex(item => item.data.question === transQuest.value)
+      obj = answerList.value[idx]?.data?.files
     }
     const val = transQuest.value
     submitTran(val, true, obj)
   } else if (pageType.value === 'final') {
     let obj = ''
     if (activeIndex.value || activeIndex.value == 0) {
-      obj = answerList.value[activeIndex.value]?.data?.files
+      const idx = answerList.value.findIndex(item => item.data.question === finalQuest.value)
+      obj = answerList.value[idx]?.data?.files
     }
     const val = finalQuest.value
     submitFinal(finalQuest.value, true, obj)
@@ -1090,7 +1096,6 @@ const submitSample = async (val, isRefresh) => {
   newQuestion.value = ''
   let title = ''
   if (!questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
-    console.log('b')
     for (var m = 0; m < answerList.value.length; m++) {
       if (
         answerList.value[m].type === '通用模式' &&
@@ -1505,7 +1510,10 @@ const submitTran = async (val, isRefresh, obj) => {
     })
 
     .catch(err => {
-      ElMessage.error('翻译失败' + err.message)
+      if (err.message !== 'canceled') {
+        ElMessage.error('翻译失败' + err.message)
+      }
+
       finalIng.value = false
       docIng.value = false
       clearInterval(interval)
@@ -2027,11 +2035,12 @@ const cancelCurrentRequest = async val => {
     finalIng.value = false
     docIng.value = false
     let title = ''
-    let obj = fileObj.value
+    let obj = ''
     for (var i = 0; i < answerList.value.length; i++) {
       if (answerList.value[i].type === '翻译') {
         if (answerList.value[i].data.question === transQuest.value) {
           title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+          obj = answerList.value[i].data.files
         }
       }
     }
@@ -2045,11 +2054,12 @@ const cancelCurrentRequest = async val => {
     finalIng.value = false
     docIng.value = false
     let title = ''
-    let ob = fileObj.value
+    let ob = ''
     for (var i = 0; i < answerList.value.length; i++) {
       if (answerList.value[i].type === '总结') {
         if (answerList.value[i].data.question === finalQuest.value) {
           title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+          ob = answerList.value[i].data.files
         }
       }
     }
