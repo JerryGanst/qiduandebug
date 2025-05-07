@@ -860,7 +860,6 @@ const refreshData = () => {
     submitQuestion(tipQuery.value, true)
   } else if (pageType.value === 'tran') {
     let obj = ''
-    console.log(answerList.value)
     if (activeIndex.value || activeIndex.value == 0) {
       const idx = answerList.value.findIndex(item => item.data.question === transQuest.value)
       obj = answerList.value[idx]?.data?.files

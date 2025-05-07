@@ -1,3 +1,4 @@
+handlePreview
 <template>
   <el-dialog
     v-model="dialogVisible"
@@ -18,7 +19,7 @@
               <span class="filename">{{ file.name }}</span>
               <div class="file-actions">
                 <span
-                  @click="handleDelete(index)"
+                  @click.stop="handleDelete(index)"
                   style="width: 20px; height: 20px; cursor: pointer"
                   :style="{ marginRight: file.status === 'pending' ? '0px' : '10px' }"
                 >
