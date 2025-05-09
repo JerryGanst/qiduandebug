@@ -5,7 +5,8 @@
 <script setup>
 import { computed } from 'vue'
 import { marked } from 'marked' // 引入 marked
-
+import hljs from 'highlight.js/lib/common' // 按需引入常用语言包
+import 'highlight.js/styles/github-dark.css' // 推荐暗色主题
 // 定义 props 接收 Markdown 字符串
 const props = defineProps({
   markdown: {
@@ -15,6 +16,11 @@ const props = defineProps({
 })
 // 配置 marked 以启用硬换行
 marked.setOptions({
+  highlight: (code, lang) => {
+    console.log(code)
+    const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+    return hljs.highlight(code, { language }).value
+  },
   breaks: true
 })
 // 使用 computed 将 Markdown 转换为 HTML

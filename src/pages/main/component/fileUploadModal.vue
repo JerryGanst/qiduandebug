@@ -2,14 +2,39 @@ handlePreview
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="文件上传"
+    title="附件上传"
     width="1100px"
     class="custom-upload-dialog"
     style="margin-top: 3vh"
   >
     <div class="upload-layout">
-      <!-- 左侧文件列表 -->
+      <!-- 左侧附件列表 -->
       <div class="file-list">
+        <div class="upload_list">
+          <el-upload
+            drag
+            :auto-upload="false"
+            :multiple="type === 'sample' ? true : false"
+            :accept="allowedFileTypes"
+            :on-change="handleFileAdd"
+            :show-file-list="false"
+            :file-list="fileQueue"
+            :before-upload="checkFileSize"
+            :limit="5"
+          >
+            <i class="el-icon-upload" />
+            <div class="el-upload__text">
+              拖拽附件到此或
+              <em>点击上传</em>
+              <div class="el-upload__subtext">
+                <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
+              </div>
+              <div class="el-upload__subtext" v-if="type === 'sample'">
+                <span style="color: #868686">一次性最多上传五个附件,单个大小不超过10M</span>
+              </div>
+            </div>
+          </el-upload>
+        </div>
         <div class="file_item">
           <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
             <div class="file_img">
@@ -69,37 +94,11 @@ handlePreview
             />
           </div>
         </div>
-
-        <div class="upload_list">
-          <el-upload
-            drag
-            :auto-upload="false"
-            :multiple="type === 'sample' ? true : false"
-            :accept="allowedFileTypes"
-            :on-change="handleFileAdd"
-            :show-file-list="false"
-            :file-list="fileQueue"
-            :before-upload="checkFileSize"
-            :limit="5"
-          >
-            <i class="el-icon-upload" />
-            <div class="el-upload__text">
-              拖拽文件到此或
-              <em>点击上传</em>
-              <div class="el-upload__subtext">
-                <span>支持格式：{{ allowedFileTypes }}</span>
-              </div>
-              <div class="el-upload__subtext" v-if="type === 'sample'">
-                <span style="color: rgb(216, 30, 6)">一次性最多上传五个文件</span>
-              </div>
-            </div>
-          </el-upload>
-        </div>
       </div>
 
       <!-- 右侧上传区域 -->
       <div class="upload-area">
-        <!-- 文件预览 -->
+        <!-- 附件预览 -->
         <div v-if="previewFileId" class="preview-container" :key="previewFileId">
           <div v-if="previewType === 'text'" class="text-preview">
             <pre>{{ previewContent }}</pre>
@@ -111,7 +110,10 @@ handlePreview
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>
         <div v-else="previewFileId" class="preview-container">
-          <div class="unsupported-preview">请先上传文件即可预览</div>
+          <div style="width: 100%; display: flex; justify-content: center; margin-top: 154px">
+            <img src="@/assets/no-file.png" style="width: 150px; height: 150px" />
+          </div>
+          <div class="unsupported-preview" style="padding: 0px">请先上传附件即可预览</div>
         </div>
       </div>
     </div>
@@ -186,7 +188,7 @@ const handleDelete = index => {
 
   // 取消上传（原有逻辑）
   if (deletedFile.status === 'uploading' && deletedFile.source) {
-    deletedFile.source.cancel('用户删除文件')
+    deletedFile.source.cancel('用户删除附件')
   }
 
   // 从队列中移除
@@ -214,7 +216,7 @@ const hasPendingFiles = computed(() => {
 })
 const startUpload = async file => {
   if (fileQueue.value.length === 0) {
-    ElMessage.warning('请先上传文件再提交')
+    ElMessage.warning('请先上传附件再提交')
     return
   }
   if (isSampleLoad.value || finalIng.value) {
@@ -282,7 +284,6 @@ const startUpload = async file => {
       previewFileId.value = file.uid
       const formData = new FormData()
       formData.append('files', file.raw)
-
       await axios
         .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
           cancelToken: source.token,
@@ -317,7 +318,7 @@ const startUpload = async file => {
 // 处理超出限制
 // const handleExceed = (files, fileList) => {
 //   console.log(fileQueue.value)
-//   ElMessage.warning('最多只能上传5个文件')
+//   ElMessage.warning('最多只能上传5个附件')
 // }
 // 进度条颜色计算
 const customProgressColor = file => {
@@ -327,7 +328,7 @@ const customProgressColor = file => {
 const checkFileSize = file => {
   const isLt10M = file.size / 1024 / 1024 < 50
   if (!isLt10M) {
-    ElMessage.warning('文件大小不能超过50MB!')
+    ElMessage.warning('附件大小不能超过50MB!')
   }
 
   return isLt10M
@@ -338,7 +339,7 @@ const getStatusType = status => {
   return status === STATUS.ERROR ? 'exception' : status === STATUS.SUCCESS ? 'success' : undefined
 }
 
-// 文件添加处理
+// 附件添加处理
 const handleFileAdd = uploadFile => {
   const file = {
     ...uploadFile,
@@ -352,7 +353,7 @@ const handleFileAdd = uploadFile => {
     source: null
   }
   if (file.size / 1024 / 1024 > 50) {
-    ElMessage.warning('文件大小不能超过50MB!')
+    ElMessage.warning('附件大小不能超过50MB!')
     return
   }
   previewFileId.value = file.uid
@@ -388,14 +389,14 @@ const retryUpload = file => {
   startUpload(file)
 }
 
-// 文件预览处理
+// 附件预览处理
 const handlePreview = async file => {
   if (!file) {
     return
   }
   try {
     if (['txt'].includes(file.extension)) {
-      // 处理文本文件
+      // 处理文本附件
       const reader = new FileReader()
       reader.onload = e => {
         previewContent.value = e.target.result
@@ -443,12 +444,12 @@ const handlePreview = async file => {
       // 在组件销毁或关闭预览时记得释放URL
       // 例如在onUnmounted或关闭弹窗的方法中调用 URL.revokeObjectURL(pdfUrl)
     } else {
-      previewContent.value = '不支持此文件预览'
+      previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'
     }
   } catch (error) {
     console.error('预览失败:', error)
-    previewContent.value = '文件预览失败'
+    previewContent.value = '附件预览失败'
     previewType.value = 'error'
   }
 }
@@ -483,9 +484,9 @@ const getFileAry = () => {
       method: 'POST'
     })
       .then(response => {
-        // 从 Content-Disposition 中解析文件名
+        // 从 Content-Disposition 中解析附件名
         const disposition = response.headers.get('Content-Disposition')
-        let filename = 'default_filename' // 默认文件名
+        let filename = 'default_filename' // 默认附件名
         if (disposition && disposition.indexOf('filename=') !== -1) {
           filename = disposition.split('filename=')[1].replace(/"/g, '')
         }
@@ -515,7 +516,7 @@ const getFileAry = () => {
         handlePreview(fileQueue.value[0])
       })
       .catch(error => {
-        console.error('获取文件失败:', error)
+        console.error('获取附件失败:', error)
       })
   }
 }
@@ -525,9 +526,9 @@ const getFile = () => {
     method: 'POST'
   })
     .then(response => {
-      // 从 Content-Disposition 中解析文件名
+      // 从 Content-Disposition 中解析附件名
       const disposition = response.headers.get('Content-Disposition')
-      let filename = 'default_filename' // 默认文件名
+      let filename = 'default_filename' // 默认附件名
       if (disposition && disposition.indexOf('filename=') !== -1) {
         filename = disposition.split('filename=')[1].replace(/"/g, '')
       }
@@ -556,14 +557,14 @@ const getFile = () => {
       handlePreview(fileOther)
     })
     .catch(error => {
-      console.error('获取文件失败:', error)
+      console.error('获取附件失败:', error)
     })
 }
 const closeFile = () => {
   dialogVisible.value = false
 }
 
-// 监听文件队列变化
+// 监听附件队列变化
 watch(
   fileQueue,
   newVal => {
@@ -619,7 +620,7 @@ defineExpose({ openFile, closeFile })
 
 .file-list {
   width: 350px;
-  height: 538px;
+  height: 540px;
   border-radius: 4px;
 
   overflow-y: hidden;
@@ -632,12 +633,13 @@ defineExpose({ openFile, closeFile })
     width: 100%;
     height: 400px;
     overflow-y: auto;
+    margin-top: 156px;
   }
   .upload_list {
     width: calc(100% - 30px);
     margin-left: 15px;
     position: absolute;
-    bottom: 15px;
+    top: 15px;
   }
 }
 
@@ -707,12 +709,12 @@ defineExpose({ openFile, closeFile })
 }
 
 .preview-container {
-  height: 508px;
+  height: 510px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
   padding: 15px;
   overflow: auto;
-  max-width: 670px;
+  width: 670px;
 }
 .preview-container::-webkit-scrollbar {
   width: 1px; /* 滚动条宽度 */

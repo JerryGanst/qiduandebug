@@ -1,12 +1,12 @@
 <template>
   <el-aside :width="isCollapsed ? '60px' : '280px'" class="aside">
     <div class="aside_left">
-      <img @click="toggleCollapse" class="aside_left_img" :src="isCollapsed ? foldRight : foldLeft" />
+      <img class="aside_left_img" src="@/assets/logo.png" />
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
         <el-avatar
           :size="40"
-          :src="avatarUrl"
+          :src="userInfo.url"
           class="user-avatar"
           @mouseenter="showPopup = true"
           @mouseleave="showPopup = false"
@@ -49,40 +49,6 @@
           {{ isCollapsed ? '' : '开启新对话' }}
         </div>
       </div>
-      <!-- <el-menu :default-active="activeIndex" @select="handleSelect" class="el_menu">
-        <el-tooltip
-          v-for="(question, index) in processedQuerys"
-          :key="index"
-          :content="question"
-          placement="right"
-          popper-class="custom-tooltip"
-        >
-          <el-menu-item style="position: relative" @click="handleClick('param', $event)" :index="null">
-            <span @click="querySelect(question, index)" :class="{ 'active-span': activeIndex == index.toString() }">
-              {{ isCollapsed ? 'Q' : question }}
-            </span>
-            <el-popconfirm
-              title="确定要删除吗？"
-              confirm-button-text="确定"
-              cancel-button-text="取消"
-              icon="el-icon-warning"
-              icon-color="red"
-              @confirm="handleConfirmDelete(question, index)"
-            >
-              <template #reference>
-                <img src="@/assets/delete.png" class="aside_right_img" />
-              </template>
-            </el-popconfirm>
-            <img
-              src="@/assets/edit.png"
-              class="aside_right_img"
-              style="right: 32px"
-              @click="handleEdit(question, index)"
-            />
-          </el-menu-item>
-        </el-tooltip>
-      </el-menu> -->
-
       <el-menu :default-active="activeIndex" class="el_menu">
         <el-menu-item
           v-for="(question, index) in processedQuerys"
@@ -158,18 +124,32 @@
       </el-menu>
     </div>
   </el-aside>
-  <el-dialog v-model="dialogVisible" title="登录" width="30%" :before-close="handleClose">
+  <div class="foldable" :style="{ left: isCollapsed ? '70px' : '290px' }">
+    <img :src="isCollapsed ? right : left" @click="toggleCollapse" />
+  </div>
+  <el-dialog v-model="dialogVisible" title="" width="30%" :before-close="handleClose">
+    <div class="login_title">
+      <span><img src="@/assets/logo2.png" /></span>
+      <span>立讯技术百事通</span>
+    </div>
     <el-form :model="loginForm" :rules="rules" ref="loginForms" class="login-form">
-      <el-form-item label="工号" prop="username" class="form-item">
-        <el-input v-model="loginForm.username" placeholder="请输入工号(用户名)" clearable></el-input>
+      <el-form-item prop="username" class="form-item">
+        <el-input v-model="loginForm.username" placeholder="请输入工号(用户名)" clearable>
+          <template #prefix>
+            <img src="@/assets/user.png" style="width: 20px; height: 20px" />
+          </template>
+        </el-input>
       </el-form-item>
-      <el-form-item label="密码" prop="password" class="form-item">
+      <el-form-item prop="password" class="form-item">
         <el-input
           v-model="loginForm.password"
           placeholder="请输入密码"
           clearable
           :type="passwordVisible ? 'text' : 'password'"
         >
+          <template #prefix>
+            <img src="@/assets/password.png" style="width: 20px; height: 20px" />
+          </template>
           <template #suffix>
             <el-icon @click="togglePasswordVisibility" style="cursor: pointer">
               <component :is="passwordVisible ? Lock : View" />
@@ -206,6 +186,8 @@ import { Lock, View } from '@element-plus/icons-vue' // 引入需要的图标
 import photo from '@/assets/chat.deepseek.com_.png'
 import foldLeft from '@/assets/fold.svg'
 import foldRight from '@/assets/fold_right.svg'
+import left from '@/assets/159@2x.png'
+import right from '@/assets/162@2x.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 const isCollapsed = ref(false) // 左上角折叠控制
 const showPopup = ref(false) // 是否展示左下角用户信息弹窗
@@ -295,6 +277,7 @@ const getUserInfo = async id => {
       if (res.status) {
         localStorage.setItem('userInfo', JSON.stringify(res.data))
         userInfo.value = res.data
+        userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
         nextTick(() => {
           emit('change-history')
         })
@@ -739,6 +722,7 @@ onMounted(() => {
     const loginData = JSON.parse(localStorage.getItem('userInfo'))
     userInfo.value.id = loginData.id
     userInfo.value.name = loginData.name
+    userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
     emit('change-history')
   } else {
     if (queryParams && queryParams.tokenId) {
@@ -760,6 +744,17 @@ const processedQuerys = computed(() => {
 defineExpose({ queryAn, deleteData })
 </script>
 <style lang="less" scoped>
+.foldable {
+  position: absolute;
+  top: calc(50% - 15px);
+  left: 290px;
+  cursor: pointer;
+  img {
+    width: 10px;
+    height: 31px;
+    z-index: 10000;
+  }
+}
 .popover-content {
   display: flex;
   flex-direction: column;
@@ -791,7 +786,7 @@ defineExpose({ queryAn, deleteData })
   color: #1b6cff !important;
 }
 .aside {
-  background-color: #f5f5f5;
+  background: #f7f7f7;
   transition: width 0.3s ease-in-out; /* 添加缓动函数 */
   display: flex;
   position: relative; /* 为子元素绝对定位提供参考 */
@@ -799,15 +794,15 @@ defineExpose({ queryAn, deleteData })
   .aside_left {
     width: 60px;
     height: 44px;
-    margin-top: 15px;
+    margin-top: 18px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     flex-shrink: 0; /* 防止折叠时被压缩 */
     .aside_left_img {
-      width: 24px;
-      height: 24px;
+      width: 36px;
+      height: 36px;
     }
     .noLogin {
       font-size: 14px;
@@ -833,9 +828,10 @@ defineExpose({ queryAn, deleteData })
       }
     }
   }
+
   .aside_right {
     width: 220px;
-    background-color: #fff;
+    background: #f9fbff;
     border-right: 2px solid #eaeaea;
     flex-shrink: 0;
     overflow: hidden;
@@ -880,6 +876,7 @@ defineExpose({ queryAn, deleteData })
     .el_menu {
       border-right: none;
       width: 220px; /* 保持固定宽度 */
+      background: #f9fbff;
       .more {
         width: 55px;
         height: 100%;
@@ -899,8 +896,25 @@ defineExpose({ queryAn, deleteData })
     transform: translateX(-100%);
   }
 }
+.login_title {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  line-height: 40px;
+  span {
+    height: 40px;
+    img {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+    }
+  }
+}
 .login-form {
-  padding: 20px;
+  padding: 20px 20px 0 20px;
   :deep(.el-form-item__label) {
     padding-right: 8px; /* 调整 label 和输入框的间距 */
   }
@@ -918,7 +932,7 @@ defineExpose({ queryAn, deleteData })
     display: flex;
     justify-content: center;
     width: 100%;
-    margin-top: 40px;
+    margin-top: 30px;
   }
 }
 .user-info-popup {

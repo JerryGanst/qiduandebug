@@ -1,7 +1,7 @@
 <template>
   <div class="main_content">
     <div class="title" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'">
-      <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
+      <img src="@/assets/logo2.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 33px; font-weight: bold">
           Hello!我是立讯技术百事通，有什么问题欢迎咨询
@@ -98,7 +98,7 @@
       </div>
     </div>
     <div class="title" v-if="pageType === 'tran'">
-      <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
+      <img src="@/assets/logo2.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 30px; font-weight: bold">立讯技术AI翻译专家</div>
         <div class="title_top" style="font-size: 16px; font-weight: 400; line-height: 36px">
@@ -106,7 +106,6 @@
         </div>
       </div>
     </div>
-
     <div class="title_tran_tip" v-if="pageType === 'tran'">
       <div
         v-if="
@@ -119,7 +118,7 @@
           padding: transQuest ? '7px 15px' : '0px'
         }"
         @click="showFile('tran')"
-        style="color: #333; background-color: #fdfdfd; display: flex; align-items: center; cursor: pointer"
+        style="color: #333; background-color: #eff6ff; display: flex; align-items: center; cursor: pointer"
       >
         <span style="display: flex; align-items: center">
           <img
@@ -168,7 +167,7 @@
     </div>
 
     <div class="title" v-if="pageType === 'final'">
-      <img src="@/assets/chat.deepseek.com_.png" class="title_src" />
+      <img src="@/assets/logo2.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 30px; font-weight: bold">立讯技术AI智能总结</div>
         <div class="title_top" style="font-size: 16px; font-weight: 400; line-height: 36px">
@@ -191,7 +190,7 @@
         }"
         style="
           color: #333;
-          background-color: #fdfdfd;
+          background-color: #eff6ff;
           display: flex;
           align-items: center;
           margin-top: 34px;
@@ -322,7 +321,7 @@
         <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过10M</div>
+            <div v-if="showFileTip" class="tooltip">添加附件,单个大小不能超过10M</div>
           </transition>
         </div>
         <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -365,7 +364,7 @@
           <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
 
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+            <div v-if="showFileTip" class="tooltip">添加附件,大小不能超过50M</div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitTranSend" />
@@ -393,7 +392,7 @@
           <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
 
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+            <div v-if="showFileTip" class="tooltip">添加附件,大小不能超过50M</div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitFinalSend" />
