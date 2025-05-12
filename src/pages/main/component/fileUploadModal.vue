@@ -608,7 +608,7 @@ defineExpose({ openFile, closeFile })
   display: flex;
   justify-content: center;
   margin-top: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 .custom-upload-dialog {
   height: 1200px;

@@ -29,7 +29,7 @@
         </div>
       </div>
       <div class="list_item" style="margin-left: 20px">
-        <div class="list_title">效率工具</div>
+        <div class="list_title">知识工坊</div>
         <div class="list_tip">办公学习必备</div>
         <div class="img_list">
           <div class="img_item" @click="changeType('tran')">
@@ -49,8 +49,8 @@
           <div class="img_item" style="margin-top: 15px">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
-              <div class="text_title">更多功能</div>
-              <div class="text_content">开发中,敬请期待</div>
+              <div class="text_title">文件知识库</div>
+              <div class="text_content">部门和个人的专属网盘</div>
             </div>
           </div>
         </div>
@@ -70,7 +70,7 @@
         </div>
       </div>
       <div class="list_item" style="margin-left: 20px">
-        <div class="list_title">效率工具</div>
+        <div class="list_title">知识工坊</div>
         <div class="list_tip">办公学习必备</div>
         <div class="img_list">
           <div class="img_item" @click="changeType('tran')">
@@ -90,8 +90,8 @@
           <div class="img_item" style="margin-top: 15px">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
-              <div class="text_title">更多功能</div>
-              <div class="text_content">开发中,敬请期待</div>
+              <div class="text_title">文件知识库</div>
+              <div class="text_content">部门和个人的专属网盘</div>
             </div>
           </div>
         </div>

@@ -111,6 +111,7 @@ body {
   padding-left: 10px !important;
   font-size: 12px !important;
   min-width: 20px !important;
+  display: none;
   .el-icon {
     display: none;
   }
