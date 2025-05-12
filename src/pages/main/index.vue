@@ -139,7 +139,7 @@
                   :style="{
                     marginTop: item.content
                       ? item.files && item.files.length > 0
-                        ? '15px'
+                        ? '10px'
                         : index === 0
                           ? '70px'
                           : '40px'
@@ -199,7 +199,7 @@
                   :style="{
                     marginTop: item.content
                       ? item.files && item.files.length > 0
-                        ? '15px'
+                        ? '10px'
                         : index === 0
                           ? '70px'
                           : '40px'
@@ -376,7 +376,7 @@
                     style="margin-right: 10px"
                   />
                   <transition name="fade">
-                    <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过10M</div>
+                    <div v-if="showFileTip" class="tooltip">添加附件,单个大小不能超过10M</div>
                   </transition>
                 </div>
                 <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -2209,11 +2209,11 @@ onUnmounted(() => {
 
 .el-main {
   padding: 0px !important;
-  background: linear-gradient(
-    to bottom,
-    rgba(197, 208, 213, 0.2),
-    /* 淡蓝色，透明度 60% */ rgba(188, 214, 218, 0.1) /* 更淡的蓝色，透明度 60% */
-  );
+  // background: linear-gradient(
+  //   to bottom,
+  //   rgba(197, 208, 213, 0.2),
+  //   /* 淡蓝色，透明度 60% */ rgba(188, 214, 218, 0.1) /* 更淡的蓝色，透明度 60% */
+  // );
   .center-container {
     display: flex;
     align-items: center;
@@ -2292,16 +2292,16 @@ onUnmounted(() => {
       width: 1px; /* 滚动条宽度 */
     }
     .main_content::-webkit-scrollbar-track {
-      background: #f1f1f1; /* 轨道背景颜色 */
+      background: #fff; /* 轨道背景颜色 */
       border-radius: 0px; /* 轨道圆角 */
     }
     .main_content::-webkit-scrollbar-thumb {
-      background: #888; /* 滑块颜色 */
+      background: #fff; /* 轨道背景颜色 */
       border-radius: 0px; /* 滑块圆角 */
-      border: 1px solid #f1f1f1; /* 滑块边框 */
+      border: 1px solid #fff; /* 滑块边框 */
     }
     .main_content::-webkit-scrollbar-thumb:hover {
-      background: #555; /* 滑块悬停时的颜色 */
+      background: #fff; /* 滑块悬停时的颜色 */
     }
     .main_content {
       width: 726px;
@@ -2318,16 +2318,16 @@ onUnmounted(() => {
         width: 1px; /* 滚动条宽度 */
       }
       .sample_item::-webkit-scrollbar-track {
-        background: #f1f1f1; /* 轨道背景颜色 */
+        background: #fff; /* 轨道背景颜色 */
         border-radius: 0px; /* 轨道圆角 */
       }
       .sample_item::-webkit-scrollbar-thumb {
-        background: #888; /* 滑块颜色 */
+        background: #fff; /* 滑块颜色 */
         border-radius: 0px; /* 滑块圆角 */
-        border: 1px solid #f1f1f1; /* 滑块边框 */
+        border: 1px solid #fff; /* 滑块边框 */
       }
       .sample_item::-webkit-scrollbar-thumb:hover {
-        background: #555; /* 滑块悬停时的颜色 */
+        background: #fff; /* 滑块悬停时的颜色 */
       }
       .sample_item {
         width: 100%;
@@ -2355,7 +2355,7 @@ onUnmounted(() => {
               text-overflow: ellipsis;
               padding: 7px 15px;
               color: rgb(51, 51, 51);
-              background-color: rgb(253, 253, 253);
+              background-color: #eff6ff;
               display: flex;
               align-items: center;
               border-radius: 10px;
@@ -2379,7 +2379,6 @@ onUnmounted(() => {
             max-width: 600px;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 5px;
           }
         }
       }
@@ -2432,7 +2431,6 @@ onUnmounted(() => {
           text-overflow: ellipsis;
           font-size: 14px;
           letter-spacing: 1px;
-          margin-bottom: 5px;
         }
       }
       .title {
@@ -2485,8 +2483,8 @@ onUnmounted(() => {
         }
       }
       .title_final_data {
-        margin-top: 15px;
-        background-color: #fff;
+        margin-top: 10px;
+        background-color: #fafafa;
         font-size: 14px;
         letter-spacing: 1px;
         line-height: 24px;
@@ -2511,8 +2509,8 @@ onUnmounted(() => {
         }
       }
       .title_tran_data {
-        margin-top: 15px;
-        background-color: #fff;
+        margin-top: 10px;
+        background-color: #fafafa;
         font-size: 14px;
         letter-spacing: 1px;
         line-height: 24px;
@@ -2526,7 +2524,6 @@ onUnmounted(() => {
         .list_item {
           flex: 1;
           height: 326px;
-          border-radius: 12px;
           background-image: url('@/assets/arr.png');
           background-size: 100% 100%;
           // background: linear-gradient(
@@ -2546,7 +2543,7 @@ onUnmounted(() => {
             padding-left: 20px;
             font-size: 14px;
             color: #646464;
-            margin-top: 10px;
+            margin-top: 4px;
             letter-spacing: 1px;
           }
           .list_arry {
@@ -2592,7 +2589,7 @@ onUnmounted(() => {
               .image {
                 width: 40px;
                 height: 40px;
-                margin-top: 6px;
+                margin-top: 8px;
                 margin-left: 12px;
                 img {
                   width: 100%;
@@ -2601,8 +2598,8 @@ onUnmounted(() => {
               }
               .img_text {
                 height: 30px;
-                padding-left: 8px;
-                padding-top: 10px;
+                padding-left: 12px;
+                padding-top: 12px;
                 letter-spacing: 1px;
                 .text_title {
                   font-size: 14px;

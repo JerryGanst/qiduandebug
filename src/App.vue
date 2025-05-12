@@ -76,8 +76,19 @@ const handleBeforeUnload = () => {
 }
 </script>
 <style lang="less">
+.el-dialog__close {
+  font-size: 24px !important;
+  margin-top: 10px !important;
+  color: #9d9d9d !important;
+}
+.el-upload-dragger .el-upload__text {
+  color: #333 !important;
+}
 .el-upload-dragger .el-upload__text em {
   color: #1b6cff !important;
+}
+.el-upload-dragger {
+  border: 2px dashed #1b6cff !important;
 }
 .right-aligned-popover {
   max-width: 100px !important;
@@ -131,6 +142,9 @@ body {
       }
     }
   }
+}
+.el-dialog {
+  border-radius: 10px !important;
 }
 /* WebKit 浏览器滚动条样式 */
 .el-menu::-webkit-scrollbar {
@@ -216,7 +230,13 @@ body {
 // .el-menu-item.is-active {
 //   color: #1b6cff !important;
 // }
-
+// .el-radio-button {
+//   margin-left: 10px;
+//   border-radius: 10px;
+// }
+// .el-radio-button__inner{
+//   border-radius: 10px;
+// }
 .el-button {
   --el-button-hover-text-color: #1b6cff !important;
 }

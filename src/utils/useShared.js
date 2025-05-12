@@ -25,7 +25,8 @@ const queryTypes = ref([]) //左侧栏 问题+类型 比如如何打卡（'query
 const userInfo = ref({
   department: '',
   id: '',
-  name: ''
+  name: '',
+  url: ''
 })
 const messageContainer = ref(null)
 const chatQuery = reactive({
