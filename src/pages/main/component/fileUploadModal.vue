@@ -32,6 +32,9 @@ handlePreview
               <div class="el-upload__subtext" v-if="type === 'sample'">
                 <span style="color: #868686">一次性最多上传五个附件,单个大小不超过10M</span>
               </div>
+              <div class="el-upload__subtext" v-else>
+                <span style="color: #868686">大小不超过50M</span>
+              </div>
             </div>
           </el-upload>
         </div>

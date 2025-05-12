@@ -88,7 +88,7 @@ const handleBeforeUnload = () => {
   color: #1b6cff !important;
 }
 .el-upload-dragger {
-  border: 2px dashed var(--el-border-color) !important;
+  border: 2px dashed #1b6cff !important;
 }
 .right-aligned-popover {
   max-width: 100px !important;

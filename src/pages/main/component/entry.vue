@@ -321,7 +321,7 @@
         <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加附件,单个大小不能超过10M</div>
+            <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过10M</div>
           </transition>
         </div>
         <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -364,7 +364,7 @@
           <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
 
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加附件,大小不能超过50M</div>
+            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitTranSend" />
@@ -392,7 +392,7 @@
           <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
 
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加附件,大小不能超过50M</div>
+            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitFinalSend" />

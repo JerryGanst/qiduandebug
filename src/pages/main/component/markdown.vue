@@ -33,7 +33,7 @@ const renderedMarkdown = computed(() => {
 .renderedMarkdown {
   margin-top: 10px;
   width: 100%;
-  background-color: #fff;
+  background-color: #fafafa;
   padding: 2px 20px;
   font-size: 14px;
   letter-spacing: 1px;
@@ -41,6 +41,7 @@ const renderedMarkdown = computed(() => {
   border-radius: 10px;
   letter-spacing: 1px;
   box-sizing: border-box;
+
   // white-space: pre-wrap;
   :deep(.language-json) {
     white-space: pre-wrap;

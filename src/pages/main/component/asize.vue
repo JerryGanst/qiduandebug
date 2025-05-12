@@ -127,7 +127,7 @@
   <div class="foldable" :style="{ left: isCollapsed ? '70px' : '290px' }">
     <img :src="isCollapsed ? right : left" @click="toggleCollapse" />
   </div>
-  <el-dialog v-model="dialogVisible" title="" width="30%" :before-close="handleClose">
+  <el-dialog v-model="dialogVisible" title="" width="32%" :before-close="handleClose">
     <div class="login_title">
       <span><img src="@/assets/logo2.png" /></span>
       <span>立讯技术百事通</span>
@@ -798,7 +798,6 @@ defineExpose({ queryAn, deleteData })
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
     flex-shrink: 0; /* 防止折叠时被压缩 */
     .aside_left_img {
       width: 36px;

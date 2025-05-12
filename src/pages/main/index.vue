@@ -139,7 +139,7 @@
                   :style="{
                     marginTop: item.content
                       ? item.files && item.files.length > 0
-                        ? '15px'
+                        ? '10px'
                         : index === 0
                           ? '70px'
                           : '40px'
@@ -199,7 +199,7 @@
                   :style="{
                     marginTop: item.content
                       ? item.files && item.files.length > 0
-                        ? '15px'
+                        ? '10px'
                         : index === 0
                           ? '70px'
                           : '40px'
@@ -2379,7 +2379,6 @@ onUnmounted(() => {
             max-width: 600px;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 5px;
           }
         }
       }
@@ -2432,7 +2431,6 @@ onUnmounted(() => {
           text-overflow: ellipsis;
           font-size: 14px;
           letter-spacing: 1px;
-          margin-bottom: 5px;
         }
       }
       .title {
@@ -2485,8 +2483,8 @@ onUnmounted(() => {
         }
       }
       .title_final_data {
-        margin-top: 15px;
-        background-color: #fff;
+        margin-top: 10px;
+        background-color: #fafafa;
         font-size: 14px;
         letter-spacing: 1px;
         line-height: 24px;
@@ -2511,8 +2509,8 @@ onUnmounted(() => {
         }
       }
       .title_tran_data {
-        margin-top: 15px;
-        background-color: #fff;
+        margin-top: 10px;
+        background-color: #fafafa;
         font-size: 14px;
         letter-spacing: 1px;
         line-height: 24px;
@@ -2526,7 +2524,6 @@ onUnmounted(() => {
         .list_item {
           flex: 1;
           height: 326px;
-          border-radius: 12px;
           background-image: url('@/assets/arr.png');
           background-size: 100% 100%;
           // background: linear-gradient(
@@ -2546,7 +2543,7 @@ onUnmounted(() => {
             padding-left: 20px;
             font-size: 14px;
             color: #646464;
-            margin-top: 10px;
+            margin-top: 4px;
             letter-spacing: 1px;
           }
           .list_arry {
@@ -2592,7 +2589,7 @@ onUnmounted(() => {
               .image {
                 width: 40px;
                 height: 40px;
-                margin-top: 6px;
+                margin-top: 8px;
                 margin-left: 12px;
                 img {
                   width: 100%;
@@ -2601,8 +2598,8 @@ onUnmounted(() => {
               }
               .img_text {
                 height: 30px;
-                padding-left: 8px;
-                padding-top: 10px;
+                padding-left: 12px;
+                padding-top: 12px;
                 letter-spacing: 1px;
                 .text_title {
                   font-size: 14px;
