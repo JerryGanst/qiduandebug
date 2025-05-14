@@ -2,14 +2,56 @@ handlePreview
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="附件上传"
-    width="1100px"
+    title="文件知识库"
+    width="1280px"
     class="custom-upload-dialog"
     style="margin-top: 3vh"
   >
     <div class="upload-layout">
       <!-- 左侧附件列表 -->
       <div class="file-list">
+        <div class="file_search">
+          <div class="file_left">
+            <div class="file_content">
+              <div class="file_select">个人知识库</div>
+              <div class="file_info">
+                <span>共12项</span>
+                <span style="padding-left: 10px">存储空间:已使用6.5GB</span>
+              </div>
+            </div>
+          </div>
+          <div class="file_right">
+            <div class="file_content">
+              <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable />
+              <div class="active">
+                <div
+                  class="active_item"
+                  :style="{ background: activeIndex === 0 ? '#E6F4FF' : '' }"
+                  @click="changeType(0)"
+                >
+                  文件名称
+                  <img :src="nameSort ? down : up" />
+                </div>
+                <div
+                  class="active_item"
+                  :style="{ background: activeIndex === 1 ? '#E6F4FF' : '' }"
+                  @click="changeType(1)"
+                >
+                  上传时间
+                  <img :src="timeSort ? down : up" />
+                </div>
+                <div
+                  class="active_item"
+                  :style="{ background: activeIndex === 2 ? '#E6F4FF' : '' }"
+                  @click="changeType(2)"
+                >
+                  文件大小
+                  <img :src="sizeSort ? down : up" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="upload_list">
           <el-upload
             drag
@@ -120,7 +162,7 @@ handlePreview
         </div>
       </div>
     </div>
-    <div class="upload_btn">
+    <!-- <div class="upload_btn">
       <el-button @click="dialogVisible = false" style="width: 100px; height: 40px; margin-left: 15px">取消</el-button>
       <el-button
         type="primary"
@@ -130,7 +172,7 @@ handlePreview
       >
         提交
       </el-button>
-    </div>
+    </div> -->
   </el-dialog>
 </template>
 
@@ -143,9 +185,14 @@ import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
+import down from '@/assets/arrow_down.png'
+import up from '@/assets/arrow_up.png'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import { Close } from '@element-plus/icons-vue'
 import request from '@/utils/request' // 导入封装的 axios 方法
+import { Search } from '@element-plus/icons-vue'
+
+const searchText = ref('')
 const dialogVisible = ref(false)
 const fileQueue = ref([])
 const previewContent = ref(null)
@@ -163,6 +210,10 @@ const STATUS = {
   ERROR: 'error'
 }
 const allowedFileTypes = '.doc,.docx,.txt,.pdf'
+const activeIndex = ref(0)
+const nameSort = ref(false)
+const timeSort = ref(false)
+const sizeSort = ref(false)
 // 颜色映射
 const statusColors = {
   [STATUS.PENDING]: '#EDEDED',
@@ -457,6 +508,17 @@ const handlePreview = async file => {
   }
 }
 
+const changeType = val => {
+  activeIndex.value = val
+  if (val === 0) {
+    nameSort.value = !nameSort.value
+  } else if (val === 1) {
+    timeSort.value = !timeSort.value
+    console.log(timeSort.value)
+  } else {
+    sizeSort.value = !sizeSort.value
+  }
+}
 const openFile = (val, ary) => {
   dialogVisible.value = true
   type.value = val
@@ -622,8 +684,8 @@ defineExpose({ openFile, closeFile })
 }
 
 .file-list {
-  width: 350px;
-  height: 540px;
+  width: 735px;
+  height: 630px;
   border-radius: 4px;
 
   overflow-y: hidden;
@@ -636,13 +698,76 @@ defineExpose({ openFile, closeFile })
     width: 100%;
     height: 400px;
     overflow-y: auto;
-    margin-top: 156px;
+    margin-top: 205px;
+  }
+  .file_search {
+    width: calc(100% - 30px);
+    margin-left: 15px;
+    position: absolute;
+    top: 10px;
+    display: flex;
+    .file_left {
+      display: flex;
+      flex-direction: row;
+      flex: 1;
+      .file_content {
+        display: flex;
+        flex-direction: column;
+        .file_select {
+          color: #333333;
+          font-size: 16px;
+          line-height: 33px;
+        }
+        .file_info {
+          font-size: 12px;
+          color: #868686;
+          line-height: 30px;
+          padding-top: 5px;
+        }
+      }
+    }
+    .file_right {
+      display: flex;
+      flex-direction: row-reverse;
+      flex: 1;
+      .file_content {
+        display: flex;
+        flex-direction: column;
+        :deep(.el-input__wrapper) {
+          width: 160px;
+          box-shadow: none;
+          border: 1px solid #bebebe;
+        }
+        .active {
+          display: flex;
+          margin-top: 5px;
+          .active_item {
+            width: 82px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            position: relative;
+            text-indent: -4px;
+            img {
+              position: absolute;
+              right: 3px;
+              top: 9px;
+              width: 14px;
+              height: 14px;
+            }
+          }
+        }
+      }
+    }
   }
   .upload_list {
     width: calc(100% - 30px);
     margin-left: 15px;
     position: absolute;
-    top: 15px;
+    top: 90px;
   }
 }
 
@@ -712,12 +837,12 @@ defineExpose({ openFile, closeFile })
 }
 
 .preview-container {
-  height: 510px;
+  height: 600px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
   padding: 15px;
   overflow: auto;
-  width: 670px;
+  width: 450px;
 }
 .preview-container::-webkit-scrollbar {
   width: 1px; /* 滚动条宽度 */

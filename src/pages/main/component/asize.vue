@@ -127,7 +127,7 @@
   <div class="foldable" :style="{ left: isCollapsed ? '70px' : '290px' }">
     <img :src="isCollapsed ? right : left" @click="toggleCollapse" />
   </div>
-  <el-dialog v-model="dialogVisible" title="" width="32%" :before-close="handleClose">
+  <el-dialog v-model="dialogVisible" title="" width="400px" :before-close="handleClose">
     <div class="login_title">
       <span><img src="@/assets/logo2.png" /></span>
       <span>立讯技术百事通</span>
@@ -151,9 +151,16 @@
             <img src="@/assets/password.png" style="width: 20px; height: 20px" />
           </template>
           <template #suffix>
-            <el-icon @click="togglePasswordVisibility" style="cursor: pointer">
-              <component :is="passwordVisible ? Lock : View" />
-            </el-icon>
+            <img
+              v-if="loginForm.password"
+              :src="passwordVisible ? View : Lock"
+              alt=""
+              @click="togglePasswordVisibility"
+              style="cursor: pointer; width: 16px; height: 16px"
+            />
+            <!-- <el-icon @click="togglePasswordVisibility" style="cursor: pointer">
+              <component :is="loginForm.password ? (passwordVisible ? Lock : View) : ''" />
+            </el-icon> -->
           </template>
         </el-input>
       </el-form-item>
@@ -162,7 +169,7 @@
       </el-form-item>
     </el-form>
   </el-dialog>
-  <el-dialog v-model="titleVisible" title="编辑名称" width="40%" :before-close="handleTitleClose">
+  <el-dialog v-model="titleVisible" title="编辑名称" width="500px" :before-close="handleTitleClose">
     <el-input
       v-model="titleQuestion"
       placeholder="请输入标题名称"
@@ -182,7 +189,8 @@ import { ref, onMounted, computed, nextTick, reactive } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElButton, ElDivider, ElMessage, ElPopover } from 'element-plus' // 引入 ElMessage
 import { useRoute } from 'vue-router'
-import { Lock, View } from '@element-plus/icons-vue' // 引入需要的图标
+import Lock from '@/assets/lock.png' // 引入需要的图标
+import View from '@/assets/view.png' // 引入需要的图标
 import photo from '@/assets/chat.deepseek.com_.png'
 import foldLeft from '@/assets/fold.svg'
 import foldRight from '@/assets/fold_right.svg'
@@ -278,6 +286,11 @@ const getUserInfo = async id => {
         localStorage.setItem('userInfo', JSON.stringify(res.data))
         userInfo.value = res.data
         userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
+        if (powerList.value.includes(userInfo.value.id)) {
+          localStorage.setItem('isLaw', true)
+        } else {
+          localStorage.setItem('isLaw', false)
+        }
         nextTick(() => {
           emit('change-history')
         })
@@ -400,6 +413,7 @@ const handleLogout = () => {
   // 处理退出登录逻辑
   ElMessage.success('退出成功')
   localStorage.setItem('userInfo', '')
+  localStorage.setItem('isLaw', false)
   questions.value = []
   queryTypes.value = []
   answerList.value = []
@@ -716,11 +730,33 @@ const queryAn = (val, index, data) => {
   }
 }
 
+const powerList = ref([
+  'T10802004',
+  '10353965',
+  '10353964',
+  'T10802005',
+  '31001225',
+  '10801390',
+  'T17990001',
+  'T93000161',
+  '10500985',
+  '10800001',
+  '10335333',
+  '10801127',
+  'ZL044364',
+  '13829448'
+])
+
 onMounted(() => {
   if (localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).id) {
     isLogin.value = true
     const loginData = JSON.parse(localStorage.getItem('userInfo'))
     userInfo.value.id = loginData.id
+    if (powerList.value.includes(loginData.id)) {
+      localStorage.setItem('isLaw', true)
+    } else {
+      localStorage.setItem('isLaw', false)
+    }
     userInfo.value.name = loginData.name
     userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
     emit('change-history')
