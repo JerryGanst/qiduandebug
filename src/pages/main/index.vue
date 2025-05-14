@@ -278,7 +278,12 @@
               />
               <!-- 发送图标 -->
               <div class="send-icon">
-                <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
+                <div
+                  class="tooltip-wrapper"
+                  @mouseenter="showModelTip = true"
+                  @mouseleave="showModelTip = false"
+                  v-if="pageType === 'query' || pageType === 'it'"
+                >
                   <img
                     :src="deepType ? deepSelect : deep"
                     class="arrow"
