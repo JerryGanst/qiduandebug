@@ -255,7 +255,7 @@ const passwordVisible = ref(false)
 const titleVisible = ref(false)
 // 当前url的路由信息(由luxshare传来的参数)
 const queryParams = route.query
-const emit = defineEmits(['change-history'])
+const emit = defineEmits(['change-history', 'set-isLaw'])
 // 左上角折叠控制函数
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
@@ -292,6 +292,7 @@ const getUserInfo = async id => {
           localStorage.setItem('isLaw', false)
         }
         nextTick(() => {
+          emit('set-isLaw')
           emit('change-history')
         })
       }

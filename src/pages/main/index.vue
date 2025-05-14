@@ -1,7 +1,7 @@
 <template>
   <el-container class="container">
     <!-- 左侧栏 -->
-    <AsizeComponent @change-history="getHistory" ref="asizeRef"></AsizeComponent>
+    <AsizeComponent @change-history="getHistory" @set-isLaw="setlaw" ref="asizeRef"></AsizeComponent>
 
     <!-- 右侧内容 -->
     <el-container>
@@ -2105,6 +2105,10 @@ const cancelCurrentRequest = async val => {
     }
     postFinal(obj, title, ob)
   }
+}
+
+const setlaw = () => {
+  isLaw.value = localStorage.getItem('isLaw')
 }
 // 组件挂载时订阅事件
 onMounted(() => {
