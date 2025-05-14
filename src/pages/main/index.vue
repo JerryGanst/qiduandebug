@@ -495,13 +495,13 @@ const {
   showFileTip,
   showModelTip,
   fileAry,
-  fileInputAry
+  fileInputAry,
+  isLaw
 } = useShared()
 
 const queryIng = ref(false)
 const asizeRef = ref(null)
 const entryRef = ref(null)
-const isLaw = ref(false)
 const sampleData = ref('')
 
 const commonQuestion = ref('')

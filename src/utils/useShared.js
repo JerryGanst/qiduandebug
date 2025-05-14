@@ -90,7 +90,9 @@ const docIng = ref(false)
 const limitAry = ref([])
 const showFileTip = ref(false)
 const showModelTip = ref(false)
+const isLaw = ref(false)
 const fileInputAry = ref([])
+
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -295,6 +297,9 @@ export function useShared() {
   const updateFileInputAry = newName => {
     fileInputAry.value = newName
   }
+  const updateIsLaw = newName => {
+    isLaw.value = newName
+  }
 
   watch(
     newQuestion,
@@ -348,6 +353,7 @@ export function useShared() {
     showFileTip,
     showModelTip,
     fileInputAry,
+    isLaw,
     changeMode,
     updateCurrentQuestion,
     updateNewQuestion,
@@ -390,6 +396,7 @@ export function useShared() {
     updateShowFileTip,
     updateShowModelTip,
     updateFileAry,
-    updateFileInputAry
+    updateFileInputAry,
+    updateIsLaw
   }
 }

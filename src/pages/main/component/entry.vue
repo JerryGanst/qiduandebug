@@ -470,7 +470,8 @@ const {
   currentQuestion,
   showFileTip,
   showModelTip,
-  fileInputAry
+  fileInputAry,
+  isLaw
 } = useShared()
 const fileRef = ref(null)
 const knowledge = ref(null)
@@ -543,7 +544,6 @@ const historyList = ref([
 const lanList = ref(['中文', '英文', '西班牙语', '越南语'])
 const dynamicRowFinal = ref(1)
 const isDeepShow = ref(false)
-const isLaw = ref(false)
 const tranPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
