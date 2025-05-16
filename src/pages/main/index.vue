@@ -2224,10 +2224,10 @@ onUnmounted(() => {
 .button-item_common {
   display: flex;
   width: 100%;
-  margin-top: 40px;
+  margin-top: 25px;
   flex-direction: row;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 .el-container {
   background-color: #fff;
