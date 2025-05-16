@@ -93,6 +93,9 @@
               <div class="el-upload__subtext">
                 <span style="color: #868686">单个大小不超过50M</span>
               </div>
+              <div class="el-upload__subtext">
+                <span style="color: #868686">上传成功后文件将会被转为PDF</span>
+              </div>
             </div>
           </el-upload>
         </div>
@@ -233,7 +236,6 @@ const clearData = () => {
 const searchData = () => {
   if (!searchText.value.trim()) return
   getFileList()
-  console.log('触发搜索:', searchText.value)
   // 调用后端接口或其他搜索逻辑
 }
 
@@ -248,7 +250,6 @@ const downloads = url => {
     const fileName = url.split('/').pop().split('?')[0] // 根据实际情况调整
     // 4. 设置下载属性（需配合CORS配置）
     link.setAttribute('download', fileName)
-    console.log(link)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -518,7 +519,6 @@ const getInfo = val => {
     point.value = 'MB'
     totalSize.value = (size / 1024 / 1024).toFixed(1)
   }
-  console.log(fileQueue.value)
 }
 const checkKnow = val => {
   isPre.value = false
@@ -674,7 +674,7 @@ defineExpose({ openFile })
   .file_item {
     height: 400px;
     overflow-y: auto;
-    margin-top: 205px;
+    margin-top: 220px;
     float: left;
   }
   .file_search {

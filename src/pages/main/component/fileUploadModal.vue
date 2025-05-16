@@ -636,7 +636,7 @@ defineExpose({ openFile, closeFile })
     width: 100%;
     height: 400px;
     overflow-y: auto;
-    margin-top: 156px;
+    margin-top: 115px;
   }
   .upload_list {
     width: calc(100% - 30px);
