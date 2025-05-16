@@ -747,7 +747,19 @@ const powerList = ref([
   'ZL044364',
   '13829448'
 ])
-
+const getPower = () => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  request
+    .post('/Files/permissionCheck?userId=' + userInfo.id)
+    .then(res => {
+      if (res.status) {
+        localStorage.setItem('powerList', res.data)
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
 onMounted(() => {
   if (localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).id) {
     isLogin.value = true
@@ -758,6 +770,7 @@ onMounted(() => {
     } else {
       localStorage.setItem('isLaw', false)
     }
+    getPower()
     userInfo.value.name = loginData.name
     userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
     emit('change-history')

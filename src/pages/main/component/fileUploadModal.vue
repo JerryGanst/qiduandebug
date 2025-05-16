@@ -657,6 +657,7 @@ defineExpose({ openFile, closeFile })
   margin-top: 15px;
   background-color: #fff;
   border: 1px solid #eee;
+  cursor: pointer;
   .file_img {
     width: 42px;
     height: 52px;

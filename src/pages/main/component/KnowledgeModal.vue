@@ -1,4 +1,3 @@
-handlePreview
 <template>
   <el-dialog
     v-model="dialogVisible"
@@ -9,37 +8,58 @@ handlePreview
   >
     <div class="upload-layout">
       <!-- 左侧附件列表 -->
-      <div class="file-list">
+      <div class="file-list" :style="{ width: isPre ? '735px' : '100%' }">
         <div class="file_search">
           <div class="file_left">
             <div class="file_content">
-              <div class="file_select">个人知识库</div>
+              <div class="file_select" v-if="isPower">
+                <el-select v-model="selectedKnow" placeholder="请选择知识库" @change="checkKnow">
+                  <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </div>
+              <div class="file_select" v-else>个人知识库</div>
+
               <div class="file_info">
                 <span>共12项</span>
-                <span style="padding-left: 10px">存储空间:已使用6.5GB</span>
+                <span style="padding-left: 10px">存储空间 : 已使用6.5GB</span>
               </div>
             </div>
           </div>
           <div class="file_right">
             <div class="file_content">
-              <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable />
+              <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
+              <el-input
+                v-model="searchText"
+                placeholder="请点击搜索图标或按Enter键"
+                clearable
+                @clear="clearData"
+                @keydown.enter.prevent="searchData"
+              >
+                <!-- 使用插槽自定义前缀图标并绑定事件 -->
+                <template #prefix>
+                  <el-icon class="el-input__icon" @click="searchData" style="cursor: pointer">
+                    <Search />
+                  </el-icon>
+                </template>
+              </el-input>
               <div class="active">
                 <div
                   class="active_item"
                   :style="{ background: activeIndex === 0 ? '#E6F4FF' : '' }"
                   @click="changeType(0)"
                 >
-                  文件名称
-                  <img :src="nameSort ? down : up" />
+                  上传时间
+                  <img :src="timeSort ? down : up" />
                 </div>
                 <div
                   class="active_item"
                   :style="{ background: activeIndex === 1 ? '#E6F4FF' : '' }"
                   @click="changeType(1)"
                 >
-                  上传时间
-                  <img :src="timeSort ? down : up" />
+                  文件名称
+                  <img :src="nameSort ? down : up" />
                 </div>
+
                 <div
                   class="active_item"
                   :style="{ background: activeIndex === 2 ? '#E6F4FF' : '' }"
@@ -56,13 +76,12 @@ handlePreview
           <el-upload
             drag
             :auto-upload="false"
-            :multiple="type === 'sample' ? true : false"
+            :multiple="true"
             :accept="allowedFileTypes"
             :on-change="handleFileAdd"
             :show-file-list="false"
             :file-list="fileQueue"
             :before-upload="checkFileSize"
-            :limit="5"
           >
             <i class="el-icon-upload" />
             <div class="el-upload__text">
@@ -71,81 +90,68 @@ handlePreview
               <div class="el-upload__subtext">
                 <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
               </div>
-              <div class="el-upload__subtext" v-if="type === 'sample'">
-                <span style="color: #868686">一次性最多上传五个附件,单个大小不超过50M</span>
-              </div>
-              <div class="el-upload__subtext" v-else>
-                <span style="color: #868686">大小不超过50M</span>
+              <div class="el-upload__subtext">
+                <span style="color: #868686">单个大小不超过50M</span>
               </div>
             </div>
           </el-upload>
         </div>
         <div class="file_item">
-          <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
+          <div
+            v-for="(file, index) in fileQueue"
+            :key="file.uid"
+            class="file-item"
+            :class="{ 'uploading-file': file.status === 'pending' }"
+            @click="getFile(file)"
+            style="position: relative"
+            :style="{ width: isPre ? '14.7%' : '8%', marginLeft: isPre ? '14px' : '13px' }"
+          >
             <div class="file_img">
-              <img :src="file.extension === 'txt' ? text : file.extension === 'pdf' ? pdf : word" />
+              <img :src="pdf" />
             </div>
-            <div class="file-info">
-              <span class="filename">{{ file.name }}</span>
-              <div class="file-actions">
-                <span
-                  @click.stop="handleDelete(index)"
-                  style="width: 20px; height: 20px; cursor: pointer"
-                  :style="{ marginRight: file.status === 'pending' ? '0px' : '10px' }"
-                >
-                  <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
-                </span>
-                <span
-                  v-if="file.status === 'uploading'"
-                  @click.stop="pauseUpload(file)"
-                  style="width: 20px; height: 20px; cursor: pointer"
-                >
-                  <img src="@/assets/continue.svg" style="width: 100%; height: 100%" />
-                </span>
-                <!-- <span
-                v-if="file.status === 'padding'"
-                @click.stop="pauseUpload(file)"
-                style="width: 20px; height: 20px; cursor: pointer"
-              >
-                <img src="@/assets/continue.svg" style="width: 100%; height: 100%" />
-              </span> -->
-                <span
-                  v-else-if="file.status === 'paused'"
-                  @click.stop="resumeUpload(file)"
-                  style="width: 20px; height: 20px; cursor: pointer"
-                >
-                  <img src="@/assets/pause.svg" style="width: 100%; height: 100%" />
-                </span>
-                <span
-                  v-else-if="file.status === 'error'"
-                  @click.stop="retryUpload(file)"
-                  style="width: 20px; height: 20px; cursor: pointer"
-                >
-                  <img src="@/assets/refreshFile.svg" style="width: 100%; height: 100%" />
-                </span>
-                <span v-else-if="file.status === 'success'" style="width: 20px; height: 20px">
-                  <img src="@/assets/doneFile.svg" style="width: 100%; height: 100%" />
-                </span>
-              </div>
-              <!-- <span class="file-type">{{ file.extension }}</span> -->
+            <div class="filename" :style="{ width: isPre ? '90px' : '70px' }">{{ file.fileName }}</div>
+            <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
+              {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
             </div>
-            <div style="font-size: 12px; color: #bebebe; margin-top: 2px; margin-bottom: 4px">
-              {{ file.size ? (file.size / 1024).toFixed(1) : 0 }}KB
-            </div>
-            <el-progress
-              :percentage="file.progress"
-              :color="customProgressColor(file)"
-              :status="getStatusType(file.status)"
-            />
+            <el-popconfirm
+              title="确定要删除吗？"
+              confirm-button-text="确定"
+              cancel-button-text="取消"
+              @confirm="handleDelete(index, $event)"
+            >
+              <template #reference>
+                <span @click.stop>
+                  <!-- 阻止点击事件冒泡 -->
+                  <div style="width: 20px; height: 20px; cursor: pointer; position: absolute; right: 4px; top: 4px">
+                    <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
+                  </div>
+                </span>
+              </template>
+            </el-popconfirm>
           </div>
         </div>
       </div>
 
       <!-- 右侧上传区域 -->
-      <div class="upload-area">
+      <div class="upload-area" v-if="isPre">
+        <div class="file_text" v-if="previewFileId" style="position: relative">
+          <div class="text_title">{{ fileInfo.name }}</div>
+          <div class="text_list">
+            <span>大小 : {{ fileInfo.size ? (fileInfo.size / 1024).toFixed(1) : 0 }}KB</span>
+            <span style="margin-left: 14px">类型 : {{ fileInfo.extension }}</span>
+            <!-- <span style="margin-left: 14px">更新时间 : 2025-05-05</span> -->
+          </div>
+          <div class="close_pre" @click="closePre">关闭预览</div>
+        </div>
         <!-- 附件预览 -->
-        <div v-if="previewFileId" class="preview-container" :key="previewFileId">
-          <div v-if="previewType === 'text'" class="text-preview">
+        <div
+          v-if="previewFileId"
+          class="preview-container"
+          :key="previewFileId"
+          style="height: 480px; margin: 15px"
+          :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
+        >
+          <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px">
             <pre>{{ previewContent }}</pre>
           </div>
           <div v-else-if="previewType === 'html'" class="html-preview" v-html="previewContent"></div>
@@ -154,25 +160,21 @@ handlePreview
           </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>
-        <div v-else="previewFileId" class="preview-container">
+        <div
+          v-else="previewFileId"
+          class="preview-container"
+          :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
+        >
           <div style="width: 100%; display: flex; justify-content: center; margin-top: 154px">
             <img src="@/assets/no-file.png" style="width: 150px; height: 150px" />
           </div>
           <div class="unsupported-preview" style="padding: 0px">请先上传附件即可预览</div>
         </div>
+        <div class="btn_download">
+          <div class="download" @click="downloadFile(fileInfo)">下载</div>
+        </div>
       </div>
     </div>
-    <!-- <div class="upload_btn">
-      <el-button @click="dialogVisible = false" style="width: 100px; height: 40px; margin-left: 15px">取消</el-button>
-      <el-button
-        type="primary"
-        @click="startUpload(type === 'sample' ? fileQueue : fileQueue[0])"
-        style="width: 100px; height: 40px"
-        :disabled="!hasPendingFiles || !isLogin"
-      >
-        提交
-      </el-button>
-    </div> -->
   </el-dialog>
 </template>
 
@@ -185,10 +187,9 @@ import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
-import down from '@/assets/arrow_down.png'
-import up from '@/assets/arrow_up.png'
+import down from '@/assets/arrow_up.png'
+import up from '@/assets/arrow_down.png'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
-import { Close } from '@element-plus/icons-vue'
 import request from '@/utils/request' // 导入封装的 axios 方法
 import { Search } from '@element-plus/icons-vue'
 
@@ -198,185 +199,116 @@ const fileQueue = ref([])
 const previewContent = ref(null)
 const previewType = ref('')
 const previewFileId = ref(null)
-const type = ref('tran')
-const emit = defineEmits(['submit-tran', 'submit-final'])
-const { fileObj, isSampleLoad, finalIng, isLogin, fileAry } = useShared()
+const isPre = ref(false)
+const selectedKnow = ref(1)
+const isPower = ref(true)
+const permission = ref([])
+const knowOptions = ref([
+  {
+    value: 1,
+    label: '个人知识库'
+  },
+  {
+    value: 2,
+    label: '公共知识库'
+  }
+])
+
 // 常量定义
-const STATUS = {
-  PENDING: 'pending',
-  UPLOADING: 'uploading',
-  PAUSED: 'paused',
-  SUCCESS: 'success',
-  ERROR: 'error'
-}
 const allowedFileTypes = '.doc,.docx,.txt,.pdf'
 const activeIndex = ref(0)
 const nameSort = ref(false)
 const timeSort = ref(false)
 const sizeSort = ref(false)
-// 颜色映射
-const statusColors = {
-  [STATUS.PENDING]: '#EDEDED',
-  [STATUS.UPLOADING]: '#409EFF',
-  [STATUS.PAUSED]: '#FAAD14',
-  [STATUS.SUCCESS]: '#52C41A',
-  [STATUS.ERROR]: '#FF4D4F'
+
+const closePre = () => {
+  isPre.value = false
+}
+
+const clearData = () => {
+  searchText.value = ''
+  getFileList()
+}
+// 搜索方法
+const searchData = () => {
+  if (!searchText.value.trim()) return
+  getFileList()
+  console.log('触发搜索:', searchText.value)
+  // 调用后端接口或其他搜索逻辑
+}
+
+const downloads = url => {
+  try {
+    // 1. 调用后端接口获取预签名URL
+    // 2. 创建隐藏的<a>标签触发下载
+    const link = document.createElement('a')
+    link.href = url
+    link.style.display = 'none'
+    // 3. 从URL中提取文件名（可选）
+    const fileName = url.split('/').pop().split('?')[0] // 根据实际情况调整
+    // 4. 设置下载属性（需配合CORS配置）
+    link.setAttribute('download', fileName)
+    console.log(link)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  } catch (error) {
+    console.error('下载失败:', error)
+    // 使用ElementUI的提示组件
+    ElMessage.error('文件下载失败')
+  }
+}
+const downloadFile = async val => {
+  let id = ''
+  for (var i = 0; i < fileQueue.value.length; i++) {
+    if (val.name === fileQueue.value[i].fileName) {
+      id = fileQueue.value[i].id
+    }
+  }
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  request
+    .post(`/Files/getDownloadUrl?fileId=${id}&userId=${userInfo.id}`)
+    .then(res => {
+      if (res.status) {
+        downloads(res.data)
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
+const deleteData = id => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  let idList = []
+  idList.push(id)
+  request
+    .post('/Files/knowledgeFileDelete', {
+      file: idList,
+      userId: userInfo.id,
+      target: permission.value,
+      isPublic: selectedKnow.value === 1 ? false : true
+    })
+    .then(res => {
+      if (res.status) {
+        getFileList(permission.value, selectedKnow.value === 1 ? false : true)
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
 }
 // 新增删除处理函数
-const handleDelete = index => {
+const handleDelete = (index, event) => {
+  event?.stopPropagation() // 阻止事件冒泡
   const deletedFile = fileQueue.value[index]
-  // 清除关联预览（同步操作）
-  if (previewFileId.value === deletedFile.uid) {
-    previewFileId.value = null // 必须同步清除关联标识
-    previewContent.value = null
-    previewType.value = ''
-  }
+  const id = deletedFile.id
   // 强制 DOM 更新（关键修复）
+  fileQueue.value.splice(index, 1)
   nextTick(() => {
-    // 通过重新赋值触发响应式更新
-    fileQueue.value = [...fileQueue.value]
-    fileQueue.value.forEach(item => {
-      item.status = 'pending'
-    })
+    isPre.value = false
+    deleteData(id)
+    // getFileList(permission.value, selectedKnow.value === 1 ? false : true)
   })
-
-  // 取消上传（原有逻辑）
-  if (deletedFile.status === 'uploading' && deletedFile.source) {
-    deletedFile.source.cancel('用户删除附件')
-  }
-
-  // 从队列中移除
-
-  if (type.value === 'sample') {
-    // 提取array2的name集合
-    // 过滤array1，排除name存在于array2中的对象
-    if (fileAry.value && fileAry.value.length > 0) {
-      fileAry.value = fileAry.value.filter(item => item.originalFileName !== fileQueue.value[index].name)
-    }
-
-    fileQueue.value.splice(index, 1)
-
-    nextTick(() => {
-      // 通过重新赋值触发响应式更新
-      handlePreview(fileQueue.value[0])
-    })
-  } else {
-    fileQueue.value.splice(index, 1)
-  }
-}
-// 计算属性
-const hasPendingFiles = computed(() => {
-  return fileQueue.value.some(file => [STATUS.PENDING, STATUS.ERROR].includes(file.status))
-})
-const startUpload = async file => {
-  if (fileQueue.value.length === 0) {
-    ElMessage.warning('请先上传附件再提交')
-    return
-  }
-  if (isSampleLoad.value || finalIng.value) {
-    ElMessage.warning('有问题正在回答中，请稍后再修改')
-    return
-  }
-  const CancelToken = axios.CancelToken
-  const source = CancelToken.source()
-  if (type.value === 'sample') {
-    let ary = []
-    for (var i = 0; i < fileQueue.value.length; i++) {
-      file[i].status = STATUS.UPLOADING
-      file[i].source = source
-      file[i].cancel = source.cancel
-      // 清除旧预览状态
-      previewFileId.value = null
-      previewContent.value = null
-      previewType.value = ''
-      try {
-        previewFileId.value = file[i].uid
-        const formData = new FormData()
-        formData.append('files', file[i].raw)
-
-        await axios
-          .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
-            cancelToken: source.token,
-            onUploadProgress: progressEvent => {
-              file[i].progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-            }
-          })
-          .then(res => {
-            if (res.data.status) {
-              file[i].status = STATUS.SUCCESS
-              file[i].progress = 100
-              ary.push(res.data?.data[0])
-              if (i === fileQueue.value.length - 1) {
-                eventBus.emit('submit-sampleFile', ary)
-              }
-            } else {
-              ElMessage.error(res.data.message)
-              file[i].status = STATUS.ERROR
-              previewFileId.value = null
-            }
-          })
-      } catch (error) {
-        previewFileId.value = null
-        if (axios.isCancel(error)) {
-          file[i].status = STATUS.PAUSED
-        } else {
-          file[i].status = STATUS.ERROR
-          console.error('Upload failed:', error)
-        }
-        throw error
-      }
-    }
-  } else {
-    file.status = STATUS.UPLOADING
-    file.source = source
-    file.cancel = source.cancel
-    // 清除旧预览状态
-    previewFileId.value = null
-    previewContent.value = null
-    previewType.value = ''
-    try {
-      previewFileId.value = file.uid
-      const formData = new FormData()
-      formData.append('files', file.raw)
-      await axios
-        .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
-          cancelToken: source.token,
-          onUploadProgress: progressEvent => {
-            file.progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-          }
-        })
-        .then(res => {
-          if (res.data.status) {
-            file.status = STATUS.SUCCESS
-            file.progress = 100
-            fileObj.value = res.data?.data[0]
-            emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', res.data?.data[0])
-          } else {
-            ElMessage.error(res.data.message)
-            file.status = STATUS.ERROR
-            previewFileId.value = null
-          }
-        })
-    } catch (error) {
-      previewFileId.value = null
-      if (axios.isCancel(error)) {
-        file.status = STATUS.PAUSED
-      } else {
-        file.status = STATUS.ERROR
-        console.error('Upload failed:', error)
-      }
-      throw error
-    }
-  }
-}
-// 处理超出限制
-// const handleExceed = (files, fileList) => {
-//   console.log(fileQueue.value)
-//   ElMessage.warning('最多只能上传5个附件')
-// }
-// 进度条颜色计算
-const customProgressColor = file => {
-  return statusColors[file.status] || '#409EFF'
 }
 
 const checkFileSize = file => {
@@ -384,72 +316,124 @@ const checkFileSize = file => {
   if (!isLt10M) {
     ElMessage.warning('附件大小不能超过50MB!')
   }
-
   return isLt10M
 }
+// 新增独立上传队列（网页[5]思路扩展）
+let uploadPromises = [] // 存储所有上传Promise
+const startAutoUpload = async () => {
+  try {
+    uploadPromises = fileQueue.value.filter(f => f.status === 'pending').map(file => uploadSingleFile(file))
 
-// 兼容Element原生状态类型
-const getStatusType = status => {
-  return status === STATUS.ERROR ? 'exception' : status === STATUS.SUCCESS ? 'success' : undefined
-}
+    // 等待全部完成（网页[7]）
+    await Promise.all(uploadPromises)
 
-// 附件添加处理
-const handleFileAdd = uploadFile => {
-  const file = {
-    ...uploadFile,
-    uid: uploadFile.uid,
-    size: uploadFile.size,
-    name: uploadFile.name,
-    extension: uploadFile.name.split('.').pop().toLowerCase(),
-    progress: '',
-    status: STATUS.PENDING,
-    cancel: null,
-    source: null
+    // 全部成功后刷新列表
+    getFileList(permission.value, selectedKnow.value === 1 ? false : true)
+
+    // 清空队列
+    // fileQueue.value = []
+  } catch (error) {
+    console.error('批量上传失败', error)
   }
-  if (file.size / 1024 / 1024 > 50) {
+}
+const uploadSingleFile = async file => {
+  return new Promise((resolve, reject) => {
+    previewFileId.value = file.uid
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+    const formData = new FormData()
+    formData.append('file', file.raw)
+    formData.append('userId', userInfo.id)
+    formData.append('target', permission.value)
+    formData.append('isPublic', selectedKnow.value === 2 ? true : false)
+    axios
+      .post(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileUpload', formData, {
+        onUploadProgress: progress => {
+          file.progress = Math.round((progress.loaded / progress.total) * 100)
+        }
+      })
+      .then(res => {
+        if (res.data.status) {
+          file.status = 'success'
+          resolve()
+        } else {
+          file.status = 'error'
+          reject(err)
+        }
+      })
+  })
+}
+// 添加进度监控（网页[7]）
+//   axios
+//     .post(url, formData, {
+//       onUploadProgress: progress => {
+//         file.progress = Math.round((progress.loaded / progress.total) * 100)
+//       }
+//     })
+//     .then(res => {
+//       file.status = 'success'
+//       resolve()
+//     })
+//     .catch(err => {
+//       file.status = 'error'
+//       reject(err)
+//     })
+// })
+// }
+const uploadTimer = ref(null)
+// 附件添加处理
+const handleFileAdd = async uploadFile => {
+  if (uploadFile.size / 1024 / 1024 > 50) {
     ElMessage.warning('附件大小不能超过50MB!')
     return
   }
-  previewFileId.value = file.uid
-  if (type.value !== 'sample') {
-    fileQueue.value = []
+  const file = {
+    ...uploadFile,
+    uid: uploadFile.uid,
+    status: 'pending', // 新增状态字段
+    fileSize: uploadFile.size,
+    fileName: uploadFile.name
   }
+  fileQueue.value = [...fileQueue.value, file]
+  // 自动触发上传（网页[5]防抖优化）
+  clearTimeout(uploadTimer.value)
+  uploadTimer.value = setTimeout(startAutoUpload, 300)
+  // previewFileId.value = file.uid
+  // try {
+  //   previewFileId.value = file.uid
+  //   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  //   const formData = new FormData()
+  //   formData.append('file', file.raw)
+  //   formData.append('userId', userInfo.id)
+  //   formData.append('target', permission.value)
+  //   formData.append('isPublic', selectedKnow.value === 2 ? true : false)
 
-  fileQueue.value.push(file)
-  if (fileQueue.value.length > 5) {
-    fileQueue.value = fileQueue.value.slice(-5)
-  }
-
-  handlePreview(type.value === 'sample' ? fileQueue.value[0] : file)
+  //   await axios.post(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileUpload', formData).then(res => {
+  //     if (res.data.status) {
+  //       fileQueue.value = fileQueue.value.map(f => (f.uid === file.uid ? { ...f, status: 'success' } : f))
+  //       getFileList(permission.value, selectedKnow.value === 1 ? false : true)
+  //     } else {
+  //       fileQueue.value = fileQueue.value.map(f => (f.uid === file.uid ? { ...f, status: 'error' } : f))
+  //       ElMessage.error(res.data.message)
+  //     }
+  //   })
+  // } catch (error) {
+  //   fileQueue.value = fileQueue.value.map(f => (f.uid === file.uid ? { ...f, status: 'error' } : f))
+  //   previewFileId.value = null
+  //   throw error
+  // }
 }
 
-// 暂停上传
-const pauseUpload = file => {
-  if (file.source) {
-    file.source.cancel('User paused upload')
-    file.status = STATUS.PAUSED
-  }
-}
-
-// 继续上传
-const resumeUpload = file => {
-  startUpload(file)
-}
-
-// 重试上传
-const retryUpload = file => {
-  file.progress = 0
-  file.status = STATUS.PENDING
-  startUpload(file)
-}
-
+const fileInfo = ref({})
 // 附件预览处理
 const handlePreview = async file => {
   if (!file) {
     return
   }
+  const exception = getTextAfterLastDot(file.name)
   try {
-    if (['txt'].includes(file.extension)) {
+    isPre.value = true
+    fileInfo.value = file
+    if (['txt'].includes(exception)) {
       // 处理文本附件
       const reader = new FileReader()
       reader.onload = e => {
@@ -458,7 +442,7 @@ const handlePreview = async file => {
       }
 
       reader.readAsText(file.raw)
-    } else if (['docx', 'doc'].includes(file.extension)) {
+    } else if (['docx', 'doc'].includes(exception)) {
       // 处理Word文档
       const arrayBuffer = await file.raw.arrayBuffer()
       const result = await mammoth.convertToHtml({ arrayBuffer })
@@ -489,7 +473,7 @@ const handlePreview = async file => {
 
       // 处理图片显示（如果需要）
       result.messages.forEach(message => {})
-    } else if (['pdf'].includes(file.extension)) {
+    } else if (['pdf'].includes(exception)) {
       // 生成PDF的Blob URL并预览
       const pdfUrl = URL.createObjectURL(file.raw)
       previewContent.value = pdfUrl
@@ -510,30 +494,52 @@ const handlePreview = async file => {
 
 const changeType = val => {
   activeIndex.value = val
-  if (val === 0) {
+  if (val === 1) {
     nameSort.value = !nameSort.value
-  } else if (val === 1) {
+  } else if (val === 0) {
     timeSort.value = !timeSort.value
-    console.log(timeSort.value)
   } else {
     sizeSort.value = !sizeSort.value
   }
+  getFileList()
+}
+
+const checkKnow = val => {
+  isPre.value = false
+  if (val === 1) {
+    getFileList(permission.value, false)
+  } else {
+    getFileList(permission.value, true)
+  }
+}
+const getFileList = (val, isPublic) => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  request
+    .post('/Files/getFileListByUserId', {
+      userId: userInfo.id,
+      target: permission.value,
+      isPublic: selectedKnow.value === 1 ? false : true,
+      sortType: activeIndex.value === 0 ? 'time' : activeIndex.value === 1 ? 'name' : 'size',
+      increase: activeIndex.value === 0 ? timeSort.value : activeIndex.value === 1 ? nameSort.value : sizeSort.value,
+      keywords: searchText.value
+    })
+    .then(res => {
+      if (res.status) {
+        fileQueue.value = res.data
+        console.log(fileQueue.value)
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
 }
 const openFile = (val, ary) => {
   dialogVisible.value = true
-  type.value = val
-  if (val === 'sample') {
-    if (ary) {
-      fileAry.value = ary
-    }
-    getFileAry()
-  } else {
-    if (fileObj.value) {
-      getFile()
-    } else {
-      fileQueue.value = []
-    }
-  }
+  isPre.value = false
+  const power = localStorage.getItem('powerList')
+  permission.value = power.length > 0 ? power : ''
+  isPower.value = permission.value ? true : false
+  getFileList(permission.value, false)
 }
 
 const getTextAfterLastDot = str => {
@@ -541,53 +547,9 @@ const getTextAfterLastDot = str => {
   if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
   return str.slice(lastDotIndex + 1)
 }
-const getFileAry = () => {
-  fileQueue.value = []
-  for (var i = 0; i < fileAry.value.length; i++) {
-    const name = fileAry.value[i].originalFileName
-    fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById?id=' + fileAry.value[i].fileId, {
-      method: 'POST'
-    })
-      .then(response => {
-        // 从 Content-Disposition 中解析附件名
-        const disposition = response.headers.get('Content-Disposition')
-        let filename = 'default_filename' // 默认附件名
-        if (disposition && disposition.indexOf('filename=') !== -1) {
-          filename = disposition.split('filename=')[1].replace(/"/g, '')
-        }
-
-        // 获取二进制数据
-        return response.blob().then(blob => ({ blob, filename }))
-      })
-      .then(({ blob, filename }) => {
-        // 将 Blob 转换为 File 对象（类似 file.raw）
-        const file = new File([blob], filename, { type: blob.type })
-        const firstDecode = decodeURIComponent(file.name)
-        const fileOther = {
-          raw: file,
-          uid: file.lastModified,
-          size: file.size,
-          name: decodeURIComponent(firstDecode),
-          extension: getTextAfterLastDot(name),
-          progress: 100,
-          status: STATUS.SUCCESS,
-          cancel: null,
-          source: null
-        }
-        previewFileId.value = fileOther.uid
-        // 此时可以像处理 el-upload 的 file.raw 一样处理 file
-
-        fileQueue.value.push(fileOther)
-        handlePreview(fileQueue.value[0])
-      })
-      .catch(error => {
-        console.error('获取附件失败:', error)
-      })
-  }
-}
-const getFile = () => {
+const getFile = fileObj => {
   // 使用 POST 请求（与后端 @PostMapping 匹配）
-  fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById?id=' + fileObj.value.fileId, {
+  fetch(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileById?id=' + fileObj.id, {
     method: 'POST'
   })
     .then(response => {
@@ -609,43 +571,42 @@ const getFile = () => {
         uid: file.lastModified,
         size: file.size,
         name: decodeURIComponent(file.name),
-        extension: getTextAfterLastDot(fileObj.value.originalFileName),
-        progress: 100,
-        status: STATUS.SUCCESS,
+        extension: getTextAfterLastDot(file.name),
         cancel: null,
         source: null
       }
       previewFileId.value = fileOther.uid
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
-      fileQueue.value = []
-      fileQueue.value.push(fileOther)
       handlePreview(fileOther)
     })
     .catch(error => {
       console.error('获取附件失败:', error)
     })
 }
-const closeFile = () => {
-  dialogVisible.value = false
-}
 
-// 监听附件队列变化
-watch(
-  fileQueue,
-  newVal => {
-    if (newVal.length === 0) {
-      // 队列清空时强制重置预览
-      previewContent.value = null
-      previewType.value = ''
-      previewFileId.value = null
-    }
-  },
-  { deep: true }
-)
-defineExpose({ openFile, closeFile })
+defineExpose({ openFile })
 </script>
 
 <style scoped lang="less">
+/* 上传中状态样式 */
+.uploading-file {
+  background: rgba(0, 0, 0, 0.5) !important; /* 轨道背景颜色 */
+  /* 可添加加载动画 */
+  position: relative;
+  color: rgba(0, 0, 0, 0.1) !important;
+  div {
+    color: rgba(0, 0, 0, 0.1) !important;
+  }
+}
+.uploading-file::after {
+  content: '上传中...';
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #fff;
+}
 .pdf-wrapper {
   position: absolute;
   top: 0;
@@ -695,17 +656,17 @@ defineExpose({ openFile, closeFile })
   flex-direction: column;
   border: 1px solid #dcdfe6;
   .file_item {
-    width: 100%;
     height: 400px;
     overflow-y: auto;
     margin-top: 205px;
+    float: left;
   }
   .file_search {
-    width: calc(100% - 30px);
     margin-left: 15px;
     position: absolute;
     top: 10px;
     display: flex;
+    width: calc(100% - 30px);
     .file_left {
       display: flex;
       flex-direction: row;
@@ -767,27 +728,35 @@ defineExpose({ openFile, closeFile })
     width: calc(100% - 30px);
     margin-left: 15px;
     position: absolute;
-    top: 90px;
+    top: 85px;
   }
 }
 
 .file-item {
-  padding: 2px 12px 12px 12px;
   margin-bottom: 10px;
   border-radius: 6px;
   background: #f5f7fa;
   transition: all 0.3s;
-  width: calc(100% - 40px);
+  width: 15%;
+  float: left;
   margin-left: 14px;
-  margin-top: 15px;
   background-color: #fff;
   border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  font-size: 12px;
+  cursor: pointer;
   .file_img {
-    width: 42px;
-    height: 52px;
-    float: left;
-    margin-right: 10px;
-    margin-top: 10px;
+    width: 30px;
+    height: 37px;
+    margin-top: 4px;
+
     img {
       width: 100%;
       height: 100%;
@@ -801,9 +770,8 @@ defineExpose({ openFile, closeFile })
 
 .file-info {
   display: flex;
-  justify-content: space-between;
   margin-top: 8px;
-  align-items: center;
+  display: flex;
 }
 
 .filename {
@@ -811,8 +779,9 @@ defineExpose({ openFile, closeFile })
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #333;
-  font-size: 14px;
-  width: 200px;
+  font-size: 12px;
+  max-width: 100px;
+  padding-top: 4px;
 }
 
 .file-type {
@@ -833,16 +802,69 @@ defineExpose({ openFile, closeFile })
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  .file_text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding-left: 15px;
+    justify-content: center;
+    .text_title {
+      font-size: 16px;
+      color: #333333;
+      line-height: 30px;
+      max-width: 330px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .close_pre {
+      position: absolute;
+      right: 15px;
+      top: 18px;
+      width: 100px;
+      height: 30px;
+      border: 1px solid #1b6cff;
+      border-radius: 16px;
+      color: #1b6cff;
+      line-height: 30px;
+      text-align: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .text_list {
+      display: flex;
+      font-size: 12px;
+      color: #868686;
+    }
+  }
+  .btn_download {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    .download {
+      background-color: #1b6cff;
+      text-align: center;
+      height: 40px;
+      line-height: 40px;
+      width: 94%;
+      color: #fff;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  }
 }
 
 .preview-container {
-  height: 600px;
-  border: 1px solid #dcdfe6;
+  height: 480px;
   border-radius: 4px;
-  padding: 15px;
+  margin: 0 15px 15px 15px;
   overflow: auto;
   width: 450px;
+  background-color: #f8f9fb;
 }
 .preview-container::-webkit-scrollbar {
   width: 1px; /* 滚动条宽度 */

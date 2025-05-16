@@ -2111,9 +2111,23 @@ const cancelCurrentRequest = async val => {
     postFinal(obj, title, ob)
   }
 }
-
+const getPower = () => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  console.log(userInfo)
+  request
+    .post('/Files/permissionCheck?userId=' + userInfo.id)
+    .then(res => {
+      if (res.status) {
+        localStorage.setItem('powerList', res.data)
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
 const setlaw = () => {
   isLaw.value = localStorage.getItem('isLaw')
+  getPower()
 }
 // 组件挂载时订阅事件
 onMounted(() => {
