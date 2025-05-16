@@ -49,7 +49,7 @@
                   @click="changeType(0)"
                 >
                   上传时间
-                  <img :src="timeSort ? down : up" />
+                  <img :src="activeIndex === 0 ? (timeSort ? down : up) : sort" />
                 </div>
                 <div
                   class="active_item"
@@ -57,7 +57,7 @@
                   @click="changeType(1)"
                 >
                   文件名称
-                  <img :src="nameSort ? down : up" />
+                  <img :src="activeIndex === 1 ? (nameSort ? down : up) : sort" />
                 </div>
 
                 <div
@@ -66,7 +66,7 @@
                   @click="changeType(2)"
                 >
                   文件大小
-                  <img :src="sizeSort ? down : up" />
+                  <img :src="activeIndex === 2 ? (sizeSort ? down : up) : sort" />
                 </div>
               </div>
             </div>
@@ -192,6 +192,7 @@ import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
 import down from '@/assets/arrow_up.png'
 import up from '@/assets/arrow_down.png'
+import sort from '@/assets/sort.png'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import request from '@/utils/request' // 导入封装的 axios 方法
 import { Search } from '@element-plus/icons-vue'
@@ -362,23 +363,6 @@ const uploadSingleFile = async file => {
       })
   })
 }
-// 添加进度监控（网页[7]）
-//   axios
-//     .post(url, formData, {
-//       onUploadProgress: progress => {
-//         file.progress = Math.round((progress.loaded / progress.total) * 100)
-//       }
-//     })
-//     .then(res => {
-//       file.status = 'success'
-//       resolve()
-//     })
-//     .catch(err => {
-//       file.status = 'error'
-//       reject(err)
-//     })
-// })
-// }
 const uploadTimer = ref(null)
 // 附件添加处理
 const handleFileAdd = async uploadFile => {
