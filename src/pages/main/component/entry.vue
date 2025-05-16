@@ -29,7 +29,7 @@
         </div>
       </div>
       <div class="list_item" style="margin-left: 20px">
-        <div class="list_title">效率工具</div>
+        <div class="list_title">知识工坊</div>
         <div class="list_tip">办公学习必备</div>
         <div class="img_list">
           <div class="img_item" @click="changeType('tran')">
@@ -46,7 +46,7 @@
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 15px">
+          <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
               <div class="text_title">更多功能</div>
@@ -70,7 +70,7 @@
         </div>
       </div>
       <div class="list_item" style="margin-left: 20px">
-        <div class="list_title">效率工具</div>
+        <div class="list_title">知识工坊</div>
         <div class="list_tip">办公学习必备</div>
         <div class="img_list">
           <div class="img_item" @click="changeType('tran')">
@@ -87,7 +87,7 @@
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 15px">
+          <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
               <div class="text_title">更多功能</div>
@@ -254,7 +254,7 @@
         <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
         <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
         <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
-        <!-- <el-radio-button label="法务专题" value="法务专题">法务专题</el-radio-button> -->
+        <!-- <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button> -->
       </el-radio-group>
     </div>
     <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
@@ -274,7 +274,12 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
+        <div
+          class="tooltip-wrapper"
+          @mouseenter="showModelTip = true"
+          @mouseleave="showModelTip = false"
+          v-if="pageType === 'query' || pageType === 'it'"
+        >
           <img :src="deepType ? deepSelect : deep" class="arrow" @click="checkDeepType" style="margin-right: 10px" />
 
           <transition name="fade">
@@ -321,7 +326,7 @@
         <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
           <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过10M</div>
+            <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过50M</div>
           </transition>
         </div>
         <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -400,12 +405,15 @@
     </div>
   </div>
   <FileUpload ref="fileRef" @submit-tran="submitFileTran" @submit-final="submitFileFinal"></FileUpload>
+  <Knowledge ref="knowledge"></Knowledge>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import FileUpload from './fileUploadModal.vue'
+import Knowledge from './KnowledgeModal.vue'
+
 import { useShared } from '@/utils/useShared'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
@@ -467,9 +475,11 @@ const {
   currentQuestion,
   showFileTip,
   showModelTip,
-  fileInputAry
+  fileInputAry,
+  isLaw
 } = useShared()
 const fileRef = ref(null)
+const knowledge = ref(null)
 const arrList = ref([
   {
     index: 1,
@@ -539,7 +549,6 @@ const historyList = ref([
 const lanList = ref(['中文', '英文', '西班牙语', '越南语'])
 const dynamicRowFinal = ref(1)
 const isDeepShow = ref(false)
-
 const tranPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
@@ -557,6 +566,9 @@ const submitFileFinal = obj => {
 //   emit('submit-sampleFile', obj)
 // }
 
+const openKnowledge = () => {
+  // knowledge.value.openFile('')
+}
 const showFile = val => {
   if (activeIndex.value || activeIndex.value == 0) {
     if (val === 'tran') {
@@ -674,14 +686,11 @@ const changeDynamicRows = () => {
 // }
 
 // 组件挂载后初始化
-// onMounted(() => {
-//   nextTick(() => {
-//     adjustTextareaHeight(textareaInputSample.value) // 初始调整高度
-//     // getTopQuestion('通用模式')
-//     // getTopQuestion('人资行政专题')
-//     // getTopQuestion('IT专题')
-//   })
-// })
+onMounted(() => {
+  nextTick(() => {
+    isLaw.value = localStorage.getItem('isLaw')
+  })
+})
 defineExpose({ changeDynamicRows, fileRef })
 </script>
 

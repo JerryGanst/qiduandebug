@@ -30,7 +30,7 @@ handlePreview
                 <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
               </div>
               <div class="el-upload__subtext" v-if="type === 'sample'">
-                <span style="color: #868686">一次性最多上传五个附件,单个大小不超过10M</span>
+                <span style="color: #868686">一次性最多上传五个附件,单个大小不超过50M</span>
               </div>
               <div class="el-upload__subtext" v-else>
                 <span style="color: #868686">大小不超过50M</span>
@@ -608,7 +608,7 @@ defineExpose({ openFile, closeFile })
   display: flex;
   justify-content: center;
   margin-top: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 .custom-upload-dialog {
   height: 1200px;
@@ -636,7 +636,7 @@ defineExpose({ openFile, closeFile })
     width: 100%;
     height: 400px;
     overflow-y: auto;
-    margin-top: 156px;
+    margin-top: 115px;
   }
   .upload_list {
     width: calc(100% - 30px);
@@ -657,6 +657,7 @@ defineExpose({ openFile, closeFile })
   margin-top: 15px;
   background-color: #fff;
   border: 1px solid #eee;
+  cursor: pointer;
   .file_img {
     width: 42px;
     height: 52px;

@@ -76,6 +76,9 @@ const handleBeforeUnload = () => {
 }
 </script>
 <style lang="less">
+.el-upload {
+  --el-upload-dragger-padding-horizontal: 20px !important;
+}
 .el-dialog__close {
   font-size: 24px !important;
   margin-top: 10px !important;
@@ -111,6 +114,7 @@ body {
   padding-left: 10px !important;
   font-size: 12px !important;
   min-width: 20px !important;
+  display: none;
   .el-icon {
     display: none;
   }

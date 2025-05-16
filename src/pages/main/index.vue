@@ -1,7 +1,7 @@
 <template>
   <el-container class="container">
     <!-- 左侧栏 -->
-    <AsizeComponent @change-history="getHistory" ref="asizeRef"></AsizeComponent>
+    <AsizeComponent @change-history="getHistory" @set-isLaw="setlaw" ref="asizeRef"></AsizeComponent>
 
     <!-- 右侧内容 -->
     <el-container>
@@ -259,7 +259,7 @@
                 <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
                 <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
                 <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
-                <!-- <el-radio-button label="法务专题" value="法务专题">法务专题</el-radio-button> -->
+                <!-- <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button> -->
               </el-radio-group>
             </div>
             <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
@@ -278,7 +278,12 @@
               />
               <!-- 发送图标 -->
               <div class="send-icon">
-                <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
+                <div
+                  class="tooltip-wrapper"
+                  @mouseenter="showModelTip = true"
+                  @mouseleave="showModelTip = false"
+                  v-if="pageType === 'query' || pageType === 'it'"
+                >
                   <img
                     :src="deepType ? deepSelect : deep"
                     class="arrow"
@@ -376,7 +381,7 @@
                     style="margin-right: 10px"
                   />
                   <transition name="fade">
-                    <div v-if="showFileTip" class="tooltip">添加附件,单个大小不能超过10M</div>
+                    <div v-if="showFileTip" class="tooltip">添加附件,单个大小不能超过50M</div>
                   </transition>
                 </div>
                 <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -408,7 +413,7 @@
   </el-container>
   <!-- 弹窗 -->
 
-  <el-dialog v-model="commonVisible" title="评价" width="40%" :before-close="handleCommonClose">
+  <el-dialog v-model="commonVisible" title="评价" width="500px" :before-close="handleCommonClose">
     <el-input
       v-model="commonQuestion"
       placeholder="请输入您的宝贵建议"
@@ -495,13 +500,13 @@ const {
   showFileTip,
   showModelTip,
   fileAry,
-  fileInputAry
+  fileInputAry,
+  isLaw
 } = useShared()
 
 const queryIng = ref(false)
 const asizeRef = ref(null)
 const entryRef = ref(null)
-
 const sampleData = ref('')
 
 const commonQuestion = ref('')
@@ -2106,9 +2111,30 @@ const cancelCurrentRequest = async val => {
     postFinal(obj, title, ob)
   }
 }
+const getPower = () => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  console.log(userInfo)
+  request
+    .post('/Files/permissionCheck?userId=' + userInfo.id)
+    .then(res => {
+      if (res.status) {
+        localStorage.setItem('powerList', res.data)
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
+const setlaw = () => {
+  isLaw.value = localStorage.getItem('isLaw')
+  getPower()
+}
 // 组件挂载时订阅事件
 onMounted(() => {
   eventBus.on('submit-sampleFile', submitSampleFile)
+  nextTick(() => {
+    isLaw.value = localStorage.getItem('isLaw')
+  })
 })
 // 组件卸载时关闭 SSE 连接
 onBeforeUnmount(() => {
