@@ -1069,6 +1069,12 @@ const autoScroll = () => {
     }
   })
 }
+const quickJSONCheck = str => {
+  if (typeof str !== 'string') return false
+  str = str.trim()
+  return (str.startsWith('{') && str.endsWith('}')) || (str.startsWith('[') && str.endsWith(']'))
+}
+
 const submitSample = async (val, isRefresh) => {
   const fileInput = fileInputAry.value
   if (fileInput.length === 0 || !fileInput) {
@@ -1266,6 +1272,12 @@ const submitSample = async (val, isRefresh) => {
       ElMessage.error('服务器繁忙,请稍后再试')
       return
     }
+    // const answerData = res.json()
+    // console.log(answerData)
+    // if (res.data.code === 400) {
+    //   ElMessage.error(res.data.message)
+    //   return
+    // }
     const decoder = new TextDecoder() // 启用流模式解码
     let buffer = '' // 缓冲区用于存储不完整的数据
     let isFirstChunk = true // 标记是否为第一个数据块
@@ -1311,6 +1323,14 @@ const submitSample = async (val, isRefresh) => {
       // 使用更安全的分割方式（避免截断 JSON 结构）[3](@ref)
       const chunks = buffer.split(/(?=data:)/g)
       buffer = chunks.pop() || ''
+      // console.log(jsonData.code)
+      if (quickJSONCheck(buffer)) {
+        const jsonData = JSON.parse(buffer)
+        if (jsonData.code === 400) {
+          ElMessage.error('文本过长，请重新尝试')
+        }
+      }
+
       chunks.forEach(chunk => {
         // 1. 修复正则匹配语法
         const jsonMatch = chunk.match(/data:\s*({[\s\S]*?})(?=\ndata:|\n\n|$)/)
@@ -2113,7 +2133,6 @@ const cancelCurrentRequest = async val => {
 }
 const getPower = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-  console.log(userInfo)
   request
     .post('/Files/permissionCheck?userId=' + userInfo.id)
     .then(res => {
