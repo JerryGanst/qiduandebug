@@ -20,8 +20,8 @@
               <div class="file_select" v-else>个人知识库</div>
 
               <div class="file_info">
-                <span>共12项</span>
-                <span style="padding-left: 10px">存储空间 : 已使用6.5GB</span>
+                <span>共{{ total }}项</span>
+                <span style="padding-left: 10px">存储空间 : 已使用{{ totalSize }}{{ point }}</span>
               </div>
             </div>
           </div>
@@ -290,7 +290,7 @@ const deleteData = id => {
     })
     .then(res => {
       if (res.status) {
-        getFileList(permission.value, selectedKnow.value === 1 ? false : true)
+        getFileList()
       }
     })
     .catch(err => {
@@ -307,7 +307,6 @@ const handleDelete = (index, event) => {
   nextTick(() => {
     isPre.value = false
     deleteData(id)
-    // getFileList(permission.value, selectedKnow.value === 1 ? false : true)
   })
 }
 
@@ -328,7 +327,7 @@ const startAutoUpload = async () => {
     await Promise.all(uploadPromises)
 
     // 全部成功后刷新列表
-    getFileList(permission.value, selectedKnow.value === 1 ? false : true)
+    getFileList()
 
     // 清空队列
     // fileQueue.value = []
@@ -503,7 +502,24 @@ const changeType = val => {
   }
   getFileList()
 }
-
+const total = ref(0)
+const totalSize = ref(0)
+const point = ref('KB')
+const getInfo = val => {
+  total.value = fileQueue.value.length
+  let size = 0
+  for (var i = 0; i < fileQueue.value.length; i++) {
+    size = size + fileQueue.value[i].fileSize
+  }
+  if (size / 1024 < 1024) {
+    point.value = 'KB'
+    totalSize.value = (size / 1024).toFixed(1)
+  } else {
+    point.value = 'MB'
+    totalSize.value = (size / 1024 / 1024).toFixed(1)
+  }
+  console.log(fileQueue.value)
+}
 const checkKnow = val => {
   isPre.value = false
   if (val === 1) {
@@ -512,7 +528,7 @@ const checkKnow = val => {
     getFileList(permission.value, true)
   }
 }
-const getFileList = (val, isPublic) => {
+const getFileList = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
     .post('/Files/getFileListByUserId', {
@@ -526,7 +542,7 @@ const getFileList = (val, isPublic) => {
     .then(res => {
       if (res.status) {
         fileQueue.value = res.data
-        console.log(fileQueue.value)
+        getInfo()
       }
     })
     .catch(err => {
@@ -539,7 +555,7 @@ const openFile = (val, ary) => {
   const power = localStorage.getItem('powerList')
   permission.value = power.length > 0 ? power : ''
   isPower.value = permission.value ? true : false
-  getFileList(permission.value, false)
+  getFileList()
 }
 
 const getTextAfterLastDot = str => {
