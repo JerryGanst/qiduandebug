@@ -110,7 +110,7 @@
             :style="{ width: isPre ? '14.7%' : '8%', marginLeft: isPre ? '14px' : '13px' }"
           >
             <div class="file_img">
-              <img :src="pdf" />
+              <img :src="file.fileType === 'txt' ? text : file.fileType === 'pdf' ? pdf : word" />
             </div>
             <div class="filename" :style="{ width: isPre ? '90px' : '70px' }">{{ file.fileName }}</div>
             <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
@@ -526,6 +526,7 @@ const getFileList = () => {
     .then(res => {
       if (res.status) {
         fileQueue.value = res.data
+        console.log(fileQueue.value)
         getInfo()
       }
     })
