@@ -44,6 +44,7 @@
             </div>
             <div
               class="title_float"
+              :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
               v-if="
                 (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
                 currentObj.messages.type === 'final_answer'
@@ -557,6 +558,11 @@ const showListFile = val => {
   fileRefs.value.openFile('sample')
 }
 const showFileSample = val => {
+  console.log(isLogin.value)
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
   nextTick(() => {
     fileRefs.value.openFile(val, fileInputAry.value)
   })
@@ -829,6 +835,16 @@ const submitFinal = async (val, isRefresh, ob) => {
         }
 
         postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
+      } else {
+        console.log(res)
+        if (res.code === 400) {
+          const obj = {
+            question: passQuery,
+            answer: ''
+          }
+          postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
+          ElMessage.warning(res.message)
+        }
       }
     })
     .catch(err => {
@@ -1544,11 +1560,13 @@ const submitTran = async (val, isRefresh, obj) => {
       // showLoading: true
     })
     .then(res => {
+      console.log(res.status)
       currentRequestUrl.value = ''
       clearInterval(interval)
       nextTick(() => {
         adjustTextareaHeight('textareaInputTran')
       })
+      console.log(res.status)
       if (res.status) {
         transData.value = res.data
         const passData = {
@@ -1557,11 +1575,19 @@ const submitTran = async (val, isRefresh, obj) => {
         }
         postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
       } else {
-        ElMessage.warning(res.message)
+        if (res.code === 400) {
+          const passData = {
+            question: passQuery,
+            answer: ''
+          }
+          postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
+          ElMessage.warning(res.message)
+        }
       }
     })
 
     .catch(err => {
+      console.log(err)
       if (err.message !== 'canceled') {
         ElMessage.error('翻译失败' + err.message)
       }

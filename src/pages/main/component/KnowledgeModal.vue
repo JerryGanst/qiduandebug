@@ -110,9 +110,9 @@
             :style="{ width: isPre ? '14.7%' : '8%', marginLeft: isPre ? '14px' : '13px' }"
           >
             <div class="file_img">
-              <img :src="pdf" />
+              <img :src="file.fileType === 'txt' ? text : file.fileType === 'pdf' ? pdf : word" />
             </div>
-            <div class="filename" :style="{ width: isPre ? '90px' : '70px' }">{{ file.fileName }}</div>
+            <div class="originalFileName" :style="{ width: isPre ? '90px' : '70px' }">{{ file.originalFileName }}</div>
             <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
               {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
             </div>
@@ -247,9 +247,9 @@ const downloads = url => {
     link.href = url
     link.style.display = 'none'
     // 3. 从URL中提取文件名（可选）
-    const fileName = url.split('/').pop().split('?')[0] // 根据实际情况调整
+    const originalFileName = url.split('/').pop().split('?')[0] // 根据实际情况调整
     // 4. 设置下载属性（需配合CORS配置）
-    link.setAttribute('download', fileName)
+    link.setAttribute('download', originalFileName)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -262,7 +262,7 @@ const downloads = url => {
 const downloadFile = async val => {
   let id = ''
   for (var i = 0; i < fileQueue.value.length; i++) {
-    if (val.name === fileQueue.value[i].fileName) {
+    if (val.name === fileQueue.value[i].originalFileName) {
       id = fileQueue.value[i].id
     }
   }
@@ -374,7 +374,7 @@ const handleFileAdd = async uploadFile => {
     uid: uploadFile.uid,
     status: 'pending', // 新增状态字段
     fileSize: uploadFile.size,
-    fileName: uploadFile.name
+    originalFileName: uploadFile.name
   }
   fileQueue.value = [file, ...fileQueue.value]
   // 自动触发上传（网页[5]防抖优化）
@@ -484,9 +484,9 @@ const sortFiles = val => {
         break
       case 'name':
         if (isUp) {
-          compareValue = a.fileName.localeCompare(b.fileName, 'zh') // 数值比较[2,5](@ref)
+          compareValue = a.originalFileName.localeCompare(b.originalFileName, 'zh') // 数值比较[2,5](@ref)
         } else {
-          compareValue = b.fileName.localeCompare(a.fileName, 'zh') // 数值比较[2,5](@ref)
+          compareValue = b.originalFileName.localeCompare(a.originalFileName, 'zh') // 数值比较[2,5](@ref)
         }
         break
       default:
@@ -583,17 +583,17 @@ const getFile = fileObj => {
     .then(response => {
       // 从 Content-Disposition 中解析附件名
       const disposition = response.headers.get('Content-Disposition')
-      let filename = 'default_filename' // 默认附件名
+      let originalFileName = 'default_filename' // 默认附件名
       if (disposition && disposition.indexOf('filename=') !== -1) {
-        filename = disposition.split('filename=')[1].replace(/"/g, '')
+        originalFileName = disposition.split('filename=')[1].replace(/"/g, '')
       }
 
       // 获取二进制数据
-      return response.blob().then(blob => ({ blob, filename }))
+      return response.blob().then(blob => ({ blob, originalFileName }))
     })
-    .then(({ blob, filename }) => {
+    .then(({ blob, originalFileName }) => {
       // 将 Blob 转换为 File 对象（类似 file.raw）
-      const file = new File([blob], filename, { type: blob.type })
+      const file = new File([blob], originalFileName, { type: blob.type })
       const fileOther = {
         raw: file,
         uid: file.lastModified,
@@ -802,7 +802,7 @@ defineExpose({ openFile })
   display: flex;
 }
 
-.filename {
+.originalFileName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
