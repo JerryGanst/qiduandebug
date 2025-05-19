@@ -110,7 +110,7 @@
             :style="{ width: isPre ? '14.7%' : '8%', marginLeft: isPre ? '14px' : '13px' }"
           >
             <div class="file_img">
-              <img :src="file.fileType === 'txt' ? text : file.fileType === 'pdf' ? pdf : word" />
+              <img :src="pdf" />
             </div>
             <div class="filename" :style="{ width: isPre ? '90px' : '70px' }">{{ file.fileName }}</div>
             <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
@@ -235,7 +235,6 @@ const clearData = () => {
 }
 // 搜索方法
 const searchData = () => {
-  if (!searchText.value.trim()) return
   getFileList()
   // 调用后端接口或其他搜索逻辑
 }
@@ -377,34 +376,10 @@ const handleFileAdd = async uploadFile => {
     fileSize: uploadFile.size,
     fileName: uploadFile.name
   }
-  fileQueue.value = [...fileQueue.value, file]
+  fileQueue.value = [file, ...fileQueue.value]
   // 自动触发上传（网页[5]防抖优化）
   clearTimeout(uploadTimer.value)
   uploadTimer.value = setTimeout(startAutoUpload, 300)
-  // previewFileId.value = file.uid
-  // try {
-  //   previewFileId.value = file.uid
-  //   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-  //   const formData = new FormData()
-  //   formData.append('file', file.raw)
-  //   formData.append('userId', userInfo.id)
-  //   formData.append('target', permission.value)
-  //   formData.append('isPublic', selectedKnow.value === 2 ? true : false)
-
-  //   await axios.post(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileUpload', formData).then(res => {
-  //     if (res.data.status) {
-  //       fileQueue.value = fileQueue.value.map(f => (f.uid === file.uid ? { ...f, status: 'success' } : f))
-  //       getFileList(permission.value, selectedKnow.value === 1 ? false : true)
-  //     } else {
-  //       fileQueue.value = fileQueue.value.map(f => (f.uid === file.uid ? { ...f, status: 'error' } : f))
-  //       ElMessage.error(res.data.message)
-  //     }
-  //   })
-  // } catch (error) {
-  //   fileQueue.value = fileQueue.value.map(f => (f.uid === file.uid ? { ...f, status: 'error' } : f))
-  //   previewFileId.value = null
-  //   throw error
-  // }
 }
 
 const fileInfo = ref({})
@@ -476,14 +451,67 @@ const handlePreview = async file => {
   }
 }
 
+const sortFiles = val => {
+  const type = val === 0 ? 'time' : val === 1 ? 'name' : 'size'
+  const isUp = val === 0 ? timeSort.value : val === 1 ? nameSort.value : sizeSort.value
+  const data = JSON.parse(JSON.stringify(fileQueue.value))
+  return data.slice().sort((a, b) => {
+    // 1. 分离 pending 与非 pending 项
+    const aIsPending = a.status === 'pending'
+    const bIsPending = b.status === 'pending'
+
+    // pending项始终在前，且不参与后续排序[6](@ref)
+    if (aIsPending && !bIsPending) return -1
+    if (!aIsPending && bIsPending) return 1
+    if (aIsPending && bIsPending) return 0 // 两pending项保持原顺序
+    // 2. 非 pending 项按 type 和 sort 排序
+    let compareValue
+    switch (type) {
+      case 'time':
+        if (isUp) {
+          compareValue = new Date(a.createTime) - new Date(b.createTime) // 时间戳比较[3](@ref)
+        } else {
+          compareValue = new Date(b.createTime) - new Date(a.createTime) // 时间戳比较[3](@ref)
+        }
+
+        break
+      case 'size':
+        if (isUp) {
+          compareValue = a.fileSize - b.fileSize // 数值比较[2,5](@ref)
+        } else {
+          compareValue = b.fileSize - a.fileSize // 数值比较[2,5](@ref)
+        }
+        break
+      case 'name':
+        if (isUp) {
+          compareValue = a.fileName.localeCompare(b.fileName, 'zh') // 数值比较[2,5](@ref)
+        } else {
+          compareValue = b.fileName.localeCompare(a.fileName, 'zh') // 数值比较[2,5](@ref)
+        }
+        break
+      default:
+        compareValue = 0
+    }
+
+    // 3. 根据 sort 控制方向[1,4](@ref)
+    return compareValue
+  })
+}
+
 const changeType = val => {
   activeIndex.value = val
+  const hasPending = fileQueue.value.some(item => item.status === 'pending')
   if (val === 1) {
     nameSort.value = !nameSort.value
   } else if (val === 0) {
     timeSort.value = !timeSort.value
-  } else {
+  } else if (val === 2) {
     sizeSort.value = !sizeSort.value
+  }
+  if (hasPending) {
+    // sortFiles(val)
+    fileQueue.value = sortFiles(val)
+    return
   }
   getFileList()
 }
@@ -526,7 +554,6 @@ const getFileList = () => {
     .then(res => {
       if (res.status) {
         fileQueue.value = res.data
-        console.log(fileQueue.value)
         getInfo()
       }
     })

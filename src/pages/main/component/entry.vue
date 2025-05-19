@@ -49,8 +49,8 @@
           <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
-              <div class="text_title">更多功能</div>
-              <div class="text_content">开发中,敬请期待</div>
+              <div class="text_title">文件知识库</div>
+              <div class="text_content">部门和个人的专属网盘</div>
             </div>
           </div>
         </div>
@@ -90,8 +90,8 @@
           <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
-              <div class="text_title">更多功能</div>
-              <div class="text_content">开发中,敬请期待</div>
+              <div class="text_title">文件知识库</div>
+              <div class="text_content">部门和个人的专属网盘</div>
             </div>
           </div>
         </div>
@@ -567,7 +567,7 @@ const submitFileFinal = obj => {
 // }
 
 const openKnowledge = () => {
-  // knowledge.value.openFile('')
+  knowledge.value.openFile('')
 }
 const showFile = val => {
   if (activeIndex.value || activeIndex.value == 0) {
