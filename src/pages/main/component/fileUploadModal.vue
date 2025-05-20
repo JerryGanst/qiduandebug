@@ -542,6 +542,7 @@ const getFile = () => {
     .then(({ blob, filename }) => {
       // 将 Blob 转换为 File 对象（类似 file.raw）
       const file = new File([blob], filename, { type: blob.type })
+
       const fileOther = {
         raw: file,
         uid: file.lastModified,

@@ -558,7 +558,6 @@ const showListFile = val => {
   fileRefs.value.openFile('sample')
 }
 const showFileSample = val => {
-  console.log(isLogin.value)
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return false
@@ -836,7 +835,6 @@ const submitFinal = async (val, isRefresh, ob) => {
 
         postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
       } else {
-        console.log(res)
         if (res.code === 400) {
           const obj = {
             question: passQuery,
@@ -1164,62 +1162,62 @@ const submitSample = async (val, isRefresh) => {
       }
     }
   }
-  if (questions.value.includes(queryValue + '(sample)') && !isRefresh && mes.messages.length === 1) {
-    let titleStr = ''
-    for (var i = 0; i < fileInput.length; i++) {
-      titleStr += fileInput[i].originalFileName + ','
-    }
-    const qData = queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)'
-    for (var ms = 0; ms < questions.value.length; ms++) {
-      if (qData === questions.value[ms]) {
-        activeIndex.value = ms
-        asizeRef.value.queryAn(qData, '')
-        isSampleLoad.value = false
-        return
-      }
-    }
-  }
-  if (!isRefresh && mes.messages.length === 1) {
-    let titleStr = ''
-    let titleFile = ''
-    for (var i = 0; i < fileInput.length; i++) {
-      titleStr += fileInput[i].originalFileName + ','
-    }
-    for (var s = 0; s < answerList.value.length; s++) {
-      if (
-        answerList.value[s].type === '通用模式' &&
-        answerList.value[s].data[0].content &&
-        queryValue + titleStr.substring(0, titleStr.length - 1) ===
-          answerList.value[s].data[0].content +
-            (answerList.value[s].data[0].files
-              ? answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
-              : '')
-      ) {
-        activeIndex.value = s
-        asizeRef.value.queryAn(queryValue + '(sample)', '')
-        isSampleLoad.value = false
-        return
-      }
-    }
-  }
-  if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
-    const qData =
-      queryValue +
-      (answerList.value[activeIndex.value].data[0].files
-        ? answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',')
-        : '') +
-      '(sample)'
-    const index = questions.value.findIndex(item => item === qData)
-    const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    if (idx !== -1) {
-      answerList.value.splice(index, 1)
-    }
-    await asizeRef.value.deleteData(targetId, isRefresh)
-  }
+  // if (questions.value.includes(queryValue + '(sample)') && !isRefresh && mes.messages.length === 1) {
+  //   let titleStr = ''
+  //   for (var i = 0; i < fileInput.length; i++) {
+  //     titleStr += fileInput[i].originalFileName + ','
+  //   }
+  //   const qData = queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)'
+  //   for (var ms = 0; ms < questions.value.length; ms++) {
+  //     if (qData === questions.value[ms]) {
+  //       activeIndex.value = ms
+  //       asizeRef.value.queryAn(qData, '')
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //   }
+  // }
+  // if (!isRefresh && mes.messages.length === 1) {
+  //   let titleStr = ''
+  //   let titleFile = ''
+  //   for (var i = 0; i < fileInput.length; i++) {
+  //     titleStr += fileInput[i].originalFileName + ','
+  //   }
+  //   for (var s = 0; s < answerList.value.length; s++) {
+  //     if (
+  //       answerList.value[s].type === '通用模式' &&
+  //       answerList.value[s].data[0].content &&
+  //       queryValue + titleStr.substring(0, titleStr.length - 1) ===
+  //         answerList.value[s].data[0].content +
+  //           (answerList.value[s].data[0].files
+  //             ? answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
+  //             : '')
+  //     ) {
+  //       activeIndex.value = s
+  //       asizeRef.value.queryAn(queryValue + '(sample)', '')
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
+  //   const qData =
+  //     queryValue +
+  //     (answerList.value[activeIndex.value].data[0].files
+  //       ? answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',')
+  //       : '') +
+  //     '(sample)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   if (idx !== -1) {
+  //     answerList.value.splice(index, 1)
+  //   }
+  //   await asizeRef.value.deleteData(targetId, isRefresh)
+  // }
 
   const anList = JSON.parse(JSON.stringify(answerList.value))
   const hasId = anList.some(item => item.id === currentId.value)
@@ -1350,7 +1348,6 @@ const submitSample = async (val, isRefresh) => {
       chunks.forEach(chunk => {
         // 1. 修复正则匹配语法
         const jsonMatch = chunk.match(/data:\s*({[\s\S]*?})(?=\ndata:|\n\n|$)/)
-
         // 2. 添加条件判断包裹
         if (jsonMatch) {
           if (messageContainer.value) {
@@ -1377,7 +1374,6 @@ const submitSample = async (val, isRefresh) => {
                 assistantMsg.hasSplit = true
               }
             }
-
             // 立即更新视图（无需防抖）
             chatCurrent.messages.splice(-1, 1, {
               ...toRaw(assistantMsg),
@@ -1560,13 +1556,11 @@ const submitTran = async (val, isRefresh, obj) => {
       // showLoading: true
     })
     .then(res => {
-      console.log(res.status)
       currentRequestUrl.value = ''
       clearInterval(interval)
       nextTick(() => {
         adjustTextareaHeight('textareaInputTran')
       })
-      console.log(res.status)
       if (res.status) {
         transData.value = res.data
         const passData = {
@@ -1961,12 +1955,12 @@ const getHistory = async (id, page, val, ids) => {
               questions.value.push(answerList.value[i].title)
             }
           }
-          questions.value = questions.value.reduce((acc, current) => {
-            if (!acc.find(item => item === current)) {
-              acc.push(current)
-            }
-            return acc
-          }, [])
+          // questions.value = questions.value.reduce((acc, current) => {
+          //   if (!acc.find(item => item === current)) {
+          //     acc.push(current)
+          //   }
+          //   return acc
+          // }, [])
           for (var k = 0; k < answerList.value.length; k++) {
             const obj = {
               name: '',
