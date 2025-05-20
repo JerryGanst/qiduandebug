@@ -392,6 +392,7 @@ const handlePreview = async file => {
   try {
     isPre.value = true
     fileInfo.value = file
+    console.log(file)
     if (['txt'].includes(exception)) {
       // 处理文本附件
       const reader = new FileReader()
@@ -576,6 +577,7 @@ const getTextAfterLastDot = str => {
   return str.slice(lastDotIndex + 1)
 }
 const getFile = fileObj => {
+  console.log(fileObj)
   // 使用 POST 请求（与后端 @PostMapping 匹配）
   fetch(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileById?id=' + fileObj.id, {
     method: 'POST'
@@ -594,12 +596,13 @@ const getFile = fileObj => {
     .then(({ blob, originalFileName }) => {
       // 将 Blob 转换为 File 对象（类似 file.raw）
       const file = new File([blob], originalFileName, { type: blob.type })
+      console.log(file)
       const fileOther = {
         raw: file,
         uid: file.lastModified,
         size: file.size,
-        name: decodeURIComponent(file.name),
-        extension: getTextAfterLastDot(file.name),
+        name: decodeURIComponent(fileObj.originalFileName),
+        extension: getTextAfterLastDot(fileObj.originalFileName),
         cancel: null,
         source: null
       }
