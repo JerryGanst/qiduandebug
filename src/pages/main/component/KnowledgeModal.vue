@@ -686,9 +686,9 @@ defineExpose({ openFile })
   flex-direction: column;
   border: 1px solid #dcdfe6;
   .file_item {
-    height: 400px;
+    height: 420px;
     overflow-y: auto;
-    margin-top: 220px;
+    margin-top: 200px;
     float: left;
   }
   .file_search {

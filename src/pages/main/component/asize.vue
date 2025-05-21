@@ -603,10 +603,11 @@ const queryAn = (val, index, data) => {
       ) {
         pageType.value = 'sample'
         selectedMode.value = '通用模式'
-        chatQuery.messages = anList[j].data
+        const idx = anList.length === questions.value.length ? index : index - 1
+        chatQuery.messages = anList[idx].data
         chatQuery.isLoading = false
-        currentId.value = anList[j].id
-        deepType.value = anList[j].isThink
+        currentId.value = anList[idx].id
+        deepType.value = anList[idx].isThink
         nextTick(() => {
           // 滚动到底部
           if (messageContainer.value) {

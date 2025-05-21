@@ -1114,6 +1114,7 @@ const submitSample = async (val, isRefresh) => {
       filesSample.push(fileInput[me].fileId)
     }
   }
+
   const currentData = {
     role: 'user',
     content: queryValue ? queryValue : '',
@@ -1227,12 +1228,15 @@ const submitSample = async (val, isRefresh) => {
     for (var i = 0; i < fileInput.length; i++) {
       titleStr += fileInput[i].originalFileName + ','
     }
-    questions.value.unshift(queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)')
+    questions.value.unshift('新对话' + '(sample)')
     activeIndex.value = '0'
   }
   if (hasId) {
     id = currentId.value
     limitId.value = id
+    const index = answerList.value.findIndex(item => item.id === id)
+    console.log(index)
+    console.log(answerList.value)
     for (var k = 0; k < answerList.value.length; k++) {
       if (id === answerList.value[k].id) {
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
