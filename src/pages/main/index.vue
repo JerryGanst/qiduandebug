@@ -2540,7 +2540,6 @@ onUnmounted(() => {
           border-radius: 10px;
           float: right;
           color: #fff;
-          margin-top: 35px;
           max-width: 600px;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -2566,7 +2565,6 @@ onUnmounted(() => {
           border-radius: 10px;
           float: right;
           color: #fff;
-          margin-top: 35px;
           max-width: 600px;
           line-height: 24px;
           overflow: hidden;

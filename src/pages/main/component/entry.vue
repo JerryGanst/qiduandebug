@@ -193,7 +193,6 @@
           background-color: #eff6ff;
           display: flex;
           align-items: center;
-          margin-top: 34px;
           border-radius: 10px;
           cursor: pointer;
         "

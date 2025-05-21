@@ -745,9 +745,9 @@ defineExpose({ openFile })
             img {
               position: absolute;
               right: 3px;
-              top: 9px;
-              width: 14px;
-              height: 14px;
+              top: 8px;
+              width: 16px;
+              height: 16px;
             }
           }
         }
@@ -771,7 +771,7 @@ defineExpose({ openFile })
   float: left;
   margin-left: 14px;
   background-color: #fff;
-  border: 1px solid #eee;
+  // border: 1px solid #eee;
   display: flex;
   flex-direction: column;
   align-items: center;
