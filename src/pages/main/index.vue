@@ -1235,8 +1235,6 @@ const submitSample = async (val, isRefresh) => {
     id = currentId.value
     limitId.value = id
     const index = answerList.value.findIndex(item => item.id === id)
-    console.log(index)
-    console.log(answerList.value)
     for (var k = 0; k < answerList.value.length; k++) {
       if (id === answerList.value[k].id) {
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')

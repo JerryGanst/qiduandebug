@@ -688,7 +688,7 @@ defineExpose({ openFile })
   .file_item {
     height: 420px;
     overflow-y: auto;
-    margin-top: 200px;
+    margin-top: 220px;
     float: left;
   }
   .file_search {

@@ -217,9 +217,9 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.el-icon {
-  color: #707070 !important;
-}
+// .el-icon {
+//   color: #707070 !important;
+// }
 .el-radio__input.is-checked .el-radio__inner {
   background: #1b6cff !important;
   border-color: #1b6cff !important;
