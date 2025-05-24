@@ -595,6 +595,7 @@ const getFileList = () => {
 const openFile = (val, ary) => {
   dialogVisible.value = true
   isPre.value = false
+  knowOptions.value = []
   const powerList = localStorage.getItem('powerList')
   console.log(powerList)
   if (powerList) {
