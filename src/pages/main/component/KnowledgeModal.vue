@@ -45,7 +45,10 @@
               <div class="active">
                 <div
                   class="active_item"
-                  :style="{ background: activeIndex === 0 ? '#E6F4FF' : '' }"
+                  :style="{
+                    background: activeIndex === 0 ? '#E6F4FF' : '',
+                    color: activeIndex === 0 ? '#1B6CFF' : '#9D9D9D'
+                  }"
                   @click="changeType(0)"
                 >
                   上传时间
@@ -53,7 +56,10 @@
                 </div>
                 <div
                   class="active_item"
-                  :style="{ background: activeIndex === 1 ? '#E6F4FF' : '' }"
+                  :style="{
+                    background: activeIndex === 1 ? '#E6F4FF' : '',
+                    color: activeIndex === 1 ? '#1B6CFF' : '#9D9D9D'
+                  }"
                   @click="changeType(1)"
                 >
                   文件名称
@@ -62,7 +68,10 @@
 
                 <div
                   class="active_item"
-                  :style="{ background: activeIndex === 2 ? '#E6F4FF' : '' }"
+                  :style="{
+                    background: activeIndex === 2 ? '#E6F4FF' : '',
+                    color: activeIndex === 2 ? '#1B6CFF' : '#9D9D9D'
+                  }"
                   @click="changeType(2)"
                 >
                   文件大小
@@ -290,11 +299,17 @@ const deleteData = id => {
       isPublic: selectedKnow.value === 1 ? false : true
     })
     .then(res => {
+      console.log(res)
       if (res.status) {
         getFileList()
       }
     })
     .catch(err => {
+      console.log(err)
+      ElMessage.error({
+        message: '删除失败,请稍后再试',
+        duration: 3000 // 显示3秒
+      })
       console.error(err)
     })
 }

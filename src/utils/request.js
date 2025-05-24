@@ -38,6 +38,7 @@ class Request {
           }
           return response
         } else {
+          console.log(response)
           if (response.data.code !== 200 && response.data.code !== 400) {
             if (response.data.code === 429) {
               ElMessage.error({
@@ -45,6 +46,7 @@ class Request {
                 duration: 3000 // 显示3秒
               })
             } else {
+              console.log(1234)
               return Promise.reject(new Error(response.data.message || 'Request failed'))
             }
           }

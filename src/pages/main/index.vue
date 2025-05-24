@@ -27,6 +27,7 @@
             ref="entryRef"
           ></Entry>
         </div>
+
         <div v-else class="center-container" style="padding-top: 0px">
           <div class="main_content" style="width: 860px">
             <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'" class="title_tiQuery">
