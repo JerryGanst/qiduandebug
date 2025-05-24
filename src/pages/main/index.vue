@@ -415,7 +415,13 @@
   </el-container>
   <!-- 弹窗 -->
 
-  <el-dialog v-model="commonVisible" title="评价" width="500px" :before-close="handleCommonClose">
+  <el-dialog
+    v-model="commonVisible"
+    title="评价"
+    width="500px"
+    :before-close="handleCommonClose"
+    style="border-radius: 10px"
+  >
     <el-input
       v-model="commonQuestion"
       placeholder="请输入您的宝贵建议"

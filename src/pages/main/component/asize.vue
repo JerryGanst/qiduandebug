@@ -2,6 +2,7 @@
   <el-aside :width="isCollapsed ? '60px' : '280px'" class="aside">
     <div class="aside_left">
       <img class="aside_left_img" src="@/assets/logo.png" />
+      <img class="aside_left_file" src="@/assets/upload_file.png" @click="toFile" />
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
         <el-avatar
@@ -127,7 +128,7 @@
   <div class="foldable" :style="{ left: isCollapsed ? '70px' : '290px' }">
     <img :src="isCollapsed ? right : left" @click="toggleCollapse" />
   </div>
-  <el-dialog v-model="dialogVisible" title="" width="400px" :before-close="handleClose">
+  <el-dialog v-model="dialogVisible" title="" width="400px" :before-close="handleClose" style="border-radius: 10px">
     <div class="login_title">
       <span><img src="@/assets/logo2.png" /></span>
       <span>立讯技术百事通</span>
@@ -169,7 +170,13 @@
       </el-form-item>
     </el-form>
   </el-dialog>
-  <el-dialog v-model="titleVisible" title="编辑名称" width="500px" :before-close="handleTitleClose">
+  <el-dialog
+    v-model="titleVisible"
+    title="编辑名称"
+    width="500px"
+    :before-close="handleTitleClose"
+    style="border-radius: 10px"
+  >
     <el-input
       v-model="titleQuestion"
       placeholder="请输入标题名称"
@@ -183,6 +190,7 @@
       <el-button type="primary" @click="submitTitle" style="width: 100px; height: 40px">确定</el-button>
     </div>
   </el-dialog>
+  <commonModal ref="commonLedge"></commonModal>
 </template>
 <script setup>
 import { ref, onMounted, computed, nextTick, reactive } from 'vue'
@@ -197,6 +205,7 @@ import foldRight from '@/assets/fold_right.svg'
 import left from '@/assets/159@2x.png'
 import right from '@/assets/162@2x.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
+import commonModal from './commonUploadModal.vue'
 const isCollapsed = ref(false) // 左上角折叠控制
 const showPopup = ref(false) // 是否展示左下角用户信息弹窗
 const dialogVisible = ref(false) // 是否展示登录弹窗
@@ -783,7 +792,14 @@ onMounted(() => {
     }
   }
 })
-
+const commonLedge = ref(null)
+const toFile = () => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  commonLedge.value.openFile('')
+}
 // 计算属性，处理左侧栏历史记录的数据
 const processedQuerys = computed(() => {
   return questions.value.map(query => {
@@ -842,6 +858,13 @@ defineExpose({ queryAn, deleteData })
   display: flex;
   position: relative; /* 为子元素绝对定位提供参考 */
   overflow: hidden; /* 隐藏溢出的内容 */
+  .aside_left_file {
+    position: absolute;
+    width: 35px;
+    height: 28px;
+    top: 75px;
+    cursor: pointer;
+  }
   .aside_left {
     width: 60px;
     height: 44px;
@@ -854,6 +877,7 @@ defineExpose({ queryAn, deleteData })
       width: 36px;
       height: 36px;
     }
+
     .noLogin {
       font-size: 14px;
       cursor: pointer;

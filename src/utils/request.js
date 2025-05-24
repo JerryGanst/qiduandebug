@@ -45,9 +45,6 @@ class Request {
                 message: '服务器繁忙,请稍后再试',
                 duration: 3000 // 显示3秒
               })
-            } else {
-              console.log(1234)
-              return Promise.reject(new Error(response.data.message || 'Request failed'))
             }
           }
 

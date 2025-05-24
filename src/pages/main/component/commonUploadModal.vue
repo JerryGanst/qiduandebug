@@ -1,23 +1,23 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="文件知识库"
-    width="1280px"
+    title="公共知识库"
+    width="100%"
+    height="100%"
     class="custom-upload-dialog"
-    style="margin-top: 3vh; border-radius: 10px"
+    style="height: 100%; margin: 0px; border-radius: 0px"
   >
     <div class="upload-layout">
       <!-- 左侧附件列表 -->
-      <div class="file-list" :style="{ width: isPre ? '735px' : '100%' }">
+      <div class="file-list" :style="{ width: isPre ? '50%' : '100%' }">
         <div class="file_search">
           <div class="file_left">
             <div class="file_content">
-              <div class="file_select" v-if="isPower">
-                <el-select v-model="selectedKnow" placeholder="请选择知识库" @change="checkKnow">
+              <div class="file_select">
+                <el-select v-model="selectedKnow" placeholder="请选择部门知识库" @change="checkKnow">
                   <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </div>
-              <div class="file_select" v-else>个人知识库</div>
 
               <div class="file_info">
                 <span>共{{ total }}项</span>
@@ -160,8 +160,11 @@
           v-if="previewFileId"
           class="preview-container"
           :key="previewFileId"
-          style="height: 480px; margin: 15px"
-          :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
+          style="height: calc(100% - 140px); margin: 15px"
+          :style="{
+            height: previewFileId ? 'calc(100% - 140px)' : 'calc(100% - 190px)',
+            margin: previewFileId ? '0 15px 10px 15px' : '15px'
+          }"
         >
           <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px">
             <pre>{{ previewContent }}</pre>
@@ -175,7 +178,10 @@
         <div
           v-else="previewFileId"
           class="preview-container"
-          :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
+          :style="{
+            height: previewFileId ? 'calc(100% - 140px)' : 'calc(100% - 190px)',
+            margin: previewFileId ? '0 15px 10px 15px' : '15px'
+          }"
         >
           <div style="width: 100%; display: flex; justify-content: center; margin-top: 154px">
             <img src="@/assets/no-file.png" style="width: 150px; height: 150px" />
@@ -213,18 +219,16 @@ const previewContent = ref(null)
 const previewType = ref('')
 const previewFileId = ref(null)
 const isPre = ref(false)
-const selectedKnow = ref(1)
-const isPower = ref(true)
-const permission = ref([])
+const selectedKnow = ref('IT')
 const knowOptions = ref([
-  {
-    value: 1,
-    label: '个人知识库'
-  },
-  {
-    value: 2,
-    label: '公共知识库'
-  }
+  // {
+  //   value: 'IT',
+  //   label: 'IT知识库'
+  // },
+  // {
+  //   value: 'HR',
+  //   label: '人资行政知识库'
+  // }
 ])
 
 // 常量定义
@@ -295,13 +299,16 @@ const deleteData = id => {
     .post('/Files/knowledgeFileDelete', {
       file: idList,
       userId: userInfo.id,
-      target: permission.value,
-      isPublic: selectedKnow.value === 1 ? false : true
+      target: selectedKnow.value,
+      isPublic: true
     })
     .then(res => {
       console.log(res)
       if (res.status) {
         getFileList()
+      } else {
+        console.log(res)
+        ElMessage.error(res.message)
       }
     })
     .catch(err => {
@@ -358,8 +365,8 @@ const uploadSingleFile = async file => {
     const formData = new FormData()
     formData.append('file', file.raw)
     formData.append('userId', userInfo.id)
-    formData.append('target', permission.value)
-    formData.append('isPublic', selectedKnow.value === 2 ? true : false)
+    formData.append('target', selectedKnow.value)
+    formData.append('isPublic', true)
     axios
       .post(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileUpload', formData, {
         onUploadProgress: progress => {
@@ -371,6 +378,8 @@ const uploadSingleFile = async file => {
           file.status = 'success'
           resolve()
         } else {
+          console.log(res)
+          ElMessage.error(res.data.message)
           file.status = 'error'
           reject(err)
         }
@@ -550,9 +559,9 @@ const getInfo = val => {
 const checkKnow = val => {
   isPre.value = false
   if (val === 1) {
-    getFileList(permission.value, false)
+    getFileList(selectedKnow.value, false)
   } else {
-    getFileList(permission.value, true)
+    getFileList(selectedKnow.value, true)
   }
 }
 const getFileList = () => {
@@ -560,28 +569,55 @@ const getFileList = () => {
   request
     .post('/Files/getFileListByUserId', {
       userId: userInfo.id,
-      target: permission.value,
-      isPublic: selectedKnow.value === 1 ? false : true,
+      target: selectedKnow.value,
+      isPublic: true,
       sortType: activeIndex.value === 0 ? 'time' : activeIndex.value === 1 ? 'name' : 'size',
       increase: activeIndex.value === 0 ? timeSort.value : activeIndex.value === 1 ? nameSort.value : sizeSort.value,
       keywords: searchText.value
     })
     .then(res => {
+      console.log(res)
       if (res.status) {
         fileQueue.value = res.data
         getInfo()
+      } else {
+        fileQueue.value = []
+        ElMessage.error(res.message)
       }
     })
     .catch(err => {
+      console.log(err.Error)
+      fileQueue.value = []
+      ElMessage.error(err)
       console.error(err)
     })
 }
 const openFile = (val, ary) => {
   dialogVisible.value = true
   isPre.value = false
-  const power = localStorage.getItem('powerList')
-  permission.value = power.length > 0 ? power : ''
-  isPower.value = permission.value ? true : false
+  const powerList = localStorage.getItem('powerList')
+  console.log(powerList)
+  if (powerList) {
+    const ary = powerList.split(',')
+    for (var i = 0; i < ary.length; i++) {
+      const obj = {
+        value: '',
+        label: ''
+      }
+      obj.value = ary[i]
+      obj.label =
+        ary[i] === 'IT'
+          ? 'IT知识库'
+          : ary[i] === 'HR'
+            ? '人资行政知识库'
+            : ary[i] === 'Law'
+              ? '法务知识库'
+              : '热传知识库'
+      knowOptions.value.push(obj)
+    }
+    selectedKnow.value = ary[0]
+    console.log(ary)
+  }
   getFileList()
 }
 
@@ -678,10 +714,6 @@ defineExpose({ openFile })
   margin-top: 20px;
   margin-bottom: 5px;
 }
-.custom-upload-dialog {
-  height: 1200px;
-  --el-dialog-margin-top: 5vh;
-}
 
 .upload-layout {
   display: flex;
@@ -690,8 +722,8 @@ defineExpose({ openFile })
 }
 
 .file-list {
-  width: 735px;
-  height: 630px;
+  width: 50%;
+  height: calc(100vh - 80px);
   border-radius: 4px;
 
   overflow-y: hidden;
@@ -701,7 +733,7 @@ defineExpose({ openFile })
   flex-direction: column;
   border: 1px solid #dcdfe6;
   .file_item {
-    height: 420px;
+    height: calc(100% - 230px);
     overflow-y: auto;
     margin-top: 220px;
     float: left;
@@ -844,11 +876,11 @@ defineExpose({ openFile })
 }
 
 .upload-area {
-  flex: 1;
   display: flex;
   flex-direction: column;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
+  width: calc(50% - 20px);
   .file_text {
     display: flex;
     flex: 1;
@@ -904,13 +936,18 @@ defineExpose({ openFile })
 }
 
 .preview-container {
-  height: 480px;
+  height: calc(100% - 140px);
   border-radius: 4px;
   margin: 0 15px 15px 15px;
-  overflow: auto;
-  width: 450px;
+  overflow: hidden;
   background-color: #f8f9fb;
+  max-height: 900px;
+  /* 屏幕宽度 ≤600px 时文字变红 */
+  @media (max-height: 800px) {
+    max-height: 560px;
+  }
 }
+
 .preview-container::-webkit-scrollbar {
   width: 1px; /* 滚动条宽度 */
 }
@@ -936,5 +973,17 @@ defineExpose({ openFile })
   color: #909399;
   text-align: center;
   padding: 50px 0;
+}
+::v-deep .custom-upload-dialog {
+  overflow-y: hidden;
+  .el-dialog {
+    height: 100vh !important;
+    margin: 0 !important;
+    overflow-y: hidden;
+    .el-dialog__body {
+      height: calc(100vh - 120px); // 减去头部和底部高度
+      overflow-y: hidden;
+    }
+  }
 }
 </style>

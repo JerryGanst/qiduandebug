@@ -148,7 +148,7 @@ body {
   }
 }
 .el-dialog {
-  border-radius: 10px !important;
+  border-radius: 10px;
 }
 /* WebKit 浏览器滚动条样式 */
 .el-menu::-webkit-scrollbar {

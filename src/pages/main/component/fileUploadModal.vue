@@ -5,7 +5,7 @@ handlePreview
     title="附件上传"
     width="1100px"
     class="custom-upload-dialog"
-    style="margin-top: 3vh"
+    style="margin-top: 3vh; border-radius: 10px"
   >
     <div class="upload-layout">
       <!-- 左侧附件列表 -->
