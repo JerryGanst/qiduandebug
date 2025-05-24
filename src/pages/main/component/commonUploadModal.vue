@@ -940,7 +940,6 @@ defineExpose({ openFile })
   height: calc(100% - 140px);
   border-radius: 4px;
   margin: 0 15px 15px 15px;
-  overflow-x: hidden;
   overflow-y: auto;
   background-color: #f8f9fb;
   max-height: 560px;
