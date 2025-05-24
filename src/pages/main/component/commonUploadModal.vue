@@ -941,6 +941,7 @@ defineExpose({ openFile })
   border-radius: 4px;
   margin: 0 15px 15px 15px;
   overflow: hidden;
+  overflow-y: auto;
   background-color: #f8f9fb;
   max-height: 900px;
   /* 屏幕宽度 ≤600px 时文字变红 */
