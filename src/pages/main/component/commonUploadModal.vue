@@ -597,7 +597,6 @@ const openFile = (val, ary) => {
   isPre.value = false
   knowOptions.value = []
   const powerList = localStorage.getItem('powerList')
-  console.log(powerList)
   if (powerList) {
     const ary = powerList.split(',')
     for (var i = 0; i < ary.length; i++) {

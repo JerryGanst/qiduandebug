@@ -38,6 +38,33 @@ handlePreview
             </div>
           </el-upload>
         </div>
+        <div
+          v-if="type === 'sample'"
+          style="position: absolute; top: 130px; width: 100%; padding: 0 15px; box-sizing: border-box; display: flex"
+        >
+          <el-select v-model="selectedKnow" placeholder="请选择知识库" @change="checkKnow">
+            <el-option v-for="item in knowList" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+          <el-select
+            v-model="selectedMode"
+            @change="checkKnow"
+            placeholder="请选择模块"
+            style="margin-left: 10px"
+            :disabled="selectedKnow === 1"
+          >
+            <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+          <el-select
+            v-model="selectedFile"
+            placeholder="请选择文件"
+            style="margin-left: 10px"
+            filterable
+            :filter-method="filterMethod"
+            @change="changeFile"
+          >
+            <el-option v-for="item in filteredOptions" :key="item.id" :label="item.fileName" :value="item.id" />
+          </el-select>
+        </div>
         <div class="file_item">
           <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
             <div class="file_img">
@@ -162,6 +189,22 @@ const STATUS = {
   SUCCESS: 'success',
   ERROR: 'error'
 }
+const selectedKnow = ref(1)
+const selectedMode = ref('')
+const selectedFile = ref([])
+const fileOptions = ref([])
+const knowList = ref([
+  {
+    value: 1,
+    label: '个人知识库'
+  },
+  {
+    value: 2,
+    label: '通用知识库'
+  }
+])
+const selectedValues = ref([]) // 存储选中的值（数组）
+const knowOptions = ref([])
 const allowedFileTypes = '.doc,.docx,.txt,.pdf'
 // 颜色映射
 const statusColors = {
@@ -218,6 +261,7 @@ const hasPendingFiles = computed(() => {
   return fileQueue.value.some(file => [STATUS.PENDING, STATUS.ERROR].includes(file.status))
 })
 const startUpload = async file => {
+  console.log(fileQueue.value)
   if (fileQueue.value.length === 0) {
     ElMessage.warning('请先上传附件再提交')
     return
@@ -256,6 +300,7 @@ const startUpload = async file => {
               file[i].progress = 100
               ary.push(res.data?.data[0])
               if (i === fileQueue.value.length - 1) {
+                console.log(ary)
                 eventBus.emit('submit-sampleFile', ary)
               }
             } else {
@@ -336,7 +381,32 @@ const checkFileSize = file => {
 
   return isLt10M
 }
-
+const changeFile = async file => {
+  console.log(fileQueue.value)
+  console.log(fileOptions.value)
+  try {
+    for (var i = 0; i < fileOptions.value.length; i++) {
+      if (fileOptions.value[i].id === file) {
+        const obj = {
+          cancel: null,
+          extension: fileOptions.value[i].fileType,
+          name: fileOptions.value[i].fileName,
+          raw: await getSampleFile(fileOptions.value[i].id),
+          percentage: 0,
+          progress: '',
+          size: fileOptions.value[i].fileSize,
+          source: null,
+          status: 'pending',
+          uid: fileOptions.value[i].id
+        }
+        fileQueue.value.push(obj)
+      }
+    }
+    // 在这里使用 raw 进行后续操作
+  } catch (error) {
+    console.error('Error:', error)
+  }
+}
 // 兼容Element原生状态类型
 const getStatusType = status => {
   return status === STATUS.ERROR ? 'exception' : status === STATUS.SUCCESS ? 'success' : undefined
@@ -394,16 +464,23 @@ const retryUpload = file => {
 
 // 附件预览处理
 const handlePreview = async file => {
+  console.log(file)
   if (!file) {
     return
   }
+  console.log(file)
   try {
     if (['txt'].includes(file.extension)) {
       // 处理文本附件
       const reader = new FileReader()
-      reader.onload = e => {
+      reader.onload = async function (e) {
+        await nextTick()
         previewContent.value = e.target.result
         previewType.value = 'text'
+        previewFileId.value = 123
+        console.log(e.target.result)
+        console.log(previewContent.value)
+        console.log(previewType.value)
       }
 
       reader.readAsText(file.raw)
@@ -435,6 +512,7 @@ const handlePreview = async file => {
         </div>
       `
       previewType.value = 'html'
+      previewFileId.value = 123
 
       // 处理图片显示（如果需要）
       result.messages.forEach(message => {})
@@ -442,6 +520,7 @@ const handlePreview = async file => {
       // 生成PDF的Blob URL并预览
       const pdfUrl = URL.createObjectURL(file.raw)
       previewContent.value = pdfUrl
+      previewFileId.value = 123
       previewType.value = 'pdf'
 
       // 在组件销毁或关闭预览时记得释放URL
@@ -457,6 +536,52 @@ const handlePreview = async file => {
   }
 }
 
+const checkKnow = () => {
+  selectedFile.value = []
+  fileOptions.value = []
+  if (selectedKnow.value === 2) {
+    if (selectedMode.value) {
+      getFileList()
+    }
+  } else {
+    getFileList()
+  }
+}
+const searchQuery = ref('')
+
+// 计算属性，根据搜索条件过滤选项
+const filteredOptions = computed(() => {
+  if (!searchQuery.value) {
+    return fileOptions.value
+  }
+  return fileOptions.value.filter(item => item.fileName.toLowerCase().includes(searchQuery.value.toLowerCase()))
+})
+
+// 过滤方法
+const filterMethod = query => {
+  searchQuery.value = query
+  console.log(searchQuery.value)
+}
+const getFileList = () => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  request
+    .post('/Files/getFileListByUserId', {
+      userId: userInfo.id,
+      target: selectedMode.value,
+      isPublic: selectedKnow.value === 1 ? false : true,
+      sortType: 'time',
+      increase: true,
+      keywords: ''
+    })
+    .then(res => {
+      if (res.status) {
+        fileOptions.value = res.data
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
 const openFile = (val, ary) => {
   dialogVisible.value = true
   type.value = val
@@ -464,6 +589,27 @@ const openFile = (val, ary) => {
     if (ary) {
       fileAry.value = ary
     }
+    const powerList = localStorage.getItem('powerList')
+    if (powerList) {
+      const ary = powerList.split(',')
+      for (var i = 0; i < ary.length; i++) {
+        const obj = {
+          value: '',
+          label: ''
+        }
+        obj.value = ary[i]
+        obj.label =
+          ary[i] === 'IT'
+            ? 'IT知识库'
+            : ary[i] === 'HR'
+              ? '人资行政知识库'
+              : ary[i] === 'Law'
+                ? '法务知识库'
+                : '热传知识库'
+        knowOptions.value.push(obj)
+      }
+    }
+    getFileList()
     getFileAry()
   } else {
     if (fileObj.value) {
@@ -522,6 +668,26 @@ const getFileAry = () => {
         console.error('获取附件失败:', error)
       })
   }
+}
+const getSampleFile = id => {
+  return fetch(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileById?id=' + id, {
+    method: 'POST'
+  })
+    .then(response => {
+      const disposition = response.headers.get('Content-Disposition')
+      let filename = 'default_filename'
+      if (disposition && disposition.indexOf('filename=') !== -1) {
+        filename = disposition.split('filename=')[1].replace(/"/g, '')
+      }
+      return response.blob().then(blob => ({ blob, filename }))
+    })
+    .then(({ blob, filename }) => {
+      return new File([blob], filename, { type: blob.type })
+    })
+    .catch(error => {
+      console.error('获取附件失败:', error)
+      throw error // 重新抛出错误以便外部捕获
+    })
 }
 const getFile = () => {
   // 使用 POST 请求（与后端 @PostMapping 匹配）
@@ -635,9 +801,9 @@ defineExpose({ openFile, closeFile })
   border: 1px solid #dcdfe6;
   .file_item {
     width: 100%;
-    height: 400px;
+    height: 350px;
     overflow-y: auto;
-    margin-top: 115px;
+    margin-top: 175px;
   }
   .upload_list {
     width: calc(100% - 30px);

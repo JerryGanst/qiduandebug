@@ -214,7 +214,7 @@ const previewType = ref('')
 const previewFileId = ref(null)
 const isPre = ref(false)
 const selectedKnow = ref(1)
-const isPower = ref(true)
+const isPower = ref(false)
 const permission = ref([])
 const knowOptions = ref([
   {
@@ -581,7 +581,8 @@ const openFile = (val, ary) => {
   isPre.value = false
   const power = localStorage.getItem('powerList')
   permission.value = power.length > 0 ? power : ''
-  isPower.value = permission.value ? true : false
+  // isPower.value = permission.value ? true : false
+  isPower.value = false
   getFileList()
 }
 
