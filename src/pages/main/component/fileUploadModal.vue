@@ -590,6 +590,11 @@ const openFile = (val, ary) => {
       fileAry.value = ary
     }
     const powerList = localStorage.getItem('powerList')
+    knowOptions.value = []
+    selectedKnow.value = 1
+    selectedMode.value = ''
+    selectedFile.value = []
+    fileOptions.value = []
     if (powerList) {
       const ary = powerList.split(',')
       for (var i = 0; i < ary.length; i++) {
