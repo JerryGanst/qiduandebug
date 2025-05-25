@@ -3,7 +3,7 @@ handlePreview
   <el-dialog
     v-model="dialogVisible"
     title="附件上传"
-    width="1100px"
+    width="1200px"
     class="custom-upload-dialog"
     style="margin-top: 3vh; border-radius: 10px"
   >
@@ -65,7 +65,7 @@ handlePreview
             <el-option v-for="item in filteredOptions" :key="item.id" :label="item.fileName" :value="item.id" />
           </el-select>
         </div>
-        <div class="file_item">
+        <div class="file_item" :style="{ marginTop: type === 'sample' ? '160px' : '115px' }">
           <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
             <div class="file_img">
               <img :src="file.extension === 'txt' ? text : file.extension === 'pdf' ? pdf : word" />
@@ -382,8 +382,11 @@ const checkFileSize = file => {
   return isLt10M
 }
 const changeFile = async file => {
-  console.log(fileQueue.value)
-  console.log(fileOptions.value)
+  if (fileQueue.value.length >= 5) {
+    selectedFile.value = []
+    ElMessage.warning('一次性最多上传五个文件')
+    return
+  }
   try {
     for (var i = 0; i < fileOptions.value.length; i++) {
       if (fileOptions.value[i].id === file) {
@@ -400,6 +403,17 @@ const changeFile = async file => {
           uid: fileOptions.value[i].id
         }
         fileQueue.value.push(obj)
+        fileQueue.value = fileQueue.value.reduce((acc, current) => {
+          const isExist = acc.some(item => item.name === current.name)
+          if (!isExist) {
+            acc.push(current)
+          } else {
+            selectedFile.value = []
+            ElMessage.warning('请勿上传同名文件')
+          }
+          return acc
+        }, [])
+        selectedFile.value = []
       }
     }
     // 在这里使用 raw 进行后续操作
@@ -414,6 +428,11 @@ const getStatusType = status => {
 
 // 附件添加处理
 const handleFileAdd = uploadFile => {
+  if (fileQueue.value.length >= 5) {
+    ElMessage.warning('一次性最多上传五个文件')
+    fileQueue.value = fileQueue.value.slice(-5)
+    return
+  }
   const file = {
     ...uploadFile,
     uid: uploadFile.uid,
@@ -435,10 +454,16 @@ const handleFileAdd = uploadFile => {
   }
 
   fileQueue.value.push(file)
-  if (fileQueue.value.length > 5) {
-    fileQueue.value = fileQueue.value.slice(-5)
-  }
 
+  fileQueue.value = fileQueue.value.reduce((acc, current) => {
+    const isExist = acc.some(item => item.name === current.name)
+    if (!isExist) {
+      acc.push(current)
+    } else {
+      ElMessage.warning('请勿上传同名文件')
+    }
+    return acc
+  }, [])
   handlePreview(type.value === 'sample' ? fileQueue.value[0] : file)
 }
 
@@ -794,7 +819,7 @@ defineExpose({ openFile, closeFile })
 }
 
 .file-list {
-  width: 350px;
+  width: 500px;
   height: 540px;
   border-radius: 4px;
 
@@ -808,7 +833,7 @@ defineExpose({ openFile, closeFile })
     width: 100%;
     height: 350px;
     overflow-y: auto;
-    margin-top: 175px;
+    margin-top: 160px;
   }
   .upload_list {
     width: calc(100% - 30px);
