@@ -1590,7 +1590,6 @@ const submitTran = async (val, isRefresh, obj) => {
     })
 
     .catch(err => {
-      console.log(err)
       if (err.message !== 'canceled') {
         ElMessage.error('翻译失败' + err.message)
       }

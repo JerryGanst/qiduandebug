@@ -299,13 +299,11 @@ const deleteData = id => {
       isPublic: selectedKnow.value === 1 ? false : true
     })
     .then(res => {
-      console.log(res)
       if (res.status) {
         getFileList()
       }
     })
     .catch(err => {
-      console.log(err)
       ElMessage.error({
         message: '删除失败,请稍后再试',
         duration: 3000 // 显示3秒

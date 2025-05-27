@@ -38,7 +38,6 @@ class Request {
           }
           return response
         } else {
-          console.log(response)
           if (response.data.code !== 200 && response.data.code !== 400) {
             if (response.data.code === 429) {
               ElMessage.error({

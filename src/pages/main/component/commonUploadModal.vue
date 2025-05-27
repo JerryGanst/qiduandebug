@@ -220,16 +220,13 @@ const deleteData = id => {
       isPublic: true
     })
     .then(res => {
-      console.log(res)
       if (res.status) {
         getFileList()
       } else {
-        console.log(res)
         ElMessage.error(res.message)
       }
     })
     .catch(err => {
-      console.log(err)
       ElMessage.error({
         message: '删除失败,请稍后再试',
         duration: 3000 // 显示3秒
@@ -258,9 +255,7 @@ const filteredList = computed(() => {
   return fileQueue.value.filter(item => item.fileName.toLowerCase().includes(searchLower))
 })
 
-const handleSearch = debounce(() => {
-  console.log('防抖搜索:', searchText.value)
-}, 500)
+const handleSearch = debounce(() => {}, 500)
 const checkFileSize = file => {
   const isLt10M = file.size / 1024 / 1024 < 50
   if (!isLt10M) {
@@ -494,7 +489,6 @@ const getFileList = () => {
   request
     .post('/Files/getFileInfoFromSystem?userId=' + userInfo.id + '&target=' + selectedKnow.value)
     .then(res => {
-      console.log(res)
       if (res.status) {
         fileQueue.value = res.data
         getInfo()
@@ -512,38 +506,55 @@ const getFileList = () => {
 const openFile = (val, ary) => {
   dialogVisible.value = true
   knowOptions.value = []
-  const powerList = JSON.parse(localStorage.getItem('powerList'))
-  if (powerList && powerList.length > 0) {
+  nextTick(() => {
+    let powerList = JSON.parse(localStorage.getItem('powerList'))
+    if (!powerList || powerList.length === 0) {
+      powerList = [
+        {
+          target: 'IT',
+          delete: false,
+          upload: false
+        },
+        {
+          target: 'HR',
+          delete: false,
+          upload: false
+        }
+      ]
+    }
+
     let str = ''
     for (var i = 0; i < powerList.length; i++) {
       str += powerList[i].target + ','
     }
     str = str.substring(0, str.length - 1)
-    const ary = str.split(',')
-    for (var i = 0; i < ary.length; i++) {
+    const newAry = str.split(',')
+    for (var i = 0; i < newAry.length; i++) {
       const obj = {
         value: '',
         label: '',
         isDelete: false,
         isUpload: false
       }
-      obj.value = ary[i]
+      obj.value = newAry[i]
       obj.isDelete = powerList[i].delete
       obj.isUpload = powerList[i].upload
       obj.label =
-        ary[i] === 'IT'
+        newAry[i] === 'IT'
           ? 'IT知识库'
-          : ary[i] === 'HR'
+          : newAry[i] === 'HR'
             ? '人资行政知识库'
-            : ary[i] === 'Law'
+            : newAry[i] === 'Law'
               ? '法务知识库'
               : '热传知识库'
       knowOptions.value.push(obj)
     }
-    selectedKnow.value = ary[0]
-    console.log(knowOptions.value)
-  }
-  getFileList()
+    isDelete.value = powerList[0].delete
+    isUpload.value = powerList[0].upload
+    selectedKnow.value = newAry[0]
+
+    getFileList()
+  })
 }
 
 const getTextAfterLastDot = str => {
@@ -558,17 +569,34 @@ const getFile = fileObj => {
 watch(
   selectedKnow,
   newVal => {
-    const powerList = JSON.parse(localStorage.getItem('powerList'))
-    for (var i = 0; i < powerList.length; i++) {
-      console.log(powerList[i])
-      console.log(newVal)
-      if (powerList[i].target === newVal) {
-        isDelete.value = powerList[i].delete
-        isUpload.value = powerList[i].upload
+    if (localStorage.getItem('powerList')) {
+      let powerList = JSON.parse(localStorage.getItem('powerList'))
+      if (!powerList || powerList.length === 0) {
+        powerList = [
+          {
+            target: 'IT',
+            delete: false,
+            upload: false
+          },
+          {
+            target: 'HR',
+            delete: false,
+            upload: false
+          }
+        ]
+      }
+      for (var i = 0; i < powerList.length; i++) {
+        if (powerList[i].target === newVal) {
+          isDelete.value = powerList[i].delete
+          isUpload.value = powerList[i].upload
+        }
       }
     }
   },
-  { deep: true }
+  {
+    deep: true,
+    immediate: true
+  }
 )
 defineExpose({ openFile })
 </script>

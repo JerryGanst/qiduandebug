@@ -261,7 +261,6 @@ const hasPendingFiles = computed(() => {
   return fileQueue.value.some(file => [STATUS.PENDING, STATUS.ERROR].includes(file.status))
 })
 const startUpload = async file => {
-  console.log(fileQueue.value)
   if (fileQueue.value.length === 0) {
     ElMessage.warning('请先上传附件再提交')
     return
@@ -300,7 +299,6 @@ const startUpload = async file => {
               file[i].progress = 100
               ary.push(res.data?.data[0])
               if (i === fileQueue.value.length - 1) {
-                console.log(ary)
                 eventBus.emit('submit-sampleFile', ary)
               }
             } else {
@@ -489,11 +487,9 @@ const retryUpload = file => {
 
 // 附件预览处理
 const handlePreview = async file => {
-  console.log(file)
   if (!file) {
     return
   }
-  console.log(file)
   try {
     if (['txt'].includes(file.extension)) {
       // 处理文本附件
@@ -582,7 +578,6 @@ const filteredOptions = computed(() => {
 // 过滤方法
 const filterMethod = query => {
   searchQuery.value = query
-  console.log(searchQuery.value)
 }
 const getFileList = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))

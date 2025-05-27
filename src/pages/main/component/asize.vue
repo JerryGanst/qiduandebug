@@ -218,7 +218,7 @@ const loginForm = ref({
 const avatarUrl = ref(photo) // 左下角用户头像
 const titleQuestion = ref('')
 const titleIndex = ref('')
-const isPowerFile = ref(false)
+const isPowerFile = ref(true)
 const hoverStates = ref({}) // 悬停状态
 const {
   currentQuestion,
@@ -431,7 +431,7 @@ const handleLogout = () => {
   answerList.value = []
   chatQuery.messages = []
   chatQuery.isLoading = false
-  isPowerFile.value = false
+  isPowerFile.value = true
   currentId.value = ''
   currentQuestion.value = false
   isLogin.value = false
@@ -762,7 +762,6 @@ const powerList = ref([
 ])
 const getPower = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-  console.log(1234)
   request
     .post('/Files/permissionCheck?userId=' + userInfo.id)
     .then(res => {
@@ -807,8 +806,7 @@ const toFile = () => {
 }
 const setPower = data => {
   const isPower = JSON.parse(data)
-  isPowerFile.value = isPower && isPower.length > 0
-  console.log(isPowerFile.value)
+  // isPowerFile.value = isPower && isPower.length > 0
 }
 
 // 计算属性，处理左侧栏历史记录的数据
