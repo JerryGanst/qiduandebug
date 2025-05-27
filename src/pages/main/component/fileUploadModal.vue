@@ -611,31 +611,31 @@ const openFile = (val, ary) => {
     if (ary) {
       fileAry.value = ary
     }
-    const powerList = localStorage.getItem('powerList')
+    const powerList = JSON.parse(localStorage.getItem('powerList'))
     knowOptions.value = []
     selectedKnow.value = 1
     selectedMode.value = ''
     selectedFile.value = []
     fileOptions.value = []
-    if (powerList) {
-      const ary = powerList.split(',')
-      for (var i = 0; i < ary.length; i++) {
-        const obj = {
-          value: '',
-          label: ''
-        }
-        obj.value = ary[i]
-        obj.label =
-          ary[i] === 'IT'
-            ? 'IT知识库'
-            : ary[i] === 'HR'
-              ? '人资行政知识库'
-              : ary[i] === 'Law'
-                ? '法务知识库'
-                : '热传知识库'
-        knowOptions.value.push(obj)
-      }
-    }
+    // if (powerList) {
+    //   const ary = powerList.split(',')
+    //   for (var i = 0; i < ary.length; i++) {
+    //     const obj = {
+    //       value: '',
+    //       label: ''
+    //     }
+    //     obj.value = ary[i]
+    //     obj.label =
+    //       ary[i] === 'IT'
+    //         ? 'IT知识库'
+    //         : ary[i] === 'HR'
+    //           ? '人资行政知识库'
+    //           : ary[i] === 'Law'
+    //             ? '法务知识库'
+    //             : '热传知识库'
+    //     knowOptions.value.push(obj)
+    //   }
+    // }
     getFileList()
     getFileAry()
   } else {

@@ -2166,7 +2166,8 @@ const getPower = () => {
     .post('/Files/permissionCheck?userId=' + userInfo.id)
     .then(res => {
       if (res.status) {
-        localStorage.setItem('powerList', res.data)
+        localStorage.setItem('powerList', JSON.stringify(res.data))
+        asizeRef.value.setPower(JSON.stringify(res.data))
       }
     })
     .catch(err => {

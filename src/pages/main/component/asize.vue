@@ -2,7 +2,7 @@
   <el-aside :width="isCollapsed ? '60px' : '280px'" class="aside">
     <div class="aside_left">
       <img class="aside_left_img" src="@/assets/logo.png" />
-      <img class="aside_left_file" src="@/assets/upload_file.png" @click="toFile" />
+      <img class="aside_left_file" src="@/assets/upload_file.png" @click="toFile" v-if="isPowerFile" />
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
         <el-avatar
@@ -218,6 +218,7 @@ const loginForm = ref({
 const avatarUrl = ref(photo) // 左下角用户头像
 const titleQuestion = ref('')
 const titleIndex = ref('')
+const isPowerFile = ref(false)
 const hoverStates = ref({}) // 悬停状态
 const {
   currentQuestion,
@@ -424,11 +425,13 @@ const handleLogout = () => {
   ElMessage.success('退出成功')
   localStorage.setItem('userInfo', '')
   localStorage.setItem('isLaw', false)
+  localStorage.setItem('powerList', [])
   questions.value = []
   queryTypes.value = []
   answerList.value = []
   chatQuery.messages = []
   chatQuery.isLoading = false
+  isPowerFile.value = false
   currentId.value = ''
   currentQuestion.value = false
   isLogin.value = false
@@ -759,11 +762,13 @@ const powerList = ref([
 ])
 const getPower = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  console.log(1234)
   request
     .post('/Files/permissionCheck?userId=' + userInfo.id)
     .then(res => {
       if (res.status) {
-        localStorage.setItem('powerList', res.data)
+        localStorage.setItem('powerList', JSON.stringify(res.data))
+        setPower(JSON.stringify(res.data))
       }
     })
     .catch(err => {
@@ -800,6 +805,12 @@ const toFile = () => {
   }
   commonLedge.value.openFile('')
 }
+const setPower = data => {
+  const isPower = JSON.parse(data)
+  isPowerFile.value = isPower && isPower.length > 0
+  console.log(isPowerFile.value)
+}
+
 // 计算属性，处理左侧栏历史记录的数据
 const processedQuerys = computed(() => {
   return questions.value.map(query => {
@@ -808,7 +819,7 @@ const processedQuerys = computed(() => {
   })
 })
 
-defineExpose({ queryAn, deleteData })
+defineExpose({ queryAn, deleteData, setPower })
 </script>
 <style lang="less" scoped>
 .foldable {

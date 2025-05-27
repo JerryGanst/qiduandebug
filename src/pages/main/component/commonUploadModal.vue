@@ -40,6 +40,7 @@
         </div>
         <div class="upload_list">
           <el-upload
+            v-if="isUpload"
             drag
             :auto-upload="false"
             :multiple="true"
@@ -65,7 +66,13 @@
             </div>
           </el-upload>
         </div>
-        <div class="file_item">
+        <div
+          class="file_item"
+          :style="{
+            marginTop: isUpload ? '170px' : '60px',
+            height: isUpload ? 'calc(100% - 180px)' : 'calc(100% - 70px)'
+          }"
+        >
           <div
             v-for="(file, index) in filteredList"
             :key="file.uid"
@@ -92,7 +99,10 @@
               <template #reference>
                 <span @click.stop>
                   <!-- 阻止点击事件冒泡 -->
-                  <div style="width: 20px; height: 20px; cursor: pointer; position: absolute; right: 4px; top: 4px">
+                  <div
+                    style="width: 20px; height: 20px; cursor: pointer; position: absolute; right: 4px; top: 4px"
+                    v-if="isDelete"
+                  >
                     <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
                   </div>
                 </span>
@@ -129,6 +139,8 @@ const previewContent = ref(null)
 const previewType = ref('')
 const previewFileId = ref(null)
 const selectedKnow = ref('IT')
+const isDelete = ref(true)
+const isUpload = ref(true)
 const knowOptions = ref([
   // {
   //   value: 'IT',
@@ -294,7 +306,6 @@ const uploadSingleFile = async file => {
           file.status = 'success'
           resolve()
         } else {
-          console.log(res)
           ElMessage.error(res.data.message)
           file.status = 'error'
           reject(err)
@@ -501,15 +512,24 @@ const getFileList = () => {
 const openFile = (val, ary) => {
   dialogVisible.value = true
   knowOptions.value = []
-  const powerList = localStorage.getItem('powerList')
-  if (powerList) {
-    const ary = powerList.split(',')
+  const powerList = JSON.parse(localStorage.getItem('powerList'))
+  if (powerList && powerList.length > 0) {
+    let str = ''
+    for (var i = 0; i < powerList.length; i++) {
+      str += powerList[i].target + ','
+    }
+    str = str.substring(0, str.length - 1)
+    const ary = str.split(',')
     for (var i = 0; i < ary.length; i++) {
       const obj = {
         value: '',
-        label: ''
+        label: '',
+        isDelete: false,
+        isUpload: false
       }
       obj.value = ary[i]
+      obj.isDelete = powerList[i].delete
+      obj.isUpload = powerList[i].upload
       obj.label =
         ary[i] === 'IT'
           ? 'IT知识库'
@@ -521,7 +541,7 @@ const openFile = (val, ary) => {
       knowOptions.value.push(obj)
     }
     selectedKnow.value = ary[0]
-    console.log(ary)
+    console.log(knowOptions.value)
   }
   getFileList()
 }
@@ -535,7 +555,21 @@ const getFile = fileObj => {
   window.open('http://files.luxshare-tech.com:8081/MajorFun/viewer?d=' + fileObj.id, '_blank')
   // 使用 POST 请求（与后端 @PostMapping 匹配）
 }
-
+watch(
+  selectedKnow,
+  newVal => {
+    const powerList = JSON.parse(localStorage.getItem('powerList'))
+    for (var i = 0; i < powerList.length; i++) {
+      console.log(powerList[i])
+      console.log(newVal)
+      if (powerList[i].target === newVal) {
+        isDelete.value = powerList[i].delete
+        isUpload.value = powerList[i].upload
+      }
+    }
+  },
+  { deep: true }
+)
 defineExpose({ openFile })
 </script>
 
