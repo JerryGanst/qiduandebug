@@ -27,7 +27,7 @@
           <div class="file_right">
             <div class="file_content">
               <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
-              <el-input v-model="searchText" placeholder="请点击搜索图标或按Enter键" @input="handleSearch">
+              <el-input v-model="searchText" placeholder="请输入关键字" @input="handleSearch">
                 <!-- 使用插槽自定义前缀图标并绑定事件 -->
                 <template #prefix>
                   <el-icon class="el-input__icon" @click="searchData" style="cursor: pointer">
