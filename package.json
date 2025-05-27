@@ -15,6 +15,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "highlight.js": "^11.11.1",
+    "lodash-es": "^4.17.21",
     "mammoth": "^1.9.0",
     "marked": "^15.0.7",
     "mitt": "^3.0.1",

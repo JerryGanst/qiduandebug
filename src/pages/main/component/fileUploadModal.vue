@@ -503,9 +503,6 @@ const handlePreview = async file => {
         previewContent.value = e.target.result
         previewType.value = 'text'
         previewFileId.value = 123
-        console.log(e.target.result)
-        console.log(previewContent.value)
-        console.log(previewType.value)
       }
 
       reader.readAsText(file.raw)

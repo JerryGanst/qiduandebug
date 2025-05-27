@@ -24,7 +24,19 @@
               </div>
             </div>
           </div>
-          <div class="file_right"></div>
+          <div class="file_right">
+            <div class="file_content">
+              <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
+              <el-input v-model="searchText" placeholder="请点击搜索图标或按Enter键" @input="handleSearch">
+                <!-- 使用插槽自定义前缀图标并绑定事件 -->
+                <template #prefix>
+                  <el-icon class="el-input__icon" @click="searchData" style="cursor: pointer">
+                    <Search />
+                  </el-icon>
+                </template>
+              </el-input>
+            </div>
+          </div>
         </div>
         <div class="upload_list">
           <el-upload
@@ -55,7 +67,7 @@
         </div>
         <div class="file_item">
           <div
-            v-for="(file, index) in fileQueue"
+            v-for="(file, index) in filteredList"
             :key="file.uid"
             class="file-item"
             :class="{ 'uploading-file': file.status === 'pending' }"
@@ -97,6 +109,7 @@
 import { ref, computed, nextTick, watch } from 'vue'
 import axios from 'axios'
 import mammoth from 'mammoth'
+import { debounce } from 'lodash-es'
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
@@ -223,7 +236,19 @@ const handleDelete = (index, event) => {
     deleteData(id)
   })
 }
+// 过滤后的列表
+const filteredList = computed(() => {
+  if (!searchText.value) {
+    return fileQueue.value
+  }
 
+  const searchLower = searchText.value.toLowerCase()
+  return fileQueue.value.filter(item => item.fileName.toLowerCase().includes(searchLower))
+})
+
+const handleSearch = debounce(() => {
+  console.log('防抖搜索:', searchText.value)
+}, 500)
 const checkFileSize = file => {
   const isLt10M = file.size / 1024 / 1024 < 50
   if (!isLt10M) {
@@ -619,7 +644,7 @@ defineExpose({ openFile })
         display: flex;
         flex-direction: column;
         :deep(.el-input__wrapper) {
-          width: 160px;
+          width: 210px;
           box-shadow: none;
           border: 1px solid #bebebe;
         }
