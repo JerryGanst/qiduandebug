@@ -17,7 +17,6 @@ const props = defineProps({
 // 配置 marked 以启用硬换行
 marked.setOptions({
   highlight: (code, lang) => {
-    console.log(code)
     const language = hljs.getLanguage(lang) ? lang : 'plaintext'
     return hljs.highlight(code, { language }).value
   },

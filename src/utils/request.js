@@ -38,14 +38,12 @@ class Request {
           }
           return response
         } else {
-          if (response.data.code !== 200) {
+          if (response.data.code !== 200 && response.data.code !== 400) {
             if (response.data.code === 429) {
               ElMessage.error({
                 message: '服务器繁忙,请稍后再试',
                 duration: 3000 // 显示3秒
               })
-            } else {
-              return Promise.reject(new Error(response.data.message || 'Request failed'))
             }
           }
 

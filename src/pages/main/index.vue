@@ -27,6 +27,7 @@
             ref="entryRef"
           ></Entry>
         </div>
+
         <div v-else class="center-container" style="padding-top: 0px">
           <div class="main_content" style="width: 860px">
             <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'" class="title_tiQuery">
@@ -44,6 +45,7 @@
             </div>
             <div
               class="title_float"
+              :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
               v-if="
                 (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
                 currentObj.messages.type === 'final_answer'
@@ -259,7 +261,7 @@
                 <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
                 <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
                 <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
-                <!-- <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button> -->
+                <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button>
               </el-radio-group>
             </div>
             <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
@@ -413,7 +415,13 @@
   </el-container>
   <!-- 弹窗 -->
 
-  <el-dialog v-model="commonVisible" title="评价" width="500px" :before-close="handleCommonClose">
+  <el-dialog
+    v-model="commonVisible"
+    title="评价"
+    width="500px"
+    :before-close="handleCommonClose"
+    style="border-radius: 10px"
+  >
     <el-input
       v-model="commonQuestion"
       placeholder="请输入您的宝贵建议"
@@ -557,6 +565,10 @@ const showListFile = val => {
   fileRefs.value.openFile('sample')
 }
 const showFileSample = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
   nextTick(() => {
     fileRefs.value.openFile(val, fileInputAry.value)
   })
@@ -829,6 +841,15 @@ const submitFinal = async (val, isRefresh, ob) => {
         }
 
         postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
+      } else {
+        if (res.code === 400) {
+          const obj = {
+            question: passQuery,
+            answer: ''
+          }
+          postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
+          ElMessage.warning(res.message)
+        }
       }
     })
     .catch(err => {
@@ -1100,6 +1121,7 @@ const submitSample = async (val, isRefresh) => {
       filesSample.push(fileInput[me].fileId)
     }
   }
+
   const currentData = {
     role: 'user',
     content: queryValue ? queryValue : '',
@@ -1148,62 +1170,62 @@ const submitSample = async (val, isRefresh) => {
       }
     }
   }
-  if (questions.value.includes(queryValue + '(sample)') && !isRefresh && mes.messages.length === 1) {
-    let titleStr = ''
-    for (var i = 0; i < fileInput.length; i++) {
-      titleStr += fileInput[i].originalFileName + ','
-    }
-    const qData = queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)'
-    for (var ms = 0; ms < questions.value.length; ms++) {
-      if (qData === questions.value[ms]) {
-        activeIndex.value = ms
-        asizeRef.value.queryAn(qData, '')
-        isSampleLoad.value = false
-        return
-      }
-    }
-  }
-  if (!isRefresh && mes.messages.length === 1) {
-    let titleStr = ''
-    let titleFile = ''
-    for (var i = 0; i < fileInput.length; i++) {
-      titleStr += fileInput[i].originalFileName + ','
-    }
-    for (var s = 0; s < answerList.value.length; s++) {
-      if (
-        answerList.value[s].type === '通用模式' &&
-        answerList.value[s].data[0].content &&
-        queryValue + titleStr.substring(0, titleStr.length - 1) ===
-          answerList.value[s].data[0].content +
-            (answerList.value[s].data[0].files
-              ? answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
-              : '')
-      ) {
-        activeIndex.value = s
-        asizeRef.value.queryAn(queryValue + '(sample)', '')
-        isSampleLoad.value = false
-        return
-      }
-    }
-  }
-  if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
-    const qData =
-      queryValue +
-      (answerList.value[activeIndex.value].data[0].files
-        ? answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',')
-        : '') +
-      '(sample)'
-    const index = questions.value.findIndex(item => item === qData)
-    const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    if (idx !== -1) {
-      answerList.value.splice(index, 1)
-    }
-    await asizeRef.value.deleteData(targetId, isRefresh)
-  }
+  // if (questions.value.includes(queryValue + '(sample)') && !isRefresh && mes.messages.length === 1) {
+  //   let titleStr = ''
+  //   for (var i = 0; i < fileInput.length; i++) {
+  //     titleStr += fileInput[i].originalFileName + ','
+  //   }
+  //   const qData = queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)'
+  //   for (var ms = 0; ms < questions.value.length; ms++) {
+  //     if (qData === questions.value[ms]) {
+  //       activeIndex.value = ms
+  //       asizeRef.value.queryAn(qData, '')
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //   }
+  // }
+  // if (!isRefresh && mes.messages.length === 1) {
+  //   let titleStr = ''
+  //   let titleFile = ''
+  //   for (var i = 0; i < fileInput.length; i++) {
+  //     titleStr += fileInput[i].originalFileName + ','
+  //   }
+  //   for (var s = 0; s < answerList.value.length; s++) {
+  //     if (
+  //       answerList.value[s].type === '通用模式' &&
+  //       answerList.value[s].data[0].content &&
+  //       queryValue + titleStr.substring(0, titleStr.length - 1) ===
+  //         answerList.value[s].data[0].content +
+  //           (answerList.value[s].data[0].files
+  //             ? answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
+  //             : '')
+  //     ) {
+  //       activeIndex.value = s
+  //       asizeRef.value.queryAn(queryValue + '(sample)', '')
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
+  //   const qData =
+  //     queryValue +
+  //     (answerList.value[activeIndex.value].data[0].files
+  //       ? answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',')
+  //       : '') +
+  //     '(sample)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   if (idx !== -1) {
+  //     answerList.value.splice(index, 1)
+  //   }
+  //   await asizeRef.value.deleteData(targetId, isRefresh)
+  // }
 
   const anList = JSON.parse(JSON.stringify(answerList.value))
   const hasId = anList.some(item => item.id === currentId.value)
@@ -1213,12 +1235,13 @@ const submitSample = async (val, isRefresh) => {
     for (var i = 0; i < fileInput.length; i++) {
       titleStr += fileInput[i].originalFileName + ','
     }
-    questions.value.unshift(queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)')
+    questions.value.unshift('新对话' + '(sample)')
     activeIndex.value = '0'
   }
   if (hasId) {
     id = currentId.value
     limitId.value = id
+    const index = answerList.value.findIndex(item => item.id === id)
     for (var k = 0; k < answerList.value.length; k++) {
       if (id === answerList.value[k].id) {
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
@@ -1334,7 +1357,6 @@ const submitSample = async (val, isRefresh) => {
       chunks.forEach(chunk => {
         // 1. 修复正则匹配语法
         const jsonMatch = chunk.match(/data:\s*({[\s\S]*?})(?=\ndata:|\n\n|$)/)
-
         // 2. 添加条件判断包裹
         if (jsonMatch) {
           if (messageContainer.value) {
@@ -1361,7 +1383,6 @@ const submitSample = async (val, isRefresh) => {
                 assistantMsg.hasSplit = true
               }
             }
-
             // 立即更新视图（无需防抖）
             chatCurrent.messages.splice(-1, 1, {
               ...toRaw(assistantMsg),
@@ -1557,7 +1578,14 @@ const submitTran = async (val, isRefresh, obj) => {
         }
         postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
       } else {
-        ElMessage.warning(res.message)
+        if (res.code === 400) {
+          const passData = {
+            question: passQuery,
+            answer: ''
+          }
+          postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
+          ElMessage.warning(res.message)
+        }
       }
     })
 
@@ -1935,12 +1963,12 @@ const getHistory = async (id, page, val, ids) => {
               questions.value.push(answerList.value[i].title)
             }
           }
-          questions.value = questions.value.reduce((acc, current) => {
-            if (!acc.find(item => item === current)) {
-              acc.push(current)
-            }
-            return acc
-          }, [])
+          // questions.value = questions.value.reduce((acc, current) => {
+          //   if (!acc.find(item => item === current)) {
+          //     acc.push(current)
+          //   }
+          //   return acc
+          // }, [])
           for (var k = 0; k < answerList.value.length; k++) {
             const obj = {
               name: '',
@@ -2137,7 +2165,8 @@ const getPower = () => {
     .post('/Files/permissionCheck?userId=' + userInfo.id)
     .then(res => {
       if (res.status) {
-        localStorage.setItem('powerList', res.data)
+        localStorage.setItem('powerList', JSON.stringify(res.data))
+        asizeRef.value.setPower(JSON.stringify(res.data))
       }
     })
     .catch(err => {
@@ -2518,7 +2547,6 @@ onUnmounted(() => {
           border-radius: 10px;
           float: right;
           color: #fff;
-          margin-top: 35px;
           max-width: 600px;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -2544,7 +2572,6 @@ onUnmounted(() => {
           border-radius: 10px;
           float: right;
           color: #fff;
-          margin-top: 35px;
           max-width: 600px;
           line-height: 24px;
           overflow: hidden;

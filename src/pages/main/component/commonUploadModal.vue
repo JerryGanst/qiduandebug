@@ -1,40 +1,33 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="文件知识库"
-    width="1280px"
+    title="公共知识库"
+    width="100%"
+    height="100%"
     class="custom-upload-dialog"
-    style="margin-top: 3vh; border-radius: 10px"
+    style="height: 100%; margin: 0px; border-radius: 0px"
   >
     <div class="upload-layout">
       <!-- 左侧附件列表 -->
-      <div class="file-list" :style="{ width: isPre ? '735px' : '100%' }">
+      <div class="file-list" style="width: 100%">
         <div class="file_search">
           <div class="file_left">
             <div class="file_content">
-              <div class="file_select" v-if="isPower">
-                <el-select v-model="selectedKnow" placeholder="请选择知识库" @change="checkKnow">
+              <div class="file_select">
+                <el-select v-model="selectedKnow" placeholder="请选择部门知识库" @change="checkKnow">
                   <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </div>
-              <div class="file_select" v-else>个人知识库</div>
 
-              <div class="file_info">
+              <div class="file_info" style="margin-left: 10px">
                 <span>共{{ total }}项</span>
-                <span style="padding-left: 10px">存储空间 : 已使用{{ totalSize }}{{ point }}</span>
               </div>
             </div>
           </div>
           <div class="file_right">
             <div class="file_content">
               <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
-              <el-input
-                v-model="searchText"
-                placeholder="请点击搜索图标或按Enter键"
-                clearable
-                @clear="clearData"
-                @keydown.enter.prevent="searchData"
-              >
+              <el-input v-model="searchText" placeholder="请输入关键字" @input="handleSearch">
                 <!-- 使用插槽自定义前缀图标并绑定事件 -->
                 <template #prefix>
                   <el-icon class="el-input__icon" @click="searchData" style="cursor: pointer">
@@ -42,47 +35,12 @@
                   </el-icon>
                 </template>
               </el-input>
-              <div class="active">
-                <div
-                  class="active_item"
-                  :style="{
-                    background: activeIndex === 0 ? '#E6F4FF' : '',
-                    color: activeIndex === 0 ? '#1B6CFF' : '#9D9D9D'
-                  }"
-                  @click="changeType(0)"
-                >
-                  上传时间
-                  <img :src="activeIndex === 0 ? (timeSort ? down : up) : sort" />
-                </div>
-                <div
-                  class="active_item"
-                  :style="{
-                    background: activeIndex === 1 ? '#E6F4FF' : '',
-                    color: activeIndex === 1 ? '#1B6CFF' : '#9D9D9D'
-                  }"
-                  @click="changeType(1)"
-                >
-                  文件名称
-                  <img :src="activeIndex === 1 ? (nameSort ? down : up) : sort" />
-                </div>
-
-                <div
-                  class="active_item"
-                  :style="{
-                    background: activeIndex === 2 ? '#E6F4FF' : '',
-                    color: activeIndex === 2 ? '#1B6CFF' : '#9D9D9D'
-                  }"
-                  @click="changeType(2)"
-                >
-                  文件大小
-                  <img :src="activeIndex === 2 ? (sizeSort ? down : up) : sort" />
-                </div>
-              </div>
             </div>
           </div>
         </div>
         <div class="upload_list">
           <el-upload
+            v-if="isUpload"
             drag
             :auto-upload="false"
             :multiple="true"
@@ -108,23 +66,30 @@
             </div>
           </el-upload>
         </div>
-        <div class="file_item">
+        <div
+          class="file_item"
+          :style="{
+            marginTop: isUpload ? '170px' : '60px',
+            height: isUpload ? 'calc(100% - 180px)' : 'calc(100% - 70px)'
+          }"
+        >
           <div
-            v-for="(file, index) in fileQueue"
+            v-for="(file, index) in filteredList"
             :key="file.uid"
             class="file-item"
             :class="{ 'uploading-file': file.status === 'pending' }"
             @click="getFile(file)"
-            style="position: relative"
-            :style="{ width: isPre ? '14.7%' : '8%', marginLeft: isPre ? '14px' : '13px' }"
+            style="position: relative; width: 8%; margin-left: 13px"
           >
             <div class="file_img">
               <img :src="file.fileType === 'txt' ? text : file.fileType === 'pdf' ? pdf : word" />
             </div>
-            <div class="originalFileName" :style="{ width: isPre ? '90px' : '70px' }">{{ file.originalFileName }}</div>
-            <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
-              {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
+            <div class="fileName" style="width: 70px">
+              {{ file.fileName }}
             </div>
+            <!-- <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
+              {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
+            </div> -->
             <el-popconfirm
               title="确定要删除吗？"
               confirm-button-text="确定"
@@ -134,56 +99,16 @@
               <template #reference>
                 <span @click.stop>
                   <!-- 阻止点击事件冒泡 -->
-                  <div style="width: 20px; height: 20px; cursor: pointer; position: absolute; right: 4px; top: 4px">
+                  <div
+                    style="width: 20px; height: 20px; cursor: pointer; position: absolute; right: 4px; top: 4px"
+                    v-if="isDelete"
+                  >
                     <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
                   </div>
                 </span>
               </template>
             </el-popconfirm>
           </div>
-        </div>
-      </div>
-
-      <!-- 右侧上传区域 -->
-      <div class="upload-area" v-if="isPre">
-        <div class="file_text" v-if="previewFileId" style="position: relative">
-          <div class="text_title">{{ fileInfo.name }}</div>
-          <div class="text_list">
-            <span>大小 : {{ fileInfo.size ? (fileInfo.size / 1024).toFixed(1) : 0 }}KB</span>
-            <span style="margin-left: 14px">类型 : {{ fileInfo.extension }}</span>
-            <!-- <span style="margin-left: 14px">更新时间 : 2025-05-05</span> -->
-          </div>
-          <div class="close_pre" @click="closePre">关闭预览</div>
-        </div>
-        <!-- 附件预览 -->
-        <div
-          v-if="previewFileId"
-          class="preview-container"
-          :key="previewFileId"
-          style="height: 480px; margin: 15px"
-          :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
-        >
-          <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px">
-            <pre>{{ previewContent }}</pre>
-          </div>
-          <div v-else-if="previewType === 'html'" class="html-preview" v-html="previewContent"></div>
-          <div v-else-if="previewType === 'pdf'">
-            <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
-          </div>
-          <div v-else class="unsupported-preview">暂不支持此格式预览</div>
-        </div>
-        <div
-          v-else="previewFileId"
-          class="preview-container"
-          :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
-        >
-          <div style="width: 100%; display: flex; justify-content: center; margin-top: 154px">
-            <img src="@/assets/no-file.png" style="width: 150px; height: 150px" />
-          </div>
-          <div class="unsupported-preview" style="padding: 0px">请先上传附件即可预览</div>
-        </div>
-        <div class="btn_download">
-          <div class="download" @click="downloadFile(fileInfo)">下载</div>
         </div>
       </div>
     </div>
@@ -194,6 +119,7 @@
 import { ref, computed, nextTick, watch } from 'vue'
 import axios from 'axios'
 import mammoth from 'mammoth'
+import { debounce } from 'lodash-es'
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
@@ -212,19 +138,18 @@ const fileQueue = ref([])
 const previewContent = ref(null)
 const previewType = ref('')
 const previewFileId = ref(null)
-const isPre = ref(false)
-const selectedKnow = ref(1)
-const isPower = ref(false)
-const permission = ref([])
+const selectedKnow = ref('IT')
+const isDelete = ref(true)
+const isUpload = ref(true)
 const knowOptions = ref([
-  {
-    value: 1,
-    label: '个人知识库'
-  },
-  {
-    value: 2,
-    label: '公共知识库'
-  }
+  // {
+  //   value: 'IT',
+  //   label: 'IT知识库'
+  // },
+  // {
+  //   value: 'HR',
+  //   label: '人资行政知识库'
+  // }
 ])
 
 // 常量定义
@@ -233,10 +158,6 @@ const activeIndex = ref(0)
 const nameSort = ref(false)
 const timeSort = ref(false)
 const sizeSort = ref(false)
-
-const closePre = () => {
-  isPre.value = false
-}
 
 const clearData = () => {
   searchText.value = ''
@@ -256,9 +177,9 @@ const downloads = url => {
     link.href = url
     link.style.display = 'none'
     // 3. 从URL中提取文件名（可选）
-    const originalFileName = url.split('/').pop().split('?')[0] // 根据实际情况调整
+    const fileName = url.split('/').pop().split('?')[0] // 根据实际情况调整
     // 4. 设置下载属性（需配合CORS配置）
-    link.setAttribute('download', originalFileName)
+    link.setAttribute('download', fileName)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -271,7 +192,7 @@ const downloads = url => {
 const downloadFile = async val => {
   let id = ''
   for (var i = 0; i < fileQueue.value.length; i++) {
-    if (val.name === fileQueue.value[i].originalFileName) {
+    if (val.name === fileQueue.value[i].fileName) {
       id = fileQueue.value[i].id
     }
   }
@@ -295,12 +216,14 @@ const deleteData = id => {
     .post('/Files/knowledgeFileDelete', {
       file: idList,
       userId: userInfo.id,
-      target: permission.value,
-      isPublic: selectedKnow.value === 1 ? false : true
+      target: selectedKnow.value,
+      isPublic: true
     })
     .then(res => {
       if (res.status) {
         getFileList()
+      } else {
+        ElMessage.error(res.message)
       }
     })
     .catch(err => {
@@ -319,11 +242,20 @@ const handleDelete = (index, event) => {
   // 强制 DOM 更新（关键修复）
   fileQueue.value.splice(index, 1)
   nextTick(() => {
-    isPre.value = false
     deleteData(id)
   })
 }
+// 过滤后的列表
+const filteredList = computed(() => {
+  if (!searchText.value) {
+    return fileQueue.value
+  }
 
+  const searchLower = searchText.value.toLowerCase()
+  return fileQueue.value.filter(item => item.fileName.toLowerCase().includes(searchLower))
+})
+
+const handleSearch = debounce(() => {}, 500)
 const checkFileSize = file => {
   const isLt10M = file.size / 1024 / 1024 < 50
   if (!isLt10M) {
@@ -356,8 +288,8 @@ const uploadSingleFile = async file => {
     const formData = new FormData()
     formData.append('file', file.raw)
     formData.append('userId', userInfo.id)
-    formData.append('target', permission.value)
-    formData.append('isPublic', selectedKnow.value === 2 ? true : false)
+    formData.append('target', selectedKnow.value)
+    formData.append('isPublic', true)
     axios
       .post(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileUpload', formData, {
         onUploadProgress: progress => {
@@ -369,6 +301,7 @@ const uploadSingleFile = async file => {
           file.status = 'success'
           resolve()
         } else {
+          ElMessage.error(res.data.message)
           file.status = 'error'
           reject(err)
         }
@@ -387,7 +320,7 @@ const handleFileAdd = async uploadFile => {
     uid: uploadFile.uid,
     status: 'pending', // 新增状态字段
     fileSize: uploadFile.size,
-    originalFileName: uploadFile.name
+    fileName: uploadFile.name
   }
   fileQueue.value = [file, ...fileQueue.value]
   // 自动触发上传（网页[5]防抖优化）
@@ -403,7 +336,6 @@ const handlePreview = async file => {
   }
   const exception = getTextAfterLastDot(file.name)
   try {
-    isPre.value = true
     fileInfo.value = file
     if (['txt'].includes(exception)) {
       // 处理文本附件
@@ -497,9 +429,9 @@ const sortFiles = val => {
         break
       case 'name':
         if (isUp) {
-          compareValue = a.originalFileName.localeCompare(b.originalFileName, 'zh') // 数值比较[2,5](@ref)
+          compareValue = a.fileName.localeCompare(b.fileName, 'zh') // 数值比较[2,5](@ref)
         } else {
-          compareValue = b.originalFileName.localeCompare(a.originalFileName, 'zh') // 数值比较[2,5](@ref)
+          compareValue = b.fileName.localeCompare(a.fileName, 'zh') // 数值比较[2,5](@ref)
         }
         break
       default:
@@ -546,42 +478,83 @@ const getInfo = val => {
   }
 }
 const checkKnow = val => {
-  isPre.value = false
   if (val === 1) {
-    getFileList(permission.value, false)
+    getFileList(selectedKnow.value, false)
   } else {
-    getFileList(permission.value, true)
+    getFileList(selectedKnow.value, true)
   }
 }
 const getFileList = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
-    .post('/Files/getFileListByUserId', {
-      userId: userInfo.id,
-      target: permission.value,
-      isPublic: selectedKnow.value === 1 ? false : true,
-      sortType: activeIndex.value === 0 ? 'time' : activeIndex.value === 1 ? 'name' : 'size',
-      increase: activeIndex.value === 0 ? timeSort.value : activeIndex.value === 1 ? nameSort.value : sizeSort.value,
-      keywords: searchText.value
-    })
+    .post('/Files/getFileInfoFromSystem?userId=' + userInfo.id + '&target=' + selectedKnow.value)
     .then(res => {
       if (res.status) {
         fileQueue.value = res.data
         getInfo()
+      } else {
+        fileQueue.value = []
+        ElMessage.error(res.message)
       }
     })
     .catch(err => {
+      fileQueue.value = []
+      ElMessage.error(err)
       console.error(err)
     })
 }
 const openFile = (val, ary) => {
   dialogVisible.value = true
-  isPre.value = false
-  const power = localStorage.getItem('powerList')
-  permission.value = power.length > 0 ? power : ''
-  // isPower.value = permission.value ? true : false
-  isPower.value = false
-  getFileList()
+  knowOptions.value = []
+  nextTick(() => {
+    let powerList = JSON.parse(localStorage.getItem('powerList'))
+    if (!powerList || powerList.length === 0) {
+      powerList = [
+        {
+          target: 'IT',
+          delete: false,
+          upload: false
+        },
+        {
+          target: 'HR',
+          delete: false,
+          upload: false
+        }
+      ]
+    }
+
+    let str = ''
+    for (var i = 0; i < powerList.length; i++) {
+      str += powerList[i].target + ','
+    }
+    str = str.substring(0, str.length - 1)
+    const newAry = str.split(',')
+    for (var i = 0; i < newAry.length; i++) {
+      const obj = {
+        value: '',
+        label: '',
+        isDelete: false,
+        isUpload: false
+      }
+      obj.value = newAry[i]
+      obj.isDelete = powerList[i].delete
+      obj.isUpload = powerList[i].upload
+      obj.label =
+        newAry[i] === 'IT'
+          ? 'IT知识库'
+          : newAry[i] === 'HR'
+            ? '人资行政知识库'
+            : newAry[i] === 'Law'
+              ? '法务知识库'
+              : '热传知识库'
+      knowOptions.value.push(obj)
+    }
+    isDelete.value = powerList[0].delete
+    isUpload.value = powerList[0].upload
+    selectedKnow.value = newAry[0]
+
+    getFileList()
+  })
 }
 
 const getTextAfterLastDot = str => {
@@ -590,44 +563,41 @@ const getTextAfterLastDot = str => {
   return str.slice(lastDotIndex + 1)
 }
 const getFile = fileObj => {
+  window.open('http://files.luxshare-tech.com:8081/MajorFun/viewer?d=' + fileObj.id, '_blank')
   // 使用 POST 请求（与后端 @PostMapping 匹配）
-  fetch(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileById?id=' + fileObj.id, {
-    method: 'POST',
-    headers: { Accept: 'application/octet-stream' }, // 明确接收二进制
-    responseType: 'blob' // 关键参数
-  })
-    .then(response => {
-      // 从 Content-Disposition 中解析附件名
-      const disposition = response.headers.get('Content-Disposition')
-      let originalFileName = 'default_filename' // 默认附件名
-      if (disposition && disposition.indexOf('filename=') !== -1) {
-        originalFileName = disposition.split('filename=')[1].replace(/"/g, '')
-      }
-
-      // 获取二进制数据
-      return response.blob().then(blob => ({ blob, originalFileName }))
-    })
-    .then(({ blob, originalFileName }) => {
-      // 将 Blob 转换为 File 对象（类似 file.raw）
-      const file = new File([blob], originalFileName, { type: blob.type })
-      const fileOther = {
-        raw: file,
-        uid: file.lastModified,
-        size: file.size,
-        name: decodeURIComponent(fileObj.originalFileName),
-        extension: getTextAfterLastDot(fileObj.originalFileName),
-        cancel: null,
-        source: null
-      }
-      previewFileId.value = fileOther.uid
-      // 此时可以像处理 el-upload 的 file.raw 一样处理 file
-      handlePreview(fileOther)
-    })
-    .catch(error => {
-      console.error('获取附件失败:', error)
-    })
 }
-
+watch(
+  selectedKnow,
+  newVal => {
+    if (localStorage.getItem('powerList')) {
+      let powerList = JSON.parse(localStorage.getItem('powerList'))
+      if (!powerList || powerList.length === 0) {
+        powerList = [
+          {
+            target: 'IT',
+            delete: false,
+            upload: false
+          },
+          {
+            target: 'HR',
+            delete: false,
+            upload: false
+          }
+        ]
+      }
+      for (var i = 0; i < powerList.length; i++) {
+        if (powerList[i].target === newVal) {
+          isDelete.value = powerList[i].delete
+          isUpload.value = powerList[i].upload
+        }
+      }
+    }
+  },
+  {
+    deep: true,
+    immediate: true
+  }
+)
 defineExpose({ openFile })
 </script>
 
@@ -677,10 +647,6 @@ defineExpose({ openFile })
   margin-top: 20px;
   margin-bottom: 5px;
 }
-.custom-upload-dialog {
-  height: 1200px;
-  --el-dialog-margin-top: 5vh;
-}
 
 .upload-layout {
   display: flex;
@@ -689,8 +655,8 @@ defineExpose({ openFile })
 }
 
 .file-list {
-  width: 735px;
-  height: 630px;
+  width: 50%;
+  height: calc(100vh - 80px);
   border-radius: 4px;
 
   overflow-y: hidden;
@@ -700,9 +666,9 @@ defineExpose({ openFile })
   flex-direction: column;
   border: 1px solid #dcdfe6;
   .file_item {
-    height: 420px;
+    height: calc(100% - 180px);
     overflow-y: auto;
-    margin-top: 200px;
+    margin-top: 170px;
     float: left;
   }
   .file_search {
@@ -715,13 +681,14 @@ defineExpose({ openFile })
       display: flex;
       flex-direction: row;
       flex: 1;
+      min-width: 250px;
       .file_content {
         display: flex;
-        flex-direction: column;
         .file_select {
           color: #333333;
           font-size: 16px;
           line-height: 33px;
+          min-width: 200px;
         }
         .file_info {
           font-size: 12px;
@@ -739,7 +706,7 @@ defineExpose({ openFile })
         display: flex;
         flex-direction: column;
         :deep(.el-input__wrapper) {
-          width: 160px;
+          width: 210px;
           box-shadow: none;
           border: 1px solid #bebebe;
         }
@@ -772,7 +739,7 @@ defineExpose({ openFile })
     width: calc(100% - 30px);
     margin-left: 15px;
     position: absolute;
-    top: 85px;
+    top: 55px;
   }
 }
 
@@ -791,7 +758,7 @@ defineExpose({ openFile })
   align-items: center;
   justify-content: center;
   text-align: center;
-  height: 100px;
+  height: 80px;
   box-sizing: border-box;
   overflow-x: hidden;
   font-size: 12px;
@@ -818,7 +785,7 @@ defineExpose({ openFile })
   display: flex;
 }
 
-.originalFileName {
+.fileName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -843,11 +810,11 @@ defineExpose({ openFile })
 }
 
 .upload-area {
-  flex: 1;
   display: flex;
   flex-direction: column;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
+  width: calc(50% - 20px);
   .file_text {
     display: flex;
     flex: 1;
@@ -903,13 +870,18 @@ defineExpose({ openFile })
 }
 
 .preview-container {
-  height: 480px;
+  height: calc(100% - 140px);
   border-radius: 4px;
   margin: 0 15px 15px 15px;
-  overflow: auto;
-  width: 450px;
+  overflow-y: auto;
   background-color: #f8f9fb;
+  max-height: 560px;
+  /* 屏幕宽度 ≤600px 时文字变红 */
+  @media (max-height: 800px) {
+    max-height: 560px;
+  }
 }
+
 .preview-container::-webkit-scrollbar {
   width: 1px; /* 滚动条宽度 */
 }
@@ -935,5 +907,17 @@ defineExpose({ openFile })
   color: #909399;
   text-align: center;
   padding: 50px 0;
+}
+::v-deep .custom-upload-dialog {
+  overflow-y: hidden;
+  .el-dialog {
+    height: 100vh !important;
+    margin: 0 !important;
+    overflow-y: hidden;
+    .el-dialog__body {
+      height: calc(100vh - 120px); // 减去头部和底部高度
+      overflow-y: hidden;
+    }
+  }
 }
 </style>

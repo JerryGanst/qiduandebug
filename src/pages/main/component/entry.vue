@@ -49,8 +49,8 @@
           <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
-              <div class="text_title">更多功能</div>
-              <div class="text_content">开发中,敬请期待</div>
+              <div class="text_title">文件知识库</div>
+              <div class="text_content">个人和部门的专属网盘</div>
             </div>
           </div>
         </div>
@@ -90,8 +90,8 @@
           <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
-              <div class="text_title">更多功能</div>
-              <div class="text_content">开发中,敬请期待</div>
+              <div class="text_title">文件知识库</div>
+              <div class="text_content">个人和部门的专属网盘</div>
             </div>
           </div>
         </div>
@@ -193,7 +193,6 @@
           background-color: #eff6ff;
           display: flex;
           align-items: center;
-          margin-top: 34px;
           border-radius: 10px;
           cursor: pointer;
         "
@@ -226,9 +225,9 @@
         <span>概括 :</span>
         <span>{{ finalData.title }}</span>
       </div>
-      <div v-if="finalData.data.length > 0" style="margin-top: 15px">
+      <div v-if="finalData?.data?.length > 0" style="margin-top: 15px">
         <div>关键词 :</div>
-        <div v-for="items in finalData.data">
+        <div v-for="items in finalData?.data">
           {{ items }}
         </div>
       </div>
@@ -254,7 +253,7 @@
         <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
         <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
         <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
-        <!-- <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button> -->
+        <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button>
       </el-radio-group>
     </div>
     <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
@@ -476,7 +475,8 @@ const {
   showFileTip,
   showModelTip,
   fileInputAry,
-  isLaw
+  isLaw,
+  isLogin
 } = useShared()
 const fileRef = ref(null)
 const knowledge = ref(null)
@@ -567,9 +567,17 @@ const submitFileFinal = obj => {
 // }
 
 const openKnowledge = () => {
-  // knowledge.value.openFile('')
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  knowledge.value.openFile('')
 }
 const showFile = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
   if (activeIndex.value || activeIndex.value == 0) {
     if (val === 'tran') {
       for (var i = 0; i < answerList.value.length; i++) {

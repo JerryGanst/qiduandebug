@@ -133,7 +133,11 @@ const isObject = variable => {
 }
 const checkData = val => {
   if (!isLogin.value) {
-    ElMessage.warning('请先登录再使用')
+    ElMessage({
+      message: '请先登录再使用',
+      type: 'warning'
+    })
+
     return false
   }
   if (isObject(val) && !newQuestion.value) {
