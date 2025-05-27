@@ -45,7 +45,7 @@ handlePreview
           <el-select v-model="selectedKnow" placeholder="请选择知识库" @change="checkKnow">
             <el-option v-for="item in knowList" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          <el-select
+          <!-- <el-select
             v-model="selectedMode"
             @change="checkKnow"
             placeholder="请选择模块"
@@ -53,7 +53,7 @@ handlePreview
             :disabled="selectedKnow === 1"
           >
             <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
+          </el-select> -->
           <el-select
             v-model="selectedFile"
             placeholder="请选择文件"
@@ -197,11 +197,11 @@ const knowList = ref([
   {
     value: 1,
     label: '个人知识库'
-  },
-  {
-    value: 2,
-    label: '通用知识库'
   }
+  // {
+  //   value: 2,
+  //   label: '通用知识库'
+  // }
 ])
 const selectedValues = ref([]) // 存储选中的值（数组）
 const knowOptions = ref([])

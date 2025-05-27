@@ -102,9 +102,9 @@
               <div class="el-upload__subtext">
                 <span style="color: #868686">单个大小不超过50M</span>
               </div>
-              <div class="el-upload__subtext">
+              <!-- <div class="el-upload__subtext">
                 <span style="color: #868686">上传成功后文件将会被转为PDF</span>
-              </div>
+              </div> -->
             </div>
           </el-upload>
         </div>
@@ -704,7 +704,7 @@ defineExpose({ openFile })
   .file_item {
     height: 420px;
     overflow-y: auto;
-    margin-top: 220px;
+    margin-top: 200px;
     float: left;
   }
   .file_search {

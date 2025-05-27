@@ -508,7 +508,6 @@ const getTextAfterLastDot = str => {
 }
 const getFile = fileObj => {
   window.open('http://files.luxshare-tech.com:8081/MajorFun/viewer?d=' + fileObj.id, '_blank')
-  console.log(fileObj)
   // 使用 POST 请求（与后端 @PostMapping 匹配）
 }
 
@@ -580,9 +579,9 @@ defineExpose({ openFile })
   flex-direction: column;
   border: 1px solid #dcdfe6;
   .file_item {
-    height: calc(100% - 230px);
+    height: calc(100% - 180px);
     overflow-y: auto;
-    margin-top: 200px;
+    margin-top: 170px;
     float: left;
   }
   .file_search {
