@@ -446,7 +446,7 @@ import FileUpload from './component/fileUploadModal.vue'
 import { Document } from '@element-plus/icons-vue' // 引入需要的图标
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
-import { ElButton, ElMessage } from 'element-plus' // 引入 ElMessage
+import { componentSizeMap, ElButton, ElMessage } from 'element-plus' // 引入 ElMessage
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, toRaw, onBeforeUnmount } from 'vue'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
@@ -687,107 +687,122 @@ const submitFinal = async (val, isRefresh, ob) => {
   finalIng.value = true
   docIng.value = true
   let title = ''
-  if (!isRefresh && ob) {
-    const qData = ob.originalFileName + '(final)'
-    const index = questions.value.findIndex(item => item === qData)
-    // const idx = answerList.value.findIndex(item => item.title === qData)
+  // if (!isRefresh && ob) {
+  //   const qData = ob.originalFileName + '(final)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   // const idx = answerList.value.findIndex(item => item.title === qData)
 
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    // if (idx !== -1) {
-    //   answerList.value.splice(index, 1)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   // if (idx !== -1) {
+  //   //   answerList.value.splice(index, 1)
+  //   // }
+  //   if (targetId) {
+  //     asizeRef.value.deleteData(targetId, true)
+  //   }
+  //   questions.value.unshift(qData)
+  // }
+  if (isRefresh) {
+    let current = currentId.value
+    const idx = answerList.value.findIndex(item => item.id === current)
+    title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
+    let limitTitle = ''
+    limitTitle = questions.value[idx]
+    questions.value.splice(idx, 1)
+    answerList.value.splice(idx, 1)
+    await asizeRef.value.deleteData(current, true)
+    activeIndex.value = 0
+    questions.value.unshift(limitTitle)
+
+    // for (var m = 0; m < answerList.value.length; m++) {
+    //   if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
+    //     const id = answerList.value[m].id
+    //     title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+    //     const index = questions.value.findIndex(item => item === title + '(final)')
+    //     let limitTitle = ''
+    //     if (index !== -1) {
+    //       limitTitle = questions.value[index]
+    //       questions.value.splice(index, 1)
+    //     }
+    //     const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
+    //     if (idx !== -1) {
+    //       answerList.value.splice(index, 1)
+    //     }
+    //     await asizeRef.value.deleteData(id, true)
+    //     activeIndex.value = 0
+    //     const limit = limitTitle
+    //       ? limitTitle.length > 15
+    //         ? limitQuery.value.substring(0, 15) + '(final)'
+    //         : limitTitle + '(final)'
+    //       : limitQuery.value.length > 15
+    //         ? limitQuery.value.substring(0, 15) + '(final)'
+    //         : limitQuery.value + '(final)'
+    //     questions.value.unshift(limit)
+    //   }
     // }
-    if (targetId) {
-      asizeRef.value.deleteData(targetId, true)
-    }
-    questions.value.unshift(qData)
   }
-  if (isRefresh && !ob) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
-        const index = questions.value.findIndex(item => item === title + '(final)')
-        let limitTitle = ''
-        if (index !== -1) {
-          limitTitle = questions.value[index]
-          questions.value.splice(index, 1)
-        }
-        const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
-        if (idx !== -1) {
-          answerList.value.splice(index, 1)
-        }
-        await asizeRef.value.deleteData(id, true)
-        activeIndex.value = 0
-        const limit = limitTitle
-          ? limitTitle.length > 15
-            ? limitQuery.value.substring(0, 15) + '(final)'
-            : limitTitle + '(final)'
-          : limitQuery.value.length > 15
-            ? limitQuery.value.substring(0, 15) + '(final)'
-            : limitQuery.value + '(final)'
-        questions.value.unshift(limit)
-      }
-    }
-  }
-  if (isRefresh && ob) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (
-        answerList.value[m].type === '总结' &&
-        answerList.value[m].data.files &&
-        ob.originalFileName === answerList.value[m].data.files.originalFileName
-      ) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title
-        const index = questions.value.findIndex(item => item === title)
-        let limitObj = {}
-        if (index !== -1) {
-          questions.value.splice(index, 1)
-        }
-        const idx = answerList.value.findIndex(
-          item => item.data.files && item.data.files.originalFileName === ob.originalFileName
-        )
-        if (idx !== -1) {
-          limitObj = answerList.value[idx]
-          answerList.value.splice(idx, 1)
-        }
-        await asizeRef.value.deleteData(id, true)
-        activeIndex.value = 0
-        questions.value.unshift(title)
-        answerList.value.unshift(limitObj)
-      }
-    }
-  }
-  if (questions.value.includes(limitQuery.value + '(final)') && !isRefresh && !ob) {
-    const qData = limitQuery.value + '(final)'
-    for (var ms = 0; ms < questions.value.length; ms++) {
-      if (qData === questions.value[ms]) {
-        activeIndex.value = ms
-      }
-    }
-    asizeRef.value.queryAn(qData, '')
-    finalIng.value = false
-    docIng.value = false
-    return
-  }
-  if (questions.value.includes(limitQuery.value + '(final)') && isRefresh && !ob) {
-    const qData = limitQuery.value + '(final)'
-    const index = questions.value.findIndex(item => item === qData)
-    const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    if (idx !== -1) {
-      answerList.value.splice(index, 1)
-    }
-    await asizeRef.value.deleteData(targetId, isRefresh)
-  }
+  // if (isRefresh && ob) {
+  //   for (var m = 0; m < answerList.value.length; m++) {
+  //     if (
+  //       answerList.value[m].type === '总结' &&
+  //       answerList.value[m].data.files &&
+  //       ob.originalFileName === answerList.value[m].data.files.originalFileName
+  //     ) {
+  //       const id = answerList.value[m].id
+  //       title = answerList.value[m].title
+  //       const index = questions.value.findIndex(item => item === title)
+  //       let limitObj = {}
+  //       if (index !== -1) {
+  //         questions.value.splice(index, 1)
+  //       }
+  //       const idx = answerList.value.findIndex(
+  //         item => item.data.files && item.data.files.originalFileName === ob.originalFileName
+  //       )
+  //       if (idx !== -1) {
+  //         limitObj = answerList.value[idx]
+  //         answerList.value.splice(idx, 1)
+  //       }
+  //       await asizeRef.value.deleteData(id, true)
+  //       activeIndex.value = 0
+  //       questions.value.unshift(title)
+  //       answerList.value.unshift(limitObj)
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(limitQuery.value + '(final)') && !isRefresh && !ob) {
+  //   const qData = limitQuery.value + '(final)'
+  //   for (var ms = 0; ms < questions.value.length; ms++) {
+  //     if (qData === questions.value[ms]) {
+  //       activeIndex.value = ms
+  //     }
+  //   }
+  //   asizeRef.value.queryAn(qData, '')
+  //   finalIng.value = false
+  //   docIng.value = false
+  //   return
+  // }
+  // if (questions.value.includes(limitQuery.value + '(final)') && isRefresh && !ob) {
+  //   const qData = limitQuery.value + '(final)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   if (idx !== -1) {
+  //     answerList.value.splice(index, 1)
+  //   }
+  //   await asizeRef.value.deleteData(targetId, isRefresh)
+  // }
 
-  if (!questions.value.includes(limitQuery.value + '(final)') && !title && !ob) {
-    const qData = limitQuery.value + '(final)'
+  // if (!questions.value.includes(limitQuery.value + '(final)') && !title && !ob) {
+  //   const qData = limitQuery.value + '(final)'
+  //   questions.value.unshift(qData)
+  // }
+  if (!isRefresh) {
+    const qData = '新对话' + '(final)'
     questions.value.unshift(qData)
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
@@ -803,6 +818,7 @@ const submitFinal = async (val, isRefresh, ob) => {
       limitData.unshift(queryObj)
     }
   }
+
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   currentRequestUrl.value = '/AI/summarize'
@@ -839,7 +855,6 @@ const submitFinal = async (val, isRefresh, ob) => {
           question: passQuery,
           answer: finalData.value
         }
-
         postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
       } else {
         if (res.code === 400) {
@@ -877,6 +892,7 @@ const samplePost = event => {
 }
 
 const refreshData = () => {
+  console.log(123)
   if (isSampleLoad.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
@@ -891,6 +907,7 @@ const refreshData = () => {
       obj = answerList.value[idx]?.data?.files
     }
     const val = transQuest.value
+    console.log(1234)
     submitTran(val, true, obj)
   } else if (pageType.value === 'final') {
     let obj = ''
@@ -1409,6 +1426,7 @@ const submitSample = async (val, isRefresh) => {
   }
 }
 const submitTran = async (val, isRefresh, obj) => {
+  console.log(isRefresh)
   if (finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
@@ -1425,115 +1443,129 @@ const submitTran = async (val, isRefresh, obj) => {
   transQuest.value = ''
   transData.value = ''
   let title = ''
-  if (!isRefresh && obj) {
-    const qData = obj.originalFileName + '(tran)'
-    const index = questions.value.findIndex(item => item === qData)
-    // const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    // if (idx !== -1) {
-    //   answerList.value.splice(index, 1)
+  // if (!isRefresh && obj) {
+  //   const qData = obj.originalFileName + '(tran)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   // const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   if (targetId) {
+  //     asizeRef.value.deleteData(targetId, true)
+  //   }
+  //   questions.value.unshift(qData)
+  // }
+  if (isRefresh) {
+    let current = currentId.value
+    const idx = answerList.value.findIndex(item => item.id === current)
+    title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
+    let limitTitle = ''
+    limitTitle = questions.value[idx]
+    questions.value.splice(idx, 1)
+    answerList.value.splice(idx, 1)
+    await asizeRef.value.deleteData(current, true)
+    activeIndex.value = 0
+    questions.value.unshift(limitTitle)
+    // for (var m = 0; m < answerList.value.length; m++) {
+    //   if (answerList.value[m].type === '翻译' && limitQuery.value === answerList.value[m].data.question) {
+    //     const id = answerList.value[m].id
+    //     title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+    //     const index = questions.value.findIndex(item => item === title + '(tran)')
+    //     let limitTitle = ''
+    //     if (index !== -1) {
+    //       limitTitle = questions.value[index]
+    //       questions.value.splice(index, 1)
+    //     }
+    //     const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
+    //     if (idx !== -1) {
+    //       answerList.value.splice(index, 1)
+    //     }
+
+    //     await asizeRef.value.deleteData(id, true)
+    //     console.log(id)
+    //     activeIndex.value = 0
+    //     const limit = limitTitle
+    //       ? limitTitle.length > 15
+    //         ? limitQuery.value.substring(0, 15) + '(tran)'
+    //         : limitTitle + '(tran)'
+    //       : limitQuery.value.length > 15
+    //         ? limitQuery.value.substring(0, 15) + '(tran)'
+    //         : limitQuery.value + '(tran)'
+    //     questions.value.unshift(limit)
+    //   }
     // }
-    if (targetId) {
-      asizeRef.value.deleteData(targetId, true)
-    }
+  }
+  // if (isRefresh && obj) {
+  //   for (var m = 0; m < answerList.value.length; m++) {
+  //     if (
+  //       answerList.value[m].type === '翻译' &&
+  //       answerList.value[m].data.files &&
+  //       obj.originalFileName === answerList.value[m].data.files.originalFileName
+  //     ) {
+  //       const id = answerList.value[m].id
+  //       title = answerList.value[m].title
+  //       const index = questions.value.findIndex(item => item === title)
+  //       let limitObj = {}
+  //       if (index !== -1) {
+  //         questions.value.splice(index, 1)
+  //       }
+  //       const idx = answerList.value.findIndex(
+  //         item => item.data.files && item.data.files.originalFileName === obj.originalFileName
+  //       )
+  //       if (idx !== -1) {
+  //         limitObj = answerList.value[idx]
+  //         answerList.value.splice(idx, 1)
+  //       }
+  //       await asizeRef.value.deleteData(id, true)
+  //       activeIndex.value = 0
+  //       questions.value.unshift(title)
+  //       answerList.value.unshift(limitObj)
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(limitQuery.value + '(tran)') && !isRefresh && !obj) {
+  //   const qData = limitQuery.value + '(tran)'
+  //   for (var ms = 0; ms < questions.value.length; ms++) {
+  //     if (qData === questions.value[ms]) {
+  //       activeIndex.value = ms
+  //     }
+  //   }
+  //   if (selectedLan.value === answerList.value[activeIndex.value].data.target) {
+  //     asizeRef.value.queryAn(qData, '')
+  //     finalIng.value = false
+  //     docIng.value = false
+  //     return
+  //   } else {
+  //     const idx = answerList.value.findIndex(item => item.title === qData)
+  //     const targetId = answerList.value.find(item => item.title === qData)?.id
+  //     await asizeRef.value.deleteData(targetId, true)
+  //   }
+  // }
+  // if (questions.value.includes(limitQuery.value + '(tran)') && isRefresh && !obj) {
+  //   const qData = limitQuery.value + '(tran)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   if (idx !== -1) {
+  //     answerList.value.splice(index, 1)
+  //   }
+  //   await asizeRef.value.deleteData(targetId, isRefresh)
+  // }
+  // console.log(!questions.value.includes(limitQuery.value + '(tran)'))
+  // if (!questions.value.includes(limitQuery.value + '(tran)') && !title && !obj) {
+  //   const qData = '新对话' + '(tran)'
+  //   questions.value.unshift(qData)
+  //   console.log(questions.value)
+  // }
+  if (!isRefresh) {
+    const qData = '新对话' + '(tran)'
     questions.value.unshift(qData)
   }
-  if (isRefresh && !obj) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (answerList.value[m].type === '翻译' && limitQuery.value === answerList.value[m].data.question) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
-        const index = questions.value.findIndex(item => item === title + '(tran)')
-        let limitTitle = ''
-        if (index !== -1) {
-          limitTitle = questions.value[index]
-          questions.value.splice(index, 1)
-        }
-        const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
-        if (idx !== -1) {
-          answerList.value.splice(index, 1)
-        }
 
-        await asizeRef.value.deleteData(id, true)
-        activeIndex.value = 0
-        const limit = limitTitle
-          ? limitTitle.length > 15
-            ? limitQuery.value.substring(0, 15) + '(tran)'
-            : limitTitle + '(tran)'
-          : limitQuery.value.length > 15
-            ? limitQuery.value.substring(0, 15) + '(tran)'
-            : limitQuery.value + '(tran)'
-        questions.value.unshift(limit)
-      }
-    }
-  }
-  if (isRefresh && obj) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (
-        answerList.value[m].type === '翻译' &&
-        answerList.value[m].data.files &&
-        obj.originalFileName === answerList.value[m].data.files.originalFileName
-      ) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title
-        const index = questions.value.findIndex(item => item === title)
-        let limitObj = {}
-        if (index !== -1) {
-          questions.value.splice(index, 1)
-        }
-        const idx = answerList.value.findIndex(
-          item => item.data.files && item.data.files.originalFileName === obj.originalFileName
-        )
-        if (idx !== -1) {
-          limitObj = answerList.value[idx]
-          answerList.value.splice(idx, 1)
-        }
-        await asizeRef.value.deleteData(id, true)
-        activeIndex.value = 0
-        questions.value.unshift(title)
-        answerList.value.unshift(limitObj)
-      }
-    }
-  }
-  if (questions.value.includes(limitQuery.value + '(tran)') && !isRefresh && !obj) {
-    const qData = limitQuery.value + '(tran)'
-    for (var ms = 0; ms < questions.value.length; ms++) {
-      if (qData === questions.value[ms]) {
-        activeIndex.value = ms
-      }
-    }
-    if (selectedLan.value === answerList.value[activeIndex.value].data.target) {
-      asizeRef.value.queryAn(qData, '')
-      finalIng.value = false
-      docIng.value = false
-      return
-    } else {
-      const idx = answerList.value.findIndex(item => item.title === qData)
-      const targetId = answerList.value.find(item => item.title === qData)?.id
-      await asizeRef.value.deleteData(targetId, true)
-    }
-  }
-  if (questions.value.includes(limitQuery.value + '(tran)') && isRefresh && !obj) {
-    const qData = limitQuery.value + '(tran)'
-    const index = questions.value.findIndex(item => item === qData)
-    const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    if (idx !== -1) {
-      answerList.value.splice(index, 1)
-    }
-    await asizeRef.value.deleteData(targetId, isRefresh)
-  }
-
-  if (!questions.value.includes(limitQuery.value + '(tran)') && !title && !obj) {
-    const qData = limitQuery.value + '(tran)'
-    questions.value.unshift(qData)
-  }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
   for (var k = 0; k < questions.value.length; k++) {
     const queryObj = {
@@ -1576,6 +1608,7 @@ const submitTran = async (val, isRefresh, obj) => {
           question: passQuery,
           answer: res.data
         }
+
         postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
       } else {
         if (res.code === 400) {
@@ -1636,77 +1669,89 @@ const submitQuestion = async (val, isRefresh) => {
   //   deepType.value = 0
   // }
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
-  if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (
-        (answerList.value[m].type === '人资行政专题' ||
-          answerList.value[m].type === 'IT专题' ||
-          answerList.value[m].type === '法务专题') &&
-        queryValue === answerList.value[m].data.question
-      ) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
-        const index = questions.value.findIndex(item => item === title + addTitle)
-        if (index !== -1) {
-          questions.value.splice(index, 1)
-        }
-        activeIndex.value = 0
-        await asizeRef.value.deleteData(id, true)
-        questions.value.unshift(title + addTitle)
-      }
-    }
+  if (isRefresh) {
+    let current = currentId.value
+    const idx = answerList.value.findIndex(item => item.id === current)
+    title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
+    let limitTitle = ''
+    limitTitle = questions.value[idx]
+    questions.value.splice(idx, 1)
+    answerList.value.splice(idx, 1)
+    await asizeRef.value.deleteData(current, true)
+    activeIndex.value = 0
+    questions.value.unshift(title + addTitle)
   }
-  if (questions.value.includes(queryValue + addTitle) && !isRefresh) {
-    queryIng.value = false
-    const qData = queryValue + addTitle
-    for (var i = 0; i < questions.value.length; i++) {
-      if (qData === questions.value[i]) {
-        activeIndex.value = i
-      }
-    }
-    asizeRef.value.queryAn(qData, '')
-    isSampleLoad.value = false
-    return
-  }
-  if (!isRefresh) {
-    for (var s = 0; s < answerList.value.length; s++) {
-      if (answerList.value[s].type === '人资行政专题' && queryValue === answerList.value[s].data.question) {
-        activeIndex.value = s
-        asizeRef.value.queryAn(queryValue + '(query)', '')
-        queryIng.value = false
-        isSampleLoad.value = false
-        return
-      }
-      if (answerList.value[s].type === 'IT专题' && queryValue === answerList.value[s].data.question) {
-        activeIndex.value = s
-        asizeRef.value.queryAn(queryValue + '(it)', '')
-        queryIng.value = false
-        isSampleLoad.value = false
-        return
-      }
-      if (answerList.value[s].type === '法务专题' && queryValue === answerList.value[s].data.question) {
-        activeIndex.value = s
-        asizeRef.value.queryAn(queryValue + '(law)', '')
-        queryIng.value = false
-        isSampleLoad.value = false
-        return
-      }
-    }
-  }
-  if (questions.value.includes(queryValue + addTitle) && isRefresh) {
-    const qData = queryValue + addTitle
-    const index = questions.value.findIndex(item => item === qData)
-    const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    limitAry.value = JSON.parse(JSON.stringify(answerList.value))
-    if (idx !== -1) {
-      answerList.value.splice(index, 1)
-    }
-    await asizeRef.value.deleteData(targetId, isRefresh)
-  }
+  // if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
+  //   for (var m = 0; m < answerList.value.length; m++) {
+  //     if (
+  //       (answerList.value[m].type === '人资行政专题' ||
+  //         answerList.value[m].type === 'IT专题' ||
+  //         answerList.value[m].type === '法务专题') &&
+  //       queryValue === answerList.value[m].data.question
+  //     ) {
+  //       const id = answerList.value[m].id
+  //       title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+  //       const index = questions.value.findIndex(item => item === title + addTitle)
+  //       if (index !== -1) {
+  //         questions.value.splice(index, 1)
+  //       }
+  //       activeIndex.value = 0
+  //       await asizeRef.value.deleteData(id, true)
+  //       questions.value.unshift(title + addTitle)
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(queryValue + addTitle) && !isRefresh) {
+  //   queryIng.value = false
+  //   const qData = queryValue + addTitle
+  //   for (var i = 0; i < questions.value.length; i++) {
+  //     if (qData === questions.value[i]) {
+  //       activeIndex.value = i
+  //     }
+  //   }
+  //   asizeRef.value.queryAn(qData, '')
+  //   isSampleLoad.value = false
+  //   return
+  // }
+  // if (!isRefresh) {
+  //   for (var s = 0; s < answerList.value.length; s++) {
+  //     if (answerList.value[s].type === '人资行政专题' && queryValue === answerList.value[s].data.question) {
+  //       activeIndex.value = s
+  //       asizeRef.value.queryAn(queryValue + '(query)', '')
+  //       queryIng.value = false
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //     if (answerList.value[s].type === 'IT专题' && queryValue === answerList.value[s].data.question) {
+  //       activeIndex.value = s
+  //       asizeRef.value.queryAn(queryValue + '(it)', '')
+  //       queryIng.value = false
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //     if (answerList.value[s].type === '法务专题' && queryValue === answerList.value[s].data.question) {
+  //       activeIndex.value = s
+  //       asizeRef.value.queryAn(queryValue + '(law)', '')
+  //       queryIng.value = false
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(queryValue + addTitle) && isRefresh) {
+  //   const qData = queryValue + addTitle
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
+  //   if (idx !== -1) {
+  //     answerList.value.splice(index, 1)
+  //   }
+  //   await asizeRef.value.deleteData(targetId, isRefresh)
+  // }
   if (!questions.value.includes(queryValue) && !title) {
     questions.value.unshift(queryValue + addTitle)
     activeIndex.value = '0'

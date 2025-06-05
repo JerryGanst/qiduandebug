@@ -639,10 +639,16 @@ const queryAn = (val, index, data) => {
         currentQuestion.value = false
         pageType.value = 'tran'
         selectedMode.value = '翻译'
-        transData.value = anList[j].data.answer
-        transQuest.value = anList[j].data.files ? anList[j].data.files.originalFileName : anList[j].data.question
-        selectedLan.value = anList[j].data.target
-        currentId.value = anList[j].id
+        const idx = anList.length === questions.value.length ? index : index - 1
+        transData.value = anList[idx].data.answer
+        transQuest.value = anList[idx].data.files ? anList[idx].data.files.originalFileName : anList[idx].data.question
+        selectedLan.value = anList[idx].data.target
+        currentId.value = anList[idx].id
+
+        // transData.value = anList[j].data.answer
+        // transQuest.value = anList[j].data.files ? anList[j].data.files.originalFileName : anList[j].data.question
+        // selectedLan.value = anList[j].data.target
+        // currentId.value = anList[j].id
       }
     } else if (anList[j].type === '总结') {
       queryFinal.push(anList[j].title)
@@ -651,10 +657,11 @@ const queryAn = (val, index, data) => {
         currentQuestion.value = false
         pageType.value = 'final'
         selectedMode.value = '总结'
-        finalData.value.data = anList[j].data.answer.key_points
-        finalData.value.title = anList[j].data.answer.summary
-        finalQuest.value = anList[j].data.files ? anList[j].data.files.originalFileName : anList[j].data.question
-        currentId.value = anList[j].id
+        const idx = anList.length === questions.value.length ? index : index - 1
+        finalData.value.data = anList[idx].data.answer.key_points
+        finalData.value.title = anList[idx].data.answer.summary
+        finalQuest.value = anList[idx].data.files ? anList[idx].data.files.originalFileName : anList[idx].data.question
+        currentId.value = anList[idx].id
       }
     }
   }
@@ -693,18 +700,22 @@ const queryAn = (val, index, data) => {
         currentQuestion.value = false
         if (anList.length === queryList.length) {
           transQuest.value = anList[i].data.question
-        } else {
-          const data = getMatchingIndexes(limitAry.value, queryList[i])
-          transQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
         }
+        // else {
+        //   const data = getMatchingIndexes(limitAry.value, queryList[i])
+        //   console.log(data)
+        //   transQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
+        // }
       } else if (pageType.value === 'final') {
         currentQuestion.value = false
         if (anList.length === queryList.length) {
           finalQuest.value = anList[i].data.question
-        } else {
-          const data = getMatchingIndexes(limitAry.value, queryList[i])
-          finalQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
         }
+        //  else {
+        //   const data = getMatchingIndexes(limitAry.value, queryList[i])
+
+        //   finalQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
+        // }
       }
     }
   }
