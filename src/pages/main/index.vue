@@ -676,7 +676,7 @@ const submitFinal = async (val, isRefresh, ob) => {
   if (!ob && !checkData(val)) {
     return
   }
-  limitQuery.value = newQuestion.value
+  const queryData = newQuestion.value
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
   finalData.value = {
@@ -828,8 +828,8 @@ const submitFinal = async (val, isRefresh, ob) => {
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   currentRequestUrl.value = '/AI/summarize'
-  finalQuest.value = ob ? ob.originalFileName : limitQuery.value
-  const passQuery = ob ? ob.originalFileName : limitQuery.value
+  finalQuest.value = ob ? ob.originalFileName : queryData
+  const passQuery = ob ? ob.originalFileName : queryData
   entryRef.value.changeDynamicRows()
   nextTick(() => {
     if (entryRef.value?.fileRef) {
@@ -1987,7 +1987,12 @@ const postFinal = async (obj, title, ob) => {
     })
     .then(res => {
       if (res.status) {
+        finalIng.value = false
+        docIng.value = false
         getHistory('', 'final', obj.question, res.data)
+      } else {
+        finalIng.value = false
+        docIng.value = false
       }
     })
     .catch(err => {
