@@ -574,9 +574,10 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'query'
         selectedMode.value = '人资行政专题'
-        currentObj.value.messages = anList[j].data.answer
-        currentObj.value.list = anList[j].data?.think
-        deepType.value = anList[j].isThink
+        tipQuery.value = anList[index].data.question
+        currentObj.value.messages = anList[index].data.answer
+        currentObj.value.list = anList[index].data?.think
+        deepType.value = anList[index].isThink
       }
     } else if (anList[j].type === 'IT专题') {
       queryIt.push(anList[j].title)
@@ -585,10 +586,10 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'it'
         selectedMode.value = 'IT专题'
-        tipQuery.value = anList[j].data.question
-        currentObj.value.messages = anList[j].data.answer
-        currentObj.value.list = anList[j].data?.think
-        deepType.value = anList[j].isThink
+        tipQuery.value = anList[index].data.question
+        currentObj.value.messages = anList[index].data.answer
+        currentObj.value.list = anList[index].data?.think
+        deepType.value = anList[index].isThink
       }
     } else if (anList[j].type === '法务专题') {
       queryLaw.push(anList[j].title)
@@ -597,10 +598,10 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'law'
         selectedMode.value = '法务专题'
-        tipQuery.value = anList[j].data.question
-        currentObj.value.messages = anList[j].data.answer
-        currentObj.value.list = anList[j].data?.think
-        deepType.value = anList[j].isThink
+        tipQuery.value = anList[index].data.question
+        currentObj.value.messages = anList[index].data.answer
+        currentObj.value.list = anList[index].data?.think
+        deepType.value = anList[index].isThink
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)

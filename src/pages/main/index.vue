@@ -715,7 +715,13 @@ const submitFinal = async (val, isRefresh, ob) => {
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
     questions.value.unshift(limitTitle)
-
+    const data = {
+      data: {
+        answer: '',
+        question: '桌面云规划怎么做？',
+        think: {}
+      }
+    }
     // for (var m = 0; m < answerList.value.length; m++) {
     //   if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
     //     const id = answerList.value[m].id
@@ -1674,12 +1680,15 @@ const submitQuestion = async (val, isRefresh) => {
     const idx = answerList.value.findIndex(item => item.id === current)
     title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
     let limitTitle = ''
+    let limitObj = {}
     limitTitle = questions.value[idx]
     questions.value.splice(idx, 1)
+    limitObj = answerList.value[idx]
     answerList.value.splice(idx, 1)
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
     questions.value.unshift(title + addTitle)
+    answerList.value.unshift(limitObj)
   }
   // if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
   //   for (var m = 0; m < answerList.value.length; m++) {
@@ -1753,7 +1762,16 @@ const submitQuestion = async (val, isRefresh) => {
   //   await asizeRef.value.deleteData(targetId, isRefresh)
   // }
   if (!questions.value.includes(queryValue) && !title) {
-    questions.value.unshift(queryValue + addTitle)
+    questions.value.unshift('新对话' + addTitle)
+    const data = {
+      data: {
+        answer: '',
+        question: queryValue,
+        think: ''
+      },
+      title: queryValue
+    }
+    answerList.value.unshift(data)
     activeIndex.value = '0'
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
