@@ -913,7 +913,6 @@ const refreshData = () => {
       obj = answerList.value[idx]?.data?.files
     }
     const val = transQuest.value
-    console.log(1234)
     submitTran(val, true, obj)
   } else if (pageType.value === 'final') {
     let obj = ''
@@ -1432,7 +1431,6 @@ const submitSample = async (val, isRefresh) => {
   }
 }
 const submitTran = async (val, isRefresh, obj) => {
-  console.log(isRefresh)
   if (finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
@@ -1444,6 +1442,7 @@ const submitTran = async (val, isRefresh, obj) => {
   docIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   limitQuery.value = newQuestion.value
+  const passData = newQuestion.value
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
   transQuest.value = ''
@@ -1586,8 +1585,8 @@ const submitTran = async (val, isRefresh, obj) => {
     }
   }
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
-  transQuest.value = obj ? obj.originalFileName : limitQuery.value
-  const passQuery = obj ? obj.originalFileName : limitQuery.value
+  transQuest.value = obj ? obj.originalFileName : passData
+  const passQuery = obj ? obj.originalFileName : passData
   currentRequestUrl.value = '/AI/translate'
   nextTick(() => {
     if (entryRef.value?.fileRef) {
@@ -1597,7 +1596,7 @@ const submitTran = async (val, isRefresh, obj) => {
   request
     .post('/AI/translate', {
       user_id: userInfo.value.id,
-      source_text: obj ? '' : limitQuery.value,
+      source_text: obj ? '' : passData,
       target_language: selectedLan.value,
       file: obj ? obj.fileId : ''
       // showLoading: true
