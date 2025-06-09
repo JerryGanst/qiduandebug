@@ -678,7 +678,7 @@ defineExpose({ openFile })
     }
   }
   .upload_list {
-    width: calc(100% - 30px);
+    width: calc(100% - 70px);
     margin-left: 15px;
     position: absolute;
     top: 82px;
