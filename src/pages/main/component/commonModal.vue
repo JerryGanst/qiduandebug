@@ -25,16 +25,17 @@
               <span style="color: #868686">单个大小不超过50M</span>
             </div>
             <!-- <div class="el-upload__subtext">
-                <span style="color: #868686">上传成功后文件将会被转为PDF</span>
-              </div> -->
+                  <span style="color: #868686">上传成功后文件将会被转为PDF</span>
+                </div> -->
           </div>
         </el-upload>
       </div>
       <div
         class="file_item"
         :style="{
-          marginTop: isUpload ? '170px' : '20px',
-          height: isUpload ? 'calc(100% - 180px)' : 'calc(100% - 20px)'
+          marginTop: isUpload ? '170px' : '42px',
+          marginBottom: isUpload ? '12px' : '0px',
+          height: isUpload ? 'calc(100% - 240px)' : 'calc(100% - 100px)'
         }"
       >
         <div
@@ -52,8 +53,8 @@
             {{ file.fileName }}
           </div>
           <!-- <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
-              {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
-            </div> -->
+                {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
+              </div> -->
           <el-popconfirm
             title="确定要删除吗？"
             confirm-button-text="确定"
@@ -74,6 +75,18 @@
           </el-popconfirm>
         </div>
       </div>
+      <div style="width: 100%; height: 50px; display: flex; justify-content: center; align-items: center">
+        <!-- 分页器 -->
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[30, 50, 100]"
+          :total="totals"
+          layout="total, prev, pager, next, sizes"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -91,7 +104,7 @@ import pdf from '@/assets/pdf.png'
 import down from '@/assets/arrow_up.png'
 import up from '@/assets/arrow_down.png'
 import sort from '@/assets/sort.png'
-import { ElMessage } from 'element-plus' // 引入 ElMessage
+import { ElMessage, ElPagination } from 'element-plus' // 引入 ElMessage
 import request from '@/utils/request' // 导入封装的 axios 方法
 import { Search } from '@element-plus/icons-vue'
 
@@ -102,8 +115,11 @@ const previewContent = ref(null)
 const previewType = ref('')
 const previewFileId = ref(null)
 const selectedKnow = ref('IT')
+const totals = ref(100)
 const isDelete = ref(true)
 const isUpload = ref(true)
+const currentPage = ref(1)
+const pageSize = ref(100)
 const knowOptions = ref([
   // {
   //   value: 'IT',
@@ -131,7 +147,17 @@ const searchData = () => {
   getFileList()
   // 调用后端接口或其他搜索逻辑
 }
+const handleSizeChange = val => {
+  pageSize.value = val
+  getFileList()
+  // 这里通常调用API获取新数据
+}
 
+const handleCurrentChange = val => {
+  currentPage.value = val
+  getFileList()
+  // 这里通常调用API获取新数据
+}
 const downloads = url => {
   try {
     // 1. 调用后端接口获取预签名URL
@@ -263,6 +289,7 @@ const uploadSingleFile = async file => {
         } else {
           ElMessage.error(res.data.message)
           file.status = 'error'
+          getFileList()
           reject(err)
         }
       })
@@ -334,10 +361,20 @@ const checkKnow = val => {
 const getFileList = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
-    .post('/Files/getFileInfoFromSystem?userId=' + userInfo.id + '&target=' + selectedKnow.value)
+    .post(
+      '/Files/getFileInfoFromSystem?userId=' +
+        userInfo.id +
+        '&target=' +
+        selectedKnow.value +
+        '&page=' +
+        currentPage.value +
+        '&size=' +
+        pageSize.value
+    )
     .then(res => {
       if (res.status) {
-        fileQueue.value = res.data
+        fileQueue.value = res.data.content
+        totals.value = res.data.totalElements
         getInfo()
       } else {
         fileQueue.value = []
@@ -404,6 +441,14 @@ const openFile = (val, ary) => {
   })
 }
 
+const getKnow = val => {
+  selectedKnow.value = val.target
+  isUpload.value = val.upload
+  isDelete.value = val.delete
+  console.log(val)
+  getFileList()
+}
+
 const getTextAfterLastDot = str => {
   const lastDotIndex = str.lastIndexOf('.')
   if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
@@ -415,7 +460,14 @@ const getFile = fileObj => {
 }
 // 组件挂载时订阅事件
 onMounted(() => {
-  openFile()
+  eventBus.on('changeKnow', getKnow)
+  let powerList = JSON.parse(localStorage.getItem('powerList'))
+  selectedKnow.value = powerList[0].target
+  isUpload.value = powerList[0].upload
+  isDelete.value = powerList[0].delete
+  console.log(powerList)
+  getFileList()
+  //   openFile()
 })
 watch(
   selectedKnow,
@@ -506,7 +558,8 @@ defineExpose({ openFile })
 }
 
 .file-list {
-  width: 100%;
+  width: calc(100% - 80px);
+  margin-left: 80px;
   height: 100%;
 
   overflow-y: hidden;
@@ -514,10 +567,25 @@ defineExpose({ openFile })
   position: relative;
   flex-direction: column;
   .file_item {
-    height: calc(100% - 180px);
+    height: calc(100% - 240px);
     overflow-y: auto;
     margin-top: 170px;
     float: left;
+  }
+  .file_item::-webkit-scrollbar {
+    width: 1px; /* 滚动条宽度 */
+  }
+  .file_item::-webkit-scrollbar-track {
+    background: #fff; /* 轨道背景颜色 */
+    border-radius: 0px; /* 轨道圆角 */
+  }
+  .file_item::-webkit-scrollbar-thumb {
+    background: #fff; /* 轨道背景颜色 */
+    border-radius: 0px; /* 滑块圆角 */
+    border: 1px solid #fff; /* 滑块边框 */
+  }
+  .file_item::-webkit-scrollbar-thumb:hover {
+    background: #fff; /* 滑块悬停时的颜色 */
   }
   .file_search {
     margin-left: 15px;
@@ -718,7 +786,7 @@ defineExpose({ openFile })
 }
 
 .preview-container {
-  height: calc(100% - 140px);
+  height: calc(100% - 100px);
   border-radius: 4px;
   margin: 0 15px 15px 15px;
   overflow-y: auto;
