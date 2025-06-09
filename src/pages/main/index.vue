@@ -628,7 +628,29 @@ const toDoc = async data => {
       // botMessage.text = '抱歉，暂时无法获取回复';
     })
 }
+// const toDoc = async data => {
+//   request
+//     .post(
+//       '/Files/getFileLinkByName?fileName=' +
+//         data.document_title +
+//         '&target=' +
+//         (selectedMode.value === 'IT专题' ? 'IT' : selectedMode.value === '人资行政专题' ? 'HR' : 'Law')
 
+//       // showLoading: true
+//     )
+//     .then(res => {
+//       if (res.status) {
+//         if (res.data) {
+//           window.open(res.data, '_blank')
+//         }
+//       }
+//     })
+//     .catch(err => {
+//       // loadingInstance.close();
+//       console.error('获取回复失败:', err)
+//       // botMessage.text = '抱歉，暂时无法获取回复';
+//     })
+// }
 const handleCommonClose = done => {
   // 这里可以添加一些关闭前的逻辑
   done()

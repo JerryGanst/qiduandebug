@@ -2,28 +2,23 @@
   <el-aside :width="isCollapsed ? '60px' : '280px'" class="aside">
     <div class="aside_left">
       <img class="aside_left_img" src="@/assets/logo.png" />
-      <div
-        class="aside_left_message"
-        :style="{ backgroundColor: selectType === 1 ? '#E6F4FF' : '#F7F7F7' }"
-        @click="changeContent(1)"
-      >
-        <img :src="selectType === 1 ? messageBlue : messageGray" />
+      <div class="aside_left_message" @click="changeContent(1)">
+        <div class="aside_img" :style="{ backgroundColor: selectType === 1 ? '#E6F4FF' : '#F7F7F7' }">
+          <img :src="selectType === 1 ? messageBlue : messageGray" />
+        </div>
+        <div class="aside_message_text" :style="{ color: selectType === 1 ? '#1B6CFF' : '#9D9D9D' }">对话</div>
       </div>
-      <div class="aside_message_text" :style="{ color: selectType === 1 ? '#1B6CFF' : '#9D9D9D' }">对话</div>
-      <div
-        class="aside_left_file"
-        v-if="isPowerFile"
-        @click="changeContent(2)"
-        :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }"
-      >
-        <img
-          :src="selectType === 2 ? fileBlue : fileGray"
-          :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }"
-        />
+
+      <div class="aside_left_file" v-if="isPowerFile" @click="changeContent(2)">
+        <div class="aside_img" :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }">
+          <img
+            :src="selectType === 2 ? fileBlue : fileGray"
+            :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }"
+          />
+        </div>
+        <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
       </div>
-      <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }" style="top: 187px">
-        知识库
-      </div>
+
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
         <el-avatar
@@ -1005,34 +1000,52 @@ defineExpose({ queryAn, deleteData, setPower })
     flex-shrink: 0; /* 防止折叠时被压缩 */
     .aside_left_file {
       position: absolute;
-      width: 36px;
-      height: 36px;
-      background-color: #f7f7f7;
+      width: 100%;
+      height: 66px;
+
+      flex-direction: column;
       top: 150px;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
-      border-radius: 12px;
-      img {
-        width: 28px;
-        height: 28px;
+
+      .aside_img {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f7f7f7;
+        border-radius: 12px;
+        img {
+          width: 28px;
+          height: 28px;
+        }
       }
     }
     .aside_left_message {
       position: absolute;
-      width: 36px;
-      height: 36px;
-      background-color: #f7f7f7;
+      width: 100%;
+      height: 70px;
       top: 75px;
       cursor: pointer;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      border-radius: 12px;
-      img {
-        width: 28px;
-        height: 28px;
+      .aside_img {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 12px;
+        background-color: #f7f7f7;
+        img {
+          width: 28px;
+          height: 28px;
+        }
       }
     }
     .aside_message_text {
@@ -1040,8 +1053,7 @@ defineExpose({ queryAn, deleteData, setPower })
       height: 24px;
       line-height: 24px;
       font-size: 12px;
-      position: absolute;
-      top: 112px;
+
       text-align: center;
     }
     .aside_left_img {
