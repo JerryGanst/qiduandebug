@@ -166,7 +166,7 @@
         class="preview-container"
         :key="previewFileId"
         style="margin: 15px"
-        :style="{ margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
+        :style="{ margin: previewFileId ? '0 15px 10px 15px' : '15px', width: isCollapsed ? '550px' : '450px' }"
       >
         <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px">
           <pre>{{ previewContent }}</pre>
@@ -223,6 +223,7 @@ const permission = ref([])
 const currentPage = ref(1)
 const pageSize = ref(100)
 const totals = ref(100)
+const isCollapsed = ref(false)
 const knowOptions = ref([
   {
     value: 1,
@@ -606,7 +607,9 @@ const openFile = (val, ary) => {
   isPower.value = false
   getFileList()
 }
-
+const getCollapsed = val => {
+  isCollapsed.value = val
+}
 const getTextAfterLastDot = str => {
   const lastDotIndex = str.lastIndexOf('.')
   if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
@@ -652,6 +655,7 @@ const getFile = fileObj => {
     })
 }
 onMounted(() => {
+  eventBus.on('setCollapsed', getCollapsed)
   openFile()
 })
 defineExpose({ openFile })

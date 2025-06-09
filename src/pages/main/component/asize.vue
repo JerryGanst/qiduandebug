@@ -350,6 +350,8 @@ const emit = defineEmits(['change-history', 'set-isLaw', 'set-message', 'set-Fil
 // 左上角折叠控制函数
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
+  eventBus.emit('setCollapsed', isCollapsed.value)
+  // emit('set-message', isCollapsed.value)
 }
 const handleTitleClose = done => {
   // 这里可以添加一些关闭前的逻辑

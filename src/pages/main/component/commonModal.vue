@@ -142,6 +142,7 @@ const isDelete = ref(true)
 const isUpload = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(100)
+
 const knowOptions = ref([
   // {
   //   value: 'IT',
@@ -485,6 +486,7 @@ const getFile = fileObj => {
 // 组件挂载时订阅事件
 onMounted(() => {
   eventBus.on('changeKnow', getKnow)
+
   let powerList = JSON.parse(localStorage.getItem('powerList'))
   selectedKnow.value = powerList[0].target
   isUpload.value = powerList[0].upload
