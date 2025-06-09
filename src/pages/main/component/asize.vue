@@ -415,7 +415,6 @@ const changeFileModel = val => {
 const knowItemSelect = val => {
   ItemSelect.value = val
   const data = powerArr.value[val].target
-  console.log(powerArr.value[val])
   eventBus.emit('changeKnow', powerArr.value[val])
 }
 
@@ -888,7 +887,6 @@ const getPower = () => {
                   : '法务知识库'
           }
         }
-        console.log(powerArr.value)
         setPower(JSON.stringify(res.data))
       }
     })

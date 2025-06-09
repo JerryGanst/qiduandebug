@@ -723,11 +723,11 @@ defineExpose({ openFile })
   display: flex;
   position: relative;
   flex-direction: column;
-  margin-top: 10px;
+  margin-top: 15px;
   .file_item {
     overflow-y: auto;
     margin-top: 215px;
-    height: calc(100% - 260px);
+    height: calc(100% - 270px);
     float: left;
   }
   .file_item::-webkit-scrollbar {

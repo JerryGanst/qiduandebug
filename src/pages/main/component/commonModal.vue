@@ -489,7 +489,6 @@ onMounted(() => {
   selectedKnow.value = powerList[0].target
   isUpload.value = powerList[0].upload
   isDelete.value = powerList[0].delete
-  console.log(powerList)
   getFileList()
   //   openFile()
 })
@@ -643,7 +642,7 @@ defineExpose({ openFile })
       flex-direction: row-reverse;
       flex: 1;
       margin-right: 40px;
-      margin-top: 10px;
+      margin-top: 15px;
       .file_content {
         display: flex;
         flex-direction: column;
