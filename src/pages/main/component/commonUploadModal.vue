@@ -1,85 +1,122 @@
 <template>
-  <div class="upload-layout">
-    <!-- 左侧附件列表 -->
-    <div class="file-list" style="width: 100%">
-      <div class="upload_list">
-        <el-upload
-          v-if="isUpload"
-          drag
-          :auto-upload="false"
-          :multiple="true"
-          :accept="allowedFileTypes"
-          :on-change="handleFileAdd"
-          :show-file-list="false"
-          :file-list="fileQueue"
-          :before-upload="checkFileSize"
-        >
-          <i class="el-icon-upload" />
-          <div class="el-upload__text">
-            拖拽附件到此或
-            <em>点击上传</em>
-            <div class="el-upload__subtext">
-              <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
+  <el-dialog
+    v-model="dialogVisible"
+    title="公共知识库"
+    width="100%"
+    height="100%"
+    class="custom-upload-dialog"
+    style="height: 100%; margin: 0px; border-radius: 0px"
+  >
+    <div class="upload-layout">
+      <!-- 左侧附件列表 -->
+      <div class="file-list" style="width: 100%">
+        <div class="file_search">
+          <div class="file_left">
+            <div class="file_content">
+              <div class="file_select">
+                <el-select v-model="selectedKnow" placeholder="请选择部门知识库" @change="checkKnow">
+                  <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </div>
+
+              <div class="file_info" style="margin-left: 10px">
+                <span>共{{ total }}项</span>
+              </div>
             </div>
-            <div class="el-upload__subtext">
-              <span style="color: #868686">单个大小不超过50M</span>
+          </div>
+          <div class="file_right">
+            <div class="file_content">
+              <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
+              <el-input v-model="searchText" placeholder="请输入关键字" @input="handleSearch">
+                <!-- 使用插槽自定义前缀图标并绑定事件 -->
+                <template #prefix>
+                  <el-icon class="el-input__icon" @click="searchData" style="cursor: pointer">
+                    <Search />
+                  </el-icon>
+                </template>
+              </el-input>
             </div>
-            <!-- <div class="el-upload__subtext">
+          </div>
+        </div>
+        <div class="upload_list">
+          <el-upload
+            v-if="isUpload"
+            drag
+            :auto-upload="false"
+            :multiple="true"
+            :accept="allowedFileTypes"
+            :on-change="handleFileAdd"
+            :show-file-list="false"
+            :file-list="fileQueue"
+            :before-upload="checkFileSize"
+          >
+            <i class="el-icon-upload" />
+            <div class="el-upload__text">
+              拖拽附件到此或
+              <em>点击上传</em>
+              <div class="el-upload__subtext">
+                <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
+              </div>
+              <div class="el-upload__subtext">
+                <span style="color: #868686">单个大小不超过50M</span>
+              </div>
+              <!-- <div class="el-upload__subtext">
                 <span style="color: #868686">上传成功后文件将会被转为PDF</span>
               </div> -->
-          </div>
-        </el-upload>
-      </div>
-      <div
-        class="file_item"
-        :style="{
-          marginTop: isUpload ? '170px' : '20px',
-          height: isUpload ? 'calc(100% - 180px)' : 'calc(100% - 20px)'
-        }"
-      >
+            </div>
+          </el-upload>
+        </div>
         <div
-          v-for="(file, index) in filteredList"
-          :key="file.uid"
-          class="file-item"
-          :class="{ 'uploading-file': file.status === 'pending' }"
-          @click="getFile(file)"
-          style="position: relative; width: 8%; margin-left: 13px"
+          class="file_item"
+          :style="{
+            marginTop: isUpload ? '170px' : '60px',
+            height: isUpload ? 'calc(100% - 180px)' : 'calc(100% - 70px)'
+          }"
         >
-          <div class="file_img">
-            <img :src="file.fileType === 'txt' ? text : file.fileType === 'pdf' ? pdf : word" />
-          </div>
-          <div class="fileName" style="width: 70px">
-            {{ file.fileName }}
-          </div>
-          <!-- <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
+          <div
+            v-for="(file, index) in filteredList"
+            :key="file.uid"
+            class="file-item"
+            :class="{ 'uploading-file': file.status === 'pending' }"
+            @click="getFile(file)"
+            style="position: relative; width: 8%; margin-left: 13px"
+          >
+            <div class="file_img">
+              <img :src="file.fileType === 'txt' ? text : file.fileType === 'pdf' ? pdf : word" />
+            </div>
+            <div class="fileName" style="width: 70px">
+              {{ file.fileName }}
+            </div>
+            <!-- <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
               {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
             </div> -->
-          <el-popconfirm
-            title="确定要删除吗？"
-            confirm-button-text="确定"
-            cancel-button-text="取消"
-            @confirm="handleDelete(index, $event)"
-          >
-            <template #reference>
-              <span @click.stop>
-                <!-- 阻止点击事件冒泡 -->
-                <div
-                  style="width: 20px; height: 20px; cursor: pointer; position: absolute; right: 4px; top: 4px"
-                  v-if="isDelete"
-                >
-                  <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
-                </div>
-              </span>
-            </template>
-          </el-popconfirm>
+            <el-popconfirm
+              title="确定要删除吗？"
+              confirm-button-text="确定"
+              cancel-button-text="取消"
+              @confirm="handleDelete(index, $event)"
+            >
+              <template #reference>
+                <span @click.stop>
+                  <!-- 阻止点击事件冒泡 -->
+                  <div
+                    style="width: 20px; height: 20px; cursor: pointer; position: absolute; right: 4px; top: 4px"
+                    v-if="isDelete"
+                  >
+                    <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
+                  </div>
+                </span>
+              </template>
+            </el-popconfirm>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </el-dialog>
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch, onMounted } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import axios from 'axios'
 import mammoth from 'mammoth'
 import { debounce } from 'lodash-es'
@@ -231,10 +268,13 @@ let uploadPromises = [] // 存储所有上传Promise
 const startAutoUpload = async () => {
   try {
     uploadPromises = fileQueue.value.filter(f => f.status === 'pending').map(file => uploadSingleFile(file))
+
     // 等待全部完成（网页[7]）
     await Promise.all(uploadPromises)
+
     // 全部成功后刷新列表
     getFileList()
+
     // 清空队列
     // fileQueue.value = []
   } catch (error) {
@@ -289,6 +329,119 @@ const handleFileAdd = async uploadFile => {
 }
 
 const fileInfo = ref({})
+// 附件预览处理
+const handlePreview = async file => {
+  if (!file) {
+    return
+  }
+  const exception = getTextAfterLastDot(file.name)
+  try {
+    fileInfo.value = file
+    if (['txt'].includes(exception)) {
+      // 处理文本附件
+      const reader = new FileReader()
+      reader.onload = e => {
+        previewContent.value = e.target.result
+        previewType.value = 'text'
+      }
+
+      reader.readAsText(file.raw)
+    } else if (['docx', 'doc'].includes(exception)) {
+      // 处理Word文档
+      const arrayBuffer = await file.raw.arrayBuffer()
+      const result = await mammoth.convertToHtml({ arrayBuffer })
+
+      // 添加Word文档基础样式
+      previewContent.value = `
+        <div class="word-preview">
+          <style>
+            .word-preview {
+              font-family: "Times New Roman", serif;
+              line-height: 1.2;
+              padding: 20px;
+              font-size:14px
+            }
+            table {
+              border-collapse: collapse;
+              margin: 10px 0;
+            }
+            td {
+              border: 1px solid #ddd;
+              padding: 8px;
+            }
+          </style>
+          ${result.value}
+        </div>
+      `
+      previewType.value = 'html'
+
+      // 处理图片显示（如果需要）
+      result.messages.forEach(message => {})
+    } else if (['pdf'].includes(exception)) {
+      // 生成PDF的Blob URL并预览
+      const pdfUrl = URL.createObjectURL(file.raw)
+      previewContent.value = pdfUrl
+      previewType.value = 'pdf'
+
+      // 在组件销毁或关闭预览时记得释放URL
+      // 例如在onUnmounted或关闭弹窗的方法中调用 URL.revokeObjectURL(pdfUrl)
+    } else {
+      previewContent.value = '不支持此附件预览'
+      previewType.value = 'unsupported'
+    }
+  } catch (error) {
+    console.error('预览失败:', error)
+    previewContent.value = '附件预览失败'
+    previewType.value = 'error'
+  }
+}
+
+const sortFiles = val => {
+  const type = val === 0 ? 'time' : val === 1 ? 'name' : 'size'
+  const isUp = val === 0 ? timeSort.value : val === 1 ? nameSort.value : sizeSort.value
+  const data = JSON.parse(JSON.stringify(fileQueue.value))
+  return data.slice().sort((a, b) => {
+    // 1. 分离 pending 与非 pending 项
+    const aIsPending = a.status === 'pending'
+    const bIsPending = b.status === 'pending'
+
+    // pending项始终在前，且不参与后续排序[6](@ref)
+    if (aIsPending && !bIsPending) return -1
+    if (!aIsPending && bIsPending) return 1
+    if (aIsPending && bIsPending) return 0 // 两pending项保持原顺序
+    // 2. 非 pending 项按 type 和 sort 排序
+    let compareValue
+    switch (type) {
+      case 'time':
+        if (isUp) {
+          compareValue = new Date(a.createTime) - new Date(b.createTime) // 时间戳比较[3](@ref)
+        } else {
+          compareValue = new Date(b.createTime) - new Date(a.createTime) // 时间戳比较[3](@ref)
+        }
+
+        break
+      case 'size':
+        if (isUp) {
+          compareValue = a.fileSize - b.fileSize // 数值比较[2,5](@ref)
+        } else {
+          compareValue = b.fileSize - a.fileSize // 数值比较[2,5](@ref)
+        }
+        break
+      case 'name':
+        if (isUp) {
+          compareValue = a.fileName.localeCompare(b.fileName, 'zh') // 数值比较[2,5](@ref)
+        } else {
+          compareValue = b.fileName.localeCompare(a.fileName, 'zh') // 数值比较[2,5](@ref)
+        }
+        break
+      default:
+        compareValue = 0
+    }
+
+    // 3. 根据 sort 控制方向[1,4](@ref)
+    return compareValue
+  })
+}
 
 const changeType = val => {
   activeIndex.value = val
@@ -413,10 +566,6 @@ const getFile = fileObj => {
   window.open('http://files.luxshare-tech.com:8081/MajorFun/viewer?d=' + fileObj.id, '_blank')
   // 使用 POST 请求（与后端 @PostMapping 匹配）
 }
-// 组件挂载时订阅事件
-onMounted(() => {
-  openFile()
-})
 watch(
   selectedKnow,
   newVal => {
@@ -506,13 +655,16 @@ defineExpose({ openFile })
 }
 
 .file-list {
-  width: 100%;
-  height: 100%;
+  width: 50%;
+  height: calc(100vh - 80px);
+  border-radius: 4px;
 
   overflow-y: hidden;
+  padding-right: 15px;
   display: flex;
   position: relative;
   flex-direction: column;
+  border: 1px solid #dcdfe6;
   .file_item {
     height: calc(100% - 180px);
     overflow-y: auto;

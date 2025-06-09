@@ -2,6 +2,28 @@
   <div class="upload-layout">
     <!-- 左侧附件列表 -->
     <div class="file-list" style="width: 100%">
+      <div class="file_search">
+        <div class="file_left"></div>
+        <div class="file_right">
+          <div class="file_content">
+            <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
+            <el-input
+              v-model="searchText"
+              placeholder="请点击搜索图标或按Enter键"
+              @keydown.enter.prevent="searchData"
+              clearable
+              @clear="clearData"
+            >
+              <!-- 使用插槽自定义前缀图标并绑定事件 -->
+              <template #prefix>
+                <el-icon class="el-input__icon" @click="searchData" style="cursor: pointer">
+                  <Search />
+                </el-icon>
+              </template>
+            </el-input>
+          </div>
+        </div>
+      </div>
       <div class="upload_list">
         <el-upload
           v-if="isUpload"
@@ -33,13 +55,13 @@
       <div
         class="file_item"
         :style="{
-          marginTop: isUpload ? '170px' : '42px',
+          marginTop: isUpload ? '200px' : '70px',
           marginBottom: isUpload ? '12px' : '0px',
-          height: isUpload ? 'calc(100% - 240px)' : 'calc(100% - 100px)'
+          height: isUpload ? 'calc(100% - 272px)' : 'calc(100% - 130px)'
         }"
       >
         <div
-          v-for="(file, index) in filteredList"
+          v-for="(file, index) in fileQueue"
           :key="file.uid"
           class="file-item"
           :class="{ 'uploading-file': file.status === 'pending' }"
@@ -142,6 +164,7 @@ const clearData = () => {
   searchText.value = ''
   getFileList()
 }
+
 // 搜索方法
 const searchData = () => {
   getFileList()
@@ -235,14 +258,14 @@ const handleDelete = (index, event) => {
   })
 }
 // 过滤后的列表
-const filteredList = computed(() => {
-  if (!searchText.value) {
-    return fileQueue.value
-  }
+// const filteredList = computed(() => {
+//   if (!searchText.value) {
+//     return fileQueue.value
+//   }
 
-  const searchLower = searchText.value.toLowerCase()
-  return fileQueue.value.filter(item => item.fileName.toLowerCase().includes(searchLower))
-})
+//   const searchLower = searchText.value.toLowerCase()
+//   return fileQueue.value.filter(item => item.fileName.toLowerCase().includes(searchLower))
+// })
 
 const handleSearch = debounce(() => {}, 500)
 const checkFileSize = file => {
@@ -369,7 +392,9 @@ const getFileList = () => {
         '&page=' +
         currentPage.value +
         '&size=' +
-        pageSize.value
+        pageSize.value +
+        '&keyword=' +
+        searchText.value
     )
     .then(res => {
       if (res.status) {
@@ -445,7 +470,6 @@ const getKnow = val => {
   selectedKnow.value = val.target
   isUpload.value = val.upload
   isDelete.value = val.delete
-  console.log(val)
   getFileList()
 }
 
@@ -618,6 +642,8 @@ defineExpose({ openFile })
       display: flex;
       flex-direction: row-reverse;
       flex: 1;
+      margin-right: 40px;
+      margin-top: 10px;
       .file_content {
         display: flex;
         flex-direction: column;
@@ -655,7 +681,7 @@ defineExpose({ openFile })
     width: calc(100% - 30px);
     margin-left: 15px;
     position: absolute;
-    top: 55px;
+    top: 82px;
   }
 }
 

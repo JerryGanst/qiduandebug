@@ -687,7 +687,7 @@ defineExpose({ openFile })
 
 .pdf-frame {
   width: 100%;
-  height: 500px;
+  height: calc(100vh - 180px);
   border: 0;
   box-shadow: none !important;
   outline: none !important;
