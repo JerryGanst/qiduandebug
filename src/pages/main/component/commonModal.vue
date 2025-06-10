@@ -46,9 +46,6 @@
             <div class="el-upload__subtext">
               <span style="color: #868686">单个大小不超过50M</span>
             </div>
-            <!-- <div class="el-upload__subtext">
-                  <span style="color: #868686">上传成功后文件将会被转为PDF</span>
-                </div> -->
           </div>
         </el-upload>
       </div>
@@ -647,8 +644,10 @@ defineExpose({ openFile })
         display: flex;
         flex-direction: column;
         :deep(.el-input__wrapper) {
-          width: 210px;
+          width: 233px;
           box-shadow: none;
+          height: 32px;
+          box-sizing: border-box;
           border: 1px solid #bebebe;
         }
         .active {

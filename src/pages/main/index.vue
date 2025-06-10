@@ -382,15 +382,22 @@
                 </div>
                 <!-- 发送图标 -->
                 <div class="send-icon">
-                  <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+                  <div class="tooltip-wrapper" ref="wrapperRef">
                     <img
                       src="@/assets/file.png"
                       class="arrow"
                       @click="showFileSample('sample')"
                       style="margin-right: 10px"
                     />
-                    <transition name="fade">
+                    <!-- <transition name="fade">
                       <div v-if="showFileTip" class="tooltip">添加附件,单个大小不能超过50M</div>
+                    </transition> -->
+                    <transition name="fade">
+                      <div v-if="showFileMenu" class="file-menu" @click.stop>
+                        <div class="triangle"></div>
+                        <div class="menu-item" @click="handleFileSelect('local', 'sample')">从本地读取</div>
+                        <div class="menu-item" @click="handleFileSelect('knowledge', 'sample')">从知识库读取</div>
+                      </div>
                     </transition>
                   </div>
                   <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -417,6 +424,7 @@
             </div>
           </div>
           <FileUpload ref="fileRefs"></FileUpload>
+          <commonUploadModal ref="commonUploadModals"></commonUploadModal>
         </div>
         <div v-if="!isMessage" style="width: 100%; height: 100vh">
           <personModal v-if="fileModal === 1"></personModal>
@@ -455,6 +463,7 @@
 import AsizeComponent from './component/asize.vue'
 import Entry from './component/entry.vue'
 import FileUpload from './component/fileUploadModal.vue'
+import commonUploadModal from './component/commonUploadModal.vue'
 import commonModal from './component/commonModal.vue'
 import personModal from './component/personModal.vue'
 import { Document } from '@element-plus/icons-vue' // 引入需要的图标
@@ -543,8 +552,9 @@ const isDisabled = ref(false)
 const limitQuery = ref('')
 const currentRequestUrl = ref('')
 const fileRefs = ref(null)
+const commonUploadModals = ref(null)
 let interval
-
+const wrapperRef = ref(null)
 // 函数区域
 const removeItemById = (arr, id) => {
   for (let i = 0; i < arr.length; i++) {
@@ -585,20 +595,35 @@ const showListFile = val => {
 const setMessage = val => {
   isMessage.value = val
 }
-
+const showFileMenu = ref(false)
 const showFileSample = val => {
-  if (!isLogin.value) {
-    ElMessage.warning('请先登录再使用')
-    return false
-  }
-  nextTick(() => {
-    fileRefs.value.openFile(val, fileInputAry.value)
-  })
+  showFileMenu.value = !showFileMenu.value
+  // if (!isLogin.value) {
+  //   ElMessage.warning('请先登录再使用')
+  //   return false
+  // }
+  // nextTick(() => {
+  //   fileRefs.value.openFile(val, fileInputAry.value)
+  // })
 }
 // 点击取消
 // const handleCancel = () => {
 //   // ElMessage.info('已取消删除');
 // }
+const handleFileSelect = (val1, val2) => {
+  showFileMenu.value = false
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  nextTick(() => {
+    if (val1 === 'local') {
+      fileRefs.value.openFile(val2, fileInputAry.value)
+    } else {
+      commonUploadModals.value.openFile('')
+    }
+  })
+}
 
 // 点号变化逻辑
 const updateDots = () => {
@@ -2288,9 +2313,15 @@ const setlaw = () => {
   isLaw.value = localStorage.getItem('isLaw')
   getPower()
 }
+const handleClickOutside = event => {
+  if (wrapperRef.value && !wrapperRef.value.contains(event.target)) {
+    showFileMenu.value = false
+  }
+}
 // 组件挂载时订阅事件
 onMounted(() => {
   eventBus.on('submit-sampleFile', submitSampleFile)
+  document.addEventListener('click', handleClickOutside)
   nextTick(() => {
     isLaw.value = localStorage.getItem('isLaw')
   })
@@ -2298,6 +2329,7 @@ onMounted(() => {
 // 组件卸载时关闭 SSE 连接
 onBeforeUnmount(() => {
   eventBus.off('submit-sampleFile', submitSampleFile)
+  document.removeEventListener('click', handleClickOutside)
 })
 // 组件卸载时关闭 SSE 连接
 onUnmounted(() => {
@@ -2342,8 +2374,51 @@ onUnmounted(() => {
 .tooltip-wrapper {
   position: relative;
   display: flex;
-}
+  .triangle {
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #fff;
+  }
+  .file-menu {
+    position: absolute;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 8px 0;
+    margin-bottom: 12px;
+    z-index: 2000;
+    min-width: 140px;
+  }
 
+  .menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    color: #333;
+  }
+
+  .menu-item:hover {
+    background-color: #e6f4ff;
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.2s;
+  }
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+}
 .tooltip {
   position: absolute;
   bottom: calc(100% + 5px);

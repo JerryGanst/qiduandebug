@@ -46,7 +46,7 @@
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
+          <div class="img_item" style="margin-top: 15px">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
               <div class="text_title">更多功能</div>
@@ -87,7 +87,7 @@
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
+          <div class="img_item" style="margin-top: 15px">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
               <div class="text_title">更多功能</div>
@@ -322,10 +322,20 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+        <!-- <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
           <transition name="fade">
             <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过50M</div>
+          </transition>
+        </div> -->
+        <div class="tooltip-wrapper" ref="wrapperRef">
+          <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
+          <transition name="fade">
+            <div v-if="showFileMenu" class="file-menu" @click.stop>
+              <div class="triangle"></div>
+              <div class="menu-item" @click="handleFileSelect('local', 'sample')">从本地读取</div>
+              <div class="menu-item" @click="handleFileSelect('knowledge', 'sample')">从知识库读取</div>
+            </div>
           </transition>
         </div>
         <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -364,11 +374,21 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+        <!-- <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
 
           <transition name="fade">
             <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+          </transition>
+        </div> -->
+        <div class="tooltip-wrapper" ref="wrapperRef">
+          <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
+          <transition name="fade">
+            <div v-if="showFileMenu" class="file-menu" @click.stop>
+              <div class="triangle"></div>
+              <div class="menu-item" @click="handleFileSelect('local', 'tran')">从本地读取</div>
+              <div class="menu-item" @click="handleFileSelect('knowledge', 'tran')">从知识库读取</div>
+            </div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitTranSend" />
@@ -392,11 +412,21 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+        <!-- <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
 
           <transition name="fade">
             <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+          </transition>
+        </div> -->
+        <div class="tooltip-wrapper" ref="wrapperRef">
+          <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
+          <transition name="fade">
+            <div v-if="showFileMenu" class="file-menu" @click.stop>
+              <div class="triangle"></div>
+              <div class="menu-item" @click="handleFileSelect('local', 'final')">从本地读取</div>
+              <div class="menu-item" @click="handleFileSelect('knowledge', 'final')">从知识库读取</div>
+            </div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitFinalSend" />
@@ -404,15 +434,16 @@
     </div>
   </div>
   <FileUpload ref="fileRef" @submit-tran="submitFileTran" @submit-final="submitFileFinal"></FileUpload>
+  <commonUploadModal ref="commonUploadModals"></commonUploadModal>
   <Knowledge ref="knowledge"></Knowledge>
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import FileUpload from './fileUploadModal.vue'
 import Knowledge from './KnowledgeModal.vue'
-
+import commonUploadModal from './commonUploadModal.vue'
 import { useShared } from '@/utils/useShared'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
@@ -480,6 +511,8 @@ const {
 } = useShared()
 const fileRef = ref(null)
 const knowledge = ref(null)
+const wrapperRef = ref(null)
+const commonUploadModals = ref(null)
 const arrList = ref([
   {
     index: 1,
@@ -573,42 +606,66 @@ const openKnowledge = () => {
   }
   knowledge.value.openFile('')
 }
+const showFileMenu = ref(false)
 const showFile = val => {
+  showFileMenu.value = !showFileMenu.value
+  // if (!isLogin.value) {
+  //   ElMessage.warning('请先登录再使用')
+  //   return false
+  // }
+  // if (activeIndex.value || activeIndex.value == 0) {
+  //   if (val === 'tran') {
+  //     for (var i = 0; i < answerList.value.length; i++) {
+  //       if (transQuest.value === answerList.value[i].data.question) {
+  //         fileObj.value = answerList.value[i]?.data?.files
+  //       }
+  //     }
+  //   }
+  //   if (val === 'final') {
+  //     for (var i = 0; i < answerList.value.length; i++) {
+  //       if (finalQuest.value === answerList.value[i].data.question) {
+  //         fileObj.value = answerList.value[i]?.data?.files
+  //       }
+  //     }
+  //   }
+  // } else {
+  //   fileObj.value = ''
+  //   fileAry.value = ''
+  // }
+  // fileRef.value.openFile(val)
+}
+const handleFileSelect = (val1, val2) => {
+  showFileMenu.value = false
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return false
   }
-  if (activeIndex.value || activeIndex.value == 0) {
-    if (val === 'tran') {
-      for (var i = 0; i < answerList.value.length; i++) {
-        if (transQuest.value === answerList.value[i].data.question) {
-          fileObj.value = answerList.value[i]?.data?.files
+  if (val1 === 'local') {
+    if (activeIndex.value || activeIndex.value == 0) {
+      if (val2 === 'tran') {
+        for (var i = 0; i < answerList.value.length; i++) {
+          if (transQuest.value === answerList.value[i].data.question) {
+            fileObj.value = answerList.value[i]?.data?.files
+          }
         }
       }
-    }
-    if (val === 'final') {
-      for (var i = 0; i < answerList.value.length; i++) {
-        if (finalQuest.value === answerList.value[i].data.question) {
-          fileObj.value = answerList.value[i]?.data?.files
+      if (val2 === 'final') {
+        for (var i = 0; i < answerList.value.length; i++) {
+          if (finalQuest.value === answerList.value[i].data.question) {
+            fileObj.value = answerList.value[i]?.data?.files
+          }
         }
       }
+    } else {
+      fileObj.value = ''
+      fileAry.value = ''
     }
-    if (val === 'sample') {
-      // for (var i = 0; i < answerList.value.length; i++) {
-      //   if (
-      //     answerList.value[i].data[0].question &&
-      //     chatQuery.messages[0].question === answerList.value[i].data[0].question
-      //   ) {
-      //     fileAry.value = answerList.value[i].data[0].files
-      //   }
-      // }
-    }
+    fileRef.value.openFile(val2)
   } else {
-    fileObj.value = ''
-    fileAry.value = ''
+    commonUploadModals.value.openFile('')
   }
-  fileRef.value.openFile(val)
 }
+
 const finalPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
@@ -692,12 +749,21 @@ const changeDynamicRows = () => {
 //       console.error(err)
 //     })
 // }
-
+const handleClickOutside = event => {
+  if (wrapperRef.value && !wrapperRef.value.contains(event.target)) {
+    showFileMenu.value = false
+  }
+}
 // 组件挂载后初始化
 onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
   nextTick(() => {
     isLaw.value = localStorage.getItem('isLaw')
   })
+})
+// 组件卸载时关闭 SSE 连接
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 defineExpose({ changeDynamicRows, fileRef })
 </script>
@@ -711,6 +777,38 @@ defineExpose({ changeDynamicRows, fileRef })
 .tooltip-wrapper {
   position: relative;
   display: flex;
+  .file-menu {
+    position: absolute;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 8px 0;
+    margin-bottom: 12px;
+    z-index: 2000;
+    min-width: 140px;
+  }
+
+  .menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+
+  .menu-item:hover {
+    background-color: #e6f4ff;
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.2s;
+  }
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
 }
 
 .tooltip {

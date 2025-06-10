@@ -38,34 +38,8 @@ handlePreview
             </div>
           </el-upload>
         </div>
-        <div
-          v-if="type === 'sample'"
-          style="position: absolute; top: 130px; width: 100%; padding: 0 15px; box-sizing: border-box; display: flex"
-        >
-          <el-select v-model="selectedKnow" placeholder="请选择知识库" @change="checkKnow">
-            <el-option v-for="item in knowList" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-          <!-- <el-select
-            v-model="selectedMode"
-            @change="checkKnow"
-            placeholder="请选择模块"
-            style="margin-left: 10px"
-            :disabled="selectedKnow === 1"
-          >
-            <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select> -->
-          <el-select
-            v-model="selectedFile"
-            placeholder="请选择文件"
-            style="margin-left: 10px"
-            filterable
-            :filter-method="filterMethod"
-            @change="changeFile"
-          >
-            <el-option v-for="item in filteredOptions" :key="item.id" :label="item.fileName" :value="item.id" />
-          </el-select>
-        </div>
-        <div class="file_item" :style="{ marginTop: type === 'sample' ? '160px' : '115px' }">
+
+        <div class="file_item" :style="{ marginTop: type === 'sample' ? '115px' : '115px' }">
           <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
             <div class="file_img">
               <img :src="file.extension === 'txt' ? text : file.extension === 'pdf' ? pdf : word" />
@@ -823,9 +797,9 @@ defineExpose({ openFile, closeFile })
   border: 1px solid #dcdfe6;
   .file_item {
     width: 100%;
-    height: 350px;
+    height: 430px;
     overflow-y: auto;
-    margin-top: 160px;
+    margin-top: 115px;
   }
   .upload_list {
     width: calc(100% - 30px);

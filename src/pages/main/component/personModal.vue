@@ -1,5 +1,11 @@
 <template>
-  <div class="upload-layout">
+  <div
+    class="upload-layout"
+    @dragover.prevent="handleDragOver"
+    @dragleave="handleDragLeave"
+    @drop.prevent="handleDrop"
+    :class="{ 'drag-over': isDragOver }"
+  >
     <!-- 左侧附件列表 -->
     <div class="file-list" :style="{ width: isPre ? '735px' : '100%' }">
       <div class="file_search">
@@ -10,7 +16,19 @@
                 <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
               </el-select>
             </div>
-            <div class="file_select" v-else>个人知识库</div>
+            <!-- <div class="file_select" v-else>个人知识库</div> -->
+            <el-upload
+              drag
+              :auto-upload="false"
+              :multiple="true"
+              :accept="allowedFileTypes"
+              :on-change="handleFileAdd"
+              :show-file-list="false"
+              :file-list="fileQueue"
+              :before-upload="checkFileSize"
+            >
+              <div class="file_upload">文件上传</div>
+            </el-upload>
 
             <div class="file_info">
               <span>共{{ total }}项</span>
@@ -74,7 +92,7 @@
           </div>
         </div>
       </div>
-      <div class="upload_list">
+      <!-- <div class="upload_list">
         <el-upload
           drag
           :auto-upload="false"
@@ -95,12 +113,9 @@
             <div class="el-upload__subtext">
               <span style="color: #868686">单个大小不超过50M</span>
             </div>
-            <!-- <div class="el-upload__subtext">
-                  <span style="color: #868686">上传成功后文件将会被转为PDF</span>
-                </div> -->
           </div>
         </el-upload>
-      </div>
+      </div> -->
       <div class="file_item">
         <div
           v-for="(file, index) in fileQueue"
@@ -219,6 +234,7 @@ const previewFileId = ref(null)
 const isPre = ref(false)
 const selectedKnow = ref(1)
 const isPower = ref(false)
+const isDragOver = ref(false)
 const permission = ref([])
 const currentPage = ref(1)
 const pageSize = ref(100)
@@ -388,6 +404,7 @@ const uploadSingleFile = async file => {
 const uploadTimer = ref(null)
 // 附件添加处理
 const handleFileAdd = async uploadFile => {
+  console.log(uploadFile)
   if (uploadFile.size / 1024 / 1024 > 50) {
     ElMessage.warning('附件大小不能超过50MB!')
     return
@@ -563,6 +580,26 @@ const checkKnow = val => {
     getFileList(permission.value, true)
   }
 }
+const handleDragOver = () => {
+  isDragOver.value = true
+}
+
+const handleDragLeave = () => {
+  isDragOver.value = false
+}
+const handleDrop = e => {
+  isDragOver.value = false
+  const files = Array.from(e.dataTransfer.files)
+  const data = {
+    name: files[0].name,
+    percentage: 0,
+    size: files[0].size,
+    status: 'ready',
+    raw: files[0]
+  }
+  handleFileAdd(data)
+}
+
 const getFileList = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
@@ -716,6 +753,14 @@ defineExpose({ openFile })
   display: flex;
   height: 100%;
   gap: 20px;
+  :deep(.el-upload-dragger) {
+    border: none !important;
+    padding: 0px;
+  }
+}
+.upload-layout.drag-over {
+  border-color: #409eff;
+  background-color: rgba(64, 158, 255, 0.1);
 }
 
 .file-list {
@@ -730,8 +775,8 @@ defineExpose({ openFile })
   margin-top: 15px;
   .file_item {
     overflow-y: auto;
-    margin-top: 215px;
-    height: calc(100% - 270px);
+    margin-top: 100px;
+    height: calc(100% - 155px);
     float: left;
   }
   .file_item::-webkit-scrollbar {
@@ -759,6 +804,7 @@ defineExpose({ openFile })
       display: flex;
       flex-direction: row;
       flex: 1;
+      height: 32px;
       .file_content {
         display: flex;
         flex-direction: column;
@@ -767,11 +813,25 @@ defineExpose({ openFile })
           font-size: 16px;
           line-height: 33px;
         }
+        .file_upload {
+          width: 120px;
+          height: 32px;
+          line-height: 32px;
+          border-radius: 16px;
+          background: #fff;
+          border: 1px solid #1b6cff;
+          text-align: center;
+          margin-right: 15px;
+          font-size: 12px;
+          color: #1b6cff;
+          cursor: pointer;
+        }
         .file_info {
           font-size: 12px;
           color: #868686;
-          line-height: 30px;
-          padding-top: 10px;
+          line-height: 32px;
+          height: 32px;
+          margin-top: 10px;
         }
       }
     }
@@ -783,18 +843,21 @@ defineExpose({ openFile })
         display: flex;
         flex-direction: column;
         :deep(.el-input__wrapper) {
-          width: 160px;
+          width: 233px;
+          height: 32px;
           box-shadow: none;
+          box-sizing: border-box;
           border: 1px solid #bebebe;
         }
         .active {
           display: flex;
+
           margin-top: 10px;
           .active_item {
             width: 82px;
-            height: 30px;
+            height: 32px;
             text-align: center;
-            line-height: 30px;
+            line-height: 32px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
