@@ -92,6 +92,7 @@ const showFileTip = ref(false)
 const showModelTip = ref(false)
 const isLaw = ref(false)
 const isMessage = ref(true)
+const knowSelect = ref(1)
 const fileInputAry = ref([])
 
 const adjustTextareaHeight = val => {
@@ -308,6 +309,9 @@ export function useShared() {
   const updateIsMessage = newName => {
     isMessage.value = newName
   }
+  const updateKnowSelect = newName => {
+    knowSelect.value = newName
+  }
 
   watch(
     newQuestion,
@@ -324,6 +328,7 @@ export function useShared() {
     isSampleStop,
     isQueryStop,
     limitLoading,
+    knowSelect,
     limitId,
     questions,
     answerList,
@@ -406,6 +411,7 @@ export function useShared() {
     updateShowModelTip,
     updateFileAry,
     updateFileInputAry,
-    updateIsLaw
+    updateIsLaw,
+    updateKnowSelect
   }
 }

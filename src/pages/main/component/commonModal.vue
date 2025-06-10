@@ -142,7 +142,6 @@ const isDelete = ref(true)
 const isUpload = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(100)
-
 const knowOptions = ref([
   // {
   //   value: 'IT',
@@ -471,7 +470,7 @@ const getKnow = val => {
   selectedKnow.value = val.target
   isUpload.value = val.upload
   isDelete.value = val.delete
-  getFileList()
+  getFileList(selectedKnow.value)
 }
 
 const getTextAfterLastDot = str => {
@@ -488,7 +487,6 @@ onMounted(() => {
   eventBus.on('changeKnow', getKnow)
 
   let powerList = JSON.parse(localStorage.getItem('powerList'))
-  selectedKnow.value = powerList[0].target
   isUpload.value = powerList[0].upload
   isDelete.value = powerList[0].delete
   getFileList()

@@ -297,7 +297,7 @@ const titleQuestion = ref('')
 const titleIndex = ref('')
 const isPowerFile = ref(true)
 const hoverStates = ref({}) // 悬停状态
-const knowSelect = ref(1)
+
 const {
   currentQuestion,
   newQuestion,
@@ -333,7 +333,8 @@ const {
   limitAry,
   fileAry,
   fileInputAry,
-  isMessage
+  isMessage,
+  knowSelect
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -408,14 +409,18 @@ const handleClick = (param, e) => {
 const changeContent = val => {
   selectType.value = val
   isMessage.value = val === 1 ? true : false
+  ItemSelect.value = 0
   emit('set-message', isMessage.value)
 }
 const changeFileModel = val => {
   knowSelect.value = val
+  ItemSelect.value = 0
   emit('set-FileModel', knowSelect.value)
 }
 const knowItemSelect = val => {
   ItemSelect.value = val
+  console.log(ItemSelect.value)
+
   const data = powerArr.value[val].target
   eventBus.emit('changeKnow', powerArr.value[val])
 }

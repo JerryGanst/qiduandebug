@@ -592,7 +592,7 @@ const getFileList = () => {
     })
     .then(res => {
       if (res.status) {
-        fileOptions.value = res.data
+        fileOptions.value = res.data.content
       }
     })
     .catch(err => {
