@@ -631,7 +631,7 @@ const postData = async () => {
       previewFileId.value = selectList.value[i].uid
       const formData = new FormData()
       formData.append('files', selectList.value[i].raw)
-      console.log(selectList.value[i].raw)
+      formData.set('files', selectList.value[i].raw, decodeURIComponent(selectList.value[i].raw.name)) // 新文件
       await axios
         .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
           cancelToken: source.token,
@@ -703,6 +703,7 @@ const getFile = fileObj => {
     .then(({ blob, originalFileName }) => {
       // 将 Blob 转换为 File 对象（类似 file.raw）
       const file = new File([blob], originalFileName, { type: blob.type })
+      console.log(file)
       const fileOther = {
         raw: file,
         uid: file.lastModified,
