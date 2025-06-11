@@ -281,6 +281,7 @@ const downloads = url => {
     link.style.display = 'none'
     // 3. 从URL中提取文件名（可选）
     const originalFileName = url.split('/').pop().split('?')[0] // 根据实际情况调整
+    console.log(originalFileName)
     // 4. 设置下载属性（需配合CORS配置）
     link.setAttribute('download', originalFileName)
     document.body.appendChild(link)

@@ -172,14 +172,7 @@
             @click="knowItemSelect(index)"
             :style="{
               color: index === ItemSelect ? '#1B6CFF' : '#333333',
-              backgroundImage:
-                index === 0
-                  ? index === ItemSelect
-                    ? `url('${itBlue}')`
-                    : `url('${itGray}')`
-                  : index === ItemSelect
-                    ? `url('${hrBlue}')`
-                    : `url('${hrGray}')`
+              marginTop: index === 0 ? '0px' : '5px'
             }"
           >
             {{ item.name }}
@@ -1128,9 +1121,9 @@ defineExpose({ queryAn, deleteData, setPower })
         .know_item {
           width: 125px;
           height: 32px;
-          padding-left: 30px;
+          padding-left: 12px;
           line-height: 32px;
-          margin-left: 10px;
+          margin-left: 38px;
           border-radius: 6px;
           font-size: 14px;
           cursor: pointer;

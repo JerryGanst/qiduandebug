@@ -425,6 +425,7 @@
           </div>
           <FileUpload ref="fileRefs"></FileUpload>
           <commonUploadModal ref="commonUploadModals"></commonUploadModal>
+          <FilePreUpload ref="filePreRef"></FilePreUpload>
         </div>
         <div v-if="!isMessage" style="width: 100%; height: 100vh">
           <personModal v-if="fileModal === 1"></personModal>
@@ -463,6 +464,7 @@
 import AsizeComponent from './component/asize.vue'
 import Entry from './component/entry.vue'
 import FileUpload from './component/fileUploadModal.vue'
+import FilePreUpload from './component/filePreModal.vue'
 import commonUploadModal from './component/commonUploadModal.vue'
 import commonModal from './component/commonModal.vue'
 import personModal from './component/personModal.vue'
@@ -544,7 +546,7 @@ const commonLedge = ref(null)
 const commonQuestion = ref('')
 // 当前显示的消息内容
 const currentMessage = ref('')
-
+const filePreRef = ref(null)
 const commonVisible = ref(false)
 // 当前正在显示的消息索引
 const currentMessageIndex = ref(0)
@@ -590,7 +592,7 @@ const setFileModel = val => {
 const showListFile = val => {
   fileAry.value = []
   fileAry.value.push(val)
-  fileRefs.value.openFile('sample')
+  filePreRef.value.openFile('sample')
 }
 const setMessage = val => {
   isMessage.value = val
@@ -620,7 +622,7 @@ const handleFileSelect = (val1, val2) => {
     if (val1 === 'local') {
       fileRefs.value.openFile(val2, fileInputAry.value)
     } else {
-      commonUploadModals.value.openFile('')
+      commonUploadModals.value.openFile(val2)
     }
   })
 }
@@ -1140,7 +1142,7 @@ const deleteImg = index => {
   }
 }
 const submitSampleFile = val => {
-  fileRefs.value.closeFile()
+  console.log(val)
   currentQuestion.value = true
   for (var i = 0; i < val.length; i++) {
     val[i].fileName = decodeURIComponent(val[i].fileName)
@@ -1500,6 +1502,8 @@ const submitSample = async (val, isRefresh) => {
   }
 }
 const submitTran = async (val, isRefresh, obj) => {
+  console.log(val)
+  console.log(obj)
   if (finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return

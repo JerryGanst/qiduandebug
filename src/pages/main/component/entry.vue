@@ -117,7 +117,7 @@
         :style="{
           padding: transQuest ? '7px 15px' : '0px'
         }"
-        @click="showFile('tran')"
+        @click="showPreFile('tran')"
         style="color: #333; background-color: #eff6ff; display: flex; align-items: center; cursor: pointer"
       >
         <span style="display: flex; align-items: center">
@@ -184,7 +184,7 @@
           (finalQuest && finalQuest.includes('docx') && finalQuest.endsWith('docx')) ||
           (finalQuest && finalQuest.includes('pdf') && finalQuest.endsWith('pdf'))
         "
-        @click="showFile('final')"
+        @click="showPreFile('final')"
         :style="{
           padding: finalQuest ? '7px 15px' : '0px'
         }"
@@ -434,7 +434,12 @@
     </div>
   </div>
   <FileUpload ref="fileRef" @submit-tran="submitFileTran" @submit-final="submitFileFinal"></FileUpload>
-  <commonUploadModal ref="commonUploadModals"></commonUploadModal>
+  <FilePreUpload ref="filePreRef"></FilePreUpload>
+  <commonUploadModal
+    ref="commonUploadModals"
+    @submit-tran="submitFileTran"
+    @submit-final="submitFileFinal"
+  ></commonUploadModal>
   <Knowledge ref="knowledge"></Knowledge>
 </template>
 
@@ -442,6 +447,7 @@
 import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import FileUpload from './fileUploadModal.vue'
+import FilePreUpload from './filePreModal.vue'
 import Knowledge from './KnowledgeModal.vue'
 import commonUploadModal from './commonUploadModal.vue'
 import { useShared } from '@/utils/useShared'
@@ -510,6 +516,7 @@ const {
   isLogin
 } = useShared()
 const fileRef = ref(null)
+const filePreRef = ref(null)
 const knowledge = ref(null)
 const wrapperRef = ref(null)
 const commonUploadModals = ref(null)
@@ -607,32 +614,35 @@ const openKnowledge = () => {
   knowledge.value.openFile('')
 }
 const showFileMenu = ref(false)
+
+const showPreFile = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  if (activeIndex.value || activeIndex.value == 0) {
+    if (val === 'tran') {
+      for (var i = 0; i < answerList.value.length; i++) {
+        if (transQuest.value === answerList.value[i].data.question) {
+          fileObj.value = answerList.value[i]?.data?.files
+        }
+      }
+    }
+    if (val === 'final') {
+      for (var i = 0; i < answerList.value.length; i++) {
+        if (finalQuest.value === answerList.value[i].data.question) {
+          fileObj.value = answerList.value[i]?.data?.files
+        }
+      }
+    }
+  } else {
+    fileObj.value = ''
+    fileAry.value = ''
+  }
+  filePreRef.value.openFile(val)
+}
 const showFile = val => {
   showFileMenu.value = !showFileMenu.value
-  // if (!isLogin.value) {
-  //   ElMessage.warning('请先登录再使用')
-  //   return false
-  // }
-  // if (activeIndex.value || activeIndex.value == 0) {
-  //   if (val === 'tran') {
-  //     for (var i = 0; i < answerList.value.length; i++) {
-  //       if (transQuest.value === answerList.value[i].data.question) {
-  //         fileObj.value = answerList.value[i]?.data?.files
-  //       }
-  //     }
-  //   }
-  //   if (val === 'final') {
-  //     for (var i = 0; i < answerList.value.length; i++) {
-  //       if (finalQuest.value === answerList.value[i].data.question) {
-  //         fileObj.value = answerList.value[i]?.data?.files
-  //       }
-  //     }
-  //   }
-  // } else {
-  //   fileObj.value = ''
-  //   fileAry.value = ''
-  // }
-  // fileRef.value.openFile(val)
 }
 const handleFileSelect = (val1, val2) => {
   showFileMenu.value = false
@@ -662,7 +672,7 @@ const handleFileSelect = (val1, val2) => {
     }
     fileRef.value.openFile(val2)
   } else {
-    commonUploadModals.value.openFile('')
+    commonUploadModals.value.openFile(val2)
   }
 }
 

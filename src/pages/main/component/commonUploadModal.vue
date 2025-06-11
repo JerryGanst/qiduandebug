@@ -82,7 +82,15 @@
           </div>
         </div>
         <div class="upload_list">
-          <span></span>
+          <span style="padding-left: 20px">已选择:</span>
+          <span>{{ selectList.length }}</span>
+          <span>个文件</span>
+          <span v-for="item in selectList" class="select_item">
+            <span>{{ item.name }}</span>
+            <span class="file_delete_img" @click="deleteSelectFile(item.name)">
+              <img src="@/assets/deleteFile.png" />
+            </span>
+          </span>
         </div>
         <div class="file_item">
           <div
@@ -92,7 +100,11 @@
             :class="{ 'uploading-file': file.status === 'pending' }"
             @click="getFile(file)"
             style="position: relative"
-            :style="{ width: isPre ? '14.7%' : '8%', marginLeft: isPre ? '14px' : '13px' }"
+            :style="{
+              width: isPre ? '14.7%' : '8%',
+              marginLeft: isPre ? '14px' : '13px',
+              border: file.isBorder ? '1px solid #1B6CFF' : '1px solid #fff'
+            }"
           >
             <div class="file_img">
               <img :src="file.fileType === 'txt' ? text : file.fileType === 'pdf' ? pdf : word" />
@@ -101,22 +113,23 @@
             <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
               {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
             </div>
-            <el-popconfirm
-              title="确定要删除吗？"
-              confirm-button-text="确定"
-              cancel-button-text="取消"
-              @confirm="handleDelete(index, $event)"
-            >
-              <template #reference>
-                <span @click.stop>
-                  <!-- 阻止点击事件冒泡 -->
-                  <div style="width: 20px; height: 20px; cursor: pointer; position: absolute; right: 4px; top: 4px">
-                    <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
-                  </div>
-                </span>
-              </template>
-            </el-popconfirm>
           </div>
+        </div>
+        <div style="width: 100%; height: 50px; display: flex; justify-content: center; align-items: center">
+          <!-- 分页器 -->
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[30, 50, 100]"
+            :total="totals"
+            layout="total, prev, pager, next, sizes"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
+        </div>
+        <div class="btn_list">
+          <div class="btn_cancel" @click="cancelDialog">取消</div>
+          <div class="btn_confirm" @click="postData">确定</div>
         </div>
       </div>
 
@@ -188,10 +201,16 @@ const fileQueue = ref([])
 const previewContent = ref(null)
 const previewType = ref('')
 const previewFileId = ref(null)
+const currentPage = ref(1)
+const pageSize = ref(100)
+const totals = ref(0)
 const isPre = ref(false)
 const selectedKnow = ref(1)
 const isPower = ref(false)
 const permission = ref([])
+const selectNum = ref(0)
+const selectList = ref([])
+const type = ref('sample')
 const knowOptions = ref([
   {
     value: 1,
@@ -209,7 +228,7 @@ const activeIndex = ref(0)
 const nameSort = ref(false)
 const timeSort = ref(false)
 const sizeSort = ref(false)
-
+const emit = defineEmits(['submit-tran', 'submit-final'])
 const closePre = () => {
   isPre.value = false
 }
@@ -529,6 +548,20 @@ const checkKnow = val => {
     getFileList(permission.value, true)
   }
 }
+const deleteSelectFile = val => {
+  selectList.value = selectList.value.filter(item => item.name !== val)
+  fileQueue.value = fileQueue.value.map(item => {
+    const isNameMatch = selectList.value.some(listItem => listItem.name === item.fileName)
+    return {
+      ...item,
+      isBorder: isNameMatch
+    }
+  })
+}
+
+const cancelDialog = () => {
+  dialogVisible.value = false
+}
 const getFileList = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
@@ -538,11 +571,14 @@ const getFileList = () => {
       isPublic: selectedKnow.value === 1 ? false : true,
       sortType: activeIndex.value === 0 ? 'time' : activeIndex.value === 1 ? 'name' : 'size',
       increase: activeIndex.value === 0 ? timeSort.value : activeIndex.value === 1 ? nameSort.value : sizeSort.value,
+      page: currentPage.value,
+      pageSize: pageSize.value,
       keywords: searchText.value
     })
     .then(res => {
       if (res.status) {
         fileQueue.value = res.data.content
+        totals.value = res.data.totalElements
         getInfo()
       }
     })
@@ -553,8 +589,10 @@ const getFileList = () => {
 const openFile = (val, ary) => {
   dialogVisible.value = true
   isPre.value = false
+  selectList.value = []
   const power = localStorage.getItem('powerList')
   permission.value = power.length > 0 ? power : ''
+  type.value = val
   // isPower.value = permission.value ? true : false
   isPower.value = false
   getFileList()
@@ -564,6 +602,85 @@ const getTextAfterLastDot = str => {
   const lastDotIndex = str.lastIndexOf('.')
   if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
   return str.slice(lastDotIndex + 1)
+}
+const handleSizeChange = val => {
+  pageSize.value = val
+  getFileList()
+  // 这里通常调用API获取新数据
+}
+
+const handleCurrentChange = val => {
+  currentPage.value = val
+  getFileList()
+  // 这里通常调用API获取新数据
+}
+const postData = async () => {
+  if (selectList.value.length === 0) {
+    ElMessage.warning('请先上传附件再提交')
+    return
+  }
+  const CancelToken = axios.CancelToken
+  const source = CancelToken.source()
+  let ary = []
+  for (var i = 0; i < selectList.value.length; i++) {
+    // 清除旧预览状态
+    previewFileId.value = null
+    previewContent.value = null
+    previewType.value = ''
+    try {
+      previewFileId.value = selectList.value[i].uid
+      const formData = new FormData()
+      formData.append('files', selectList.value[i].raw)
+      console.log(selectList.value[i].raw)
+      await axios
+        .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
+          cancelToken: source.token,
+          onUploadProgress: progressEvent => {
+            selectList.value[i].progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+          }
+        })
+        .then(res => {
+          if (res.data.status) {
+            ary.push(res.data?.data[0])
+            console.log(ary[0])
+            if (i === selectList.value.length - 1) {
+              if (type.value === 'sample') {
+                eventBus.emit('submit-sampleFile', ary)
+              } else {
+                ary[0].fileName = decodeURIComponent(ary[0].fileName)
+                ary[0].originalFileName = decodeURIComponent(ary[0].originalFileName)
+                emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', ary[0])
+              }
+
+              dialogVisible.value = false
+            }
+          } else {
+            ElMessage.error(res.data.message)
+            previewFileId.value = null
+          }
+        })
+    } catch (error) {
+      previewFileId.value = null
+      if (axios.isCancel(error)) {
+      } else {
+        console.error('Upload failed:', error)
+      }
+      throw error
+    }
+  }
+  // const aryData = []
+  // for (var i = 0; i < selectList.value.length; i++) {
+  //   const obj = {
+  //     size: selectList.value[i].size,
+  //     fileId: selectList.value[i].id,
+  //     originalFileName: selectList.value[i].name,
+  //     fileName: selectList.value[i].name
+  //   }
+  //   aryData.push(obj)
+  // }
+  // console.log(aryData)
+  // eventBus.emit('submit-sampleFile', aryData)
+  // dialogVisible.value = false
 }
 const getFile = fileObj => {
   // 使用 POST 请求（与后端 @PostMapping 匹配）
@@ -590,12 +707,32 @@ const getFile = fileObj => {
         raw: file,
         uid: file.lastModified,
         size: file.size,
+        id: fileObj.id,
         name: decodeURIComponent(fileObj.originalFileName),
         extension: getTextAfterLastDot(fileObj.originalFileName),
         cancel: null,
         source: null
       }
       previewFileId.value = fileOther.uid
+      if (selectList.value.length < 5) {
+        // 检查obj的name是否已存在于selectList中
+        const isNameExist = selectList.value.some(item => item.name === fileOther.name)
+        if (!isNameExist) {
+          if (type.value !== 'sample') {
+            selectList.value = []
+          }
+          selectList.value.push(fileOther)
+          fileQueue.value = fileQueue.value.map(item => {
+            const isNameMatch = selectList.value.some(listItem => listItem.name === item.fileName)
+            return {
+              ...item,
+              isBorder: isNameMatch
+            }
+          })
+          console.log(fileQueue.value)
+        }
+      }
+
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
       handlePreview(fileOther)
     })
@@ -675,8 +812,40 @@ defineExpose({ openFile })
   position: relative;
   flex-direction: column;
   border: 1px solid #dcdfe6;
+  .btn_list {
+    width: 100%;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .btn_confirm {
+      width: 100px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      border-radius: 4px;
+      color: #fff;
+      background-color: #1b6cff;
+      font-size: 14px;
+      border: 1px solid #1b6cff;
+      cursor: pointer;
+    }
+    .btn_cancel {
+      width: 100px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      border-radius: 4px;
+      color: #333;
+      background-color: #fff;
+      font-size: 14px;
+      margin-right: 15px;
+      border: 1px solid #eee;
+      cursor: pointer;
+    }
+  }
   .file_item {
-    height: 420px;
+    height: 400px;
     overflow-y: auto;
     margin-top: 154px;
     float: left;
@@ -752,6 +921,38 @@ defineExpose({ openFile })
     border-radius: 4px;
     background-color: #eeeeee;
     height: 54px;
+    line-height: 54px;
+    display: flex;
+    align-items: center;
+    .select_item {
+      max-width: 76px;
+      padding-left: 10px;
+      padding-right: 20px;
+      background-color: #e6f4ff;
+      font-size: 12px;
+      line-height: 32px;
+      margin-left: 10px;
+      border-radius: 10px;
+      height: 32px;
+      color: #1b6cff;
+      white-space: nowrap; /* 禁止换行 */
+      overflow: hidden; /* 隐藏超出部分 */
+      text-overflow: ellipsis; /* 显示省略号 */
+      position: relative;
+      .file_delete_img {
+        width: 12px;
+        height: 12px;
+        position: absolute;
+        right: 6px;
+        top: 10px;
+        cursor: pointer;
+        img {
+          width: 100%;
+          height: 100%;
+          float: left;
+        }
+      }
+    }
   }
 }
 
@@ -775,6 +976,7 @@ defineExpose({ openFile })
   overflow-x: hidden;
   font-size: 12px;
   cursor: pointer;
+  border: 1px solid #fff;
   .file_img {
     width: 30px;
     height: 37px;
