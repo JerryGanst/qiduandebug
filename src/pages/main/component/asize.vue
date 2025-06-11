@@ -400,19 +400,30 @@ const handleClick = (param, e) => {
   // e.stopPropagation() // 正确获取事件对象
 }
 const changeContent = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
   selectType.value = val
   isMessage.value = val === 1 ? true : false
   ItemSelect.value = 0
   emit('set-message', isMessage.value)
 }
 const changeFileModel = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
   knowSelect.value = val
   ItemSelect.value = 0
   emit('set-FileModel', knowSelect.value)
 }
 const knowItemSelect = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
   ItemSelect.value = val
-  console.log(ItemSelect.value)
 
   const data = powerArr.value[val].target
   eventBus.emit('changeKnow', powerArr.value[val])
@@ -521,7 +532,11 @@ const handleLogout = () => {
   ElMessage.success('退出成功')
   localStorage.setItem('userInfo', '')
   localStorage.setItem('isLaw', false)
+
   localStorage.setItem('powerList', [])
+  selectType.value = 1
+  isMessage.value = true
+  // isPowerFile.value = false
   questions.value = []
   queryTypes.value = []
   answerList.value = []
