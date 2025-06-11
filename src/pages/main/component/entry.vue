@@ -1,6 +1,10 @@
 <template>
   <div class="main_content">
-    <div class="title" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'">
+    <div v-if="isDragOver && (pageType === 'sample' || pageType === 'tran' || pageType === 'final')">1111111</div>
+    <div
+      class="title"
+      v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || (pageType === 'sample' && !isDragOver)"
+    >
       <img src="@/assets/logo2.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 33px; font-weight: bold">
@@ -56,7 +60,7 @@
         </div>
       </div>
     </div>
-    <div class="content_list" v-if="pageType === 'sample'">
+    <div class="content_list" v-if="pageType === 'sample' && !isDragOver">
       <div class="list_item">
         <div class="list_title">近期热搜</div>
         <div class="list_tip">深度搜索您关心的问题</div>
@@ -97,7 +101,7 @@
         </div>
       </div>
     </div>
-    <div class="title" v-if="pageType === 'tran'">
+    <div class="title" v-if="pageType === 'tran' && !isDragOver">
       <img src="@/assets/logo2.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 30px; font-weight: bold">立讯技术AI翻译专家</div>
@@ -106,7 +110,7 @@
         </div>
       </div>
     </div>
-    <div class="title_tran_tip" v-if="pageType === 'tran'">
+    <div class="title_tran_tip" v-if="pageType === 'tran' && !isDragOver">
       <div
         v-if="
           (transQuest && transQuest.includes('txt') && transQuest.endsWith('txt')) ||
@@ -137,7 +141,7 @@
         {{ transQuest }}
       </div>
     </div>
-    <div v-if="pageType === 'tran' && finalIng && docIng" class="title_wait">
+    <div v-if="pageType === 'tran' && finalIng && docIng && !isDragOver" class="title_wait">
       <span>
         <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
       </span>
@@ -146,7 +150,7 @@
     </div>
     <MarkdownRenderer
       class="title_tran_data"
-      v-if="pageType === 'tran'"
+      v-if="pageType === 'tran' && !isDragOver"
       :style="{ padding: transData ? '0px 15px' : '0px' }"
       :markdown="transData"
     />
@@ -154,7 +158,7 @@
       <p>{{ transData }}</p>
     </div> -->
 
-    <div class="query_common" v-if="pageType === 'tran' && transQuest && !docIng">
+    <div class="query_common" v-if="pageType === 'tran' && transQuest && !docIng && !isDragOver">
       <div>
         <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
@@ -166,7 +170,7 @@
       </div>
     </div>
 
-    <div class="title" v-if="pageType === 'final'">
+    <div class="title" v-if="pageType === 'final' && !isDragOver">
       <img src="@/assets/logo2.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 30px; font-weight: bold">立讯技术AI智能总结</div>
@@ -176,7 +180,7 @@
       </div>
     </div>
 
-    <div class="title_final_tip" v-if="pageType === 'final'">
+    <div class="title_final_tip" v-if="pageType === 'final' && !isDragOver">
       <div
         v-if="
           (finalQuest && finalQuest.includes('txt') && finalQuest.endsWith('txt')) ||
@@ -209,7 +213,7 @@
         <div>{{ finalQuest }}</div>
       </div>
     </div>
-    <div v-if="pageType === 'final' && docIng" class="title_wait">
+    <div v-if="pageType === 'final' && docIng && !isDragOver" class="title_wait">
       <span>
         <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
       </span>
@@ -218,7 +222,7 @@
     </div>
     <div
       class="title_final_data"
-      v-if="pageType === 'final'"
+      v-if="pageType === 'final' && !isDragOver"
       :style="{ padding: finalData.title ? '15px 15px' : '0px' }"
     >
       <div v-if="finalData.title">
@@ -232,7 +236,7 @@
         </div>
       </div>
     </div>
-    <div class="query_common" v-if="pageType === 'final' && finalQuest && !docIng">
+    <div class="query_common" v-if="pageType === 'final' && finalQuest && !docIng && !isDragOver">
       <div>
         <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
@@ -247,7 +251,7 @@
   <div class="select_content">
     <div
       class="tran_select"
-      v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'"
+      v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || (pageType === 'sample' && !isDragOver)"
     >
       <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
         <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
@@ -305,7 +309,7 @@
         />
       </div>
     </div>
-    <div class="textarea sampleArea" v-if="pageType === 'sample'">
+    <div class="textarea sampleArea" v-if="pageType === 'sample' && !isDragOver">
       <el-input
         v-model="newQuestion"
         placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -352,12 +356,12 @@
         />
       </div>
     </div>
-    <div class="tran_select" v-if="pageType === 'tran'">
+    <div class="tran_select" v-if="pageType === 'tran' && !isDragOver">
       <el-radio-group v-model="selectedLan">
         <el-radio-button v-for="item in lanList" :label="item" :value="item">{{ item }}</el-radio-button>
       </el-radio-group>
     </div>
-    <div class="textarea" v-if="pageType === 'tran'">
+    <div class="textarea" v-if="pageType === 'tran' && !isDragOver">
       <el-input
         v-model="newQuestion"
         placeholder="请输入您想翻译的文本,换行请按下Shift+Enter"
@@ -395,7 +399,7 @@
       </div>
     </div>
 
-    <div class="textarea" v-if="pageType === 'final'">
+    <div class="textarea" v-if="pageType === 'final' && !isDragOver">
       <el-input
         v-model="newQuestion"
         placeholder="请输入您想总结的文本,换行请按下Shift+Enter"
@@ -520,6 +524,7 @@ const filePreRef = ref(null)
 const knowledge = ref(null)
 const wrapperRef = ref(null)
 const commonUploadModals = ref(null)
+const isDragOver = ref(false)
 const arrList = ref([
   {
     index: 1,
@@ -764,6 +769,10 @@ const handleClickOutside = event => {
     showFileMenu.value = false
   }
 }
+const setDrag = val => {
+  isDragOver.value = val
+}
+
 // 组件挂载后初始化
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
@@ -771,11 +780,12 @@ onMounted(() => {
     isLaw.value = localStorage.getItem('isLaw')
   })
 })
+
 // 组件卸载时关闭 SSE 连接
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
-defineExpose({ changeDynamicRows, fileRef })
+defineExpose({ changeDynamicRows, fileRef, setDrag })
 </script>
 
 <style lang="less" scoped>

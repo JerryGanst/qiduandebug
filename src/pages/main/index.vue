@@ -12,7 +12,14 @@
     <!-- 右侧内容 -->
     <el-container>
       <el-main>
-        <div v-if="isMessage" style="width: 100%; height: 100vh">
+        <div
+          v-if="isMessage"
+          style="width: 100%; height: 100vh"
+          @dragover.prevent="handleDragOver"
+          @dragleave="handleDragLeave"
+          @drop.prevent="handleDrop"
+          :class="{ 'drag-over': isDragOver }"
+        >
           <div v-if="!currentQuestion" class="center-container">
             <Entry
               @submit-tran="submitTran"
@@ -36,7 +43,8 @@
           </div>
 
           <div v-else class="center-container" style="padding-top: 0px">
-            <div class="main_content" style="width: 860px">
+            <div v-if="isDragOver">12343</div>
+            <div class="main_content" style="width: 860px" v-if="!isDragOver">
               <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'" class="title_tiQuery">
                 <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
                   {{ tipQuery }}
@@ -259,7 +267,7 @@
                 </div>
               </div>
             </div>
-            <div class="query_content">
+            <div class="query_content" v-if="!isDragOver">
               <div
                 class="tran_select"
                 v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'"
@@ -539,6 +547,7 @@ const {
 } = useShared()
 
 const queryIng = ref(false)
+const isDragOver = ref(false)
 const asizeRef = ref(null)
 const entryRef = ref(null)
 const sampleData = ref('')
@@ -600,18 +609,28 @@ const setMessage = val => {
 const showFileMenu = ref(false)
 const showFileSample = val => {
   showFileMenu.value = !showFileMenu.value
-  // if (!isLogin.value) {
-  //   ElMessage.warning('请先登录再使用')
-  //   return false
-  // }
-  // nextTick(() => {
-  //   fileRefs.value.openFile(val, fileInputAry.value)
-  // })
 }
-// 点击取消
-// const handleCancel = () => {
-//   // ElMessage.info('已取消删除');
-// }
+const handleDragOver = () => {
+  isDragOver.value = true
+  entryRef.value.setDrag(isDragOver.value)
+}
+
+const handleDragLeave = () => {
+  isDragOver.value = false
+  entryRef.value.setDrag(isDragOver.value)
+}
+const handleDrop = e => {
+  // isDragOver.value = false
+  // const files = Array.from(e.dataTransfer.files)
+  // const data = {
+  //   name: files[0].name,
+  //   percentage: 0,
+  //   size: files[0].size,
+  //   status: 'ready',
+  //   raw: files[0]
+  // }
+  // handleFileAdd(data)
+}
 const handleFileSelect = (val1, val2) => {
   showFileMenu.value = false
   if (!isLogin.value) {
@@ -2344,6 +2363,10 @@ onUnmounted(() => {
 </script>
 
 <style lang="less">
+.upload-layout.drag-over {
+  border-color: #409eff;
+  background-color: rgba(64, 158, 255, 0.1);
+}
 .sampleArea {
   .el-textarea__inner {
     padding: 18px 135px 18px 15px !important;

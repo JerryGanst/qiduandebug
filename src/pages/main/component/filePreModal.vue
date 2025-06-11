@@ -914,7 +914,7 @@ defineExpose({ openFile, closeFile })
 }
 
 .preview-container {
-  height: 480px;
+  height: 470px;
   border-radius: 4px;
   padding: 0 15px 15px 15px;
   overflow: auto;
