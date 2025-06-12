@@ -14,12 +14,16 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@vue-office/excel": "^1.7.14",
+    "@vue-office/pptx": "^1.0.1",
     "highlight.js": "^11.11.1",
     "lodash-es": "^4.17.21",
     "mammoth": "^1.9.0",
     "marked": "^15.0.7",
     "mitt": "^3.0.1",
+    "pptxjs": "^0.0.0",
     "vue": "^3.5.13",
+    "vue-demi": "^0.14.10",
     "vue-router": "^4.0.13"
   },
   "devDependencies": {

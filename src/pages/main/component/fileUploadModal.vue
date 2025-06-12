@@ -42,7 +42,19 @@ handlePreview
         <div class="file_item" :style="{ marginTop: type === 'sample' ? '115px' : '115px' }">
           <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
             <div class="file_img">
-              <img :src="file.extension === 'txt' ? text : file.extension === 'pdf' ? pdf : word" />
+              <img
+                :src="
+                  file.extension === 'txt'
+                    ? text
+                    : file.extension === 'pdf'
+                      ? pdf
+                      : file.extension === 'ppt' || file.extension === 'pptx'
+                        ? ppt
+                        : file.extension === 'xls' || file.extension === 'xlsx'
+                          ? excel
+                          : word
+                "
+              />
             </div>
             <div class="file-info">
               <span class="filename">{{ file.name }}</span>
@@ -111,6 +123,16 @@ handlePreview
           <div v-else-if="previewType === 'pdf'">
             <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
           </div>
+          <div v-else-if="previewType === 'pptx'">
+            <vue-office-pptx
+              :src="previewContent"
+              @rendered="() => console.log('PPT渲染完成')"
+              @error="e => console.error('PPT渲染失败', e)"
+            />
+          </div>
+          <div v-else-if="previewType === 'excel'">
+            <vue-office-excel :src="previewContent" @rendered="() => console.log('Excel渲染完成')" />
+          </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>
         <div v-else="previewFileId" class="preview-container">
@@ -138,15 +160,21 @@ handlePreview
 <script setup>
 import { ref, computed, nextTick, watch } from 'vue'
 import axios from 'axios'
+import VueOfficePptx from '@vue-office/pptx'
+import VueOfficeExcel from '@vue-office/excel'
+
 import mammoth from 'mammoth'
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
+import excel from '@/assets/excl.png'
+import ppt from '@/assets/ppt.png'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import { Close } from '@element-plus/icons-vue'
 import request from '@/utils/request' // 导入封装的 axios 方法
+import { fromPairs } from 'lodash-es'
 const dialogVisible = ref(false)
 const fileQueue = ref([])
 const previewContent = ref(null)
@@ -179,7 +207,7 @@ const knowList = ref([
 ])
 const selectedValues = ref([]) // 存储选中的值（数组）
 const knowOptions = ref([])
-const allowedFileTypes = '.doc,.docx,.txt,.pdf'
+const allowedFileTypes = '.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx'
 // 颜色映射
 const statusColors = {
   [STATUS.PENDING]: '#EDEDED',
@@ -518,6 +546,19 @@ const handlePreview = async file => {
 
       // 在组件销毁或关闭预览时记得释放URL
       // 例如在onUnmounted或关闭弹窗的方法中调用 URL.revokeObjectURL(pdfUrl)
+    } else if (['pptx', 'ppt'].includes(file.extension)) {
+      // 新增：处理PPT文件
+      const arrayBuffer = await file.raw.arrayBuffer()
+      previewContent.value = arrayBuffer // 直接传递ArrayBuffer
+      previewType.value = 'pptx' // 标识为PPT类型
+      console.log(previewContent.value)
+      previewFileId.value = 123
+    } else if (['xlsx', 'xls'].includes(file.extension)) {
+      // 新增：处理Excel文件
+      const arrayBuffer = await file.raw.arrayBuffer()
+      previewContent.value = arrayBuffer // 直接传递ArrayBuffer
+      previewType.value = 'excel' // 标识为Excel类型
+      previewFileId.value = 123
     } else {
       previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'

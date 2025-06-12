@@ -142,7 +142,11 @@
                               ? text
                               : its.originalFileName.endsWith('pdf')
                                 ? pdf
-                                : word
+                                : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
+                                  ? ppt
+                                  : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
+                                    ? excel
+                                    : word
                           "
                           style="width: 24px; height: 30px"
                         />
@@ -202,7 +206,11 @@
                               ? text
                               : its.originalFileName.endsWith('pdf')
                                 ? pdf
-                                : word
+                                : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
+                                  ? ppt
+                                  : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
+                                    ? excel
+                                    : word
                           "
                           style="width: 24px; height: 30px"
                         />
@@ -362,7 +370,11 @@
                             ? text
                             : item.originalFileName.endsWith('pdf')
                               ? pdf
-                              : word
+                              : item.originalFileName.endsWith('ppt') || item.originalFileName.endsWith('pptx')
+                                ? ppt
+                                : item.originalFileName.endsWith('xls') || item.originalFileName.endsWith('xlsx')
+                                  ? excel
+                                  : word
                         "
                         style="width: 22px; height: 28px"
                       />
@@ -490,6 +502,8 @@ import deepSelect from '@/assets/deepSelect.png'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
+import excel from '@/assets/excl.png'
+import ppt from '@/assets/ppt.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './component/markdown.vue' // 引入 Markdown 渲染组件
 

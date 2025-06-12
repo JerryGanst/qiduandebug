@@ -107,7 +107,19 @@
             }"
           >
             <div class="file_img">
-              <img :src="file.fileType === 'txt' ? text : file.fileType === 'pdf' ? pdf : word" />
+              <img
+                :src="
+                  file.fileType === 'txt'
+                    ? text
+                    : file.fileType === 'pdf'
+                      ? pdf
+                      : file.fileType === 'ppt' || file.fileType === 'pptx'
+                        ? ppt
+                        : file.fileType === 'xls' || file.fileType === 'xlsx'
+                          ? excel
+                          : word
+                "
+              />
             </div>
             <div class="originalFileName" :style="{ width: isPre ? '90px' : '70px' }">{{ file.originalFileName }}</div>
             <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
@@ -159,6 +171,16 @@
           <div v-else-if="previewType === 'pdf'">
             <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
           </div>
+          <div v-else-if="previewType === 'pptx'">
+            <vue-office-pptx
+              :src="previewContent"
+              @rendered="() => console.log('PPT渲染完成')"
+              @error="e => console.error('PPT渲染失败', e)"
+            />
+          </div>
+          <div v-else-if="previewType === 'excel'">
+            <vue-office-excel :src="previewContent" @rendered="() => console.log('Excel渲染完成')" />
+          </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>
         <div
@@ -183,11 +205,15 @@
 import { ref, computed, nextTick, watch } from 'vue'
 import axios from 'axios'
 import mammoth from 'mammoth'
+import VueOfficePptx from '@vue-office/pptx'
+import VueOfficeExcel from '@vue-office/excel'
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
+import ppt from '@/assets/ppt.png'
+import excel from '@/assets/excl.png'
 import down from '@/assets/arrow_up.png'
 import up from '@/assets/arrow_down.png'
 import sort from '@/assets/sort.png'
@@ -448,6 +474,16 @@ const handlePreview = async file => {
 
       // 在组件销毁或关闭预览时记得释放URL
       // 例如在onUnmounted或关闭弹窗的方法中调用 URL.revokeObjectURL(pdfUrl)
+    } else if (['pptx', 'ppt'].includes(file.extension)) {
+      // 新增：处理PPT文件
+      const arrayBuffer = await file.raw.arrayBuffer()
+      previewContent.value = arrayBuffer // 直接传递ArrayBuffer
+      previewType.value = 'pptx' // 标识为PPT类型
+    } else if (['xlsx', 'xls'].includes(file.extension)) {
+      // 新增：处理Excel文件
+      const arrayBuffer = await file.raw.arrayBuffer()
+      previewContent.value = arrayBuffer // 直接传递ArrayBuffer
+      previewType.value = 'excel' // 标识为Excel类型
     } else {
       previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'

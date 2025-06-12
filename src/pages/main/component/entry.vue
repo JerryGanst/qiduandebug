@@ -121,7 +121,11 @@
           (transQuest && transQuest.includes('txt') && transQuest.endsWith('txt')) ||
           (transQuest && transQuest.includes('doc') && transQuest.endsWith('doc')) ||
           (transQuest && transQuest.includes('docx') && transQuest.endsWith('docx')) ||
-          (transQuest && transQuest.includes('pdf') && transQuest.endsWith('pdf'))
+          (transQuest && transQuest.includes('pdf') && transQuest.endsWith('pdf')) ||
+          (transQuest && transQuest.includes('ppt') && transQuest.endsWith('ppt')) ||
+          (transQuest && transQuest.includes('pptx') && transQuest.endsWith('pptx')) ||
+          (transQuest && transQuest.includes('xls') && transQuest.endsWith('xls')) ||
+          (transQuest && transQuest.includes('xlsx') && transQuest.endsWith('xlsx'))
         "
         :style="{
           padding: transQuest ? '7px 15px' : '0px'
@@ -131,7 +135,17 @@
       >
         <span style="display: flex; align-items: center">
           <img
-            :src="transQuest.endsWith('txt') ? text : transQuest.endsWith('pdf') ? pdf : word"
+            :src="
+              transQuest.endsWith('txt')
+                ? text
+                : transQuest.endsWith('pdf')
+                  ? pdf
+                  : transQuest.endsWith('ppt') || transQuest.endsWith('pptx')
+                    ? ppt
+                    : transQuest.endsWith('xls') || transQuest.endsWith('xlsx')
+                      ? excel
+                      : word
+            "
             style="width: 24px; height: 30px"
           />
         </span>
@@ -191,7 +205,11 @@
           (finalQuest && finalQuest.includes('txt') && finalQuest.endsWith('txt')) ||
           (finalQuest && finalQuest.includes('doc') && finalQuest.endsWith('doc')) ||
           (finalQuest && finalQuest.includes('docx') && finalQuest.endsWith('docx')) ||
-          (finalQuest && finalQuest.includes('pdf') && finalQuest.endsWith('pdf'))
+          (finalQuest && finalQuest.includes('pdf') && finalQuest.endsWith('pdf')) ||
+          (finalQuest && finalQuest.includes('ppt') && finalQuest.endsWith('ppt')) ||
+          (finalQuest && finalQuest.includes('pptx') && finalQuest.endsWith('pptx')) ||
+          (finalQuest && finalQuest.includes('xls') && finalQuest.endsWith('xls')) ||
+          (finalQuest && finalQuest.includes('xlsx') && finalQuest.endsWith('xlsx'))
         "
         @click="showPreFile('final')"
         :style="{
@@ -208,7 +226,17 @@
       >
         <span style="display: flex; align-items: center">
           <img
-            :src="finalQuest.endsWith('txt') ? text : finalQuest.endsWith('pdf') ? pdf : word"
+            :src="
+              finalQuest.endsWith('txt')
+                ? text
+                : finalQuest.endsWith('pdf')
+                  ? pdf
+                  : finalQuest.endsWith('ppt') || finalQuest.endsWith('pptx')
+                    ? ppt
+                    : finalQuest.endsWith('xls') || finalQuest.endsWith('xlsx')
+                      ? excel
+                      : word
+            "
             style="width: 24px; height: 30px"
           />
         </span>
@@ -469,6 +497,8 @@ import deepSelect from '@/assets/deepSelect.png'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
+import excel from '@/assets/excl.png'
+import ppt from '@/assets/ppt.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './markdown.vue' // 引入 Markdown 渲染组件
 const emit = defineEmits([

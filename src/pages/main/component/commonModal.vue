@@ -1,9 +1,28 @@
 <template>
-  <div class="upload-layout">
+  <div
+    class="upload-layout"
+    @dragover.prevent="handleDragOver"
+    @dragleave="handleDragLeave"
+    @drop.prevent="handleDrop"
+    :class="{ 'drag-over': isDragOver }"
+  >
     <!-- 左侧附件列表 -->
     <div class="file-list" style="width: 100%">
       <div class="file_search">
-        <div class="file_left"></div>
+        <div class="file_left" v-if="isUpload">
+          <el-upload
+            drag
+            :auto-upload="false"
+            :multiple="true"
+            :accept="allowedFileTypes"
+            :on-change="handleFileAdd"
+            :show-file-list="false"
+            :file-list="fileQueue"
+            :before-upload="checkFileSize"
+          >
+            <div class="file_upload">文件上传</div>
+          </el-upload>
+        </div>
         <div class="file_right">
           <div class="file_content">
             <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
@@ -24,37 +43,12 @@
           </div>
         </div>
       </div>
-      <div class="upload_list">
-        <el-upload
-          v-if="isUpload"
-          drag
-          :auto-upload="false"
-          :multiple="true"
-          :accept="allowedFileTypes"
-          :on-change="handleFileAdd"
-          :show-file-list="false"
-          :file-list="fileQueue"
-          :before-upload="checkFileSize"
-        >
-          <i class="el-icon-upload" />
-          <div class="el-upload__text">
-            拖拽附件到此或
-            <em>点击上传</em>
-            <div class="el-upload__subtext">
-              <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
-            </div>
-            <div class="el-upload__subtext">
-              <span style="color: #868686">单个大小不超过50M</span>
-            </div>
-          </div>
-        </el-upload>
-      </div>
       <div
         class="file_item"
         :style="{
-          marginTop: isUpload ? '200px' : '70px',
+          marginTop: isUpload ? '70px' : '70px',
           marginBottom: isUpload ? '12px' : '0px',
-          height: isUpload ? 'calc(100% - 272px)' : 'calc(100% - 130px)'
+          height: isUpload ? 'calc(100% - 142px)' : 'calc(100% - 130px)'
         }"
       >
         <div
@@ -66,7 +60,23 @@
           style="position: relative; width: 8%; margin-left: 13px"
         >
           <div class="file_img">
-            <img :src="file.fileType === 'txt' ? text : file.fileType === 'pdf' ? pdf : word" />
+            <img
+              :src="
+                file.fileType === 'txt'
+                  ? text
+                  : file.fileType === 'pdf'
+                    ? pdf
+                    : file.fileType === 'ppt'
+                      ? ppt
+                      : file.fileType === 'pptx'
+                        ? ppt
+                        : file.fileType === 'xls'
+                          ? excel
+                          : file.fileType === 'xlsx'
+                            ? excel
+                            : word
+              "
+            />
           </div>
           <div class="fileName" style="width: 70px">
             {{ file.fileName }}
@@ -120,6 +130,8 @@ import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
+import excel from '@/assets/excl.png'
+import ppt from '@/assets/ppt.png'
 import down from '@/assets/arrow_up.png'
 import up from '@/assets/arrow_down.png'
 import sort from '@/assets/sort.png'
@@ -156,7 +168,7 @@ const activeIndex = ref(0)
 const nameSort = ref(false)
 const timeSort = ref(false)
 const sizeSort = ref(false)
-
+const isDragOver = ref(false)
 const clearData = () => {
   searchText.value = ''
   getFileList()
@@ -254,15 +266,6 @@ const handleDelete = (index, event) => {
     deleteData(id)
   })
 }
-// 过滤后的列表
-// const filteredList = computed(() => {
-//   if (!searchText.value) {
-//     return fileQueue.value
-//   }
-
-//   const searchLower = searchText.value.toLowerCase()
-//   return fileQueue.value.filter(item => item.fileName.toLowerCase().includes(searchLower))
-// })
 
 const handleSearch = debounce(() => {}, 500)
 const checkFileSize = file => {
@@ -292,10 +295,12 @@ const uploadSingleFile = async file => {
     previewFileId.value = file.uid
     const userInfo = JSON.parse(localStorage.getItem('userInfo'))
     const formData = new FormData()
+    console.log(file.raw)
     formData.append('file', file.raw)
     formData.append('userId', userInfo.id)
     formData.append('target', selectedKnow.value)
     formData.append('isPublic', true)
+    console.log(formData)
     axios
       .post(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileUpload', formData, {
         onUploadProgress: progress => {
@@ -469,7 +474,34 @@ const getKnow = val => {
   isDelete.value = val.delete
   getFileList(selectedKnow.value)
 }
+const handleDragOver = () => {
+  if (!isUpload.value) {
+    return
+  }
+  isDragOver.value = true
+}
 
+const handleDragLeave = () => {
+  if (!isUpload.value) {
+    return
+  }
+  isDragOver.value = false
+}
+const handleDrop = e => {
+  if (!isUpload.value) {
+    return
+  }
+  isDragOver.value = false
+  const files = Array.from(e.dataTransfer.files)
+  const data = {
+    name: files[0].name,
+    percentage: 0,
+    size: files[0].size,
+    status: 'ready',
+    raw: files[0]
+  }
+  handleFileAdd(data)
+}
 const getTextAfterLastDot = str => {
   const lastDotIndex = str.lastIndexOf('.')
   if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
@@ -575,8 +607,15 @@ defineExpose({ openFile })
   display: flex;
   height: 100%;
   gap: 20px;
+  :deep(.el-upload-dragger) {
+    border: none !important;
+    padding: 0px;
+  }
 }
-
+.upload-layout.drag-over {
+  border-color: #409eff;
+  background-color: rgba(64, 158, 255, 0.1);
+}
 .file-list {
   width: calc(100% - 80px);
   margin-left: 80px;
@@ -618,6 +657,20 @@ defineExpose({ openFile })
       flex-direction: row;
       flex: 1;
       min-width: 250px;
+      margin-top: 15px;
+      .file_upload {
+        width: 120px;
+        height: 32px;
+        line-height: 32px;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid #1b6cff;
+        text-align: center;
+        margin-right: 15px;
+        font-size: 12px;
+        color: #1b6cff;
+        cursor: pointer;
+      }
       .file_content {
         display: flex;
         .file_select {
@@ -626,6 +679,7 @@ defineExpose({ openFile })
           line-height: 33px;
           min-width: 200px;
         }
+
         .file_info {
           font-size: 12px;
           color: #868686;

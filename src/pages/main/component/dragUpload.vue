@@ -1,6 +1,6 @@
 <template>
   <div class="drag_content" style="width: 86%; margin-left: 5%">
-    <div>支持格式：.doc,.docx,.txt,.pdf</div>
+    <div>支持格式：.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx</div>
     <div>大小不超过50M</div>
   </div>
 </template>
