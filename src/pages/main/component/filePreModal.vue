@@ -615,14 +615,12 @@ const openFile = (val, ary) => {
   if (val === 'sample') {
     if (fileAry.value.length > 0) {
       fileObj.value = JSON.parse(JSON.stringify(fileAry.value[0]))
-      console.log(fileObj.value)
       getFile()
     } else {
       fileQueue.value = []
     }
   } else {
     if (fileObj.value) {
-      console.log(fileObj.value)
       getFile()
     } else {
       fileQueue.value = []
@@ -732,9 +730,7 @@ const getFile = () => {
       }
       previewFileId.value = fileOther.uid
       fileInfo.value = fileOther
-      console.log(fileOther.name)
       fileInfo.value.name = decodeURIComponent(fileOther.name)
-      console.log(fileInfo.value)
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
       fileQueue.value = []
       fileQueue.value.push(fileOther)

@@ -642,7 +642,6 @@ const postData = async () => {
         .then(res => {
           if (res.data.status) {
             ary.push(res.data?.data[0])
-            console.log(ary[0])
             if (i === selectList.value.length - 1) {
               if (type.value === 'sample') {
                 eventBus.emit('submit-sampleFile', ary)
@@ -703,7 +702,6 @@ const getFile = fileObj => {
     .then(({ blob, originalFileName }) => {
       // 将 Blob 转换为 File 对象（类似 file.raw）
       const file = new File([blob], originalFileName, { type: blob.type })
-      console.log(file)
       const fileOther = {
         raw: file,
         uid: file.lastModified,
@@ -730,7 +728,6 @@ const getFile = fileObj => {
               isBorder: isNameMatch
             }
           })
-          console.log(fileQueue.value)
         }
       }
 

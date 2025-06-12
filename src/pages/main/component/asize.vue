@@ -813,11 +813,6 @@ const queryAn = (val, index, data) => {
         if (anList.length === queryList.length) {
           transQuest.value = anList[i].data.question
         }
-        // else {
-        //   const data = getMatchingIndexes(limitAry.value, queryList[i])
-        //   console.log(data)
-        //   transQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
-        // }
       } else if (pageType.value === 'final') {
         currentQuestion.value = false
         if (anList.length === queryList.length) {

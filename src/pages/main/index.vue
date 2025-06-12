@@ -20,7 +20,7 @@
           @drop.prevent="handleDrop"
           :class="{ 'drag-over': isDragOver }"
         >
-          <div v-if="!currentQuestion" class="center-container">
+          <div v-if="!currentQuestion" class="center-container" :style="{ paddingTop: isDragOver ? '0px' : '80px' }">
             <Entry
               @submit-tran="submitTran"
               @submit-final="submitFinal"
@@ -43,8 +43,8 @@
           </div>
 
           <div v-else class="center-container" style="padding-top: 0px">
-            <div v-if="isDragOver">12343</div>
-            <div class="main_content" style="width: 860px" v-if="!isDragOver">
+            <DragUpload v-if="isDragOver" ref="dragUploads"></DragUpload>
+            <div class="main_content" v-if="!isDragOver" style="width: 860px">
               <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'" class="title_tiQuery">
                 <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
                   {{ tipQuery }}
@@ -476,6 +476,7 @@ import FilePreUpload from './component/filePreModal.vue'
 import commonUploadModal from './component/commonUploadModal.vue'
 import commonModal from './component/commonModal.vue'
 import personModal from './component/personModal.vue'
+import DragUpload from './component/dragUpload.vue'
 import { Document } from '@element-plus/icons-vue' // 引入需要的图标
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
@@ -543,11 +544,12 @@ const {
   fileAry,
   fileInputAry,
   isLaw,
-  isMessage
+  isMessage,
+  dragUploads,
+  isDragOver
 } = useShared()
 
 const queryIng = ref(false)
-const isDragOver = ref(false)
 const asizeRef = ref(null)
 const entryRef = ref(null)
 const sampleData = ref('')
@@ -611,24 +613,45 @@ const showFileSample = val => {
   showFileMenu.value = !showFileMenu.value
 }
 const handleDragOver = () => {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+    return
+  }
   isDragOver.value = true
-  entryRef.value.setDrag(isDragOver.value)
+  console.log(currentQuestion.value)
+  console.log(isDragOver.value)
+  nextTick(() => {
+    if (entryRef.value) {
+      entryRef.value.setDrag(isDragOver.value)
+    }
+  })
 }
 
 const handleDragLeave = () => {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+    return
+  }
   isDragOver.value = false
-  entryRef.value.setDrag(isDragOver.value)
+  nextTick(() => {
+    if (entryRef.value) {
+      entryRef.value.setDrag(isDragOver.value)
+    }
+  })
 }
 const handleDrop = e => {
-  // isDragOver.value = false
-  // const files = Array.from(e.dataTransfer.files)
-  // const data = {
-  //   name: files[0].name,
-  //   percentage: 0,
-  //   size: files[0].size,
-  //   status: 'ready',
-  //   raw: files[0]
-  // }
+  const files = Array.from(e.dataTransfer.files)
+  const data = {
+    name: files[0].name,
+    percentage: 0,
+    size: files[0].size,
+    status: 'ready',
+    raw: files[0]
+  }
+  console.log(currentQuestion.value)
+  console.log(dragUploads.value)
+  nextTick(() => {
+    dragUploads.value.setFiles(data)
+  })
+
   // handleFileAdd(data)
 }
 const handleFileSelect = (val1, val2) => {
@@ -988,7 +1011,6 @@ const samplePost = event => {
 }
 
 const refreshData = () => {
-  console.log(123)
   if (isSampleLoad.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
@@ -1161,7 +1183,6 @@ const deleteImg = index => {
   }
 }
 const submitSampleFile = val => {
-  console.log(val)
   currentQuestion.value = true
   for (var i = 0; i < val.length; i++) {
     val[i].fileName = decodeURIComponent(val[i].fileName)
@@ -1407,12 +1428,6 @@ const submitSample = async (val, isRefresh) => {
       ElMessage.error('服务器繁忙,请稍后再试')
       return
     }
-    // const answerData = res.json()
-    // console.log(answerData)
-    // if (res.data.code === 400) {
-    //   ElMessage.error(res.data.message)
-    //   return
-    // }
     const decoder = new TextDecoder() // 启用流模式解码
     let buffer = '' // 缓冲区用于存储不完整的数据
     let isFirstChunk = true // 标记是否为第一个数据块
@@ -1458,7 +1473,6 @@ const submitSample = async (val, isRefresh) => {
       // 使用更安全的分割方式（避免截断 JSON 结构）[3](@ref)
       const chunks = buffer.split(/(?=data:)/g)
       buffer = chunks.pop() || ''
-      // console.log(jsonData.code)
       if (quickJSONCheck(buffer)) {
         const jsonData = JSON.parse(buffer)
         if (jsonData.code === 400) {
@@ -1521,8 +1535,6 @@ const submitSample = async (val, isRefresh) => {
   }
 }
 const submitTran = async (val, isRefresh, obj) => {
-  console.log(val)
-  console.log(obj)
   if (finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return

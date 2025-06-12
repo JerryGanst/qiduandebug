@@ -281,7 +281,6 @@ const downloads = url => {
     link.style.display = 'none'
     // 3. 从URL中提取文件名（可选）
     const originalFileName = url.split('/').pop().split('?')[0] // 根据实际情况调整
-    console.log(originalFileName)
     // 4. 设置下载属性（需配合CORS配置）
     link.setAttribute('download', originalFileName)
     document.body.appendChild(link)
@@ -405,7 +404,6 @@ const uploadSingleFile = async file => {
 const uploadTimer = ref(null)
 // 附件添加处理
 const handleFileAdd = async uploadFile => {
-  console.log(uploadFile)
   if (uploadFile.size / 1024 / 1024 > 50) {
     ElMessage.warning('附件大小不能超过50MB!')
     return
@@ -654,7 +652,6 @@ const getTextAfterLastDot = str => {
   return str.slice(lastDotIndex + 1)
 }
 const getFile = fileObj => {
-  console.log(fileObj)
   // 使用 POST 请求（与后端 @PostMapping 匹配）
   fetch(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileById?id=' + fileObj.id, {
     method: 'POST',

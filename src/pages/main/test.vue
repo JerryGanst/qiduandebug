@@ -107,7 +107,6 @@ const submitUpload = () => {
 
   // 这里实际项目中应该是调用上传API
   ElMessage.success(`开始上传 ${fileList.value.length} 个文件`)
-  console.log('上传文件:', fileList.value)
 
   // 模拟上传完成后清空列表
   setTimeout(() => {

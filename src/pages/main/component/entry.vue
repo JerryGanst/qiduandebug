@@ -1,6 +1,11 @@
 <template>
-  <div class="main_content">
-    <div v-if="isDragOver && (pageType === 'sample' || pageType === 'tran' || pageType === 'final')">1111111</div>
+  <DragUpload
+    ref="dragUploads"
+    @submit-tran="submitFileTran"
+    @submit-final="submitFileFinal"
+    v-if="isDragOver && (pageType === 'sample' || pageType === 'tran' || pageType === 'final')"
+  ></DragUpload>
+  <div class="main_content" :style="{ marginBottom: isDragOver ? '0px' : '10px' }" v-if="!isDragOver">
     <div
       class="title"
       v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || (pageType === 'sample' && !isDragOver)"
@@ -248,7 +253,7 @@
       </div>
     </div>
   </div>
-  <div class="select_content">
+  <div class="select_content" v-if="!isDragOver">
     <div
       class="tran_select"
       v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || (pageType === 'sample' && !isDragOver)"
@@ -454,6 +459,7 @@ import FileUpload from './fileUploadModal.vue'
 import FilePreUpload from './filePreModal.vue'
 import Knowledge from './KnowledgeModal.vue'
 import commonUploadModal from './commonUploadModal.vue'
+import DragUpload from './dragUpload.vue'
 import { useShared } from '@/utils/useShared'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
@@ -517,14 +523,16 @@ const {
   showModelTip,
   fileInputAry,
   isLaw,
-  isLogin
+  isLogin,
+  dragUploads,
+  isDragOver
 } = useShared()
 const fileRef = ref(null)
 const filePreRef = ref(null)
 const knowledge = ref(null)
 const wrapperRef = ref(null)
 const commonUploadModals = ref(null)
-const isDragOver = ref(false)
+
 const arrList = ref([
   {
     index: 1,
@@ -770,6 +778,9 @@ const handleClickOutside = event => {
   }
 }
 const setDrag = val => {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+    return
+  }
   isDragOver.value = val
 }
 
