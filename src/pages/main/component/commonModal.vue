@@ -61,6 +61,7 @@
         >
           <div class="file_img">
             <img
+              v-if="file.fileType"
               :src="
                 file.fileType === 'txt'
                   ? text
@@ -400,15 +401,18 @@ const getFileList = () => {
     )
     .then(res => {
       if (res.status) {
+        isDragOver.value = false
         fileQueue.value = res.data.content
         totals.value = res.data.totalElements
         getInfo()
       } else {
+        isDragOver.value = false
         fileQueue.value = []
         ElMessage.error(res.message)
       }
     })
     .catch(err => {
+      isDragOver.value = false
       fileQueue.value = []
       ElMessage.error(err)
       console.error(err)
@@ -478,6 +482,7 @@ const handleDragOver = () => {
   if (!isUpload.value) {
     return
   }
+
   isDragOver.value = true
 }
 
@@ -491,8 +496,22 @@ const handleDrop = e => {
   if (!isUpload.value) {
     return
   }
-  isDragOver.value = false
   const files = Array.from(e.dataTransfer.files)
+  const exception = getTextAfterLastDot(files[0].name)
+  if (
+    exception !== 'txt' &&
+    exception !== 'doc' &&
+    exception !== 'docx' &&
+    exception !== 'ppt' &&
+    exception !== 'pptx' &&
+    exception !== 'xls' &&
+    exception !== 'xlsx' &&
+    exception !== 'pdf'
+  ) {
+    isDragOver.value = false
+    ElMessage.warning('暂不支持此格式上传')
+    return
+  }
   const data = {
     name: files[0].name,
     percentage: 0,

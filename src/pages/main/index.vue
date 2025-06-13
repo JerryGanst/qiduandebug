@@ -630,16 +630,19 @@ const handleDragOver = () => {
   if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
     return
   }
+
   isDragOver.value = true
-  console.log(currentQuestion.value)
-  console.log(isDragOver.value)
   nextTick(() => {
     if (entryRef.value) {
       entryRef.value.setDrag(isDragOver.value)
     }
   })
 }
-
+const getTextAfterLastDot = str => {
+  const lastDotIndex = str.lastIndexOf('.')
+  if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
+  return str.slice(lastDotIndex + 1)
+}
 const handleDragLeave = () => {
   if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
     return
@@ -652,7 +655,27 @@ const handleDragLeave = () => {
   })
 }
 const handleDrop = e => {
+  if (!isLogin.value) {
+    isDragOver.value = false
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
   const files = Array.from(e.dataTransfer.files)
+  const exception = getTextAfterLastDot(files[0].name)
+  if (
+    exception !== 'txt' &&
+    exception !== 'doc' &&
+    exception !== 'docx' &&
+    exception !== 'ppt' &&
+    exception !== 'pptx' &&
+    exception !== 'xls' &&
+    exception !== 'xlsx' &&
+    exception !== 'pdf'
+  ) {
+    isDragOver.value = false
+    ElMessage.warning('暂不支持此格式上传')
+    return
+  }
   const data = {
     name: files[0].name,
     percentage: 0,
@@ -660,8 +683,6 @@ const handleDrop = e => {
     status: 'ready',
     raw: files[0]
   }
-  console.log(currentQuestion.value)
-  console.log(dragUploads.value)
   nextTick(() => {
     dragUploads.value.setFiles(data)
   })
@@ -1198,6 +1219,8 @@ const deleteImg = index => {
 }
 const submitSampleFile = val => {
   currentQuestion.value = true
+  isDragOver.value = false
+  console.log(isDragOver.value)
   for (var i = 0; i < val.length; i++) {
     val[i].fileName = decodeURIComponent(val[i].fileName)
     val[i].originalFileName = decodeURIComponent(val[i].originalFileName)

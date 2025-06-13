@@ -7,6 +7,7 @@ handlePreview
     class="custom-upload-dialog"
     style="margin-top: 3vh; border-radius: 10px"
   >
+    <!-- <div class="file_loading" v-if="isLoading">加载中...</div> -->
     <div class="upload-layout">
       <!-- 左侧附件列表 -->
       <!-- <div class="file-list">
@@ -180,6 +181,7 @@ const STATUS = {
   ERROR: 'error'
 }
 const selectedKnow = ref(1)
+const isLoading = ref(false)
 const selectedMode = ref('')
 const selectedFile = ref([])
 const fileOptions = ref([])
@@ -513,6 +515,7 @@ const retryUpload = file => {
 
 // 附件预览处理
 const handlePreview = async file => {
+  isLoading.value = false
   if (!file) {
     return
   }
@@ -640,6 +643,11 @@ const getFileList = () => {
 }
 const openFile = (val, ary) => {
   dialogVisible.value = true
+  previewContent.value = null
+  isLoading.value = true
+  fileInfo.value.size = 0
+  fileInfo.value.name = ''
+  fileInfo.value.extension = ''
   type.value = val
   if (val === 'sample') {
     if (fileAry.value.length > 0) {
@@ -790,6 +798,19 @@ defineExpose({ openFile, closeFile })
 </script>
 
 <style scoped lang="less">
+.file_loading {
+  width: 1170px;
+  height: 648px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.2) !important;
+}
+/* 覆盖遮罩透明度 */
+:deep(.el-overlay) {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
 .pdf-wrapper {
   position: absolute;
   top: 0;

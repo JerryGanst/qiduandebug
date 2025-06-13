@@ -108,6 +108,7 @@
           >
             <div class="file_img">
               <img
+                v-if="file.fileType"
                 :src="
                   file.fileType === 'txt'
                     ? text

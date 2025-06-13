@@ -429,6 +429,21 @@ const getStatusType = status => {
 
 // 附件添加处理
 const handleFileAdd = uploadFile => {
+  const exception = uploadFile.name.split('.').pop().toLowerCase()
+  if (
+    exception !== 'txt' &&
+    exception !== 'doc' &&
+    exception !== 'docx' &&
+    exception !== 'ppt' &&
+    exception !== 'pptx' &&
+    exception !== 'xls' &&
+    exception !== 'xlsx' &&
+    exception !== 'pdf'
+  ) {
+    ElMessage.warning('暂不支持此格式上传')
+    return
+  }
+
   if (fileQueue.value.length >= 5) {
     ElMessage.warning('一次性最多上传五个文件')
     fileQueue.value = fileQueue.value.slice(-5)
