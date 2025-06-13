@@ -40,6 +40,7 @@ const chatCurrent = reactive({
 const isLogin = ref(false) // 判断是否登录
 const dynamicRows = ref(1) // 问答文本域的动态行数（高度）
 const isSampleLoad = ref(false) // 判断是否正在问答状态
+const dragUploads = ref(null)
 const finalData = ref({
   title: '',
   data: []
@@ -91,8 +92,10 @@ const limitAry = ref([])
 const showFileTip = ref(false)
 const showModelTip = ref(false)
 const isLaw = ref(false)
+const isMessage = ref(true)
+const knowSelect = ref(1)
 const fileInputAry = ref([])
-
+const isDragOver = ref(false)
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -304,6 +307,18 @@ export function useShared() {
   const updateIsLaw = newName => {
     isLaw.value = newName
   }
+  const updateIsMessage = newName => {
+    isMessage.value = newName
+  }
+  const updateKnowSelect = newName => {
+    knowSelect.value = newName
+  }
+  const updateDragUploads = newName => {
+    dragUploads.value = newName
+  }
+  const updateIsDragOver = newName => {
+    isDragOver.value = newName
+  }
 
   watch(
     newQuestion,
@@ -319,7 +334,10 @@ export function useShared() {
     newQuestion,
     isSampleStop,
     isQueryStop,
+    isDragOver,
     limitLoading,
+    knowSelect,
+    dragUploads,
     limitId,
     questions,
     answerList,
@@ -358,6 +376,7 @@ export function useShared() {
     showModelTip,
     fileInputAry,
     isLaw,
+    isMessage,
     changeMode,
     updateCurrentQuestion,
     updateNewQuestion,
@@ -401,6 +420,9 @@ export function useShared() {
     updateShowModelTip,
     updateFileAry,
     updateFileInputAry,
-    updateIsLaw
+    updateIsLaw,
+    updateKnowSelect,
+    updateDragUploads,
+    updateIsDragOver
   }
 }

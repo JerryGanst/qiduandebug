@@ -1,6 +1,15 @@
 <template>
-  <div class="main_content">
-    <div class="title" v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'">
+  <DragUpload
+    ref="dragUploads"
+    @submit-tran="submitFileTran"
+    @submit-final="submitFileFinal"
+    v-if="isDragOver && (pageType === 'sample' || pageType === 'tran' || pageType === 'final')"
+  ></DragUpload>
+  <div class="main_content" :style="{ marginBottom: isDragOver ? '0px' : '10px' }" v-if="!isDragOver">
+    <div
+      class="title"
+      v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || (pageType === 'sample' && !isDragOver)"
+    >
       <img src="@/assets/logo2.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 33px; font-weight: bold">
@@ -46,17 +55,17 @@
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
+          <div class="img_item" style="margin-top: 15px">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
-              <div class="text_title">文件知识库</div>
-              <div class="text_content">个人和部门的专属网盘</div>
+              <div class="text_title">更多功能</div>
+              <div class="text_content">敬请期待...</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="content_list" v-if="pageType === 'sample'">
+    <div class="content_list" v-if="pageType === 'sample' && !isDragOver">
       <div class="list_item">
         <div class="list_title">近期热搜</div>
         <div class="list_tip">深度搜索您关心的问题</div>
@@ -87,17 +96,17 @@
               <div class="text_content">AI智能总结,让复杂信息一目了然</div>
             </div>
           </div>
-          <div class="img_item" style="margin-top: 15px" @click="openKnowledge">
+          <div class="img_item" style="margin-top: 15px">
             <div class="image"><img src="@/assets/3.png" /></div>
             <div class="img_text">
-              <div class="text_title">文件知识库</div>
-              <div class="text_content">个人和部门的专属网盘</div>
+              <div class="text_title">更多功能</div>
+              <div class="text_content">敬请期待...</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="title" v-if="pageType === 'tran'">
+    <div class="title" v-if="pageType === 'tran' && !isDragOver">
       <img src="@/assets/logo2.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 30px; font-weight: bold">立讯技术AI翻译专家</div>
@@ -106,23 +115,37 @@
         </div>
       </div>
     </div>
-    <div class="title_tran_tip" v-if="pageType === 'tran'">
+    <div class="title_tran_tip" v-if="pageType === 'tran' && !isDragOver">
       <div
         v-if="
           (transQuest && transQuest.includes('txt') && transQuest.endsWith('txt')) ||
           (transQuest && transQuest.includes('doc') && transQuest.endsWith('doc')) ||
           (transQuest && transQuest.includes('docx') && transQuest.endsWith('docx')) ||
-          (transQuest && transQuest.includes('pdf') && transQuest.endsWith('pdf'))
+          (transQuest && transQuest.includes('pdf') && transQuest.endsWith('pdf')) ||
+          (transQuest && transQuest.includes('ppt') && transQuest.endsWith('ppt')) ||
+          (transQuest && transQuest.includes('pptx') && transQuest.endsWith('pptx')) ||
+          (transQuest && transQuest.includes('xls') && transQuest.endsWith('xls')) ||
+          (transQuest && transQuest.includes('xlsx') && transQuest.endsWith('xlsx'))
         "
         :style="{
           padding: transQuest ? '7px 15px' : '0px'
         }"
-        @click="showFile('tran')"
+        @click="showPreFile('tran')"
         style="color: #333; background-color: #eff6ff; display: flex; align-items: center; cursor: pointer"
       >
         <span style="display: flex; align-items: center">
           <img
-            :src="transQuest.endsWith('txt') ? text : transQuest.endsWith('pdf') ? pdf : word"
+            :src="
+              transQuest.endsWith('txt')
+                ? text
+                : transQuest.endsWith('pdf')
+                  ? pdf
+                  : transQuest.endsWith('ppt') || transQuest.endsWith('pptx')
+                    ? ppt
+                    : transQuest.endsWith('xls') || transQuest.endsWith('xlsx')
+                      ? excel
+                      : word
+            "
             style="width: 24px; height: 30px"
           />
         </span>
@@ -137,7 +160,7 @@
         {{ transQuest }}
       </div>
     </div>
-    <div v-if="pageType === 'tran' && finalIng && docIng" class="title_wait">
+    <div v-if="pageType === 'tran' && finalIng && docIng && !isDragOver" class="title_wait">
       <span>
         <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
       </span>
@@ -146,7 +169,7 @@
     </div>
     <MarkdownRenderer
       class="title_tran_data"
-      v-if="pageType === 'tran'"
+      v-if="pageType === 'tran' && !isDragOver"
       :style="{ padding: transData ? '0px 15px' : '0px' }"
       :markdown="transData"
     />
@@ -154,7 +177,7 @@
       <p>{{ transData }}</p>
     </div> -->
 
-    <div class="query_common" v-if="pageType === 'tran' && transQuest && !docIng">
+    <div class="query_common" v-if="pageType === 'tran' && transQuest && !docIng && !isDragOver">
       <div>
         <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
@@ -166,7 +189,7 @@
       </div>
     </div>
 
-    <div class="title" v-if="pageType === 'final'">
+    <div class="title" v-if="pageType === 'final' && !isDragOver">
       <img src="@/assets/logo2.png" class="title_src" />
       <div>
         <div class="title_top" style="line-height: 30px; font-weight: bold">立讯技术AI智能总结</div>
@@ -176,15 +199,19 @@
       </div>
     </div>
 
-    <div class="title_final_tip" v-if="pageType === 'final'">
+    <div class="title_final_tip" v-if="pageType === 'final' && !isDragOver">
       <div
         v-if="
           (finalQuest && finalQuest.includes('txt') && finalQuest.endsWith('txt')) ||
           (finalQuest && finalQuest.includes('doc') && finalQuest.endsWith('doc')) ||
           (finalQuest && finalQuest.includes('docx') && finalQuest.endsWith('docx')) ||
-          (finalQuest && finalQuest.includes('pdf') && finalQuest.endsWith('pdf'))
+          (finalQuest && finalQuest.includes('pdf') && finalQuest.endsWith('pdf')) ||
+          (finalQuest && finalQuest.includes('ppt') && finalQuest.endsWith('ppt')) ||
+          (finalQuest && finalQuest.includes('pptx') && finalQuest.endsWith('pptx')) ||
+          (finalQuest && finalQuest.includes('xls') && finalQuest.endsWith('xls')) ||
+          (finalQuest && finalQuest.includes('xlsx') && finalQuest.endsWith('xlsx'))
         "
-        @click="showFile('final')"
+        @click="showPreFile('final')"
         :style="{
           padding: finalQuest ? '7px 15px' : '0px'
         }"
@@ -199,7 +226,17 @@
       >
         <span style="display: flex; align-items: center">
           <img
-            :src="finalQuest.endsWith('txt') ? text : finalQuest.endsWith('pdf') ? pdf : word"
+            :src="
+              finalQuest.endsWith('txt')
+                ? text
+                : finalQuest.endsWith('pdf')
+                  ? pdf
+                  : finalQuest.endsWith('ppt') || finalQuest.endsWith('pptx')
+                    ? ppt
+                    : finalQuest.endsWith('xls') || finalQuest.endsWith('xlsx')
+                      ? excel
+                      : word
+            "
             style="width: 24px; height: 30px"
           />
         </span>
@@ -209,7 +246,7 @@
         <div>{{ finalQuest }}</div>
       </div>
     </div>
-    <div v-if="pageType === 'final' && docIng" class="title_wait">
+    <div v-if="pageType === 'final' && docIng && !isDragOver" class="title_wait">
       <span>
         <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
       </span>
@@ -218,7 +255,7 @@
     </div>
     <div
       class="title_final_data"
-      v-if="pageType === 'final'"
+      v-if="pageType === 'final' && !isDragOver"
       :style="{ padding: finalData.title ? '15px 15px' : '0px' }"
     >
       <div v-if="finalData.title">
@@ -232,7 +269,7 @@
         </div>
       </div>
     </div>
-    <div class="query_common" v-if="pageType === 'final' && finalQuest && !docIng">
+    <div class="query_common" v-if="pageType === 'final' && finalQuest && !docIng && !isDragOver">
       <div>
         <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
@@ -244,10 +281,10 @@
       </div>
     </div>
   </div>
-  <div class="select_content">
+  <div class="select_content" v-if="!isDragOver">
     <div
       class="tran_select"
-      v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'"
+      v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || (pageType === 'sample' && !isDragOver)"
     >
       <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
         <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
@@ -305,7 +342,7 @@
         />
       </div>
     </div>
-    <div class="textarea sampleArea" v-if="pageType === 'sample'">
+    <div class="textarea sampleArea" v-if="pageType === 'sample' && !isDragOver">
       <el-input
         v-model="newQuestion"
         placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -322,10 +359,20 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+        <!-- <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
           <transition name="fade">
             <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过50M</div>
+          </transition>
+        </div> -->
+        <div class="tooltip-wrapper" ref="wrapperRef">
+          <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
+          <transition name="fade">
+            <div v-if="showFileMenu" class="file-menu" @click.stop>
+              <div class="triangle"></div>
+              <div class="menu-item" @click="handleFileSelect('local', 'sample')">从本地读取</div>
+              <div class="menu-item" @click="handleFileSelect('knowledge', 'sample')">从知识库读取</div>
+            </div>
           </transition>
         </div>
         <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
@@ -342,12 +389,12 @@
         />
       </div>
     </div>
-    <div class="tran_select" v-if="pageType === 'tran'">
+    <div class="tran_select" v-if="pageType === 'tran' && !isDragOver">
       <el-radio-group v-model="selectedLan">
         <el-radio-button v-for="item in lanList" :label="item" :value="item">{{ item }}</el-radio-button>
       </el-radio-group>
     </div>
-    <div class="textarea" v-if="pageType === 'tran'">
+    <div class="textarea" v-if="pageType === 'tran' && !isDragOver">
       <el-input
         v-model="newQuestion"
         placeholder="请输入您想翻译的文本,换行请按下Shift+Enter"
@@ -364,18 +411,28 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+        <!-- <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
 
           <transition name="fade">
             <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+          </transition>
+        </div> -->
+        <div class="tooltip-wrapper" ref="wrapperRef">
+          <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
+          <transition name="fade">
+            <div v-if="showFileMenu" class="file-menu" @click.stop>
+              <div class="triangle"></div>
+              <div class="menu-item" @click="handleFileSelect('local', 'tran')">从本地读取</div>
+              <div class="menu-item" @click="handleFileSelect('knowledge', 'tran')">从知识库读取</div>
+            </div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitTranSend" />
       </div>
     </div>
 
-    <div class="textarea" v-if="pageType === 'final'">
+    <div class="textarea" v-if="pageType === 'final' && !isDragOver">
       <el-input
         v-model="newQuestion"
         placeholder="请输入您想总结的文本,换行请按下Shift+Enter"
@@ -392,11 +449,21 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
+        <!-- <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
           <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
 
           <transition name="fade">
             <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
+          </transition>
+        </div> -->
+        <div class="tooltip-wrapper" ref="wrapperRef">
+          <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
+          <transition name="fade">
+            <div v-if="showFileMenu" class="file-menu" @click.stop>
+              <div class="triangle"></div>
+              <div class="menu-item" @click="handleFileSelect('local', 'final')">从本地读取</div>
+              <div class="menu-item" @click="handleFileSelect('knowledge', 'final')">从知识库读取</div>
+            </div>
           </transition>
         </div>
         <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitFinalSend" />
@@ -404,15 +471,23 @@
     </div>
   </div>
   <FileUpload ref="fileRef" @submit-tran="submitFileTran" @submit-final="submitFileFinal"></FileUpload>
+  <FilePreUpload ref="filePreRef"></FilePreUpload>
+  <commonUploadModal
+    ref="commonUploadModals"
+    @submit-tran="submitFileTran"
+    @submit-final="submitFileFinal"
+  ></commonUploadModal>
   <Knowledge ref="knowledge"></Knowledge>
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import FileUpload from './fileUploadModal.vue'
+import FilePreUpload from './filePreModal.vue'
 import Knowledge from './KnowledgeModal.vue'
-
+import commonUploadModal from './commonUploadModal.vue'
+import DragUpload from './dragUpload.vue'
 import { useShared } from '@/utils/useShared'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
@@ -422,6 +497,8 @@ import deepSelect from '@/assets/deepSelect.png'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
+import excel from '@/assets/excl.png'
+import ppt from '@/assets/ppt.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './markdown.vue' // 引入 Markdown 渲染组件
 const emit = defineEmits([
@@ -476,10 +553,16 @@ const {
   showModelTip,
   fileInputAry,
   isLaw,
-  isLogin
+  isLogin,
+  dragUploads,
+  isDragOver
 } = useShared()
 const fileRef = ref(null)
+const filePreRef = ref(null)
 const knowledge = ref(null)
+const wrapperRef = ref(null)
+const commonUploadModals = ref(null)
+
 const arrList = ref([
   {
     index: 1,
@@ -573,7 +656,9 @@ const openKnowledge = () => {
   }
   knowledge.value.openFile('')
 }
-const showFile = val => {
+const showFileMenu = ref(false)
+
+const showPreFile = val => {
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return false
@@ -593,22 +678,47 @@ const showFile = val => {
         }
       }
     }
-    if (val === 'sample') {
-      // for (var i = 0; i < answerList.value.length; i++) {
-      //   if (
-      //     answerList.value[i].data[0].question &&
-      //     chatQuery.messages[0].question === answerList.value[i].data[0].question
-      //   ) {
-      //     fileAry.value = answerList.value[i].data[0].files
-      //   }
-      // }
-    }
   } else {
     fileObj.value = ''
     fileAry.value = ''
   }
-  fileRef.value.openFile(val)
+  filePreRef.value.openFile(val)
 }
+const showFile = val => {
+  showFileMenu.value = !showFileMenu.value
+}
+const handleFileSelect = (val1, val2) => {
+  showFileMenu.value = false
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  if (val1 === 'local') {
+    if (activeIndex.value || activeIndex.value == 0) {
+      if (val2 === 'tran') {
+        for (var i = 0; i < answerList.value.length; i++) {
+          if (transQuest.value === answerList.value[i].data.question) {
+            fileObj.value = answerList.value[i]?.data?.files
+          }
+        }
+      }
+      if (val2 === 'final') {
+        for (var i = 0; i < answerList.value.length; i++) {
+          if (finalQuest.value === answerList.value[i].data.question) {
+            fileObj.value = answerList.value[i]?.data?.files
+          }
+        }
+      }
+    } else {
+      fileObj.value = ''
+      fileAry.value = ''
+    }
+    fileRef.value.openFile(val2)
+  } else {
+    commonUploadModals.value.openFile(val2)
+  }
+}
+
 const finalPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
@@ -692,14 +802,31 @@ const changeDynamicRows = () => {
 //       console.error(err)
 //     })
 // }
+const handleClickOutside = event => {
+  if (wrapperRef.value && !wrapperRef.value.contains(event.target)) {
+    showFileMenu.value = false
+  }
+}
+const setDrag = val => {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+    return
+  }
+  isDragOver.value = val
+}
 
 // 组件挂载后初始化
 onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
   nextTick(() => {
     isLaw.value = localStorage.getItem('isLaw')
   })
 })
-defineExpose({ changeDynamicRows, fileRef })
+
+// 组件卸载时关闭 SSE 连接
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+defineExpose({ changeDynamicRows, fileRef, setDrag })
 </script>
 
 <style lang="less" scoped>
@@ -711,6 +838,38 @@ defineExpose({ changeDynamicRows, fileRef })
 .tooltip-wrapper {
   position: relative;
   display: flex;
+  .file-menu {
+    position: absolute;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 8px 0;
+    margin-bottom: 12px;
+    z-index: 2000;
+    min-width: 140px;
+  }
+
+  .menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+
+  .menu-item:hover {
+    background-color: #e6f4ff;
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.2s;
+  }
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
 }
 
 .tooltip {

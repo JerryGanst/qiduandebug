@@ -1,415 +1,456 @@
 <template>
   <el-container class="container">
     <!-- 左侧栏 -->
-    <AsizeComponent @change-history="getHistory" @set-isLaw="setlaw" ref="asizeRef"></AsizeComponent>
+    <AsizeComponent
+      @change-history="getHistory"
+      @set-isLaw="setlaw"
+      @set-message="setMessage"
+      @set-FileModel="setFileModel"
+      ref="asizeRef"
+    ></AsizeComponent>
 
     <!-- 右侧内容 -->
     <el-container>
       <el-main>
-        <div v-if="!currentQuestion" class="center-container">
-          <Entry
-            @submit-tran="submitTran"
-            @submit-final="submitFinal"
-            @submit-question="submitQuestion"
-            @cancel-currentRequest="cancelCurrentRequest(val)"
-            @submit-sample-title="submitSampleTitle"
-            @sample-post="samplePost"
-            @summit-post="summitPost"
-            @submit-tranSend="submitTranSend"
-            @submit-finalSend="submitFinalSend"
-            @up-common="upCommon"
-            @down-common="downCommon"
-            @refresh-data="refreshData"
-            @submit-questionSend="submitQuestionSend"
-            @submit-itSend="submitITSend"
-            @submit-lawSend="submitLawSend"
-            @submit-sampleSend="submitSampleSend"
-            ref="entryRef"
-          ></Entry>
-        </div>
-
-        <div v-else class="center-container" style="padding-top: 0px">
-          <div class="main_content" style="width: 860px">
-            <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'" class="title_tiQuery">
-              <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
-                {{ tipQuery }}
-              </div>
-            </div>
-            <div class="title_float" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
-              <span v-if="!currentObj.messages.type">
-                <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
-              </span>
-              <span style="padding-left: 10px" v-if="!currentObj.messages.type">
-                {{ currentObj.messages.isHistory ? '' : currentMessage }}
-              </span>
-            </div>
-            <div
-              class="title_float"
-              :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
-              v-if="
-                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
-                currentObj.messages.type === 'final_answer'
-              "
-            >
-              <span>
-                {{ currentObj.list?.content }}
-              </span>
-            </div>
-            <MarkdownRenderer
-              v-if="
-                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
-                currentObj.messages.type === 'final_answer' &&
-                currentObj.messages.content
-              "
-              :markdown="currentObj.messages.content"
-            />
-            <div
-              v-if="
-                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
-                currentObj.messages.type === 'final_answer' &&
-                currentObj.messages.sources
-              "
-              class="query_source"
-            >
-              附件
-            </div>
-            <a
-              class="href_source"
-              v-for="(it, index) in processedData"
-              v-if="
-                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
-                currentObj.messages.type === 'final_answer' &&
-                currentObj.messages.sources
-              "
-              @click="toDoc(it)"
-            >
-              {{ it.document_title }}(第{{ it.page.join('/') }}页)
-            </a>
-            <div
-              class="query_common"
-              v-if="
-                (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
-                currentObj.messages.type === 'final_answer'
-              "
-            >
-              <div>
-                <img
-                  src="@/assets/refresh.png"
-                  style="margin-left: 10px"
-                  class="query_common_img"
-                  @click="refreshData"
-                />
-              </div>
-              <div>
-                <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
-              </div>
-              <div>
-                <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
-              </div>
-            </div>
-
-            <div class="sample_item" ref="messageContainer">
-              <div
-                class="sample_chat"
-                v-if="pageType === 'sample' && chatQuery.messages.length > 0 && !limitLoading"
-                v-for="(item, index) in chatQuery.messages"
-              >
-                <div
-                  v-if="index % 2 === 0 && item.files && item.files.length > 0"
-                  class="sample_chat_file"
-                  :style="{ marginTop: index === 0 ? '68px' : '40px' }"
-                >
-                  <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
-                    <span style="display: flex; align-items: center">
-                      <img
-                        :src="
-                          its.originalFileName.endsWith('txt')
-                            ? text
-                            : its.originalFileName.endsWith('pdf')
-                              ? pdf
-                              : word
-                        "
-                        style="width: 24px; height: 30px"
-                      />
-                    </span>
-                    <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
-                  </div>
-                </div>
-                <div
-                  v-if="index % 2 === 0"
-                  class="sample_chat_query"
-                  :style="{
-                    marginTop: item.content
-                      ? item.files && item.files.length > 0
-                        ? '10px'
-                        : index === 0
-                          ? '70px'
-                          : '40px'
-                      : '0px',
-                    padding: item.content ? '13px 15px' : '0px'
-                  }"
-                >
-                  {{ item.content }}
-                </div>
-                <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
-                <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
-                  <MarkdownRenderer
-                    :markdown="item.before"
-                    class="normal-text"
-                    style="
-                      font-size: 13px;
-                      line-height: 24px;
-                      padding: 0px 10px;
-                      background-color: transparent;
-                      color: #666;
-                    "
-                  />
-                  <!-- 后半部分 -->
-                  <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
-                </div>
-                <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
-              </div>
-              <div
-                class="sample_chat"
-                v-if="pageType === 'sample' && limitLoading && chatCurrent.messages.length > 0 && limitLoading"
-                v-for="(item, index) in chatCurrent.messages"
-              >
-                <div
-                  v-if="index % 2 === 0 && item.files && item.files.length > 0"
-                  class="sample_chat_file"
-                  :style="{ marginTop: index === 0 ? '70px' : '40px' }"
-                >
-                  <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
-                    <span style="display: flex; align-items: center">
-                      <img
-                        :src="
-                          its.originalFileName.endsWith('txt')
-                            ? text
-                            : its.originalFileName.endsWith('pdf')
-                              ? pdf
-                              : word
-                        "
-                        style="width: 24px; height: 30px"
-                      />
-                    </span>
-                    <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
-                  </div>
-                </div>
-                <div
-                  v-if="index % 2 === 0"
-                  class="sample_chat_query"
-                  :style="{
-                    marginTop: item.content
-                      ? item.files && item.files.length > 0
-                        ? '10px'
-                        : index === 0
-                          ? '70px'
-                          : '40px'
-                      : '0px',
-                    padding: item.content ? '13px 15px' : '0px'
-                  }"
-                >
-                  {{ item.content }}
-                </div>
-                <div class="tip_load" v-if="index === chatCurrent.messages.length - 1">
-                  <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
-                  <span style="padding-left: 10px">正在为您解答,请稍等</span>
-                  <span>{{ dots }}</span>
-                </div>
-                <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
-                <div v-if="index % 2 !== 0" class="stream-response">
-                  <MarkdownRenderer
-                    :markdown="item.before"
-                    class="normal-text"
-                    style="
-                      font-size: 13px;
-                      line-height: 24px;
-                      padding: 0px 10px;
-                      background-color: transparent;
-                      color: #666;
-                    "
-                  />
-                  <!-- 后半部分 -->
-                  <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
-                </div>
-              </div>
-            </div>
-
-            <div class="query_common" v-if="pageType === 'sample' && !limitLoading && chatQuery.messages.length > 0">
-              <div>
-                <img
-                  src="@/assets/refresh.png"
-                  style="margin-left: 10px"
-                  class="query_common_img"
-                  @click="refreshData"
-                />
-              </div>
-              <div>
-                <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
-              </div>
-              <div>
-                <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
-              </div>
-            </div>
+        <div
+          v-if="isMessage"
+          style="width: 100%; height: 100vh"
+          @dragover.prevent="handleDragOver"
+          @dragleave="handleDragLeave"
+          @drop.prevent="handleDrop"
+          :class="{ 'drag-over': isDragOver }"
+        >
+          <div v-if="!currentQuestion" class="center-container" :style="{ paddingTop: isDragOver ? '0px' : '80px' }">
+            <Entry
+              @submit-tran="submitTran"
+              @submit-final="submitFinal"
+              @submit-question="submitQuestion"
+              @cancel-currentRequest="cancelCurrentRequest(val)"
+              @submit-sample-title="submitSampleTitle"
+              @sample-post="samplePost"
+              @summit-post="summitPost"
+              @submit-tranSend="submitTranSend"
+              @submit-finalSend="submitFinalSend"
+              @up-common="upCommon"
+              @down-common="downCommon"
+              @refresh-data="refreshData"
+              @submit-questionSend="submitQuestionSend"
+              @submit-itSend="submitITSend"
+              @submit-lawSend="submitLawSend"
+              @submit-sampleSend="submitSampleSend"
+              ref="entryRef"
+            ></Entry>
           </div>
-          <div class="query_content">
-            <div
-              class="tran_select"
-              v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'"
-            >
-              <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
-                <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
-                <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
-                <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
-                <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button>
-              </el-radio-group>
-            </div>
-            <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
-              <el-input
-                v-model="newQuestion"
-                placeholder="请输入您的问题,换行请按下Shift+Enter"
-                class="custom-input"
-                style="width: 100%"
-                @keydown.enter.prevent="summitPost"
-                @keyup.shift.enter.prevent="handleShiftEnter('textareaInputQuery')"
-                type="textarea"
-                :maxlength="4096"
-                ref="textareaInputQuery"
-                :rows="dynamicRows"
-                @input="adjustTextareaHeight('textareaInputQuery')"
-              />
-              <!-- 发送图标 -->
-              <div class="send-icon">
-                <div
-                  class="tooltip-wrapper"
-                  @mouseenter="showModelTip = true"
-                  @mouseleave="showModelTip = false"
-                  v-if="pageType === 'query' || pageType === 'it'"
-                >
-                  <img
-                    :src="deepType ? deepSelect : deep"
-                    class="arrow"
-                    @click="checkDeepType"
-                    style="margin-right: 10px"
-                  />
 
-                  <transition name="fade">
-                    <div v-if="showModelTip" class="tooltip">
-                      {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
-                    </div>
-                  </transition>
+          <div v-else class="center-container" style="padding-top: 0px">
+            <DragUpload v-if="isDragOver" ref="dragUploads"></DragUpload>
+            <div class="main_content" v-if="!isDragOver" style="width: 860px">
+              <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'" class="title_tiQuery">
+                <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
+                  {{ tipQuery }}
                 </div>
-                <img
-                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
-                  class="arrow"
-                  v-if="pageType === 'query'"
-                  @click="submitQuestionSend"
-                />
-                <img
-                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
-                  class="arrow"
-                  v-if="pageType === 'it'"
-                  @click="submitITSend"
-                />
-                <img
-                  :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
-                  class="arrow"
-                  v-if="pageType === 'law'"
-                  @click="submitLawSend"
-                />
               </div>
-            </div>
-            <div
-              class="textarea"
-              :class="[fileInputAry && fileInputAry.length > 0 ? 'sampleAreaAry' : 'sampleArea']"
-              v-if="pageType === 'sample'"
-            >
-              <el-input
-                v-model="newQuestion"
-                placeholder="请输入您的问题,换行请按下Shift+Enter"
-                style="width: 100%"
-                class="custom-input"
-                clearable
-                @keydown.enter.prevent="samplePost"
-                @keyup.shift.enter.prevent="handleShiftEnter('textareaInputSample')"
-                ref="textareaInputSample"
-                :maxlength="4096"
-                type="textarea"
-                :rows="dynamicRows"
-                @input="adjustTextareaHeight('textareaInputSample')"
+              <div class="title_float" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
+                <span v-if="!currentObj.messages.type">
+                  <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
+                </span>
+                <span style="padding-left: 10px" v-if="!currentObj.messages.type">
+                  {{ currentObj.messages.isHistory ? '' : currentMessage }}
+                </span>
+              </div>
+              <div
+                class="title_float"
+                :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
+                v-if="
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  currentObj.messages.type === 'final_answer'
+                "
+              >
+                <span>
+                  {{ currentObj.list?.content }}
+                </span>
+              </div>
+              <MarkdownRenderer
+                v-if="
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  currentObj.messages.type === 'final_answer' &&
+                  currentObj.messages.content
+                "
+                :markdown="currentObj.messages.content"
               />
-              <div class="filesList" v-if="fileInputAry && fileInputAry.length > 0">
-                <div v-for="(item, index) in fileInputAry" :style="{ marginLeft: index === 0 ? '5px' : '10px' }">
-                  <span style="display: flex; align-items: center">
-                    <img
-                      :src="
-                        item.originalFileName.endsWith('txt')
-                          ? text
-                          : item.originalFileName.endsWith('pdf')
-                            ? pdf
-                            : word
-                      "
-                      style="width: 22px; height: 28px"
-                    />
-                  </span>
-                  <span style="padding-left: 10px; width: 50px; overflow: hidden; padding-top: 8px" class="file_name">
-                    {{ item.originalFileName }}
-                  </span>
-                  <span
-                    style="
-                      position: absolute;
-                      width: 16px;
-                      height: 16px;
-                      right: 0px;
-                      top: 0px;
-                      cursor: pointer;
-                      display: flex;
-                      justify-content: center;
-                      align-items: center;
-                    "
-                    @click="deleteImg(index)"
+              <div
+                v-if="
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  currentObj.messages.type === 'final_answer' &&
+                  currentObj.messages.sources
+                "
+                class="query_source"
+              >
+                附件
+              </div>
+              <a
+                class="href_source"
+                v-for="(it, index) in processedData"
+                v-if="
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  currentObj.messages.type === 'final_answer' &&
+                  currentObj.messages.sources
+                "
+                @click="toDoc(it)"
+              >
+                {{ it.document_title }}(第{{ it.page.join('/') }}页)
+              </a>
+              <div
+                class="query_common"
+                v-if="
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  currentObj.messages.type === 'final_answer'
+                "
+              >
+                <div>
+                  <img
+                    src="@/assets/refresh.png"
+                    style="margin-left: 10px"
+                    class="query_common_img"
+                    @click="refreshData"
+                  />
+                </div>
+                <div>
+                  <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+                </div>
+                <div>
+                  <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
+                </div>
+              </div>
+
+              <div class="sample_item" ref="messageContainer">
+                <div
+                  class="sample_chat"
+                  v-if="pageType === 'sample' && chatQuery.messages.length > 0 && !limitLoading"
+                  v-for="(item, index) in chatQuery.messages"
+                >
+                  <div
+                    v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                    class="sample_chat_file"
+                    :style="{ marginTop: index === 0 ? '68px' : '40px' }"
                   >
-                    <img src="@/assets/close.png" style="width: 10px; height: 10px" />
-                  </span>
+                    <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
+                      <span style="display: flex; align-items: center">
+                        <img
+                          :src="
+                            its.originalFileName.endsWith('txt')
+                              ? text
+                              : its.originalFileName.endsWith('pdf')
+                                ? pdf
+                                : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
+                                  ? ppt
+                                  : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
+                                    ? excel
+                                    : word
+                          "
+                          style="width: 24px; height: 30px"
+                        />
+                      </span>
+                      <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                    </div>
+                  </div>
+                  <div
+                    v-if="index % 2 === 0"
+                    class="sample_chat_query"
+                    :style="{
+                      marginTop: item.content
+                        ? item.files && item.files.length > 0
+                          ? '10px'
+                          : index === 0
+                            ? '70px'
+                            : '40px'
+                        : '0px',
+                      padding: item.content ? '13px 15px' : '0px'
+                    }"
+                  >
+                    {{ item.content }}
+                  </div>
+                  <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
+                  <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
+                    <MarkdownRenderer
+                      :markdown="item.before"
+                      class="normal-text"
+                      style="
+                        font-size: 13px;
+                        line-height: 24px;
+                        padding: 0px 10px;
+                        background-color: transparent;
+                        color: #666;
+                      "
+                    />
+                    <!-- 后半部分 -->
+                    <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
+                  </div>
+                  <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
+                </div>
+                <div
+                  class="sample_chat"
+                  v-if="pageType === 'sample' && limitLoading && chatCurrent.messages.length > 0 && limitLoading"
+                  v-for="(item, index) in chatCurrent.messages"
+                >
+                  <div
+                    v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                    class="sample_chat_file"
+                    :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                  >
+                    <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
+                      <span style="display: flex; align-items: center">
+                        <img
+                          :src="
+                            its.originalFileName.endsWith('txt')
+                              ? text
+                              : its.originalFileName.endsWith('pdf')
+                                ? pdf
+                                : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
+                                  ? ppt
+                                  : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
+                                    ? excel
+                                    : word
+                          "
+                          style="width: 24px; height: 30px"
+                        />
+                      </span>
+                      <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                    </div>
+                  </div>
+                  <div
+                    v-if="index % 2 === 0"
+                    class="sample_chat_query"
+                    :style="{
+                      marginTop: item.content
+                        ? item.files && item.files.length > 0
+                          ? '10px'
+                          : index === 0
+                            ? '70px'
+                            : '40px'
+                        : '0px',
+                      padding: item.content ? '13px 15px' : '0px'
+                    }"
+                  >
+                    {{ item.content }}
+                  </div>
+                  <div class="tip_load" v-if="index === chatCurrent.messages.length - 1">
+                    <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
+                    <span style="padding-left: 10px">正在为您解答,请稍等</span>
+                    <span>{{ dots }}</span>
+                  </div>
+                  <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
+                  <div v-if="index % 2 !== 0" class="stream-response">
+                    <MarkdownRenderer
+                      :markdown="item.before"
+                      class="normal-text"
+                      style="
+                        font-size: 13px;
+                        line-height: 24px;
+                        padding: 0px 10px;
+                        background-color: transparent;
+                        color: #666;
+                      "
+                    />
+                    <!-- 后半部分 -->
+                    <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
+                  </div>
                 </div>
               </div>
-              <!-- 发送图标 -->
-              <div class="send-icon">
-                <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
-                  <img
-                    src="@/assets/file.png"
-                    class="arrow"
-                    @click="showFileSample('sample')"
-                    style="margin-right: 10px"
-                  />
-                  <transition name="fade">
-                    <div v-if="showFileTip" class="tooltip">添加附件,单个大小不能超过50M</div>
-                  </transition>
-                </div>
-                <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
-                  <img
-                    :src="deepType ? deepSelect : deep"
-                    class="arrow"
-                    @click="checkDeepType"
-                    style="margin-right: 10px"
-                  />
 
-                  <transition name="fade">
-                    <div v-if="showModelTip" class="tooltip">
-                      {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
-                    </div>
-                  </transition>
+              <div class="query_common" v-if="pageType === 'sample' && !limitLoading && chatQuery.messages.length > 0">
+                <div>
+                  <img
+                    src="@/assets/refresh.png"
+                    style="margin-left: 10px"
+                    class="query_common_img"
+                    @click="refreshData"
+                  />
                 </div>
-                <img
-                  :src="isSampleLoad ? imageC : newQuestion || fileInputAry.length > 0 ? imageB : imageA"
-                  class="arrow"
-                  @click="submitSampleSend"
+                <div>
+                  <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+                </div>
+                <div>
+                  <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
+                </div>
+              </div>
+            </div>
+            <div class="query_content" v-if="!isDragOver">
+              <div
+                class="tran_select"
+                v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'"
+              >
+                <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
+                  <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
+                  <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
+                  <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
+                  <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button>
+                </el-radio-group>
+              </div>
+              <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
+                <el-input
+                  v-model="newQuestion"
+                  placeholder="请输入您的问题,换行请按下Shift+Enter"
+                  class="custom-input"
+                  style="width: 100%"
+                  @keydown.enter.prevent="summitPost"
+                  @keyup.shift.enter.prevent="handleShiftEnter('textareaInputQuery')"
+                  type="textarea"
+                  :maxlength="4096"
+                  ref="textareaInputQuery"
+                  :rows="dynamicRows"
+                  @input="adjustTextareaHeight('textareaInputQuery')"
                 />
+                <!-- 发送图标 -->
+                <div class="send-icon">
+                  <div
+                    class="tooltip-wrapper"
+                    @mouseenter="showModelTip = true"
+                    @mouseleave="showModelTip = false"
+                    v-if="pageType === 'query' || pageType === 'it'"
+                  >
+                    <img
+                      :src="deepType ? deepSelect : deep"
+                      class="arrow"
+                      @click="checkDeepType"
+                      style="margin-right: 10px"
+                    />
+
+                    <transition name="fade">
+                      <div v-if="showModelTip" class="tooltip">
+                        {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
+                      </div>
+                    </transition>
+                  </div>
+                  <img
+                    :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                    class="arrow"
+                    v-if="pageType === 'query'"
+                    @click="submitQuestionSend"
+                  />
+                  <img
+                    :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                    class="arrow"
+                    v-if="pageType === 'it'"
+                    @click="submitITSend"
+                  />
+                  <img
+                    :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                    class="arrow"
+                    v-if="pageType === 'law'"
+                    @click="submitLawSend"
+                  />
+                </div>
+              </div>
+              <div
+                class="textarea"
+                :class="[fileInputAry && fileInputAry.length > 0 ? 'sampleAreaAry' : 'sampleArea']"
+                v-if="pageType === 'sample'"
+              >
+                <el-input
+                  v-model="newQuestion"
+                  placeholder="请输入您的问题,换行请按下Shift+Enter"
+                  style="width: 100%"
+                  class="custom-input"
+                  clearable
+                  @keydown.enter.prevent="samplePost"
+                  @keyup.shift.enter.prevent="handleShiftEnter('textareaInputSample')"
+                  ref="textareaInputSample"
+                  :maxlength="4096"
+                  type="textarea"
+                  :rows="dynamicRows"
+                  @input="adjustTextareaHeight('textareaInputSample')"
+                />
+                <div class="filesList" v-if="fileInputAry && fileInputAry.length > 0">
+                  <div v-for="(item, index) in fileInputAry" :style="{ marginLeft: index === 0 ? '5px' : '10px' }">
+                    <span style="display: flex; align-items: center">
+                      <img
+                        :src="
+                          item.originalFileName.endsWith('txt')
+                            ? text
+                            : item.originalFileName.endsWith('pdf')
+                              ? pdf
+                              : item.originalFileName.endsWith('ppt') || item.originalFileName.endsWith('pptx')
+                                ? ppt
+                                : item.originalFileName.endsWith('xls') || item.originalFileName.endsWith('xlsx')
+                                  ? excel
+                                  : word
+                        "
+                        style="width: 22px; height: 28px"
+                      />
+                    </span>
+                    <span style="padding-left: 10px; width: 50px; overflow: hidden; padding-top: 8px" class="file_name">
+                      {{ item.originalFileName }}
+                    </span>
+                    <span
+                      style="
+                        position: absolute;
+                        width: 16px;
+                        height: 16px;
+                        right: 0px;
+                        top: 0px;
+                        cursor: pointer;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                      "
+                      @click="deleteImg(index)"
+                    >
+                      <img src="@/assets/close.png" style="width: 10px; height: 10px" />
+                    </span>
+                  </div>
+                </div>
+                <!-- 发送图标 -->
+                <div class="send-icon">
+                  <div class="tooltip-wrapper" ref="wrapperRef">
+                    <img
+                      src="@/assets/file.png"
+                      class="arrow"
+                      @click="showFileSample('sample')"
+                      style="margin-right: 10px"
+                    />
+                    <!-- <transition name="fade">
+                      <div v-if="showFileTip" class="tooltip">添加附件,单个大小不能超过50M</div>
+                    </transition> -->
+                    <transition name="fade">
+                      <div v-if="showFileMenu" class="file-menu" @click.stop>
+                        <div class="triangle"></div>
+                        <div class="menu-item" @click="handleFileSelect('local', 'sample')">从本地读取</div>
+                        <div class="menu-item" @click="handleFileSelect('knowledge', 'sample')">从知识库读取</div>
+                      </div>
+                    </transition>
+                  </div>
+                  <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
+                    <img
+                      :src="deepType ? deepSelect : deep"
+                      class="arrow"
+                      @click="checkDeepType"
+                      style="margin-right: 10px"
+                    />
+
+                    <transition name="fade">
+                      <div v-if="showModelTip" class="tooltip">
+                        {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
+                      </div>
+                    </transition>
+                  </div>
+                  <img
+                    :src="isSampleLoad ? imageC : newQuestion || fileInputAry.length > 0 ? imageB : imageA"
+                    class="arrow"
+                    @click="submitSampleSend"
+                  />
+                </div>
               </div>
             </div>
           </div>
+          <FileUpload ref="fileRefs"></FileUpload>
+          <commonUploadModal ref="commonUploadModals"></commonUploadModal>
+          <FilePreUpload ref="filePreRef"></FilePreUpload>
         </div>
-        <FileUpload ref="fileRefs"></FileUpload>
+        <div v-if="!isMessage" style="width: 100%; height: 100vh">
+          <personModal v-if="fileModal === 1"></personModal>
+          <commonModal ref="commonLedge" v-if="fileModal === 2"></commonModal>
+        </div>
       </el-main>
     </el-container>
   </el-container>
@@ -443,10 +484,15 @@
 import AsizeComponent from './component/asize.vue'
 import Entry from './component/entry.vue'
 import FileUpload from './component/fileUploadModal.vue'
+import FilePreUpload from './component/filePreModal.vue'
+import commonUploadModal from './component/commonUploadModal.vue'
+import commonModal from './component/commonModal.vue'
+import personModal from './component/personModal.vue'
+import DragUpload from './component/dragUpload.vue'
 import { Document } from '@element-plus/icons-vue' // 引入需要的图标
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
-import { ElButton, ElMessage } from 'element-plus' // 引入 ElMessage
+import { componentSizeMap, ElButton, ElMessage } from 'element-plus' // 引入 ElMessage
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, toRaw, onBeforeUnmount } from 'vue'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
@@ -456,6 +502,8 @@ import deepSelect from '@/assets/deepSelect.png'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
+import excel from '@/assets/excl.png'
+import ppt from '@/assets/ppt.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './component/markdown.vue' // 引入 Markdown 渲染组件
 
@@ -509,18 +557,21 @@ const {
   showModelTip,
   fileAry,
   fileInputAry,
-  isLaw
+  isLaw,
+  isMessage,
+  dragUploads,
+  isDragOver
 } = useShared()
 
 const queryIng = ref(false)
 const asizeRef = ref(null)
 const entryRef = ref(null)
 const sampleData = ref('')
-
+const commonLedge = ref(null)
 const commonQuestion = ref('')
 // 当前显示的消息内容
 const currentMessage = ref('')
-
+const filePreRef = ref(null)
 const commonVisible = ref(false)
 // 当前正在显示的消息索引
 const currentMessageIndex = ref(0)
@@ -528,8 +579,9 @@ const isDisabled = ref(false)
 const limitQuery = ref('')
 const currentRequestUrl = ref('')
 const fileRefs = ref(null)
+const commonUploadModals = ref(null)
 let interval
-
+const wrapperRef = ref(null)
 // 函数区域
 const removeItemById = (arr, id) => {
   for (let i = 0; i < arr.length; i++) {
@@ -558,25 +610,99 @@ const removeItemByType = (arr, name) => {
   }
   return arr
 }
-
+const fileModal = ref(1)
+const setFileModel = val => {
+  fileModal.value = val
+}
 const showListFile = val => {
   fileAry.value = []
   fileAry.value.push(val)
-  fileRefs.value.openFile('sample')
+  filePreRef.value.openFile('sample')
 }
+const setMessage = val => {
+  isMessage.value = val
+}
+const showFileMenu = ref(false)
 const showFileSample = val => {
+  showFileMenu.value = !showFileMenu.value
+}
+const handleDragOver = () => {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+    return
+  }
+
+  isDragOver.value = true
+  nextTick(() => {
+    if (entryRef.value) {
+      entryRef.value.setDrag(isDragOver.value)
+    }
+  })
+}
+const getTextAfterLastDot = str => {
+  const lastDotIndex = str.lastIndexOf('.')
+  if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
+  return str.slice(lastDotIndex + 1)
+}
+const handleDragLeave = () => {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+    return
+  }
+  isDragOver.value = false
+  nextTick(() => {
+    if (entryRef.value) {
+      entryRef.value.setDrag(isDragOver.value)
+    }
+  })
+}
+const handleDrop = e => {
+  if (!isLogin.value) {
+    isDragOver.value = false
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  const files = Array.from(e.dataTransfer.files)
+  const exception = getTextAfterLastDot(files[0].name)
+  if (
+    exception !== 'txt' &&
+    exception !== 'doc' &&
+    exception !== 'docx' &&
+    exception !== 'ppt' &&
+    exception !== 'pptx' &&
+    exception !== 'xls' &&
+    exception !== 'xlsx' &&
+    exception !== 'pdf'
+  ) {
+    isDragOver.value = false
+    ElMessage.warning('暂不支持此格式上传')
+    return
+  }
+  const data = {
+    name: files[0].name,
+    percentage: 0,
+    size: files[0].size,
+    status: 'ready',
+    raw: files[0]
+  }
+  nextTick(() => {
+    dragUploads.value.setFiles(data)
+  })
+
+  // handleFileAdd(data)
+}
+const handleFileSelect = (val1, val2) => {
+  showFileMenu.value = false
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return false
   }
   nextTick(() => {
-    fileRefs.value.openFile(val, fileInputAry.value)
+    if (val1 === 'local') {
+      fileRefs.value.openFile(val2, fileInputAry.value)
+    } else {
+      commonUploadModals.value.openFile(val2)
+    }
   })
 }
-// 点击取消
-// const handleCancel = () => {
-//   // ElMessage.info('已取消删除');
-// }
 
 // 点号变化逻辑
 const updateDots = () => {
@@ -587,16 +713,39 @@ const updateDots = () => {
   }
 }
 
+// const toDoc = async data => {
+//   request
+//     .post('/Files/getFileInfoByName', {
+//       fileName: data.document_title
+//       // showLoading: true
+//     })
+//     .then(res => {
+//       if (res.status) {
+//         if (res.data && res.data.fileLink) {
+//           window.open(res.data.fileLink, '_blank')
+//         }
+//       }
+//     })
+//     .catch(err => {
+//       // loadingInstance.close();
+//       console.error('获取回复失败:', err)
+//       // botMessage.text = '抱歉，暂时无法获取回复';
+//     })
+// }
 const toDoc = async data => {
   request
-    .post('/Files/getFileInfoByName', {
-      fileName: data.document_title
+    .post(
+      '/Files/getFileLinkByName?fileName=' +
+        data.document_title +
+        '&target=' +
+        (selectedMode.value === 'IT专题' ? 'IT' : selectedMode.value === '人资行政专题' ? 'HR' : 'Law')
+
       // showLoading: true
-    })
+    )
     .then(res => {
       if (res.status) {
-        if (res.data && res.data.fileLink) {
-          window.open(res.data.fileLink, '_blank')
+        if (res.data) {
+          window.open(res.data, '_blank')
         }
       }
     })
@@ -606,7 +755,6 @@ const toDoc = async data => {
       // botMessage.text = '抱歉，暂时无法获取回复';
     })
 }
-
 const handleCommonClose = done => {
   // 这里可以添加一些关闭前的逻辑
   done()
@@ -676,7 +824,7 @@ const submitFinal = async (val, isRefresh, ob) => {
   if (!ob && !checkData(val)) {
     return
   }
-  limitQuery.value = newQuestion.value
+  const queryData = newQuestion.value
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
   finalData.value = {
@@ -687,107 +835,128 @@ const submitFinal = async (val, isRefresh, ob) => {
   finalIng.value = true
   docIng.value = true
   let title = ''
-  if (!isRefresh && ob) {
-    const qData = ob.originalFileName + '(final)'
-    const index = questions.value.findIndex(item => item === qData)
-    // const idx = answerList.value.findIndex(item => item.title === qData)
+  // if (!isRefresh && ob) {
+  //   const qData = ob.originalFileName + '(final)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   // const idx = answerList.value.findIndex(item => item.title === qData)
 
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   // if (idx !== -1) {
+  //   //   answerList.value.splice(index, 1)
+  //   // }
+  //   if (targetId) {
+  //     asizeRef.value.deleteData(targetId, true)
+  //   }
+  //   questions.value.unshift(qData)
+  // }
+  if (isRefresh) {
+    let current = currentId.value
+    const idx = answerList.value.findIndex(item => item.id === current)
+    title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
+    let limitTitle = ''
+    limitTitle = questions.value[idx]
+    questions.value.splice(idx, 1)
+    answerList.value.splice(idx, 1)
+    await asizeRef.value.deleteData(current, true)
+    activeIndex.value = 0
+    questions.value.unshift(limitTitle)
+    const data = {
+      data: {
+        answer: '',
+        question: '桌面云规划怎么做？',
+        think: {}
+      }
     }
-    // if (idx !== -1) {
-    //   answerList.value.splice(index, 1)
+    // for (var m = 0; m < answerList.value.length; m++) {
+    //   if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
+    //     const id = answerList.value[m].id
+    //     title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+    //     const index = questions.value.findIndex(item => item === title + '(final)')
+    //     let limitTitle = ''
+    //     if (index !== -1) {
+    //       limitTitle = questions.value[index]
+    //       questions.value.splice(index, 1)
+    //     }
+    //     const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
+    //     if (idx !== -1) {
+    //       answerList.value.splice(index, 1)
+    //     }
+    //     await asizeRef.value.deleteData(id, true)
+    //     activeIndex.value = 0
+    //     const limit = limitTitle
+    //       ? limitTitle.length > 15
+    //         ? limitQuery.value.substring(0, 15) + '(final)'
+    //         : limitTitle + '(final)'
+    //       : limitQuery.value.length > 15
+    //         ? limitQuery.value.substring(0, 15) + '(final)'
+    //         : limitQuery.value + '(final)'
+    //     questions.value.unshift(limit)
+    //   }
     // }
-    if (targetId) {
-      asizeRef.value.deleteData(targetId, true)
-    }
-    questions.value.unshift(qData)
   }
-  if (isRefresh && !ob) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
-        const index = questions.value.findIndex(item => item === title + '(final)')
-        let limitTitle = ''
-        if (index !== -1) {
-          limitTitle = questions.value[index]
-          questions.value.splice(index, 1)
-        }
-        const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
-        if (idx !== -1) {
-          answerList.value.splice(index, 1)
-        }
-        await asizeRef.value.deleteData(id, true)
-        activeIndex.value = 0
-        const limit = limitTitle
-          ? limitTitle.length > 15
-            ? limitQuery.value.substring(0, 15) + '(final)'
-            : limitTitle + '(final)'
-          : limitQuery.value.length > 15
-            ? limitQuery.value.substring(0, 15) + '(final)'
-            : limitQuery.value + '(final)'
-        questions.value.unshift(limit)
-      }
-    }
-  }
-  if (isRefresh && ob) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (
-        answerList.value[m].type === '总结' &&
-        answerList.value[m].data.files &&
-        ob.originalFileName === answerList.value[m].data.files.originalFileName
-      ) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title
-        const index = questions.value.findIndex(item => item === title)
-        let limitObj = {}
-        if (index !== -1) {
-          questions.value.splice(index, 1)
-        }
-        const idx = answerList.value.findIndex(
-          item => item.data.files && item.data.files.originalFileName === ob.originalFileName
-        )
-        if (idx !== -1) {
-          limitObj = answerList.value[idx]
-          answerList.value.splice(idx, 1)
-        }
-        await asizeRef.value.deleteData(id, true)
-        activeIndex.value = 0
-        questions.value.unshift(title)
-        answerList.value.unshift(limitObj)
-      }
-    }
-  }
-  if (questions.value.includes(limitQuery.value + '(final)') && !isRefresh && !ob) {
-    const qData = limitQuery.value + '(final)'
-    for (var ms = 0; ms < questions.value.length; ms++) {
-      if (qData === questions.value[ms]) {
-        activeIndex.value = ms
-      }
-    }
-    asizeRef.value.queryAn(qData, '')
-    finalIng.value = false
-    docIng.value = false
-    return
-  }
-  if (questions.value.includes(limitQuery.value + '(final)') && isRefresh && !ob) {
-    const qData = limitQuery.value + '(final)'
-    const index = questions.value.findIndex(item => item === qData)
-    const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    if (idx !== -1) {
-      answerList.value.splice(index, 1)
-    }
-    await asizeRef.value.deleteData(targetId, isRefresh)
-  }
+  // if (isRefresh && ob) {
+  //   for (var m = 0; m < answerList.value.length; m++) {
+  //     if (
+  //       answerList.value[m].type === '总结' &&
+  //       answerList.value[m].data.files &&
+  //       ob.originalFileName === answerList.value[m].data.files.originalFileName
+  //     ) {
+  //       const id = answerList.value[m].id
+  //       title = answerList.value[m].title
+  //       const index = questions.value.findIndex(item => item === title)
+  //       let limitObj = {}
+  //       if (index !== -1) {
+  //         questions.value.splice(index, 1)
+  //       }
+  //       const idx = answerList.value.findIndex(
+  //         item => item.data.files && item.data.files.originalFileName === ob.originalFileName
+  //       )
+  //       if (idx !== -1) {
+  //         limitObj = answerList.value[idx]
+  //         answerList.value.splice(idx, 1)
+  //       }
+  //       await asizeRef.value.deleteData(id, true)
+  //       activeIndex.value = 0
+  //       questions.value.unshift(title)
+  //       answerList.value.unshift(limitObj)
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(limitQuery.value + '(final)') && !isRefresh && !ob) {
+  //   const qData = limitQuery.value + '(final)'
+  //   for (var ms = 0; ms < questions.value.length; ms++) {
+  //     if (qData === questions.value[ms]) {
+  //       activeIndex.value = ms
+  //     }
+  //   }
+  //   asizeRef.value.queryAn(qData, '')
+  //   finalIng.value = false
+  //   docIng.value = false
+  //   return
+  // }
+  // if (questions.value.includes(limitQuery.value + '(final)') && isRefresh && !ob) {
+  //   const qData = limitQuery.value + '(final)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   if (idx !== -1) {
+  //     answerList.value.splice(index, 1)
+  //   }
+  //   await asizeRef.value.deleteData(targetId, isRefresh)
+  // }
 
-  if (!questions.value.includes(limitQuery.value + '(final)') && !title && !ob) {
-    const qData = limitQuery.value + '(final)'
+  // if (!questions.value.includes(limitQuery.value + '(final)') && !title && !ob) {
+  //   const qData = limitQuery.value + '(final)'
+  //   questions.value.unshift(qData)
+  // }
+  if (!isRefresh) {
+    const qData = '新对话' + '(final)'
     questions.value.unshift(qData)
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
@@ -803,11 +972,12 @@ const submitFinal = async (val, isRefresh, ob) => {
       limitData.unshift(queryObj)
     }
   }
+
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   currentRequestUrl.value = '/AI/summarize'
-  finalQuest.value = ob ? ob.originalFileName : limitQuery.value
-  const passQuery = ob ? ob.originalFileName : limitQuery.value
+  finalQuest.value = ob ? ob.originalFileName : queryData
+  const passQuery = ob ? ob.originalFileName : queryData
   entryRef.value.changeDynamicRows()
   nextTick(() => {
     if (entryRef.value?.fileRef) {
@@ -839,7 +1009,6 @@ const submitFinal = async (val, isRefresh, ob) => {
           question: passQuery,
           answer: finalData.value
         }
-
         postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
       } else {
         if (res.code === 400) {
@@ -1049,8 +1218,9 @@ const deleteImg = index => {
   }
 }
 const submitSampleFile = val => {
-  fileRefs.value.closeFile()
   currentQuestion.value = true
+  isDragOver.value = false
+  console.log(isDragOver.value)
   for (var i = 0; i < val.length; i++) {
     val[i].fileName = decodeURIComponent(val[i].fileName)
     val[i].originalFileName = decodeURIComponent(val[i].originalFileName)
@@ -1295,12 +1465,6 @@ const submitSample = async (val, isRefresh) => {
       ElMessage.error('服务器繁忙,请稍后再试')
       return
     }
-    // const answerData = res.json()
-    // console.log(answerData)
-    // if (res.data.code === 400) {
-    //   ElMessage.error(res.data.message)
-    //   return
-    // }
     const decoder = new TextDecoder() // 启用流模式解码
     let buffer = '' // 缓冲区用于存储不完整的数据
     let isFirstChunk = true // 标记是否为第一个数据块
@@ -1346,7 +1510,6 @@ const submitSample = async (val, isRefresh) => {
       // 使用更安全的分割方式（避免截断 JSON 结构）[3](@ref)
       const chunks = buffer.split(/(?=data:)/g)
       buffer = chunks.pop() || ''
-      // console.log(jsonData.code)
       if (quickJSONCheck(buffer)) {
         const jsonData = JSON.parse(buffer)
         if (jsonData.code === 400) {
@@ -1420,120 +1583,135 @@ const submitTran = async (val, isRefresh, obj) => {
   docIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   limitQuery.value = newQuestion.value
+  const passData = newQuestion.value
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
   transQuest.value = ''
   transData.value = ''
   let title = ''
-  if (!isRefresh && obj) {
-    const qData = obj.originalFileName + '(tran)'
-    const index = questions.value.findIndex(item => item === qData)
-    // const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    // if (idx !== -1) {
-    //   answerList.value.splice(index, 1)
+  // if (!isRefresh && obj) {
+  //   const qData = obj.originalFileName + '(tran)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   // const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   if (targetId) {
+  //     asizeRef.value.deleteData(targetId, true)
+  //   }
+  //   questions.value.unshift(qData)
+  // }
+  if (isRefresh) {
+    let current = currentId.value
+    const idx = answerList.value.findIndex(item => item.id === current)
+    title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
+    let limitTitle = ''
+    limitTitle = questions.value[idx]
+    questions.value.splice(idx, 1)
+    answerList.value.splice(idx, 1)
+    await asizeRef.value.deleteData(current, true)
+    activeIndex.value = 0
+    questions.value.unshift(limitTitle)
+    // for (var m = 0; m < answerList.value.length; m++) {
+    //   if (answerList.value[m].type === '翻译' && limitQuery.value === answerList.value[m].data.question) {
+    //     const id = answerList.value[m].id
+    //     title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+    //     const index = questions.value.findIndex(item => item === title + '(tran)')
+    //     let limitTitle = ''
+    //     if (index !== -1) {
+    //       limitTitle = questions.value[index]
+    //       questions.value.splice(index, 1)
+    //     }
+    //     const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
+    //     if (idx !== -1) {
+    //       answerList.value.splice(index, 1)
+    //     }
+
+    //     await asizeRef.value.deleteData(id, true)
+    //     console.log(id)
+    //     activeIndex.value = 0
+    //     const limit = limitTitle
+    //       ? limitTitle.length > 15
+    //         ? limitQuery.value.substring(0, 15) + '(tran)'
+    //         : limitTitle + '(tran)'
+    //       : limitQuery.value.length > 15
+    //         ? limitQuery.value.substring(0, 15) + '(tran)'
+    //         : limitQuery.value + '(tran)'
+    //     questions.value.unshift(limit)
+    //   }
     // }
-    if (targetId) {
-      asizeRef.value.deleteData(targetId, true)
-    }
+  }
+  // if (isRefresh && obj) {
+  //   for (var m = 0; m < answerList.value.length; m++) {
+  //     if (
+  //       answerList.value[m].type === '翻译' &&
+  //       answerList.value[m].data.files &&
+  //       obj.originalFileName === answerList.value[m].data.files.originalFileName
+  //     ) {
+  //       const id = answerList.value[m].id
+  //       title = answerList.value[m].title
+  //       const index = questions.value.findIndex(item => item === title)
+  //       let limitObj = {}
+  //       if (index !== -1) {
+  //         questions.value.splice(index, 1)
+  //       }
+  //       const idx = answerList.value.findIndex(
+  //         item => item.data.files && item.data.files.originalFileName === obj.originalFileName
+  //       )
+  //       if (idx !== -1) {
+  //         limitObj = answerList.value[idx]
+  //         answerList.value.splice(idx, 1)
+  //       }
+  //       await asizeRef.value.deleteData(id, true)
+  //       activeIndex.value = 0
+  //       questions.value.unshift(title)
+  //       answerList.value.unshift(limitObj)
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(limitQuery.value + '(tran)') && !isRefresh && !obj) {
+  //   const qData = limitQuery.value + '(tran)'
+  //   for (var ms = 0; ms < questions.value.length; ms++) {
+  //     if (qData === questions.value[ms]) {
+  //       activeIndex.value = ms
+  //     }
+  //   }
+  //   if (selectedLan.value === answerList.value[activeIndex.value].data.target) {
+  //     asizeRef.value.queryAn(qData, '')
+  //     finalIng.value = false
+  //     docIng.value = false
+  //     return
+  //   } else {
+  //     const idx = answerList.value.findIndex(item => item.title === qData)
+  //     const targetId = answerList.value.find(item => item.title === qData)?.id
+  //     await asizeRef.value.deleteData(targetId, true)
+  //   }
+  // }
+  // if (questions.value.includes(limitQuery.value + '(tran)') && isRefresh && !obj) {
+  //   const qData = limitQuery.value + '(tran)'
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   if (idx !== -1) {
+  //     answerList.value.splice(index, 1)
+  //   }
+  //   await asizeRef.value.deleteData(targetId, isRefresh)
+  // }
+  // console.log(!questions.value.includes(limitQuery.value + '(tran)'))
+  // if (!questions.value.includes(limitQuery.value + '(tran)') && !title && !obj) {
+  //   const qData = '新对话' + '(tran)'
+  //   questions.value.unshift(qData)
+  //   console.log(questions.value)
+  // }
+  if (!isRefresh) {
+    const qData = '新对话' + '(tran)'
     questions.value.unshift(qData)
   }
-  if (isRefresh && !obj) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (answerList.value[m].type === '翻译' && limitQuery.value === answerList.value[m].data.question) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
-        const index = questions.value.findIndex(item => item === title + '(tran)')
-        let limitTitle = ''
-        if (index !== -1) {
-          limitTitle = questions.value[index]
-          questions.value.splice(index, 1)
-        }
-        const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
-        if (idx !== -1) {
-          answerList.value.splice(index, 1)
-        }
 
-        await asizeRef.value.deleteData(id, true)
-        activeIndex.value = 0
-        const limit = limitTitle
-          ? limitTitle.length > 15
-            ? limitQuery.value.substring(0, 15) + '(tran)'
-            : limitTitle + '(tran)'
-          : limitQuery.value.length > 15
-            ? limitQuery.value.substring(0, 15) + '(tran)'
-            : limitQuery.value + '(tran)'
-        questions.value.unshift(limit)
-      }
-    }
-  }
-  if (isRefresh && obj) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (
-        answerList.value[m].type === '翻译' &&
-        answerList.value[m].data.files &&
-        obj.originalFileName === answerList.value[m].data.files.originalFileName
-      ) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title
-        const index = questions.value.findIndex(item => item === title)
-        let limitObj = {}
-        if (index !== -1) {
-          questions.value.splice(index, 1)
-        }
-        const idx = answerList.value.findIndex(
-          item => item.data.files && item.data.files.originalFileName === obj.originalFileName
-        )
-        if (idx !== -1) {
-          limitObj = answerList.value[idx]
-          answerList.value.splice(idx, 1)
-        }
-        await asizeRef.value.deleteData(id, true)
-        activeIndex.value = 0
-        questions.value.unshift(title)
-        answerList.value.unshift(limitObj)
-      }
-    }
-  }
-  if (questions.value.includes(limitQuery.value + '(tran)') && !isRefresh && !obj) {
-    const qData = limitQuery.value + '(tran)'
-    for (var ms = 0; ms < questions.value.length; ms++) {
-      if (qData === questions.value[ms]) {
-        activeIndex.value = ms
-      }
-    }
-    if (selectedLan.value === answerList.value[activeIndex.value].data.target) {
-      asizeRef.value.queryAn(qData, '')
-      finalIng.value = false
-      docIng.value = false
-      return
-    } else {
-      const idx = answerList.value.findIndex(item => item.title === qData)
-      const targetId = answerList.value.find(item => item.title === qData)?.id
-      await asizeRef.value.deleteData(targetId, true)
-    }
-  }
-  if (questions.value.includes(limitQuery.value + '(tran)') && isRefresh && !obj) {
-    const qData = limitQuery.value + '(tran)'
-    const index = questions.value.findIndex(item => item === qData)
-    const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    if (idx !== -1) {
-      answerList.value.splice(index, 1)
-    }
-    await asizeRef.value.deleteData(targetId, isRefresh)
-  }
-
-  if (!questions.value.includes(limitQuery.value + '(tran)') && !title && !obj) {
-    const qData = limitQuery.value + '(tran)'
-    questions.value.unshift(qData)
-  }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
   for (var k = 0; k < questions.value.length; k++) {
     const queryObj = {
@@ -1548,8 +1726,8 @@ const submitTran = async (val, isRefresh, obj) => {
     }
   }
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
-  transQuest.value = obj ? obj.originalFileName : limitQuery.value
-  const passQuery = obj ? obj.originalFileName : limitQuery.value
+  transQuest.value = obj ? obj.originalFileName : passData
+  const passQuery = obj ? obj.originalFileName : passData
   currentRequestUrl.value = '/AI/translate'
   nextTick(() => {
     if (entryRef.value?.fileRef) {
@@ -1559,7 +1737,7 @@ const submitTran = async (val, isRefresh, obj) => {
   request
     .post('/AI/translate', {
       user_id: userInfo.value.id,
-      source_text: obj ? '' : limitQuery.value,
+      source_text: obj ? '' : passData,
       target_language: selectedLan.value,
       file: obj ? obj.fileId : ''
       // showLoading: true
@@ -1576,6 +1754,7 @@ const submitTran = async (val, isRefresh, obj) => {
           question: passQuery,
           answer: res.data
         }
+
         postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
       } else {
         if (res.code === 400) {
@@ -1636,79 +1815,103 @@ const submitQuestion = async (val, isRefresh) => {
   //   deepType.value = 0
   // }
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
-  if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
-    for (var m = 0; m < answerList.value.length; m++) {
-      if (
-        (answerList.value[m].type === '人资行政专题' ||
-          answerList.value[m].type === 'IT专题' ||
-          answerList.value[m].type === '法务专题') &&
-        queryValue === answerList.value[m].data.question
-      ) {
-        const id = answerList.value[m].id
-        title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
-        const index = questions.value.findIndex(item => item === title + addTitle)
-        if (index !== -1) {
-          questions.value.splice(index, 1)
-        }
-        activeIndex.value = 0
-        await asizeRef.value.deleteData(id, true)
-        questions.value.unshift(title + addTitle)
-      }
-    }
+  if (isRefresh) {
+    let current = currentId.value
+    const idx = answerList.value.findIndex(item => item.id === current)
+    title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
+    let limitTitle = ''
+    let limitObj = {}
+    limitTitle = questions.value[idx]
+    questions.value.splice(idx, 1)
+    limitObj = answerList.value[idx]
+    answerList.value.splice(idx, 1)
+    await asizeRef.value.deleteData(current, true)
+    activeIndex.value = 0
+    questions.value.unshift(title + addTitle)
+    answerList.value.unshift(limitObj)
   }
-  if (questions.value.includes(queryValue + addTitle) && !isRefresh) {
-    queryIng.value = false
-    const qData = queryValue + addTitle
-    for (var i = 0; i < questions.value.length; i++) {
-      if (qData === questions.value[i]) {
-        activeIndex.value = i
-      }
-    }
-    asizeRef.value.queryAn(qData, '')
-    isSampleLoad.value = false
-    return
-  }
-  if (!isRefresh) {
-    for (var s = 0; s < answerList.value.length; s++) {
-      if (answerList.value[s].type === '人资行政专题' && queryValue === answerList.value[s].data.question) {
-        activeIndex.value = s
-        asizeRef.value.queryAn(queryValue + '(query)', '')
-        queryIng.value = false
-        isSampleLoad.value = false
-        return
-      }
-      if (answerList.value[s].type === 'IT专题' && queryValue === answerList.value[s].data.question) {
-        activeIndex.value = s
-        asizeRef.value.queryAn(queryValue + '(it)', '')
-        queryIng.value = false
-        isSampleLoad.value = false
-        return
-      }
-      if (answerList.value[s].type === '法务专题' && queryValue === answerList.value[s].data.question) {
-        activeIndex.value = s
-        asizeRef.value.queryAn(queryValue + '(law)', '')
-        queryIng.value = false
-        isSampleLoad.value = false
-        return
-      }
-    }
-  }
-  if (questions.value.includes(queryValue + addTitle) && isRefresh) {
-    const qData = queryValue + addTitle
-    const index = questions.value.findIndex(item => item === qData)
-    const idx = answerList.value.findIndex(item => item.title === qData)
-    const targetId = answerList.value.find(item => item.title === qData)?.id
-    if (index !== -1) {
-      questions.value.splice(index, 1)
-    }
-    limitAry.value = JSON.parse(JSON.stringify(answerList.value))
-    if (idx !== -1) {
-      answerList.value.splice(index, 1)
-    }
-    await asizeRef.value.deleteData(targetId, isRefresh)
-  }
+  // if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
+  //   for (var m = 0; m < answerList.value.length; m++) {
+  //     if (
+  //       (answerList.value[m].type === '人资行政专题' ||
+  //         answerList.value[m].type === 'IT专题' ||
+  //         answerList.value[m].type === '法务专题') &&
+  //       queryValue === answerList.value[m].data.question
+  //     ) {
+  //       const id = answerList.value[m].id
+  //       title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
+  //       const index = questions.value.findIndex(item => item === title + addTitle)
+  //       if (index !== -1) {
+  //         questions.value.splice(index, 1)
+  //       }
+  //       activeIndex.value = 0
+  //       await asizeRef.value.deleteData(id, true)
+  //       questions.value.unshift(title + addTitle)
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(queryValue + addTitle) && !isRefresh) {
+  //   queryIng.value = false
+  //   const qData = queryValue + addTitle
+  //   for (var i = 0; i < questions.value.length; i++) {
+  //     if (qData === questions.value[i]) {
+  //       activeIndex.value = i
+  //     }
+  //   }
+  //   asizeRef.value.queryAn(qData, '')
+  //   isSampleLoad.value = false
+  //   return
+  // }
+  // if (!isRefresh) {
+  //   for (var s = 0; s < answerList.value.length; s++) {
+  //     if (answerList.value[s].type === '人资行政专题' && queryValue === answerList.value[s].data.question) {
+  //       activeIndex.value = s
+  //       asizeRef.value.queryAn(queryValue + '(query)', '')
+  //       queryIng.value = false
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //     if (answerList.value[s].type === 'IT专题' && queryValue === answerList.value[s].data.question) {
+  //       activeIndex.value = s
+  //       asizeRef.value.queryAn(queryValue + '(it)', '')
+  //       queryIng.value = false
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //     if (answerList.value[s].type === '法务专题' && queryValue === answerList.value[s].data.question) {
+  //       activeIndex.value = s
+  //       asizeRef.value.queryAn(queryValue + '(law)', '')
+  //       queryIng.value = false
+  //       isSampleLoad.value = false
+  //       return
+  //     }
+  //   }
+  // }
+  // if (questions.value.includes(queryValue + addTitle) && isRefresh) {
+  //   const qData = queryValue + addTitle
+  //   const index = questions.value.findIndex(item => item === qData)
+  //   const idx = answerList.value.findIndex(item => item.title === qData)
+  //   const targetId = answerList.value.find(item => item.title === qData)?.id
+  //   if (index !== -1) {
+  //     questions.value.splice(index, 1)
+  //   }
+  //   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
+  //   if (idx !== -1) {
+  //     answerList.value.splice(index, 1)
+  //   }
+  //   await asizeRef.value.deleteData(targetId, isRefresh)
+  // }
   if (!questions.value.includes(queryValue) && !title) {
-    questions.value.unshift(queryValue + addTitle)
+    questions.value.unshift('新对话' + addTitle)
+    const data = {
+      data: {
+        answer: '',
+        question: queryValue,
+        think: ''
+      },
+      title: queryValue
+    }
+    answerList.value.unshift(data)
     activeIndex.value = '0'
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
@@ -1924,7 +2127,12 @@ const postFinal = async (obj, title, ob) => {
     })
     .then(res => {
       if (res.status) {
+        finalIng.value = false
+        docIng.value = false
         getHistory('', 'final', obj.question, res.data)
+      } else {
+        finalIng.value = false
+        docIng.value = false
       }
     })
     .catch(err => {
@@ -2177,9 +2385,15 @@ const setlaw = () => {
   isLaw.value = localStorage.getItem('isLaw')
   getPower()
 }
+const handleClickOutside = event => {
+  if (wrapperRef.value && !wrapperRef.value.contains(event.target)) {
+    showFileMenu.value = false
+  }
+}
 // 组件挂载时订阅事件
 onMounted(() => {
   eventBus.on('submit-sampleFile', submitSampleFile)
+  document.addEventListener('click', handleClickOutside)
   nextTick(() => {
     isLaw.value = localStorage.getItem('isLaw')
   })
@@ -2187,6 +2401,7 @@ onMounted(() => {
 // 组件卸载时关闭 SSE 连接
 onBeforeUnmount(() => {
   eventBus.off('submit-sampleFile', submitSampleFile)
+  document.removeEventListener('click', handleClickOutside)
 })
 // 组件卸载时关闭 SSE 连接
 onUnmounted(() => {
@@ -2197,6 +2412,10 @@ onUnmounted(() => {
 </script>
 
 <style lang="less">
+.upload-layout.drag-over {
+  border-color: #409eff;
+  background-color: rgba(64, 158, 255, 0.1);
+}
 .sampleArea {
   .el-textarea__inner {
     padding: 18px 135px 18px 15px !important;
@@ -2231,8 +2450,51 @@ onUnmounted(() => {
 .tooltip-wrapper {
   position: relative;
   display: flex;
-}
+  .triangle {
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #fff;
+  }
+  .file-menu {
+    position: absolute;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 8px 0;
+    margin-bottom: 12px;
+    z-index: 2000;
+    min-width: 140px;
+  }
 
+  .menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    color: #333;
+  }
+
+  .menu-item:hover {
+    background-color: #e6f4ff;
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.2s;
+  }
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+}
 .tooltip {
   position: absolute;
   bottom: calc(100% + 5px);
@@ -2562,6 +2824,7 @@ onUnmounted(() => {
         letter-spacing: 1px;
         line-height: 24px;
         border-radius: 10px;
+        min-width: 696px;
       }
       .title_tran_tip {
         width: 100%;
@@ -2587,6 +2850,7 @@ onUnmounted(() => {
         letter-spacing: 1px;
         line-height: 24px;
         border-radius: 10px;
+        min-width: 696px;
       }
       .content_list {
         display: flex;

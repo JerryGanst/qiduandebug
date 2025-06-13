@@ -2,7 +2,23 @@
   <el-aside :width="isCollapsed ? '60px' : '280px'" class="aside">
     <div class="aside_left">
       <img class="aside_left_img" src="@/assets/logo.png" />
-      <img class="aside_left_file" src="@/assets/upload_file.png" @click="toFile" v-if="isPowerFile" />
+      <div class="aside_left_message" @click="changeContent(1)">
+        <div class="aside_img" :style="{ backgroundColor: selectType === 1 ? '#E6F4FF' : '#F7F7F7' }">
+          <img :src="selectType === 1 ? messageBlue : messageGray" />
+        </div>
+        <div class="aside_message_text" :style="{ color: selectType === 1 ? '#1B6CFF' : '#9D9D9D' }">对话</div>
+      </div>
+
+      <div class="aside_left_file" v-if="isPowerFile" @click="changeContent(2)">
+        <div class="aside_img" :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }">
+          <img
+            :src="selectType === 2 ? fileBlue : fileGray"
+            :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }"
+          />
+        </div>
+        <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
+      </div>
+
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
         <el-avatar
@@ -45,84 +61,124 @@
       <!-- <div class="aside_right_content">
         <img src="@/assets/lux.png" />
       </div> -->
-      <div class="aside_right_btn">
-        <div @click="startNewConversation" class="back_set">
-          {{ isCollapsed ? '' : '开启新对话' }}
+      <div class="asize_message" v-if="selectType === 1">
+        <div class="aside_right_btn">
+          <div @click="startNewConversation" class="back_set">
+            {{ isCollapsed ? '' : '开启新对话' }}
+          </div>
+        </div>
+        <el-menu :default-active="activeIndex" class="el_menu">
+          <el-menu-item
+            v-for="(question, index) in processedQuerys"
+            :key="index"
+            style="position: relative"
+            @mouseenter="() => handleHover(index, true)"
+            @mouseleave="() => handleHover(index, false)"
+          >
+            <!-- 文本区域：el-tooltip 仅作用于此处 -->
+            <el-tooltip
+              :content="question"
+              placement="right"
+              popper-class="custom-tooltip"
+              :disabled="popoverVisible[index]"
+            >
+              <span
+                @click="querySelect(question, index)"
+                :class="{ 'active-span': activeIndex == index.toString() }"
+                :style="{ width: hoverStates[index] ? '165px' : '180px' }"
+              >
+                {{ isCollapsed ? 'Q' : question }}
+              </span>
+            </el-tooltip>
+
+            <!-- 独立弹窗触发器 -->
+            <el-popover
+              v-model:visible="popoverVisible[index]"
+              popper-class="right-aligned-popover"
+              placement="right"
+              :popper-options="{
+                modifiers: [
+                  {
+                    name: 'offset',
+                    options: { offset: [0, 15] } // 向右偏移 20px，向下偏移 10px
+                  },
+                  {
+                    name: 'flip',
+                    enabled: false // 禁用自动翻转
+                  }
+                ],
+                strategy: 'fixed'
+              }"
+              trigger="manual"
+            >
+              <template #reference>
+                <div class="more" @click.stop="togglePopover(index)" v-if="hoverStates[index]">
+                  <img src="@/assets/more.png" class="aside_right_img" style="right: 15px" />
+                </div>
+              </template>
+              <div class="popover-content">
+                <el-popconfirm
+                  title="确定要删除吗？"
+                  confirm-button-text="确定"
+                  cancel-button-text="取消"
+                  icon="el-icon-warning"
+                  icon-color="red"
+                  @confirm="handleConfirmDelete(question, index)"
+                >
+                  <template #reference>
+                    <div class="edit_img delete_img">
+                      <img src="@/assets/delete.png" class="aside_right_img" />
+                      <div style="color: #d81e06; width: 60px; text-align: left; margin-left: 6px">删除</div>
+                    </div>
+                  </template>
+                </el-popconfirm>
+                <div class="edit_img rename_img" @click="handleEdit(question, index)">
+                  <img src="@/assets/edit.png" class="aside_right_img" />
+                  <div style="width: 60px; text-align: left; margin-left: 6px">重命名</div>
+                </div>
+              </div>
+            </el-popover>
+          </el-menu-item>
+        </el-menu>
+      </div>
+      <div class="asize_file" v-if="selectType === 2">
+        <div
+          class="asize_know"
+          @click="changeFileModel(1)"
+          :style="{
+            backgroundColor: knowSelect === 1 ? '#1b6cff' : '#f9fbff',
+            color: knowSelect === 1 ? '#fff' : '#6A6A6A',
+            backgroundImage: knowSelect === 1 ? `url('${imgWhite}')` : `url('${imgGray}')`
+          }"
+        >
+          个人知识库
+        </div>
+        <div
+          class="asize_know"
+          style="margin-top: 12px"
+          @click="changeFileModel(2)"
+          :style="{
+            backgroundColor: knowSelect === 2 ? '#1b6cff' : '#f9fbff',
+            color: knowSelect === 2 ? '#fff' : '#6A6A6A',
+            backgroundImage: knowSelect === 2 ? `url('${imgWhite}')` : `url('${imgGray}')`
+          }"
+        >
+          公用知识库
+        </div>
+        <div class="know_list" v-if="knowSelect === 2">
+          <div
+            class="know_item"
+            v-for="(item, index) in powerArr"
+            @click="knowItemSelect(index)"
+            :style="{
+              color: index === ItemSelect ? '#1B6CFF' : '#333333',
+              marginTop: index === 0 ? '0px' : '5px'
+            }"
+          >
+            {{ item.name }}
+          </div>
         </div>
       </div>
-      <el-menu :default-active="activeIndex" class="el_menu">
-        <el-menu-item
-          v-for="(question, index) in processedQuerys"
-          :key="index"
-          style="position: relative"
-          @mouseenter="() => handleHover(index, true)"
-          @mouseleave="() => handleHover(index, false)"
-        >
-          <!-- 文本区域：el-tooltip 仅作用于此处 -->
-          <el-tooltip
-            :content="question"
-            placement="right"
-            popper-class="custom-tooltip"
-            :disabled="popoverVisible[index]"
-          >
-            <span
-              @click="querySelect(question, index)"
-              :class="{ 'active-span': activeIndex == index.toString() }"
-              :style="{ width: hoverStates[index] ? '165px' : '180px' }"
-            >
-              {{ isCollapsed ? 'Q' : question }}
-            </span>
-          </el-tooltip>
-
-          <!-- 独立弹窗触发器 -->
-          <el-popover
-            v-model:visible="popoverVisible[index]"
-            popper-class="right-aligned-popover"
-            placement="right"
-            :popper-options="{
-              modifiers: [
-                {
-                  name: 'offset',
-                  options: { offset: [0, 15] } // 向右偏移 20px，向下偏移 10px
-                },
-                {
-                  name: 'flip',
-                  enabled: false // 禁用自动翻转
-                }
-              ],
-              strategy: 'fixed'
-            }"
-            trigger="manual"
-          >
-            <template #reference>
-              <div class="more" @click.stop="togglePopover(index)" v-if="hoverStates[index]">
-                <img src="@/assets/more.png" class="aside_right_img" style="right: 15px" />
-              </div>
-            </template>
-            <div class="popover-content">
-              <el-popconfirm
-                title="确定要删除吗？"
-                confirm-button-text="确定"
-                cancel-button-text="取消"
-                icon="el-icon-warning"
-                icon-color="red"
-                @confirm="handleConfirmDelete(question, index)"
-              >
-                <template #reference>
-                  <div class="edit_img delete_img">
-                    <img src="@/assets/delete.png" class="aside_right_img" />
-                    <div style="color: #d81e06; width: 60px; text-align: left; margin-left: 6px">删除</div>
-                  </div>
-                </template>
-              </el-popconfirm>
-              <div class="edit_img rename_img" @click="handleEdit(question, index)">
-                <img src="@/assets/edit.png" class="aside_right_img" />
-                <div style="width: 60px; text-align: left; margin-left: 6px">重命名</div>
-              </div>
-            </div>
-          </el-popover>
-        </el-menu-item>
-      </el-menu>
     </div>
   </el-aside>
   <div class="foldable" :style="{ left: isCollapsed ? '70px' : '290px' }">
@@ -190,13 +246,14 @@
       <el-button type="primary" @click="submitTitle" style="width: 100px; height: 40px">确定</el-button>
     </div>
   </el-dialog>
-  <commonModal ref="commonLedge"></commonModal>
+  <!-- <commonModal ref="commonLedge"></commonModal> -->
 </template>
 <script setup>
 import { ref, onMounted, computed, nextTick, reactive } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElButton, ElDivider, ElMessage, ElPopover } from 'element-plus' // 引入 ElMessage
 import { useRoute } from 'vue-router'
+import eventBus from '@/utils/eventBus'
 import Lock from '@/assets/lock.png' // 引入需要的图标
 import View from '@/assets/view.png' // 引入需要的图标
 import photo from '@/assets/chat.deepseek.com_.png'
@@ -204,11 +261,24 @@ import foldLeft from '@/assets/fold.svg'
 import foldRight from '@/assets/fold_right.svg'
 import left from '@/assets/159@2x.png'
 import right from '@/assets/162@2x.png'
+import messageBlue from '@/assets/message_blue.png'
+import messageGray from '@/assets/message_gray.png'
+import fileBlue from '@/assets/file_blue.png'
+import fileGray from '@/assets/file_gray.png'
+import imgWhite from '@/assets/file_icon_white.png'
+import imgGray from '@/assets/file_icon_gray.png'
+import hrGray from '@/assets/hr_gray.png'
+import hrBlue from '@/assets/hr_blue.png'
+import itGray from '@/assets/it_gray.png'
+import itBlue from '@/assets/it_blue.png'
+import lawGray from '@/assets/law_gray.png'
+import lawBlue from '@/assets/law_blue.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
-import commonModal from './commonUploadModal.vue'
+// import commonModal from './commonUploadModal.vue'
 const isCollapsed = ref(false) // 左上角折叠控制
 const showPopup = ref(false) // 是否展示左下角用户信息弹窗
 const dialogVisible = ref(false) // 是否展示登录弹窗
+const ItemSelect = ref(0)
 const route = useRoute() // 路由信息对象
 const loginForm = ref({
   // 登录弹窗信息对象
@@ -220,6 +290,7 @@ const titleQuestion = ref('')
 const titleIndex = ref('')
 const isPowerFile = ref(true)
 const hoverStates = ref({}) // 悬停状态
+
 const {
   currentQuestion,
   newQuestion,
@@ -254,7 +325,9 @@ const {
   fileObj,
   limitAry,
   fileAry,
-  fileInputAry
+  fileInputAry,
+  isMessage,
+  knowSelect
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -262,13 +335,17 @@ const rules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 const passwordVisible = ref(false)
+const knowOptions = ref([])
 const titleVisible = ref(false)
+const selectType = ref(1)
 // 当前url的路由信息(由luxshare传来的参数)
 const queryParams = route.query
-const emit = defineEmits(['change-history', 'set-isLaw'])
+const emit = defineEmits(['change-history', 'set-isLaw', 'set-message', 'set-FileModel'])
 // 左上角折叠控制函数
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
+  eventBus.emit('setCollapsed', isCollapsed.value)
+  // emit('set-message', isCollapsed.value)
 }
 const handleTitleClose = done => {
   // 这里可以添加一些关闭前的逻辑
@@ -322,6 +399,36 @@ const extractLastBracket = str => {
 const handleClick = (param, e) => {
   // e.stopPropagation() // 正确获取事件对象
 }
+const changeContent = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  selectType.value = val
+  isMessage.value = val === 1 ? true : false
+  ItemSelect.value = 0
+  emit('set-message', isMessage.value)
+}
+const changeFileModel = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  knowSelect.value = val
+  ItemSelect.value = 0
+  emit('set-FileModel', knowSelect.value)
+}
+const knowItemSelect = val => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  ItemSelect.value = val
+
+  const data = powerArr.value[val].target
+  eventBus.emit('changeKnow', powerArr.value[val])
+}
+
 const handleEdit = (val, index) => {
   if (isSampleLoad.value || finalIng.value) {
     ElMessage.warning('有问题正在回答中，请稍后再修改')
@@ -425,7 +532,11 @@ const handleLogout = () => {
   ElMessage.success('退出成功')
   localStorage.setItem('userInfo', '')
   localStorage.setItem('isLaw', false)
+
   localStorage.setItem('powerList', [])
+  selectType.value = 1
+  isMessage.value = true
+  // isPowerFile.value = false
   questions.value = []
   queryTypes.value = []
   answerList.value = []
@@ -574,9 +685,10 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'query'
         selectedMode.value = '人资行政专题'
-        currentObj.value.messages = anList[j].data.answer
-        currentObj.value.list = anList[j].data?.think
-        deepType.value = anList[j].isThink
+        tipQuery.value = anList[index].data.question
+        currentObj.value.messages = anList[index].data.answer
+        currentObj.value.list = anList[index].data?.think
+        deepType.value = anList[index].isThink
       }
     } else if (anList[j].type === 'IT专题') {
       queryIt.push(anList[j].title)
@@ -585,10 +697,10 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'it'
         selectedMode.value = 'IT专题'
-        tipQuery.value = anList[j].data.question
-        currentObj.value.messages = anList[j].data.answer
-        currentObj.value.list = anList[j].data?.think
-        deepType.value = anList[j].isThink
+        tipQuery.value = anList[index].data.question
+        currentObj.value.messages = anList[index].data.answer
+        currentObj.value.list = anList[index].data?.think
+        deepType.value = anList[index].isThink
       }
     } else if (anList[j].type === '法务专题') {
       queryLaw.push(anList[j].title)
@@ -597,10 +709,10 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'law'
         selectedMode.value = '法务专题'
-        tipQuery.value = anList[j].data.question
-        currentObj.value.messages = anList[j].data.answer
-        currentObj.value.list = anList[j].data?.think
-        deepType.value = anList[j].isThink
+        tipQuery.value = anList[index].data.question
+        currentObj.value.messages = anList[index].data.answer
+        currentObj.value.list = anList[index].data?.think
+        deepType.value = anList[index].isThink
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
@@ -639,10 +751,16 @@ const queryAn = (val, index, data) => {
         currentQuestion.value = false
         pageType.value = 'tran'
         selectedMode.value = '翻译'
-        transData.value = anList[j].data.answer
-        transQuest.value = anList[j].data.files ? anList[j].data.files.originalFileName : anList[j].data.question
-        selectedLan.value = anList[j].data.target
-        currentId.value = anList[j].id
+        const idx = anList.length === questions.value.length ? index : index - 1
+        transData.value = anList[idx].data.answer
+        transQuest.value = anList[idx].data.files ? anList[idx].data.files.originalFileName : anList[idx].data.question
+        selectedLan.value = anList[idx].data.target
+        currentId.value = anList[idx].id
+
+        // transData.value = anList[j].data.answer
+        // transQuest.value = anList[j].data.files ? anList[j].data.files.originalFileName : anList[j].data.question
+        // selectedLan.value = anList[j].data.target
+        // currentId.value = anList[j].id
       }
     } else if (anList[j].type === '总结') {
       queryFinal.push(anList[j].title)
@@ -651,10 +769,11 @@ const queryAn = (val, index, data) => {
         currentQuestion.value = false
         pageType.value = 'final'
         selectedMode.value = '总结'
-        finalData.value.data = anList[j].data.answer.key_points
-        finalData.value.title = anList[j].data.answer.summary
-        finalQuest.value = anList[j].data.files ? anList[j].data.files.originalFileName : anList[j].data.question
-        currentId.value = anList[j].id
+        const idx = anList.length === questions.value.length ? index : index - 1
+        finalData.value.data = anList[idx].data.answer.key_points
+        finalData.value.title = anList[idx].data.answer.summary
+        finalQuest.value = anList[idx].data.files ? anList[idx].data.files.originalFileName : anList[idx].data.question
+        currentId.value = anList[idx].id
       }
     }
   }
@@ -693,18 +812,17 @@ const queryAn = (val, index, data) => {
         currentQuestion.value = false
         if (anList.length === queryList.length) {
           transQuest.value = anList[i].data.question
-        } else {
-          const data = getMatchingIndexes(limitAry.value, queryList[i])
-          transQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
         }
       } else if (pageType.value === 'final') {
         currentQuestion.value = false
         if (anList.length === queryList.length) {
           finalQuest.value = anList[i].data.question
-        } else {
-          const data = getMatchingIndexes(limitAry.value, queryList[i])
-          finalQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
         }
+        //  else {
+        //   const data = getMatchingIndexes(limitAry.value, queryList[i])
+
+        //   finalQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
+        // }
       }
     }
   }
@@ -760,6 +878,7 @@ const powerList = ref([
   'ZL044364',
   '13829448'
 ])
+const powerArr = ref([])
 const getPower = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
@@ -767,6 +886,17 @@ const getPower = () => {
     .then(res => {
       if (res.status) {
         localStorage.setItem('powerList', JSON.stringify(res.data))
+        powerArr.value = res.data
+        if (powerArr.value.length > 0) {
+          for (var i = 0; i < powerArr.value.length; i++) {
+            powerArr.value[i].name =
+              powerArr.value[i].target === 'IT'
+                ? 'IT知识库'
+                : powerArr.value[i].target === 'HR'
+                  ? '人资行政知识库'
+                  : '法务知识库'
+          }
+        }
         setPower(JSON.stringify(res.data))
       }
     })
@@ -797,13 +927,13 @@ onMounted(() => {
   }
 })
 const commonLedge = ref(null)
-const toFile = () => {
-  if (!isLogin.value) {
-    ElMessage.warning('请先登录再使用')
-    return false
-  }
-  commonLedge.value.openFile('')
-}
+// const toFile = () => {
+//   if (!isLogin.value) {
+//     ElMessage.warning('请先登录再使用')
+//     return false
+//   }
+//   commonLedge.value.openFile('')
+// }
 const setPower = data => {
   const isPower = JSON.parse(data)
   // isPowerFile.value = isPower && isPower.length > 0
@@ -867,13 +997,7 @@ defineExpose({ queryAn, deleteData, setPower })
   display: flex;
   position: relative; /* 为子元素绝对定位提供参考 */
   overflow: hidden; /* 隐藏溢出的内容 */
-  .aside_left_file {
-    position: absolute;
-    width: 35px;
-    height: 28px;
-    top: 75px;
-    cursor: pointer;
-  }
+
   .aside_left {
     width: 60px;
     height: 44px;
@@ -882,6 +1006,64 @@ defineExpose({ queryAn, deleteData, setPower })
     justify-content: center;
     align-items: center;
     flex-shrink: 0; /* 防止折叠时被压缩 */
+    .aside_left_file {
+      position: absolute;
+      width: 100%;
+      height: 66px;
+
+      flex-direction: column;
+      top: 150px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .aside_img {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f7f7f7;
+        border-radius: 12px;
+        img {
+          width: 28px;
+          height: 28px;
+        }
+      }
+    }
+    .aside_left_message {
+      position: absolute;
+      width: 100%;
+      height: 70px;
+      top: 75px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      .aside_img {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 12px;
+        background-color: #f7f7f7;
+        img {
+          width: 28px;
+          height: 28px;
+        }
+      }
+    }
+    .aside_message_text {
+      width: 100%;
+      height: 24px;
+      line-height: 24px;
+      font-size: 12px;
+
+      text-align: center;
+    }
     .aside_left_img {
       width: 36px;
       height: 36px;
@@ -921,6 +1103,49 @@ defineExpose({ queryAn, deleteData, setPower })
     white-space: nowrap; /* 防止文字换行 */
     transform: translateX(0);
     transition: transform 0.3s ease-in-out;
+    .asize_file {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      .asize_know {
+        width: 100px;
+        height: 36px;
+        border-radius: 6px;
+        line-height: 36px;
+        font-size: 16px;
+        color: #fff;
+        margin-top: 22px;
+        margin-left: 10px;
+        background-color: #1b6cff;
+        background-size: 20px 20px;
+        background-position: 14px 9px;
+        background-repeat: no-repeat;
+        padding-left: 40px;
+        background-image: url('@/assets/file_icon_white.png');
+        cursor: pointer;
+      }
+      .know_list {
+        margin-top: 10px;
+
+        .know_item {
+          width: 125px;
+          height: 32px;
+          padding-left: 12px;
+          line-height: 32px;
+          margin-left: 38px;
+          border-radius: 6px;
+          font-size: 14px;
+          cursor: pointer;
+          background-repeat: no-repeat;
+          background-size: 24px 24px;
+          background-position: 4px 4px;
+        }
+        .know_item:hover {
+          background-color: #dce6fa;
+        }
+      }
+    }
     .aside_right_content {
       width: 200px;
       height: 62px;

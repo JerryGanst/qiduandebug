@@ -1,209 +1,244 @@
 <template>
-  <el-dialog
-    v-model="dialogVisible"
-    title="文件知识库"
-    width="1280px"
-    class="custom-upload-dialog"
-    style="margin-top: 3vh; border-radius: 10px"
+  <div
+    class="upload-layout"
+    @dragover.prevent="handleDragOver"
+    @dragleave="handleDragLeave"
+    @drop.prevent="handleDrop"
+    :class="{ 'drag-over': isDragOver }"
   >
-    <div class="upload-layout">
-      <!-- 左侧附件列表 -->
-      <div class="file-list" :style="{ width: isPre ? '735px' : '100%' }">
-        <div class="file_search">
-          <div class="file_left">
-            <div class="file_content">
-              <div class="file_select" v-if="isPower">
-                <el-select v-model="selectedKnow" placeholder="请选择知识库" @change="checkKnow">
-                  <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </div>
-              <div class="file_select" v-else>个人知识库</div>
+    <!-- 左侧附件列表 -->
+    <div class="file-list" :style="{ width: isPre ? '735px' : '100%' }">
+      <div class="file_search">
+        <div class="file_left">
+          <div class="file_content">
+            <div class="file_select" v-if="isPower">
+              <el-select v-model="selectedKnow" placeholder="请选择知识库" @change="checkKnow">
+                <el-option v-for="item in knowOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </div>
+            <!-- <div class="file_select" v-else>个人知识库</div> -->
+            <el-upload
+              drag
+              :auto-upload="false"
+              :multiple="true"
+              :accept="allowedFileTypes"
+              :on-change="handleFileAdd"
+              :show-file-list="false"
+              :file-list="fileQueue"
+              :before-upload="checkFileSize"
+            >
+              <div class="file_upload">文件上传</div>
+            </el-upload>
 
-              <div class="file_info">
-                <span>共{{ total }}项</span>
-                <span style="padding-left: 10px">存储空间 : 已使用{{ totalSize }}{{ point }}</span>
-              </div>
+            <div class="file_info">
+              <span>共{{ total }}项</span>
+              <span style="padding-left: 10px">存储空间 : 已使用{{ totalSize }}{{ point }}</span>
             </div>
           </div>
-          <div class="file_right">
-            <div class="file_content">
-              <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
-              <el-input
-                v-model="searchText"
-                placeholder="请点击搜索图标或按Enter键"
-                clearable
-                @clear="clearData"
-                @keydown.enter.prevent="searchData"
+        </div>
+        <div class="file_right">
+          <div class="file_content">
+            <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
+            <el-input
+              v-model="searchText"
+              placeholder="请点击搜索图标或按Enter键"
+              clearable
+              @clear="clearData"
+              @keydown.enter.prevent="searchData"
+            >
+              <!-- 使用插槽自定义前缀图标并绑定事件 -->
+              <template #prefix>
+                <el-icon class="el-input__icon" @click="searchData" style="cursor: pointer">
+                  <Search />
+                </el-icon>
+              </template>
+            </el-input>
+            <div class="active">
+              <div
+                class="active_item"
+                :style="{
+                  background: activeIndex === 0 ? '#E6F4FF' : '',
+                  color: activeIndex === 0 ? '#1B6CFF' : '#9D9D9D'
+                }"
+                @click="changeType(0)"
               >
-                <!-- 使用插槽自定义前缀图标并绑定事件 -->
-                <template #prefix>
-                  <el-icon class="el-input__icon" @click="searchData" style="cursor: pointer">
-                    <Search />
-                  </el-icon>
-                </template>
-              </el-input>
-              <div class="active">
-                <div
-                  class="active_item"
-                  :style="{
-                    background: activeIndex === 0 ? '#E6F4FF' : '',
-                    color: activeIndex === 0 ? '#1B6CFF' : '#9D9D9D'
-                  }"
-                  @click="changeType(0)"
-                >
-                  上传时间
-                  <img :src="activeIndex === 0 ? (timeSort ? down : up) : sort" />
-                </div>
-                <div
-                  class="active_item"
-                  :style="{
-                    background: activeIndex === 1 ? '#E6F4FF' : '',
-                    color: activeIndex === 1 ? '#1B6CFF' : '#9D9D9D'
-                  }"
-                  @click="changeType(1)"
-                >
-                  文件名称
-                  <img :src="activeIndex === 1 ? (nameSort ? down : up) : sort" />
-                </div>
+                上传时间
+                <img :src="activeIndex === 0 ? (timeSort ? down : up) : sort" />
+              </div>
+              <div
+                class="active_item"
+                :style="{
+                  background: activeIndex === 1 ? '#E6F4FF' : '',
+                  color: activeIndex === 1 ? '#1B6CFF' : '#9D9D9D'
+                }"
+                @click="changeType(1)"
+              >
+                文件名称
+                <img :src="activeIndex === 1 ? (nameSort ? down : up) : sort" />
+              </div>
 
-                <div
-                  class="active_item"
-                  :style="{
-                    background: activeIndex === 2 ? '#E6F4FF' : '',
-                    color: activeIndex === 2 ? '#1B6CFF' : '#9D9D9D'
-                  }"
-                  @click="changeType(2)"
-                >
-                  文件大小
-                  <img :src="activeIndex === 2 ? (sizeSort ? down : up) : sort" />
-                </div>
+              <div
+                class="active_item"
+                :style="{
+                  background: activeIndex === 2 ? '#E6F4FF' : '',
+                  color: activeIndex === 2 ? '#1B6CFF' : '#9D9D9D'
+                }"
+                @click="changeType(2)"
+              >
+                文件大小
+                <img :src="activeIndex === 2 ? (sizeSort ? down : up) : sort" />
               </div>
             </div>
           </div>
-        </div>
-        <div class="upload_list">
-          <span style="padding-left: 20px">已选择:</span>
-          <span>{{ selectList.length }}</span>
-          <span>个文件</span>
-          <span v-for="item in selectList" class="select_item">
-            <span>{{ item.name }}</span>
-            <span class="file_delete_img" @click="deleteSelectFile(item.name)">
-              <img src="@/assets/deleteFile.png" />
-            </span>
-          </span>
-        </div>
-        <div class="file_item">
-          <div
-            v-for="(file, index) in fileQueue"
-            :key="file.uid"
-            class="file-item"
-            :class="{ 'uploading-file': file.status === 'pending' }"
-            @click="getFile(file)"
-            style="position: relative"
-            :style="{
-              width: isPre ? '14.7%' : '8%',
-              marginLeft: isPre ? '14px' : '13px',
-              border: file.isBorder ? '1px solid #1B6CFF' : '1px solid #fff'
-            }"
-          >
-            <div class="file_img">
-              <img
-                v-if="file.fileType"
-                :src="
-                  file.fileType === 'txt'
-                    ? text
-                    : file.fileType === 'pdf'
-                      ? pdf
-                      : file.fileType === 'ppt' || file.fileType === 'pptx'
-                        ? ppt
-                        : file.fileType === 'xls' || file.fileType === 'xlsx'
-                          ? excel
-                          : word
-                "
-              />
-            </div>
-            <div class="originalFileName" :style="{ width: isPre ? '90px' : '70px' }">{{ file.originalFileName }}</div>
-            <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
-              {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
-            </div>
-          </div>
-        </div>
-        <div style="width: 100%; height: 50px; display: flex; justify-content: center; align-items: center">
-          <!-- 分页器 -->
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[30, 50, 100]"
-            :total="totals"
-            layout="total, prev, pager, next, sizes"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
-        </div>
-        <div class="btn_list">
-          <div class="btn_cancel" @click="cancelDialog">取消</div>
-          <div class="btn_confirm" @click="postData">确定</div>
         </div>
       </div>
-
-      <!-- 右侧上传区域 -->
-      <div class="upload-area" v-if="isPre">
-        <div class="file_text" v-if="previewFileId" style="position: relative">
-          <div class="text_title">{{ fileInfo.name }}</div>
-          <div class="text_list">
-            <span>大小 : {{ fileInfo.size ? (fileInfo.size / 1024).toFixed(1) : 0 }}KB</span>
-            <span style="margin-left: 14px">类型 : {{ fileInfo.extension }}</span>
-            <!-- <span style="margin-left: 14px">更新时间 : 2025-05-05</span> -->
-          </div>
-          <div class="close_pre" @click="closePre">关闭预览</div>
-        </div>
-        <!-- 附件预览 -->
-        <div
-          v-if="previewFileId"
-          class="preview-container"
-          :key="previewFileId"
-          style="height: 480px; margin: 15px"
-          :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
+      <!-- <div class="upload_list">
+        <el-upload
+          drag
+          :auto-upload="false"
+          :multiple="true"
+          :accept="allowedFileTypes"
+          :on-change="handleFileAdd"
+          :show-file-list="false"
+          :file-list="fileQueue"
+          :before-upload="checkFileSize"
         >
-          <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px">
-            <pre>{{ previewContent }}</pre>
+          <i class="el-icon-upload" />
+          <div class="el-upload__text">
+            拖拽附件到此或
+            <em>点击上传</em>
+            <div class="el-upload__subtext">
+              <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
+            </div>
+            <div class="el-upload__subtext">
+              <span style="color: #868686">单个大小不超过50M</span>
+            </div>
           </div>
-          <div v-else-if="previewType === 'html'" class="html-preview" v-html="previewContent"></div>
-          <div v-else-if="previewType === 'pdf'">
-            <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
-          </div>
-          <div v-else-if="previewType === 'pptx'">
-            <vue-office-pptx
-              :src="previewContent"
-              @rendered="() => console.log('PPT渲染完成')"
-              @error="e => console.error('PPT渲染失败', e)"
+        </el-upload>
+      </div> -->
+      <div class="file_item">
+        <div
+          v-for="(file, index) in fileQueue"
+          :key="file.uid"
+          class="file-item"
+          :class="{ 'uploading-file': file.status === 'pending' }"
+          @click="getFile(file)"
+          style="position: relative"
+          :style="{ width: isPre ? '13.5%' : '8.5%', marginLeft: isPre ? '14px' : '13px' }"
+        >
+          <div class="file_img">
+            <img
+              v-if="file.fileType"
+              :src="
+                file.fileType === 'txt'
+                  ? text
+                  : file.fileType === 'pdf'
+                    ? pdf
+                    : file.fileType === 'ppt'
+                      ? ppt
+                      : file.fileType === 'pptx'
+                        ? ppt
+                        : file.fileType === 'xls'
+                          ? excel
+                          : file.fileType === 'xlsx'
+                            ? excel
+                            : word
+              "
             />
           </div>
-          <div v-else-if="previewType === 'excel'">
-            <vue-office-excel :src="previewContent" @rendered="() => console.log('Excel渲染完成')" />
+          <div class="originalFileName" :style="{ width: isPre ? '90px' : '70px' }">{{ file.originalFileName }}</div>
+          <div style="font-size: 12px; color: #bebebe; margin-top: 2px">
+            {{ file.fileSize ? (file.fileSize / 1024).toFixed(1) : 0 }}KB
           </div>
-          <div v-else class="unsupported-preview">暂不支持此格式预览</div>
-        </div>
-        <div
-          v-else="previewFileId"
-          class="preview-container"
-          :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
-        >
-          <div style="width: 100%; display: flex; justify-content: center; margin-top: 154px">
-            <img src="@/assets/no-file.png" style="width: 150px; height: 150px" />
-          </div>
-          <div class="unsupported-preview" style="padding: 0px">请先上传附件即可预览</div>
-        </div>
-        <div class="btn_download">
-          <div class="download" @click="downloadFile(fileInfo)">下载</div>
+          <el-popconfirm
+            title="确定要删除吗？"
+            confirm-button-text="确定"
+            cancel-button-text="取消"
+            @confirm="handleDelete(index, $event)"
+          >
+            <template #reference>
+              <span @click.stop>
+                <!-- 阻止点击事件冒泡 -->
+                <div style="width: 20px; height: 20px; cursor: pointer; position: absolute; right: 4px; top: 4px">
+                  <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
+                </div>
+              </span>
+            </template>
+          </el-popconfirm>
         </div>
       </div>
+      <div style="width: 100%; height: 50px; display: flex; justify-content: center; align-items: center">
+        <!-- 分页器 -->
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[30, 50, 100]"
+          :total="totals"
+          layout="total, prev, pager, next, sizes"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </div>
-  </el-dialog>
+
+    <!-- 右侧上传区域 -->
+    <div class="upload-area" v-if="isPre">
+      <div class="file_text" v-if="previewFileId" style="position: relative">
+        <div class="text_title">{{ fileInfo.name }}</div>
+        <div class="text_list">
+          <span>大小 : {{ fileInfo.size ? (fileInfo.size / 1024).toFixed(1) : 0 }}KB</span>
+          <span style="margin-left: 14px">类型 : {{ fileInfo.extension }}</span>
+          <!-- <span style="margin-left: 14px">更新时间 : 2025-05-05</span> -->
+        </div>
+        <div class="close_pre" @click="closePre">关闭预览</div>
+      </div>
+      <!-- 附件预览 -->
+      <div
+        v-if="previewFileId"
+        class="preview-container"
+        :key="previewFileId"
+        style="margin: 15px"
+        :style="{ margin: previewFileId ? '0 15px 10px 15px' : '15px', width: isCollapsed ? '550px' : '450px' }"
+      >
+        <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px">
+          <pre>{{ previewContent }}</pre>
+        </div>
+        <div v-else-if="previewType === 'html'" class="html-preview" v-html="previewContent"></div>
+        <div v-else-if="previewType === 'pdf'">
+          <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
+        </div>
+        <div v-else-if="previewType === 'pptx'">
+          <vue-office-pptx
+            :src="previewContent"
+            style="height: 620px"
+            @rendered="() => console.log('PPT渲染完成')"
+            @error="e => console.error('PPT渲染失败', e)"
+          />
+        </div>
+        <div v-else-if="previewType === 'excel'">
+          <vue-office-excel :src="previewContent" @rendered="() => console.log('Excel渲染完成')" />
+        </div>
+        <div v-else class="unsupported-preview">暂不支持此格式预览</div>
+      </div>
+      <div
+        v-else="previewFileId"
+        class="preview-container"
+        :style="{ margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
+      >
+        <div style="width: 100%; display: flex; justify-content: center; margin-top: 154px">
+          <img src="@/assets/no-file.png" style="width: 150px; height: 150px" />
+        </div>
+        <div class="unsupported-preview" style="padding: 0px">请先上传附件即可预览</div>
+      </div>
+      <div class="btn_download">
+        <div class="download" @click="downloadFile(fileInfo)">下载</div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick, watch, onMounted } from 'vue'
 import axios from 'axios'
 import mammoth from 'mammoth'
 import VueOfficePptx from '@vue-office/pptx'
@@ -213,8 +248,8 @@ import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'
-import ppt from '@/assets/ppt.png'
 import excel from '@/assets/excl.png'
+import ppt from '@/assets/ppt.png'
 import down from '@/assets/arrow_up.png'
 import up from '@/assets/arrow_down.png'
 import sort from '@/assets/sort.png'
@@ -228,16 +263,15 @@ const fileQueue = ref([])
 const previewContent = ref(null)
 const previewType = ref('')
 const previewFileId = ref(null)
-const currentPage = ref(1)
-const pageSize = ref(100)
-const totals = ref(0)
 const isPre = ref(false)
 const selectedKnow = ref(1)
 const isPower = ref(false)
+const isDragOver = ref(false)
 const permission = ref([])
-const selectNum = ref(0)
-const selectList = ref([])
-const type = ref('sample')
+const currentPage = ref(1)
+const pageSize = ref(100)
+const totals = ref(100)
+const isCollapsed = ref(false)
 const knowOptions = ref([
   {
     value: 1,
@@ -250,12 +284,12 @@ const knowOptions = ref([
 ])
 
 // 常量定义
-const allowedFileTypes = '.doc,.docx,.txt,.pdf'
+const allowedFileTypes = '.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx'
 const activeIndex = ref(0)
 const nameSort = ref(false)
 const timeSort = ref(false)
 const sizeSort = ref(false)
-const emit = defineEmits(['submit-tran', 'submit-final'])
+
 const closePre = () => {
   isPre.value = false
 }
@@ -392,6 +426,8 @@ const uploadSingleFile = async file => {
           resolve()
         } else {
           file.status = 'error'
+          ElMessage.error(res.data.message)
+          getFileList()
           reject(err)
         }
       })
@@ -443,26 +479,26 @@ const handlePreview = async file => {
 
       // 添加Word文档基础样式
       previewContent.value = `
-        <div class="word-preview">
-          <style>
-            .word-preview {
-              font-family: "Times New Roman", serif;
-              line-height: 1.2;
-              padding: 20px;
-              font-size:14px
-            }
-            table {
-              border-collapse: collapse;
-              margin: 10px 0;
-            }
-            td {
-              border: 1px solid #ddd;
-              padding: 8px;
-            }
-          </style>
-          ${result.value}
-        </div>
-      `
+          <div class="word-preview">
+            <style>
+              .word-preview {
+                font-family: "Times New Roman", serif;
+                line-height: 1.2;
+                padding: 20px;
+                font-size:14px
+              }
+              table {
+                border-collapse: collapse;
+                margin: 10px 0;
+              }
+              td {
+                border: 1px solid #ddd;
+                padding: 8px;
+              }
+            </style>
+            ${result.value}
+          </div>
+        `
       previewType.value = 'html'
 
       // 处理图片显示（如果需要）
@@ -480,11 +516,14 @@ const handlePreview = async file => {
       const arrayBuffer = await file.raw.arrayBuffer()
       previewContent.value = arrayBuffer // 直接传递ArrayBuffer
       previewType.value = 'pptx' // 标识为PPT类型
+      console.log(previewContent.value)
+      previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
       // 新增：处理Excel文件
       const arrayBuffer = await file.raw.arrayBuffer()
       previewContent.value = arrayBuffer // 直接传递ArrayBuffer
       previewType.value = 'excel' // 标识为Excel类型
+      previewFileId.value = 123
     } else {
       previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'
@@ -585,20 +624,40 @@ const checkKnow = val => {
     getFileList(permission.value, true)
   }
 }
-const deleteSelectFile = val => {
-  selectList.value = selectList.value.filter(item => item.name !== val)
-  fileQueue.value = fileQueue.value.map(item => {
-    const isNameMatch = selectList.value.some(listItem => listItem.name === item.fileName)
-    return {
-      ...item,
-      isBorder: isNameMatch
-    }
-  })
+const handleDragOver = () => {
+  isDragOver.value = true
 }
 
-const cancelDialog = () => {
-  dialogVisible.value = false
+const handleDragLeave = () => {
+  isDragOver.value = false
 }
+const handleDrop = e => {
+  const files = Array.from(e.dataTransfer.files)
+  const exception = getTextAfterLastDot(files[0].name)
+  if (
+    exception !== 'txt' &&
+    exception !== 'doc' &&
+    exception !== 'docx' &&
+    exception !== 'ppt' &&
+    exception !== 'pptx' &&
+    exception !== 'xls' &&
+    exception !== 'xlsx' &&
+    exception !== 'pdf'
+  ) {
+    isDragOver.value = false
+    ElMessage.warning('暂不支持此格式上传')
+    return
+  }
+  const data = {
+    name: files[0].name,
+    percentage: 0,
+    size: files[0].size,
+    status: 'ready',
+    raw: files[0]
+  }
+  handleFileAdd(data)
+}
+
 const getFileList = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
@@ -608,37 +667,24 @@ const getFileList = () => {
       isPublic: selectedKnow.value === 1 ? false : true,
       sortType: activeIndex.value === 0 ? 'time' : activeIndex.value === 1 ? 'name' : 'size',
       increase: activeIndex.value === 0 ? timeSort.value : activeIndex.value === 1 ? nameSort.value : sizeSort.value,
+      keywords: searchText.value,
       page: currentPage.value,
-      pageSize: pageSize.value,
-      keywords: searchText.value
+      pageSize: pageSize.value
     })
     .then(res => {
       if (res.status) {
         fileQueue.value = res.data.content
         totals.value = res.data.totalElements
+        isDragOver.value = false
         getInfo()
+      } else {
+        isDragOver.value = false
       }
     })
     .catch(err => {
+      isDragOver.value = false
       console.error(err)
     })
-}
-const openFile = (val, ary) => {
-  dialogVisible.value = true
-  isPre.value = false
-  selectList.value = []
-  const power = localStorage.getItem('powerList')
-  permission.value = power.length > 0 ? power : ''
-  type.value = val
-  // isPower.value = permission.value ? true : false
-  isPower.value = false
-  getFileList()
-}
-
-const getTextAfterLastDot = str => {
-  const lastDotIndex = str.lastIndexOf('.')
-  if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
-  return str.slice(lastDotIndex + 1)
 }
 const handleSizeChange = val => {
   pageSize.value = val
@@ -651,72 +697,22 @@ const handleCurrentChange = val => {
   getFileList()
   // 这里通常调用API获取新数据
 }
-const postData = async () => {
-  if (selectList.value.length === 0) {
-    ElMessage.warning('请先上传附件再提交')
-    return
-  }
-  const CancelToken = axios.CancelToken
-  const source = CancelToken.source()
-  let ary = []
-  for (var i = 0; i < selectList.value.length; i++) {
-    // 清除旧预览状态
-    previewFileId.value = null
-    previewContent.value = null
-    previewType.value = ''
-    try {
-      previewFileId.value = selectList.value[i].uid
-      const formData = new FormData()
-      formData.append('files', selectList.value[i].raw)
-      formData.set('files', selectList.value[i].raw, decodeURIComponent(selectList.value[i].raw.name)) // 新文件
-      await axios
-        .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
-          cancelToken: source.token,
-          onUploadProgress: progressEvent => {
-            selectList.value[i].progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-          }
-        })
-        .then(res => {
-          if (res.data.status) {
-            ary.push(res.data?.data[0])
-            if (i === selectList.value.length - 1) {
-              if (type.value === 'sample') {
-                eventBus.emit('submit-sampleFile', ary)
-              } else {
-                ary[0].fileName = decodeURIComponent(ary[0].fileName)
-                ary[0].originalFileName = decodeURIComponent(ary[0].originalFileName)
-                emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', ary[0])
-              }
-
-              dialogVisible.value = false
-            }
-          } else {
-            ElMessage.error(res.data.message)
-            previewFileId.value = null
-          }
-        })
-    } catch (error) {
-      previewFileId.value = null
-      if (axios.isCancel(error)) {
-      } else {
-        console.error('Upload failed:', error)
-      }
-      throw error
-    }
-  }
-  // const aryData = []
-  // for (var i = 0; i < selectList.value.length; i++) {
-  //   const obj = {
-  //     size: selectList.value[i].size,
-  //     fileId: selectList.value[i].id,
-  //     originalFileName: selectList.value[i].name,
-  //     fileName: selectList.value[i].name
-  //   }
-  //   aryData.push(obj)
-  // }
-  // console.log(aryData)
-  // eventBus.emit('submit-sampleFile', aryData)
-  // dialogVisible.value = false
+const openFile = (val, ary) => {
+  dialogVisible.value = true
+  isPre.value = false
+  const power = localStorage.getItem('powerList')
+  permission.value = power.length > 0 ? power : ''
+  // isPower.value = permission.value ? true : false
+  isPower.value = false
+  getFileList()
+}
+const getCollapsed = val => {
+  isCollapsed.value = val
+}
+const getTextAfterLastDot = str => {
+  const lastDotIndex = str.lastIndexOf('.')
+  if (lastDotIndex === -1) return '' // 没有点号时返回空字符串
+  return str.slice(lastDotIndex + 1)
 }
 const getFile = fileObj => {
   // 使用 POST 请求（与后端 @PostMapping 匹配）
@@ -743,31 +739,12 @@ const getFile = fileObj => {
         raw: file,
         uid: file.lastModified,
         size: file.size,
-        id: fileObj.id,
         name: decodeURIComponent(fileObj.originalFileName),
         extension: getTextAfterLastDot(fileObj.originalFileName),
         cancel: null,
         source: null
       }
       previewFileId.value = fileOther.uid
-      if (selectList.value.length < 5) {
-        // 检查obj的name是否已存在于selectList中
-        const isNameExist = selectList.value.some(item => item.name === fileOther.name)
-        if (!isNameExist) {
-          if (type.value !== 'sample') {
-            selectList.value = []
-          }
-          selectList.value.push(fileOther)
-          fileQueue.value = fileQueue.value.map(item => {
-            const isNameMatch = selectList.value.some(listItem => listItem.name === item.fileName)
-            return {
-              ...item,
-              isBorder: isNameMatch
-            }
-          })
-        }
-      }
-
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
       handlePreview(fileOther)
     })
@@ -775,7 +752,10 @@ const getFile = fileObj => {
       console.error('获取附件失败:', error)
     })
 }
-
+onMounted(() => {
+  eventBus.on('setCollapsed', getCollapsed)
+  openFile()
+})
 defineExpose({ openFile })
 </script>
 
@@ -809,7 +789,7 @@ defineExpose({ openFile })
 
 .pdf-frame {
   width: 100%;
-  height: 500px;
+  height: calc(100vh - 180px);
   border: 0;
   box-shadow: none !important;
   outline: none !important;
@@ -834,56 +814,46 @@ defineExpose({ openFile })
   display: flex;
   height: 100%;
   gap: 20px;
+  :deep(.el-upload-dragger) {
+    border: none !important;
+    padding: 0px;
+  }
+}
+.upload-layout.drag-over {
+  border-color: #409eff;
+  background-color: rgba(64, 158, 255, 0.1);
 }
 
 .file-list {
-  width: 735px;
-  height: 630px;
-  border-radius: 4px;
+  margin-left: 40px;
+  height: calc(100% - 20px);
 
   overflow-y: hidden;
-  padding-right: 15px;
+  margin-right: 40px;
   display: flex;
   position: relative;
   flex-direction: column;
-  border: 1px solid #dcdfe6;
-  .btn_list {
-    width: 100%;
-    height: 70px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    .btn_confirm {
-      width: 100px;
-      height: 40px;
-      text-align: center;
-      line-height: 40px;
-      border-radius: 4px;
-      color: #fff;
-      background-color: #1b6cff;
-      font-size: 14px;
-      border: 1px solid #1b6cff;
-      cursor: pointer;
-    }
-    .btn_cancel {
-      width: 100px;
-      height: 40px;
-      text-align: center;
-      line-height: 40px;
-      border-radius: 4px;
-      color: #333;
-      background-color: #fff;
-      font-size: 14px;
-      margin-right: 15px;
-      border: 1px solid #eee;
-      cursor: pointer;
-    }
-  }
+  margin-top: 15px;
   .file_item {
-    height: 400px;
     overflow-y: auto;
-    margin-top: 154px;
+    margin-top: 100px;
+    height: calc(100% - 155px);
     float: left;
+  }
+  .file_item::-webkit-scrollbar {
+    width: 1px; /* 滚动条宽度 */
+  }
+  .file_item::-webkit-scrollbar-track {
+    background: #fff; /* 轨道背景颜色 */
+    border-radius: 0px; /* 轨道圆角 */
+  }
+  .file_item::-webkit-scrollbar-thumb {
+    background: #fff; /* 轨道背景颜色 */
+    border-radius: 0px; /* 滑块圆角 */
+    border: 1px solid #fff; /* 滑块边框 */
+  }
+  .file_item::-webkit-scrollbar-thumb:hover {
+    background: #fff; /* 滑块悬停时的颜色 */
   }
   .file_search {
     margin-left: 15px;
@@ -895,6 +865,7 @@ defineExpose({ openFile })
       display: flex;
       flex-direction: row;
       flex: 1;
+      height: 32px;
       .file_content {
         display: flex;
         flex-direction: column;
@@ -903,11 +874,25 @@ defineExpose({ openFile })
           font-size: 16px;
           line-height: 33px;
         }
+        .file_upload {
+          width: 120px;
+          height: 32px;
+          line-height: 32px;
+          border-radius: 16px;
+          background: #fff;
+          border: 1px solid #1b6cff;
+          text-align: center;
+          margin-right: 15px;
+          font-size: 12px;
+          color: #1b6cff;
+          cursor: pointer;
+        }
         .file_info {
           font-size: 12px;
           color: #868686;
-          line-height: 30px;
-          padding-top: 5px;
+          line-height: 32px;
+          height: 32px;
+          margin-top: 10px;
         }
       }
     }
@@ -919,18 +904,21 @@ defineExpose({ openFile })
         display: flex;
         flex-direction: column;
         :deep(.el-input__wrapper) {
-          width: 160px;
+          width: 233px;
+          height: 32px;
           box-shadow: none;
+          box-sizing: border-box;
           border: 1px solid #bebebe;
         }
         .active {
           display: flex;
-          margin-top: 5px;
+
+          margin-top: 10px;
           .active_item {
             width: 82px;
-            height: 30px;
+            height: 32px;
             text-align: center;
-            line-height: 30px;
+            line-height: 32px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
@@ -952,42 +940,7 @@ defineExpose({ openFile })
     width: calc(100% - 30px);
     margin-left: 15px;
     position: absolute;
-    top: 85px;
-    border-radius: 4px;
-    background-color: #eeeeee;
-    height: 54px;
-    line-height: 54px;
-    display: flex;
-    align-items: center;
-    .select_item {
-      max-width: 76px;
-      padding-left: 10px;
-      padding-right: 20px;
-      background-color: #e6f4ff;
-      font-size: 12px;
-      line-height: 32px;
-      margin-left: 10px;
-      border-radius: 10px;
-      height: 32px;
-      color: #1b6cff;
-      white-space: nowrap; /* 禁止换行 */
-      overflow: hidden; /* 隐藏超出部分 */
-      text-overflow: ellipsis; /* 显示省略号 */
-      position: relative;
-      .file_delete_img {
-        width: 12px;
-        height: 12px;
-        position: absolute;
-        right: 6px;
-        top: 10px;
-        cursor: pointer;
-        img {
-          width: 100%;
-          height: 100%;
-          float: left;
-        }
-      }
-    }
+    top: 95px;
   }
 }
 
@@ -1011,7 +964,6 @@ defineExpose({ openFile })
   overflow-x: hidden;
   font-size: 12px;
   cursor: pointer;
-  border: 1px solid #fff;
   .file_img {
     width: 30px;
     height: 37px;
@@ -1062,8 +1014,7 @@ defineExpose({ openFile })
   flex: 1;
   display: flex;
   flex-direction: column;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+  border-left: 1px solid #dcdfe6;
   .file_text {
     display: flex;
     flex: 1;
@@ -1119,7 +1070,7 @@ defineExpose({ openFile })
 }
 
 .preview-container {
-  height: 480px;
+  height: calc(100% - 160px);
   border-radius: 4px;
   margin: 0 15px 15px 15px;
   overflow: auto;
