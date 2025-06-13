@@ -45,6 +45,10 @@
       </div>
       <div
         class="file_item"
+        @dragover.stop
+        @dragenter.stop
+        @dragleave.stop
+        @drop.stop
         :style="{
           marginTop: isUpload ? '70px' : '70px',
           marginBottom: isUpload ? '12px' : '0px',

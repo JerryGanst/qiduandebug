@@ -632,6 +632,7 @@ const handleDragOver = () => {
   }
 
   isDragOver.value = true
+  console.log(isDragOver.value)
   nextTick(() => {
     if (entryRef.value) {
       entryRef.value.setDrag(isDragOver.value)
@@ -648,6 +649,7 @@ const handleDragLeave = () => {
     return
   }
   isDragOver.value = false
+  console.log(isDragOver.value)
   nextTick(() => {
     if (entryRef.value) {
       entryRef.value.setDrag(isDragOver.value)
@@ -661,6 +663,11 @@ const handleDrop = e => {
     return false
   }
   const files = Array.from(e.dataTransfer.files)
+  console.log(files[0])
+  if (!files[0]) {
+    isDragOver.value = false
+    return
+  }
   const exception = getTextAfterLastDot(files[0].name)
   if (
     exception !== 'txt' &&

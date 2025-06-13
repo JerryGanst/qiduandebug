@@ -5,9 +5,10 @@ handlePreview
     title="附件上传"
     width="1200px"
     class="custom-upload-dialog"
+    v-bind="dialogEvents"
     style="margin-top: 3vh; border-radius: 10px"
   >
-    <div class="upload-layout">
+    <div class="upload-layout no-drag">
       <!-- 左侧附件列表 -->
       <div class="file-list">
         <div class="upload_list">
@@ -39,7 +40,14 @@ handlePreview
           </el-upload>
         </div>
 
-        <div class="file_item" :style="{ marginTop: type === 'sample' ? '115px' : '115px' }">
+        <div
+          class="file_item"
+          :style="{ marginTop: type === 'sample' ? '115px' : '115px' }"
+          @dragover.stop
+          @dragenter.stop
+          @dragleave.stop
+          @drop.stop
+        >
           <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
             <div class="file_img">
               <img
@@ -139,7 +147,16 @@ handlePreview
           <div style="width: 100%; display: flex; justify-content: center; margin-top: 154px">
             <img src="@/assets/no-file.png" style="width: 150px; height: 150px" />
           </div>
-          <div class="unsupported-preview" style="padding: 0px">请先上传附件即可预览</div>
+          <div
+            class="unsupported-preview"
+            style="padding: 0px"
+            @dragover.stop
+            @dragenter.stop
+            @dragleave.stop
+            @drop.stop
+          >
+            请先上传附件即可预览
+          </div>
         </div>
       </div>
     </div>
@@ -158,7 +175,7 @@ handlePreview
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick, watch, reactive } from 'vue'
 import axios from 'axios'
 import VueOfficePptx from '@vue-office/pptx'
 import VueOfficeExcel from '@vue-office/excel'
@@ -205,6 +222,23 @@ const knowList = ref([
   //   label: '通用知识库'
   // }
 ])
+const dialogEvents = reactive({
+  onDragover: e => {
+    e.preventDefault()
+    console.log(123)
+    // 你的处理逻辑
+  },
+  onDragleave: e => {
+    e.preventDefault()
+    console.log(123)
+    // 你的处理逻辑
+  },
+  onDrop: e => {
+    e.preventDefault()
+    console.log(123)
+    // 你的处理逻辑
+  }
+})
 const selectedValues = ref([]) // 存储选中的值（数组）
 const knowOptions = ref([])
 const allowedFileTypes = '.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx'
@@ -787,7 +821,6 @@ const getFile = () => {
 const closeFile = () => {
   dialogVisible.value = false
 }
-
 // 监听附件队列变化
 watch(
   fileQueue,
@@ -805,6 +838,14 @@ defineExpose({ openFile, closeFile })
 </script>
 
 <style scoped lang="less">
+.no-drag {
+  pointer-events: none; /* 禁用所有鼠标事件 */
+}
+
+.no-drag * {
+  pointer-events: auto; /* 恢复子元素的鼠标事件 */
+}
+
 .pdf-wrapper {
   position: absolute;
   top: 0;

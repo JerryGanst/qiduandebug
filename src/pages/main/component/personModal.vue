@@ -92,31 +92,7 @@
           </div>
         </div>
       </div>
-      <!-- <div class="upload_list">
-        <el-upload
-          drag
-          :auto-upload="false"
-          :multiple="true"
-          :accept="allowedFileTypes"
-          :on-change="handleFileAdd"
-          :show-file-list="false"
-          :file-list="fileQueue"
-          :before-upload="checkFileSize"
-        >
-          <i class="el-icon-upload" />
-          <div class="el-upload__text">
-            拖拽附件到此或
-            <em>点击上传</em>
-            <div class="el-upload__subtext">
-              <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
-            </div>
-            <div class="el-upload__subtext">
-              <span style="color: #868686">单个大小不超过50M</span>
-            </div>
-          </div>
-        </el-upload>
-      </div> -->
-      <div class="file_item">
+      <div class="file_item" @dragover.stop @dragenter.stop @dragleave.stop @drop.stop>
         <div
           v-for="(file, index) in fileQueue"
           :key="file.uid"

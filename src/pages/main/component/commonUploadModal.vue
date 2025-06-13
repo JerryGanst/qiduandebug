@@ -92,7 +92,7 @@
             </span>
           </span>
         </div>
-        <div class="file_item">
+        <div class="file_item" @dragover.stop @dragenter.stop @dragleave.stop @drop.stop>
           <div
             v-for="(file, index) in fileQueue"
             :key="file.uid"
