@@ -27,7 +27,7 @@
           </div>
           <div class="file_right">
             <div class="file_content">
-              <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
+              <!-- < v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
               <el-input
                 v-model="searchText"
                 placeholder="请点击搜索图标或按Enter键"
@@ -714,7 +714,6 @@ const postData = async () => {
   //   }
   //   aryData.push(obj)
   // }
-  // console.log(aryData)
   // eventBus.emit('submit-sampleFile', aryData)
   // dialogVisible.value = false
 }

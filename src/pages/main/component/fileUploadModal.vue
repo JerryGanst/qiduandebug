@@ -225,17 +225,14 @@ const knowList = ref([
 const dialogEvents = reactive({
   onDragover: e => {
     e.preventDefault()
-    console.log(123)
     // 你的处理逻辑
   },
   onDragleave: e => {
     e.preventDefault()
-    console.log(123)
     // 你的处理逻辑
   },
   onDrop: e => {
     e.preventDefault()
-    console.log(123)
     // 你的处理逻辑
   }
 })
@@ -600,7 +597,6 @@ const handlePreview = async file => {
       const arrayBuffer = await file.raw.arrayBuffer()
       previewContent.value = arrayBuffer // 直接传递ArrayBuffer
       previewType.value = 'pptx' // 标识为PPT类型
-      console.log(previewContent.value)
       previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
       // 新增：处理Excel文件

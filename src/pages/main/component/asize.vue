@@ -18,7 +18,7 @@
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
       </div>
-      <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
+      <!-- <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
         <div class="aside_img" :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }">
           <img
             :src="selectType === 3 ? IntelligenceBlue : IntelligenceGray"
@@ -26,12 +26,12 @@
           />
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 3 ? '#1B6CFF' : '#9D9D9D' }">智能体</div>
-      </div>
+      </div> -->
 
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
         <el-avatar
-          :size="40"
+          :size="36"
           :src="userInfo.url"
           class="user-avatar"
           @mouseenter="showPopup = true"
@@ -46,7 +46,7 @@
 
           <div class="user-info-popup">
             <div class="user-info">
-              <el-avatar :size="40" :src="avatarUrl" class="el_avatar" />
+              <el-avatar :size="36" :src="avatarUrl" class="el_avatar" />
               <div class="user-details">
                 <div class="username">{{ userInfo.id }}</div>
                 <div class="username">{{ userInfo.name }}</div>
@@ -188,35 +188,42 @@
           </div>
         </div>
       </div>
-      <div class="asize_message" v-if="selectType === 3">
-        <div class="aside_right_btn">
-          <span></span>
-          <span>我的智能体</span>
+      <!-- <div class="asize_message" v-if="selectType === 3">
+        <div class="aside_right_btn" style="display: flex">
+          <div class="intel_img"><img src="@/assets/robot.png" /></div>
+          <span class="intel_title">我的智能体</span>
         </div>
-        <!-- <el-menu :default-active="activeIndex" class="el_menu">
+        <div style="width: 190px; margin-left: 10px">
+          <el-input v-model="searchTextIntel" placeholder="搜索历史对话" clearable @input="handleSearchIntel">
+            <template #suffix>
+              <el-icon class="search-icon"><Search /></el-icon>
+            </template>
+          </el-input>
+        </div>
+        <el-menu :default-active="activeIndexIntel" class="el_menu">
           <el-menu-item
-            v-for="(question, index) in processedQuerys"
+            v-for="(question, index) in intelList"
             :key="index"
             style="position: relative"
-            @mouseenter="() => handleHover(index, true)"
-            @mouseleave="() => handleHover(index, false)"
+            @mouseenter="() => handleHoverIntel(index, true)"
+            @mouseleave="() => handleHoverIntel(index, false)"
           >
             <el-tooltip
               :content="question"
               placement="right"
               popper-class="custom-tooltip"
-              :disabled="popoverVisible[index]"
+              :disabled="popoverVisibleIntel[index]"
             >
               <span
-                @click="querySelect(question, index)"
-                :class="{ 'active-span': activeIndex == index.toString() }"
-                :style="{ width: hoverStates[index] ? '165px' : '180px' }"
+                @click="querySelectIntel(question, index)"
+                :class="{ 'active-span': activeIndexIntel == index.toString() }"
+                :style="{ width: hoverStatesIntel[index] ? '165px' : '180px' }"
               >
                 {{ isCollapsed ? 'Q' : question }}
               </span>
             </el-tooltip>
             <el-popover
-              v-model:visible="popoverVisible[index]"
+              v-model:visible="popoverVisibleIntel[index]"
               popper-class="right-aligned-popover"
               placement="right"
               :popper-options="{
@@ -235,7 +242,7 @@
               trigger="manual"
             >
               <template #reference>
-                <div class="more" @click.stop="togglePopover(index)" v-if="hoverStates[index]">
+                <div class="more" @click.stop="togglePopoverIntel(index)" v-if="hoverStatesIntel[index]">
                   <img src="@/assets/more.png" class="aside_right_img" style="right: 15px" />
                 </div>
               </template>
@@ -246,7 +253,7 @@
                   cancel-button-text="取消"
                   icon="el-icon-warning"
                   icon-color="red"
-                  @confirm="handleConfirmDelete(question, index)"
+                  @confirm="handleConfirmDeleteIntel(question, index)"
                 >
                   <template #reference>
                     <div class="edit_img delete_img">
@@ -255,15 +262,16 @@
                     </div>
                   </template>
                 </el-popconfirm>
-                <div class="edit_img rename_img" @click="handleEdit(question, index)">
+                <div class="edit_img rename_img" @click="handleEditIntel(question, index)">
                   <img src="@/assets/edit.png" class="aside_right_img" />
                   <div style="width: 60px; text-align: left; margin-left: 6px">重命名</div>
                 </div>
               </div>
             </el-popover>
           </el-menu-item>
-        </el-menu> -->
-      </div>
+        </el-menu>
+        <div class="create_intel">创建智能体</div>
+      </div> -->
     </div>
   </el-aside>
   <div class="foldable" :style="{ left: isCollapsed ? '70px' : '290px' }">
@@ -313,14 +321,14 @@
   </el-dialog>
   <el-dialog
     v-model="titleVisible"
-    title="编辑名称"
+    title="编辑对话名称"
     width="500px"
     :before-close="handleTitleClose"
     style="border-radius: 10px"
   >
     <el-input
       v-model="titleQuestion"
-      placeholder="请输入标题名称"
+      placeholder="请输入对话名称"
       style="width: 100%"
       clearable
       type="textarea"
@@ -331,12 +339,35 @@
       <el-button type="primary" @click="submitTitle" style="width: 100px; height: 40px">确定</el-button>
     </div>
   </el-dialog>
+  <el-dialog
+    v-model="titleVisibleIntel"
+    title="编辑智能体名称"
+    width="500px"
+    :before-close="handleTitleCloseIntel"
+    style="border-radius: 10px"
+  >
+    <el-input
+      v-model="titleQuestionIntel"
+      placeholder="请输入智能体名称"
+      style="width: 100%"
+      clearable
+      type="textarea"
+      rows="5"
+    />
+    <div class="button-item_common">
+      <el-button @click="titleVisibleIntel = false" style="width: 100px; height: 40px; margin-left: 15px">
+        取消
+      </el-button>
+      <el-button type="primary" @click="submitTitleIntel" style="width: 100px; height: 40px">确定</el-button>
+    </div>
+  </el-dialog>
   <!-- <commonModal ref="commonLedge"></commonModal> -->
 </template>
 <script setup>
 import { ref, onMounted, computed, nextTick, reactive } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElButton, ElDivider, ElMessage, ElPopover } from 'element-plus' // 引入 ElMessage
+import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import eventBus from '@/utils/eventBus'
 import Lock from '@/assets/lock.png' // 引入需要的图标
@@ -374,10 +405,13 @@ const loginForm = ref({
 })
 const avatarUrl = ref(photo) // 左下角用户头像
 const titleQuestion = ref('')
+const titleQuestionIntel = ref('')
 const titleIndex = ref('')
+const titleIndexIntel = ref('')
 const isPowerFile = ref(true)
+const searchTextIntel = ref('')
 const hoverStates = ref({}) // 悬停状态
-
+const hoverStatesIntel = ref({})
 const {
   currentQuestion,
   newQuestion,
@@ -386,6 +420,7 @@ const {
   limitLoading,
   questions,
   answerList,
+  answerListIntel,
   currentId,
   pageType,
   selectedMode,
@@ -393,6 +428,7 @@ const {
   tipQuery,
   userInfo,
   activeIndex,
+  activeIndexIntel,
   queryTypes,
   chatQuery,
   isLogin,
@@ -413,8 +449,10 @@ const {
   limitAry,
   fileAry,
   fileInputAry,
-  isMessage,
-  knowSelect
+  contentType,
+  knowSelect,
+  intelList,
+  isCreate
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -424,10 +462,23 @@ const rules = {
 const passwordVisible = ref(false)
 const knowOptions = ref([])
 const titleVisible = ref(false)
+const titleVisibleIntel = ref(false)
 const selectType = ref(1)
 // 当前url的路由信息(由luxshare传来的参数)
 const queryParams = route.query
 const emit = defineEmits(['change-history', 'set-isLaw', 'set-message', 'set-FileModel'])
+// 实时搜索结果
+const searchResults = computed(() => {
+  if (!searchText.value) return []
+  const query = searchTextIntel.value.toLowerCase()
+  return intelList.value.filter(item => item.toLowerCase().includes(query))
+})
+
+// 搜索处理函数（自动触发）
+const handleSearch = () => {
+  console.log('搜索:', searchText.value)
+  // 这里可以添加额外的搜索逻辑
+}
 // 左上角折叠控制函数
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
@@ -438,7 +489,13 @@ const handleTitleClose = done => {
   // 这里可以添加一些关闭前的逻辑
   done()
 }
+const handleTitleCloseIntel = done => {
+  // 这里可以添加一些关闭前的逻辑
+  done()
+}
+
 const popoverVisible = reactive({})
+const popoverVisibleIntel = reactive({})
 // 鼠标悬停处理
 const handleHover = (index, isHovering) => {
   hoverStates.value = {
@@ -447,9 +504,19 @@ const handleHover = (index, isHovering) => {
     [index]: isHovering
   }
 }
+const handleHoverIntel = (index, isHovering) => {
+  hoverStatesIntel.value = {
+    ...hoverStatesIntel.value,
+
+    [index]: isHovering
+  }
+}
 
 const togglePopover = index => {
   popoverVisible[index] = !popoverVisible[index]
+}
+const togglePopoverIntel = index => {
+  popoverVisibleIntel[index] = !popoverVisibleIntel[index]
 }
 //获取用户信息接口
 const getUserInfo = async id => {
@@ -492,9 +559,9 @@ const changeContent = val => {
     return false
   }
   selectType.value = val
-  isMessage.value = val === 1 ? true : false
+  contentType.value = val
   ItemSelect.value = 0
-  emit('set-message', isMessage.value)
+  emit('set-message', contentType.value)
 }
 const changeFileModel = val => {
   if (!isLogin.value) {
@@ -525,6 +592,19 @@ const handleEdit = (val, index) => {
   titleQuestion.value = val
   titleIndex.value = index
 }
+const handleEditIntel = (val, index) => {
+  titleVisibleIntel.value = true
+  titleQuestionIntel.value = val
+  titleIndexIntel.value = index
+}
+
+const submitTitleIntel = val => {
+  let params = titleQuestionIntel.value
+  intelList.value[titleIndexIntel.value] = params
+  answerListIntel.value[titleIndexIntel.value].title = params
+  titleVisibleIntel.value = false
+  changeTitleIntel(answerListIntel.value[titleIndexIntel.value].id, params)
+}
 const submitTitle = val => {
   const result = extractLastBracket(questions.value[titleIndex.value]) // 输出：状态:正常
   let params = titleQuestion.value + '(' + result + ')'
@@ -534,6 +614,8 @@ const submitTitle = val => {
   titleVisible.value = false
   changeTitle(answerList.value[titleIndex.value].id, params)
 }
+
+const changeTitleIntel = async (id, val) => {}
 const changeTitle = async (id, val) => {
   request
     .post('/Message/changeTitle?id=' + id + '&title=' + val.replace(/\([^)]*\)/g, ''))
@@ -546,7 +628,7 @@ const changeTitle = async (id, val) => {
         //     answerList.value[i].title = val.replace(/\([^)]*\)/g, '')
         //   }
         // }
-        ElMessage.success('修改标题成功')
+        ElMessage.success('修改对话标题成功')
         emit('change-history')
       } else {
         titleQuestion.value = ''
@@ -581,6 +663,7 @@ const submitForm = async () => {
         ElMessage.success('登录成功')
         showPopup.value = false
         activeIndex.value = ''
+        activeIndexIntel.value = ''
         isLogin.value = true
         getUserInfo(data.userid)
         dialogVisible.value = false
@@ -598,6 +681,10 @@ const submitForm = async () => {
 const handleSelect = index => {
   activeIndex.value = index
 }
+const handleSelectIntel = index => {
+  activeIndexIntel.value = index
+}
+
 // 点击开启新对话
 const startNewConversation = () => {
   currentQuestion.value = ''
@@ -622,7 +709,7 @@ const handleLogout = () => {
 
   localStorage.setItem('powerList', [])
   selectType.value = 1
-  isMessage.value = true
+  contentType.value = 1
   // isPowerFile.value = false
   questions.value = []
   queryTypes.value = []
@@ -646,6 +733,7 @@ const checkToken = async token => {
         ElMessage.success('登录成功')
         showPopup.value = false
         activeIndex.value = ''
+        activeIndexIntel.value = ''
         isLogin.value = true
         getUserInfo(res.data.uid)
       } else {
@@ -661,6 +749,14 @@ const handleClose = done => {
   done()
 }
 
+const handleConfirmDeleteIntel = (val, index) => {
+  let id = ''
+  const anList = JSON.parse(JSON.stringify(answerListIntel.value))
+  for (var i = 0; i < anList.length; i++) {
+    id = anList[index].id
+  }
+  deleteDataIntel(id)
+}
 // 点击确定删除历史记录
 const handleConfirmDelete = (val, index) => {
   const queryData =
@@ -687,24 +783,10 @@ const handleConfirmDelete = (val, index) => {
   const anList = JSON.parse(JSON.stringify(answerList.value))
   for (var i = 0; i < anList.length; i++) {
     id = anList[index].id
-    // if (anList[i].type === '人资行政专题' || anList[i].type === 'IT专题') {
-    //   queryLimit.push(anList[i].title)
-    //   if (anList[i].title === val) {
-    //     id = anList[i].id
-    //   }
-    // } else if (anList[i].type === '通用模式') {
-    //   if (anList[i].title === val) {
-    //     id = anList[i].id
-    //   }
-    // } else if (anList[i].type === '翻译' || anList[i].type === '总结') {
-    //   if (anList[i].title === val) {
-    //     id = anList[i].id
-    //   }
-    // }
   }
   deleteData(id)
 }
-
+const deleteDataIntel = async (id, isRefresh) => {}
 // 删除数据
 const deleteData = async (id, isRefresh) => {
   // GET 请求
@@ -735,6 +817,10 @@ const querySelect = (val, index) => {
   activeIndex.value = index
   queryAn(val, index)
 }
+const querySelectIntel = (val, index) => {
+  activeIndexIntel.value = index
+  queryAnIntel(val, index)
+}
 const getMatchingIndexes = (arr1, val) => {
   for (var i = 0; i < arr1.length; i++) {
     if (val === arr1[i].title) {
@@ -742,6 +828,8 @@ const getMatchingIndexes = (arr1, val) => {
     }
   }
 }
+
+const queryAnIntel = (val, index, data) => {}
 // 点击切换左侧栏，控制左侧栏和右侧面板的数据
 const queryAn = (val, index, data) => {
   currentQuestion.value = val
@@ -929,7 +1017,6 @@ const queryAn = (val, index, data) => {
     currentObj.value.messages = {}
   }
   // if (pageType.value === 'sample' && !querySample.includes(val)) {
-  //   console.log('abcd')
   //   chatQuery.messages = []
   //   chatQuery.isLoading = false
   // }
@@ -1172,8 +1259,8 @@ defineExpose({ queryAn, deleteData, setPower })
         position: absolute;
         top: 0;
         right: 0;
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
       }
       .user-avatar {
         cursor: pointer;
@@ -1243,8 +1330,43 @@ defineExpose({ queryAn, deleteData, setPower })
         height: 100%;
       }
     }
+    .create_intel {
+      width: 140px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      background-color: #1b6cff;
+      border-radius: 10px;
+      font-size: 14px;
+      position: absolute;
+      bottom: 23px;
+      left: 10px;
+      height: 36px;
+      text-indent: 16px;
+      cursor: pointer;
+      background-image: url('@/assets/create.png');
+      background-repeat: no-repeat;
+      background-size: 20px 20px;
+      background-position: 16px 8px;
+    }
     .aside_right_btn {
       padding: 22px 10px 10px 10px;
+      .intel_img {
+        width: 32px !important;
+        height: 32px !important;
+        img {
+          width: 100%;
+          height: 100%;
+          float: left;
+        }
+      }
+      .intel_title {
+        color: #333333;
+        font-size: 16px;
+        padding-left: 12px;
+        line-height: 32px;
+      }
       .back_set {
         background-image: url('@/assets/start.png');
         background-repeat: no-repeat;

@@ -92,7 +92,7 @@
           </div>
         </div>
       </div>
-      <div class="file_item" @dragover.stop @dragenter.stop @dragleave.stop @drop.stop>
+      <div class="file_item">
         <div
           v-for="(file, index) in fileQueue"
           :key="file.uid"
@@ -492,7 +492,6 @@ const handlePreview = async file => {
       const arrayBuffer = await file.raw.arrayBuffer()
       previewContent.value = arrayBuffer // 直接传递ArrayBuffer
       previewType.value = 'pptx' // 标识为PPT类型
-      console.log(previewContent.value)
       previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
       // 新增：处理Excel文件
@@ -601,14 +600,20 @@ const checkKnow = val => {
   }
 }
 const handleDragOver = () => {
+  console.log(1)
   isDragOver.value = true
 }
 
 const handleDragLeave = () => {
+  console.log(2)
   isDragOver.value = false
 }
 const handleDrop = e => {
   const files = Array.from(e.dataTransfer.files)
+  if (!files[0]) {
+    isDragOver.value = false
+    return
+  }
   const exception = getTextAfterLastDot(files[0].name)
   if (
     exception !== 'txt' &&

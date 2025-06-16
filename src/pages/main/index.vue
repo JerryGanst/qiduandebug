@@ -13,7 +13,7 @@
     <el-container>
       <el-main>
         <div
-          v-if="isMessage"
+          v-if="contentType === 1"
           style="width: 100%; height: 100vh"
           @dragover.prevent="handleDragOver"
           @dragleave="handleDragLeave"
@@ -447,9 +447,12 @@
           <commonUploadModal ref="commonUploadModals"></commonUploadModal>
           <FilePreUpload ref="filePreRef"></FilePreUpload>
         </div>
-        <div v-if="!isMessage" style="width: 100%; height: 100vh">
+        <div v-if="contentType === 2" style="width: 100%; height: 100vh">
           <personModal v-if="fileModal === 1"></personModal>
           <commonModal ref="commonLedge" v-if="fileModal === 2"></commonModal>
+        </div>
+        <div v-if="contentType === 3">
+          <createIntel ref="createIntel"></createIntel>
         </div>
       </el-main>
     </el-container>
@@ -489,6 +492,7 @@ import commonUploadModal from './component/commonUploadModal.vue'
 import commonModal from './component/commonModal.vue'
 import personModal from './component/personModal.vue'
 import DragUpload from './component/dragUpload.vue'
+import createIntel from './component/createIntel.vue'
 import { Document } from '@element-plus/icons-vue' // 引入需要的图标
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
@@ -558,7 +562,7 @@ const {
   fileAry,
   fileInputAry,
   isLaw,
-  isMessage,
+  contentType,
   dragUploads,
   isDragOver
 } = useShared()
@@ -620,7 +624,7 @@ const showListFile = val => {
   filePreRef.value.openFile('sample')
 }
 const setMessage = val => {
-  isMessage.value = val
+  contentType.value = val
 }
 const showFileMenu = ref(false)
 const showFileSample = val => {
@@ -661,7 +665,6 @@ const handleDrop = e => {
     return false
   }
   const files = Array.from(e.dataTransfer.files)
-  console.log(files[0])
   if (!files[0]) {
     isDragOver.value = false
     return
@@ -1225,7 +1228,6 @@ const deleteImg = index => {
 const submitSampleFile = val => {
   currentQuestion.value = true
   isDragOver.value = false
-  console.log(isDragOver.value)
   for (var i = 0; i < val.length; i++) {
     val[i].fileName = decodeURIComponent(val[i].fileName)
     val[i].originalFileName = decodeURIComponent(val[i].originalFileName)

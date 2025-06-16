@@ -391,7 +391,6 @@ const startUpload = async file => {
 }
 // 处理超出限制
 // const handleExceed = (files, fileList) => {
-//   console.log(fileQueue.value)
 //   ElMessage.warning('最多只能上传5个附件')
 // }
 // 进度条颜色计算
@@ -577,7 +576,6 @@ const handlePreview = async file => {
       const arrayBuffer = await file.raw.arrayBuffer()
       previewContent.value = arrayBuffer // 直接传递ArrayBuffer
       previewType.value = 'pptx' // 标识为PPT类型
-      console.log(previewContent.value)
       previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
       // 新增：处理Excel文件
