@@ -18,6 +18,15 @@
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
       </div>
+      <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
+        <div class="aside_img" :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }">
+          <img
+            :src="selectType === 3 ? IntelligenceBlue : IntelligenceGray"
+            :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }"
+          />
+        </div>
+        <div class="aside_message_text" :style="{ color: selectType === 3 ? '#1B6CFF' : '#9D9D9D' }">智能体</div>
+      </div>
 
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
@@ -179,6 +188,82 @@
           </div>
         </div>
       </div>
+      <div class="asize_message" v-if="selectType === 3">
+        <div class="aside_right_btn">
+          <span></span>
+          <span>我的智能体</span>
+        </div>
+        <!-- <el-menu :default-active="activeIndex" class="el_menu">
+          <el-menu-item
+            v-for="(question, index) in processedQuerys"
+            :key="index"
+            style="position: relative"
+            @mouseenter="() => handleHover(index, true)"
+            @mouseleave="() => handleHover(index, false)"
+          >
+            <el-tooltip
+              :content="question"
+              placement="right"
+              popper-class="custom-tooltip"
+              :disabled="popoverVisible[index]"
+            >
+              <span
+                @click="querySelect(question, index)"
+                :class="{ 'active-span': activeIndex == index.toString() }"
+                :style="{ width: hoverStates[index] ? '165px' : '180px' }"
+              >
+                {{ isCollapsed ? 'Q' : question }}
+              </span>
+            </el-tooltip>
+            <el-popover
+              v-model:visible="popoverVisible[index]"
+              popper-class="right-aligned-popover"
+              placement="right"
+              :popper-options="{
+                modifiers: [
+                  {
+                    name: 'offset',
+                    options: { offset: [0, 15] } // 向右偏移 20px，向下偏移 10px
+                  },
+                  {
+                    name: 'flip',
+                    enabled: false // 禁用自动翻转
+                  }
+                ],
+                strategy: 'fixed'
+              }"
+              trigger="manual"
+            >
+              <template #reference>
+                <div class="more" @click.stop="togglePopover(index)" v-if="hoverStates[index]">
+                  <img src="@/assets/more.png" class="aside_right_img" style="right: 15px" />
+                </div>
+              </template>
+              <div class="popover-content">
+                <el-popconfirm
+                  title="确定要删除吗？"
+                  confirm-button-text="确定"
+                  cancel-button-text="取消"
+                  icon="el-icon-warning"
+                  icon-color="red"
+                  @confirm="handleConfirmDelete(question, index)"
+                >
+                  <template #reference>
+                    <div class="edit_img delete_img">
+                      <img src="@/assets/delete.png" class="aside_right_img" />
+                      <div style="color: #d81e06; width: 60px; text-align: left; margin-left: 6px">删除</div>
+                    </div>
+                  </template>
+                </el-popconfirm>
+                <div class="edit_img rename_img" @click="handleEdit(question, index)">
+                  <img src="@/assets/edit.png" class="aside_right_img" />
+                  <div style="width: 60px; text-align: left; margin-left: 6px">重命名</div>
+                </div>
+              </div>
+            </el-popover>
+          </el-menu-item>
+        </el-menu> -->
+      </div>
     </div>
   </el-aside>
   <div class="foldable" :style="{ left: isCollapsed ? '70px' : '290px' }">
@@ -273,6 +358,8 @@ import itGray from '@/assets/it_gray.png'
 import itBlue from '@/assets/it_blue.png'
 import lawGray from '@/assets/law_gray.png'
 import lawBlue from '@/assets/law_blue.png'
+import IntelligenceGray from '@/assets/​​Intel_gray.png'
+import IntelligenceBlue from '@/assets/​​Intel_blue.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
 // import commonModal from './commonUploadModal.vue'
 const isCollapsed = ref(false) // 左上角折叠控制

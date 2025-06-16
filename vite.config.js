@@ -4,6 +4,9 @@ import { resolve } from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  optimizeDeps: {
+    include: ['@vue-office/pptx', '@vue-office/excel']
+  },
   resolve: {
     alias: {
       // eslint-disable-next-line no-undef

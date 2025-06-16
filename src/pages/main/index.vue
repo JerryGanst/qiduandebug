@@ -632,7 +632,6 @@ const handleDragOver = () => {
   }
 
   isDragOver.value = true
-  console.log(isDragOver.value)
   nextTick(() => {
     if (entryRef.value) {
       entryRef.value.setDrag(isDragOver.value)
@@ -649,7 +648,6 @@ const handleDragLeave = () => {
     return
   }
   isDragOver.value = false
-  console.log(isDragOver.value)
   nextTick(() => {
     if (entryRef.value) {
       entryRef.value.setDrag(isDragOver.value)
