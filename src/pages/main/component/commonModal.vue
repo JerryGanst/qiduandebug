@@ -45,10 +45,6 @@
       </div>
       <div
         class="file_item"
-        @dragover.stop
-        @dragenter.stop
-        @dragleave.stop
-        @drop.stop
         :style="{
           marginTop: isUpload ? '70px' : '70px',
           marginBottom: isUpload ? '12px' : '0px',
@@ -499,6 +495,10 @@ const handleDrop = e => {
     return
   }
   const files = Array.from(e.dataTransfer.files)
+  if (!files[0]) {
+    isDragOver.value = false
+    return
+  }
   const exception = getTextAfterLastDot(files[0].name)
   if (
     exception !== 'txt' &&

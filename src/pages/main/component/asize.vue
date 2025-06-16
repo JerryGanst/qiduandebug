@@ -188,12 +188,12 @@
           </div>
         </div>
       </div>
-      <!-- <div class="asize_message" v-if="selectType === 3">
+      <div class="asize_message" v-if="selectType === 3">
         <div class="aside_right_btn" style="display: flex">
           <div class="intel_img"><img src="@/assets/robot.png" /></div>
           <span class="intel_title">我的智能体</span>
         </div>
-        <div style="width: 190px; margin-left: 10px">
+        <div style="width: 190px; margin-left: 10px; margin-top: 5px">
           <el-input v-model="searchTextIntel" placeholder="搜索历史对话" clearable @input="handleSearchIntel">
             <template #suffix>
               <el-icon class="search-icon"><Search /></el-icon>
@@ -271,7 +271,7 @@
           </el-menu-item>
         </el-menu>
         <div class="create_intel">创建智能体</div>
-      </div> -->
+      </div>
     </div>
   </el-aside>
   <div class="foldable" :style="{ left: isCollapsed ? '70px' : '290px' }">
