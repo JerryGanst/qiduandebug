@@ -132,14 +132,10 @@ handlePreview
             <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
           </div>
           <div v-else-if="previewType === 'pptx'">
-            <vue-office-pptx
-              :src="previewContent"
-              @rendered="() => console.log('PPT渲染完成')"
-              @error="e => console.error('PPT渲染失败', e)"
-            />
+            <vue-office-pptx :src="previewContent" />
           </div>
           <div v-else-if="previewType === 'excel'">
-            <vue-office-excel :src="previewContent" @rendered="() => console.log('Excel渲染完成')" />
+            <vue-office-excel :src="previewContent" />
           </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>

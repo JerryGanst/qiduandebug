@@ -362,7 +362,12 @@
                   @input="adjustTextareaHeight('textareaInputSample')"
                 />
                 <div class="filesList" v-if="fileInputAry && fileInputAry.length > 0">
-                  <div v-for="(item, index) in fileInputAry" :style="{ marginLeft: index === 0 ? '5px' : '10px' }">
+                  <div
+                    v-for="(item, index) in fileInputAry"
+                    style="cursor: pointer"
+                    :style="{ marginLeft: index === 0 ? '5px' : '10px' }"
+                    @click="showListFile(item)"
+                  >
                     <span style="display: flex; align-items: center">
                       <img
                         :src="
@@ -620,6 +625,7 @@ const setFileModel = val => {
 }
 const showListFile = val => {
   fileAry.value = []
+  console.log(val)
   fileAry.value.push(val)
   filePreRef.value.openFile('sample')
 }
@@ -1347,62 +1353,6 @@ const submitSample = async (val, isRefresh) => {
       }
     }
   }
-  // if (questions.value.includes(queryValue + '(sample)') && !isRefresh && mes.messages.length === 1) {
-  //   let titleStr = ''
-  //   for (var i = 0; i < fileInput.length; i++) {
-  //     titleStr += fileInput[i].originalFileName + ','
-  //   }
-  //   const qData = queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)'
-  //   for (var ms = 0; ms < questions.value.length; ms++) {
-  //     if (qData === questions.value[ms]) {
-  //       activeIndex.value = ms
-  //       asizeRef.value.queryAn(qData, '')
-  //       isSampleLoad.value = false
-  //       return
-  //     }
-  //   }
-  // }
-  // if (!isRefresh && mes.messages.length === 1) {
-  //   let titleStr = ''
-  //   let titleFile = ''
-  //   for (var i = 0; i < fileInput.length; i++) {
-  //     titleStr += fileInput[i].originalFileName + ','
-  //   }
-  //   for (var s = 0; s < answerList.value.length; s++) {
-  //     if (
-  //       answerList.value[s].type === '通用模式' &&
-  //       answerList.value[s].data[0].content &&
-  //       queryValue + titleStr.substring(0, titleStr.length - 1) ===
-  //         answerList.value[s].data[0].content +
-  //           (answerList.value[s].data[0].files
-  //             ? answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
-  //             : '')
-  //     ) {
-  //       activeIndex.value = s
-  //       asizeRef.value.queryAn(queryValue + '(sample)', '')
-  //       isSampleLoad.value = false
-  //       return
-  //     }
-  //   }
-  // }
-  // if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
-  //   const qData =
-  //     queryValue +
-  //     (answerList.value[activeIndex.value].data[0].files
-  //       ? answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',')
-  //       : '') +
-  //     '(sample)'
-  //   const index = questions.value.findIndex(item => item === qData)
-  //   const idx = answerList.value.findIndex(item => item.title === qData)
-  //   const targetId = answerList.value.find(item => item.title === qData)?.id
-  //   if (index !== -1) {
-  //     questions.value.splice(index, 1)
-  //   }
-  //   if (idx !== -1) {
-  //     answerList.value.splice(index, 1)
-  //   }
-  //   await asizeRef.value.deleteData(targetId, isRefresh)
-  // }
 
   const anList = JSON.parse(JSON.stringify(answerList.value))
   const hasId = anList.some(item => item.id === currentId.value)
