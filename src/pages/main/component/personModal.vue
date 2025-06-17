@@ -793,6 +793,7 @@ defineExpose({ openFile })
   :deep(.el-upload-dragger) {
     border: none !important;
     padding: 0px;
+    background-color: transparent;
   }
 }
 .upload-layout.drag-over {
