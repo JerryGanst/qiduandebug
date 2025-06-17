@@ -92,30 +92,6 @@
           </div>
         </div>
       </div>
-      <!-- <div class="upload_list">
-        <el-upload
-          drag
-          :auto-upload="false"
-          :multiple="true"
-          :accept="allowedFileTypes"
-          :on-change="handleFileAdd"
-          :show-file-list="false"
-          :file-list="fileQueue"
-          :before-upload="checkFileSize"
-        >
-          <i class="el-icon-upload" />
-          <div class="el-upload__text">
-            拖拽附件到此或
-            <em>点击上传</em>
-            <div class="el-upload__subtext">
-              <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
-            </div>
-            <div class="el-upload__subtext">
-              <span style="color: #868686">单个大小不超过50M</span>
-            </div>
-          </div>
-        </el-upload>
-      </div> -->
       <div class="file_item">
         <div
           v-for="(file, index) in fileQueue"
@@ -208,15 +184,10 @@
           <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
         </div>
         <div v-else-if="previewType === 'pptx'">
-          <vue-office-pptx
-            :src="previewContent"
-            style="height: 620px"
-            @rendered="() => console.log('PPT渲染完成')"
-            @error="e => console.error('PPT渲染失败', e)"
-          />
+          <vue-office-pptx :src="previewContent" style="height: 620px" />
         </div>
         <div v-else-if="previewType === 'excel'">
-          <vue-office-excel :src="previewContent" @rendered="() => console.log('Excel渲染完成')" />
+          <vue-office-excel :src="previewContent" />
         </div>
         <div v-else class="unsupported-preview">暂不支持此格式预览</div>
       </div>
@@ -516,7 +487,6 @@ const handlePreview = async file => {
       const arrayBuffer = await file.raw.arrayBuffer()
       previewContent.value = arrayBuffer // 直接传递ArrayBuffer
       previewType.value = 'pptx' // 标识为PPT类型
-      console.log(previewContent.value)
       previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
       // 新增：处理Excel文件
@@ -625,14 +595,20 @@ const checkKnow = val => {
   }
 }
 const handleDragOver = () => {
+  console.log(1)
   isDragOver.value = true
 }
 
 const handleDragLeave = () => {
+  console.log(2)
   isDragOver.value = false
 }
 const handleDrop = e => {
   const files = Array.from(e.dataTransfer.files)
+  if (!files[0]) {
+    isDragOver.value = false
+    return
+  }
   const exception = getTextAfterLastDot(files[0].name)
   if (
     exception !== 'txt' &&
@@ -817,6 +793,7 @@ defineExpose({ openFile })
   :deep(.el-upload-dragger) {
     border: none !important;
     padding: 0px;
+    background-color: transparent;
   }
 }
 .upload-layout.drag-over {

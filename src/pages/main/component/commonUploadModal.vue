@@ -27,7 +27,7 @@
           </div>
           <div class="file_right">
             <div class="file_content">
-              <!-- <el-input v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
+              <!-- < v-model="searchText" :prefix-icon="Search" placeholder="请输入关键词搜索" clearable /> -->
               <el-input
                 v-model="searchText"
                 placeholder="请点击搜索图标或按Enter键"
@@ -173,14 +173,10 @@
             <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
           </div>
           <div v-else-if="previewType === 'pptx'">
-            <vue-office-pptx
-              :src="previewContent"
-              @rendered="() => console.log('PPT渲染完成')"
-              @error="e => console.error('PPT渲染失败', e)"
-            />
+            <vue-office-pptx :src="previewContent" />
           </div>
           <div v-else-if="previewType === 'excel'">
-            <vue-office-excel :src="previewContent" @rendered="() => console.log('Excel渲染完成')" />
+            <vue-office-excel :src="previewContent" />
           </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>
@@ -656,69 +652,98 @@ const postData = async () => {
     ElMessage.warning('请先上传附件再提交')
     return
   }
-  const CancelToken = axios.CancelToken
-  const source = CancelToken.source()
-  let ary = []
-  for (var i = 0; i < selectList.value.length; i++) {
-    // 清除旧预览状态
-    previewFileId.value = null
-    previewContent.value = null
-    previewType.value = ''
-    try {
-      previewFileId.value = selectList.value[i].uid
-      const formData = new FormData()
-      formData.append('files', selectList.value[i].raw)
-      formData.set('files', selectList.value[i].raw, decodeURIComponent(selectList.value[i].raw.name)) // 新文件
-      await axios
-        .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
-          cancelToken: source.token,
-          onUploadProgress: progressEvent => {
-            selectList.value[i].progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-          }
-        })
-        .then(res => {
-          if (res.data.status) {
-            ary.push(res.data?.data[0])
-            if (i === selectList.value.length - 1) {
-              if (type.value === 'sample') {
-                eventBus.emit('submit-sampleFile', ary)
-              } else {
-                ary[0].fileName = decodeURIComponent(ary[0].fileName)
-                ary[0].originalFileName = decodeURIComponent(ary[0].originalFileName)
-                emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', ary[0])
-              }
-
-              dialogVisible.value = false
-            }
-          } else {
-            ElMessage.error(res.data.message)
-            previewFileId.value = null
-          }
-        })
-    } catch (error) {
-      previewFileId.value = null
-      if (axios.isCancel(error)) {
-      } else {
-        console.error('Upload failed:', error)
-      }
-      throw error
-    }
-  }
-  // const aryData = []
+  // const CancelToken = axios.CancelToken
+  // const source = CancelToken.source()
+  // let ary = []
   // for (var i = 0; i < selectList.value.length; i++) {
-  //   const obj = {
-  //     size: selectList.value[i].size,
-  //     fileId: selectList.value[i].id,
-  //     originalFileName: selectList.value[i].name,
-  //     fileName: selectList.value[i].name
+  //   // 清除旧预览状态
+  //   previewFileId.value = null
+  //   previewContent.value = null
+  //   previewType.value = ''
+  //   try {
+  //     previewFileId.value = selectList.value[i].uid
+  //     const formData = new FormData()
+  //     formData.append('files', selectList.value[i].raw)
+  //     formData.set('files', selectList.value[i].raw, decodeURIComponent(selectList.value[i].raw.name)) // 新文件
+  //     await axios
+  //       .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
+  //         cancelToken: source.token,
+  //         onUploadProgress: progressEvent => {
+  //           selectList.value[i].progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+  //         }
+  //       })
+  //       .then(res => {
+  //         if (res.data.status) {
+  //           ary.push(res.data?.data[0])
+  //           if (i === selectList.value.length - 1) {
+  //             if (type.value === 'sample') {
+  //               eventBus.emit('submit-sampleFile', ary)
+  //             } else {
+  //               ary[0].fileName = decodeURIComponent(ary[0].fileName)
+  //               ary[0].originalFileName = decodeURIComponent(ary[0].originalFileName)
+  //               emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', ary[0])
+  //             }
+
+  //             dialogVisible.value = false
+  //           }
+  //         } else {
+  //           ElMessage.error(res.data.message)
+  //           previewFileId.value = null
+  //         }
+  //       })
+  //   } catch (error) {
+  //     previewFileId.value = null
+  //     if (axios.isCancel(error)) {
+  //     } else {
+  //       console.error('Upload failed:', error)
+  //     }
+  //     throw error
   //   }
-  //   aryData.push(obj)
   // }
-  // console.log(aryData)
-  // eventBus.emit('submit-sampleFile', aryData)
-  // dialogVisible.value = false
+  const aryData = []
+  for (var i = 0; i < selectList.value.length; i++) {
+    const file = {
+      fileId: selectList.value[i].id,
+      local: false
+    }
+    const obj = {
+      size: selectList.value[i].size,
+      fileId: file,
+      originalFileName: selectList.value[i].name,
+      fileName: selectList.value[i].name
+    }
+    aryData.push(obj)
+  }
+  if (type.value === 'sample') {
+    eventBus.emit('submit-sampleFile', aryData)
+  } else {
+    aryData[0].fileName = decodeURIComponent(aryData[0].fileName)
+    aryData[0].originalFileName = decodeURIComponent(aryData[0].originalFileName)
+    emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', aryData[0])
+    // eventBus.emit('submit-sampleFile', aryData[0])
+  }
+
+  dialogVisible.value = false
 }
 const getFile = fileObj => {
+  if (selectList.value.length < 5) {
+    // 检查obj的name是否已存在于selectList中
+    const isNameExist = selectList.value.some(item => item.name === fileObj.originalFileName)
+    if (!isNameExist) {
+      if (type.value !== 'sample') {
+        selectList.value = []
+      }
+      fileObj.name = fileObj.originalFileName
+      selectList.value.push(fileObj)
+      fileQueue.value = fileQueue.value.map(item => {
+        const isNameMatch = selectList.value.some(listItem => listItem.name === item.originalFileName)
+        return {
+          ...item,
+          isBorder: isNameMatch
+        }
+      })
+    }
+  }
   // 使用 POST 请求（与后端 @PostMapping 匹配）
   fetch(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileById?id=' + fileObj.id, {
     method: 'POST',
@@ -750,23 +775,23 @@ const getFile = fileObj => {
         source: null
       }
       previewFileId.value = fileOther.uid
-      if (selectList.value.length < 5) {
-        // 检查obj的name是否已存在于selectList中
-        const isNameExist = selectList.value.some(item => item.name === fileOther.name)
-        if (!isNameExist) {
-          if (type.value !== 'sample') {
-            selectList.value = []
-          }
-          selectList.value.push(fileOther)
-          fileQueue.value = fileQueue.value.map(item => {
-            const isNameMatch = selectList.value.some(listItem => listItem.name === item.fileName)
-            return {
-              ...item,
-              isBorder: isNameMatch
-            }
-          })
-        }
-      }
+      // if (selectList.value.length < 5) {
+      //   // 检查obj的name是否已存在于selectList中
+      //   const isNameExist = selectList.value.some(item => item.name === fileOther.name)
+      //   if (!isNameExist) {
+      //     if (type.value !== 'sample') {
+      //       selectList.value = []
+      //     }
+      //     selectList.value.push(fileOther)
+      //     fileQueue.value = fileQueue.value.map(item => {
+      //       const isNameMatch = selectList.value.some(listItem => listItem.name === item.fileName)
+      //       return {
+      //         ...item,
+      //         isBorder: isNameMatch
+      //       }
+      //     })
+      //   }
+      // }
 
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
       handlePreview(fileOther)

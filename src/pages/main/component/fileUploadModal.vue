@@ -5,9 +5,10 @@ handlePreview
     title="附件上传"
     width="1200px"
     class="custom-upload-dialog"
+    v-bind="dialogEvents"
     style="margin-top: 3vh; border-radius: 10px"
   >
-    <div class="upload-layout">
+    <div class="upload-layout no-drag">
       <!-- 左侧附件列表 -->
       <div class="file-list">
         <div class="upload_list">
@@ -39,7 +40,14 @@ handlePreview
           </el-upload>
         </div>
 
-        <div class="file_item" :style="{ marginTop: type === 'sample' ? '115px' : '115px' }">
+        <div
+          class="file_item"
+          :style="{ marginTop: type === 'sample' ? '115px' : '115px' }"
+          @dragover.stop
+          @dragenter.stop
+          @dragleave.stop
+          @drop.stop
+        >
           <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
             <div class="file_img">
               <img
@@ -124,14 +132,10 @@ handlePreview
             <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
           </div>
           <div v-else-if="previewType === 'pptx'">
-            <vue-office-pptx
-              :src="previewContent"
-              @rendered="() => console.log('PPT渲染完成')"
-              @error="e => console.error('PPT渲染失败', e)"
-            />
+            <vue-office-pptx :src="previewContent" />
           </div>
           <div v-else-if="previewType === 'excel'">
-            <vue-office-excel :src="previewContent" @rendered="() => console.log('Excel渲染完成')" />
+            <vue-office-excel :src="previewContent" />
           </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>
@@ -139,7 +143,16 @@ handlePreview
           <div style="width: 100%; display: flex; justify-content: center; margin-top: 154px">
             <img src="@/assets/no-file.png" style="width: 150px; height: 150px" />
           </div>
-          <div class="unsupported-preview" style="padding: 0px">请先上传附件即可预览</div>
+          <div
+            class="unsupported-preview"
+            style="padding: 0px"
+            @dragover.stop
+            @dragenter.stop
+            @dragleave.stop
+            @drop.stop
+          >
+            请先上传附件即可预览
+          </div>
         </div>
       </div>
     </div>
@@ -158,7 +171,7 @@ handlePreview
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick, watch, reactive } from 'vue'
 import axios from 'axios'
 import VueOfficePptx from '@vue-office/pptx'
 import VueOfficeExcel from '@vue-office/excel'
@@ -205,6 +218,20 @@ const knowList = ref([
   //   label: '通用知识库'
   // }
 ])
+const dialogEvents = reactive({
+  onDragover: e => {
+    e.preventDefault()
+    // 你的处理逻辑
+  },
+  onDragleave: e => {
+    e.preventDefault()
+    // 你的处理逻辑
+  },
+  onDrop: e => {
+    e.preventDefault()
+    // 你的处理逻辑
+  }
+})
 const selectedValues = ref([]) // 存储选中的值（数组）
 const knowOptions = ref([])
 const allowedFileTypes = '.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx'
@@ -299,8 +326,22 @@ const startUpload = async file => {
             if (res.data.status) {
               file[i].status = STATUS.SUCCESS
               file[i].progress = 100
-              ary.push(res.data?.data[0])
+              const obj = {
+                fileId: {
+                  fileId: res.data?.data[0].fileId,
+                  local: true
+                },
+                fileName: res.data?.data[0].fileName,
+                filePath: res.data?.data[0].filePath,
+                fileType: res.data?.data[0].fileType,
+                originalFileName: res.data?.data[0].originalFileName,
+                uploadTime: res.data?.data[0].uploadTime
+              }
+
+              ary.push(obj)
+
               if (i === fileQueue.value.length - 1) {
+                console.log(ary)
                 eventBus.emit('submit-sampleFile', ary)
                 dialogVisible.value = false
               }
@@ -344,8 +385,20 @@ const startUpload = async file => {
           if (res.data.status) {
             file.status = STATUS.SUCCESS
             file.progress = 100
+            const obj = {
+              fileId: {
+                fileId: res.data?.data[0].fileId,
+                local: true
+              },
+              fileName: res.data?.data[0].fileName,
+              filePath: res.data?.data[0].filePath,
+              fileType: res.data?.data[0].fileType,
+              originalFileName: res.data?.data[0].originalFileName,
+              uploadTime: res.data?.data[0].uploadTime
+            }
+
             fileObj.value = res.data?.data[0]
-            emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', res.data?.data[0])
+            emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', obj)
           } else {
             ElMessage.error(res.data.message)
             file.status = STATUS.ERROR
@@ -566,7 +619,6 @@ const handlePreview = async file => {
       const arrayBuffer = await file.raw.arrayBuffer()
       previewContent.value = arrayBuffer // 直接传递ArrayBuffer
       previewType.value = 'pptx' // 标识为PPT类型
-      console.log(previewContent.value)
       previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
       // 新增：处理Excel文件
@@ -787,7 +839,6 @@ const getFile = () => {
 const closeFile = () => {
   dialogVisible.value = false
 }
-
 // 监听附件队列变化
 watch(
   fileQueue,
@@ -805,6 +856,14 @@ defineExpose({ openFile, closeFile })
 </script>
 
 <style scoped lang="less">
+.no-drag {
+  pointer-events: none; /* 禁用所有鼠标事件 */
+}
+
+.no-drag * {
+  pointer-events: auto; /* 恢复子元素的鼠标事件 */
+}
+
 .pdf-wrapper {
   position: absolute;
   top: 0;

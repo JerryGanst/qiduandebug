@@ -6,7 +6,11 @@ const isSampleStop = ref(false) // 控制通用模式 终止之后的状态
 const isQueryStop = ref(false) // 控制人资模式 终止之后的状态
 const limitLoading = ref(false) // 切换左侧历史记录，判断当前选中的记录是否处于问答状态中
 const questions = ref([]) // 左侧历史记录标题数组
+const intelList = ref([])
 const answerList = ref([]) //历史记录数组
+const answerListIntel = ref([])
+const isCreate = ref(true)
+const contentType = ref(1)
 const currentId = ref('') // 左侧历史记录当前选中的id
 const pageType = ref('sample') // 当前页面类型
 const selectedMode = ref('通用模式') // 模式
@@ -21,6 +25,7 @@ const limitSample = ref({
 })
 const tipQuery = ref('') // 翻译、总结、人资模式 问答框标题（问题）
 const activeIndex = ref('') // 左侧栏当前选中的索引
+const activeIndexIntel = ref('')
 const queryTypes = ref([]) //左侧栏 问题+类型 比如如何打卡（'query'） 拼接成的数组对象
 const userInfo = ref({
   department: '',
@@ -92,7 +97,6 @@ const limitAry = ref([])
 const showFileTip = ref(false)
 const showModelTip = ref(false)
 const isLaw = ref(false)
-const isMessage = ref(true)
 const knowSelect = ref(1)
 const fileInputAry = ref([])
 const isDragOver = ref(false)
@@ -205,8 +209,14 @@ export function useShared() {
   const updateQuestions = newName => {
     questions.value = newName
   }
+  const updateIntelList = newName => {
+    intelList.value = newName
+  }
   const updateAnswerList = newName => {
     answerList.value = newName
+  }
+  const updateAnswerListIntel = newName => {
+    answerListIntel.value = newName
   }
   const updateCurrentId = newName => {
     currentId.value = newName
@@ -226,6 +236,10 @@ export function useShared() {
   const updateActiveIndex = newName => {
     activeIndex.value = newName
   }
+  const updateActiveIndexIntel = newName => {
+    activeIndexIntel.value = newName
+  }
+
   const updateQueryTypes = newName => {
     queryTypes.value = newName
   }
@@ -307,8 +321,8 @@ export function useShared() {
   const updateIsLaw = newName => {
     isLaw.value = newName
   }
-  const updateIsMessage = newName => {
-    isMessage.value = newName
+  const updateContentType = newName => {
+    contentType.value = newName
   }
   const updateKnowSelect = newName => {
     knowSelect.value = newName
@@ -318,6 +332,9 @@ export function useShared() {
   }
   const updateIsDragOver = newName => {
     isDragOver.value = newName
+  }
+  const updateIsCreate = newName => {
+    isCreate.value = newName
   }
 
   watch(
@@ -332,6 +349,7 @@ export function useShared() {
   return {
     currentQuestion,
     newQuestion,
+    isCreate,
     isSampleStop,
     isQueryStop,
     isDragOver,
@@ -340,7 +358,9 @@ export function useShared() {
     dragUploads,
     limitId,
     questions,
+    intelList,
     answerList,
+    answerListIntel,
     currentId,
     pageType,
     selectedMode,
@@ -348,6 +368,7 @@ export function useShared() {
     tipQuery,
     userInfo,
     activeIndex,
+    activeIndexIntel,
     queryTypes,
     chatQuery,
     isLogin,
@@ -376,7 +397,7 @@ export function useShared() {
     showModelTip,
     fileInputAry,
     isLaw,
-    isMessage,
+    contentType,
     changeMode,
     updateCurrentQuestion,
     updateNewQuestion,
@@ -385,6 +406,7 @@ export function useShared() {
     updateLimitLoading,
     updateQuestions,
     updateAnswerList,
+    updateAnswerListIntel,
     updateCurrentId,
     updatePageType,
     updateSelectedMode,
@@ -423,6 +445,10 @@ export function useShared() {
     updateIsLaw,
     updateKnowSelect,
     updateDragUploads,
-    updateIsDragOver
+    updateIsDragOver,
+    updateIntelList,
+    updateActiveIndexIntel,
+    updateIsCreate,
+    updateContentType
   }
 }

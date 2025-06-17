@@ -296,12 +296,10 @@ const uploadSingleFile = async file => {
     previewFileId.value = file.uid
     const userInfo = JSON.parse(localStorage.getItem('userInfo'))
     const formData = new FormData()
-    console.log(file.raw)
     formData.append('file', file.raw)
     formData.append('userId', userInfo.id)
     formData.append('target', selectedKnow.value)
     formData.append('isPublic', true)
-    console.log(formData)
     axios
       .post(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileUpload', formData, {
         onUploadProgress: progress => {
@@ -497,6 +495,10 @@ const handleDrop = e => {
     return
   }
   const files = Array.from(e.dataTransfer.files)
+  if (!files[0]) {
+    isDragOver.value = false
+    return
+  }
   const exception = getTextAfterLastDot(files[0].name)
   if (
     exception !== 'txt' &&
@@ -629,6 +631,7 @@ defineExpose({ openFile })
   :deep(.el-upload-dragger) {
     border: none !important;
     padding: 0px;
+    background-color: transparent;
   }
 }
 .upload-layout.drag-over {

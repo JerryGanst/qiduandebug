@@ -13,7 +13,7 @@
     <el-container>
       <el-main>
         <div
-          v-if="isMessage"
+          v-if="contentType === 1"
           style="width: 100%; height: 100vh"
           @dragover.prevent="handleDragOver"
           @dragleave="handleDragLeave"
@@ -362,7 +362,12 @@
                   @input="adjustTextareaHeight('textareaInputSample')"
                 />
                 <div class="filesList" v-if="fileInputAry && fileInputAry.length > 0">
-                  <div v-for="(item, index) in fileInputAry" :style="{ marginLeft: index === 0 ? '5px' : '10px' }">
+                  <div
+                    v-for="(item, index) in fileInputAry"
+                    style="cursor: pointer"
+                    :style="{ marginLeft: index === 0 ? '5px' : '10px' }"
+                    @click="showListFile(item)"
+                  >
                     <span style="display: flex; align-items: center">
                       <img
                         :src="
@@ -447,9 +452,12 @@
           <commonUploadModal ref="commonUploadModals"></commonUploadModal>
           <FilePreUpload ref="filePreRef"></FilePreUpload>
         </div>
-        <div v-if="!isMessage" style="width: 100%; height: 100vh">
+        <div v-if="contentType === 2" style="width: 100%; height: 100vh">
           <personModal v-if="fileModal === 1"></personModal>
           <commonModal ref="commonLedge" v-if="fileModal === 2"></commonModal>
+        </div>
+        <div v-if="contentType === 3">
+          <createIntel ref="createIntel"></createIntel>
         </div>
       </el-main>
     </el-container>
@@ -489,6 +497,7 @@ import commonUploadModal from './component/commonUploadModal.vue'
 import commonModal from './component/commonModal.vue'
 import personModal from './component/personModal.vue'
 import DragUpload from './component/dragUpload.vue'
+import createIntel from './component/createIntel.vue'
 import { Document } from '@element-plus/icons-vue' // 引入需要的图标
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
@@ -558,7 +567,7 @@ const {
   fileAry,
   fileInputAry,
   isLaw,
-  isMessage,
+  contentType,
   dragUploads,
   isDragOver
 } = useShared()
@@ -616,11 +625,12 @@ const setFileModel = val => {
 }
 const showListFile = val => {
   fileAry.value = []
+  console.log(val)
   fileAry.value.push(val)
   filePreRef.value.openFile('sample')
 }
 const setMessage = val => {
-  isMessage.value = val
+  contentType.value = val
 }
 const showFileMenu = ref(false)
 const showFileSample = val => {
@@ -661,6 +671,10 @@ const handleDrop = e => {
     return false
   }
   const files = Array.from(e.dataTransfer.files)
+  if (!files[0]) {
+    isDragOver.value = false
+    return
+  }
   const exception = getTextAfterLastDot(files[0].name)
   if (
     exception !== 'txt' &&
@@ -1220,7 +1234,6 @@ const deleteImg = index => {
 const submitSampleFile = val => {
   currentQuestion.value = true
   isDragOver.value = false
-  console.log(isDragOver.value)
   for (var i = 0; i < val.length; i++) {
     val[i].fileName = decodeURIComponent(val[i].fileName)
     val[i].originalFileName = decodeURIComponent(val[i].originalFileName)
@@ -1282,6 +1295,7 @@ const submitSample = async (val, isRefresh) => {
   dynamicRows.value = 1
   isSampleLoad.value = true
   limitLoading.value = true
+  console.log(chatQuery.messages)
   if (chatQuery.messages.length === 1 && chatQuery.messages[0].files) {
     chatQuery.messages = []
   }
@@ -1289,6 +1303,8 @@ const submitSample = async (val, isRefresh) => {
   if (fileInput && fileInput.length > 0) {
     for (var me = 0; me < fileInput.length; me++) {
       filesSample.push(fileInput[me].fileId)
+      fileInput[me].local = fileInput[me].fileId.local
+      fileInput[me].fileId = fileInput[me].fileId.fileId
     }
   }
 
@@ -1305,6 +1321,7 @@ const submitSample = async (val, isRefresh) => {
   }
   mes = JSON.parse(JSON.stringify(chatQuery))
   mes.messages.push(currentData)
+  console.log(mes)
   limitSample.value = JSON.parse(JSON.stringify(mes))
   const params = JSON.parse(JSON.stringify(mes))
   for (var j = 0; j < params.messages.length; j++) {
@@ -1340,62 +1357,6 @@ const submitSample = async (val, isRefresh) => {
       }
     }
   }
-  // if (questions.value.includes(queryValue + '(sample)') && !isRefresh && mes.messages.length === 1) {
-  //   let titleStr = ''
-  //   for (var i = 0; i < fileInput.length; i++) {
-  //     titleStr += fileInput[i].originalFileName + ','
-  //   }
-  //   const qData = queryValue + titleStr.substring(0, titleStr.length - 1) + '(sample)'
-  //   for (var ms = 0; ms < questions.value.length; ms++) {
-  //     if (qData === questions.value[ms]) {
-  //       activeIndex.value = ms
-  //       asizeRef.value.queryAn(qData, '')
-  //       isSampleLoad.value = false
-  //       return
-  //     }
-  //   }
-  // }
-  // if (!isRefresh && mes.messages.length === 1) {
-  //   let titleStr = ''
-  //   let titleFile = ''
-  //   for (var i = 0; i < fileInput.length; i++) {
-  //     titleStr += fileInput[i].originalFileName + ','
-  //   }
-  //   for (var s = 0; s < answerList.value.length; s++) {
-  //     if (
-  //       answerList.value[s].type === '通用模式' &&
-  //       answerList.value[s].data[0].content &&
-  //       queryValue + titleStr.substring(0, titleStr.length - 1) ===
-  //         answerList.value[s].data[0].content +
-  //           (answerList.value[s].data[0].files
-  //             ? answerList.value[s].data[0].files.map(item => item.originalFileName).join(',')
-  //             : '')
-  //     ) {
-  //       activeIndex.value = s
-  //       asizeRef.value.queryAn(queryValue + '(sample)', '')
-  //       isSampleLoad.value = false
-  //       return
-  //     }
-  //   }
-  // }
-  // if (questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
-  //   const qData =
-  //     queryValue +
-  //     (answerList.value[activeIndex.value].data[0].files
-  //       ? answerList.value[activeIndex.value].data[0].files.map(item => item.originalFileName).join(',')
-  //       : '') +
-  //     '(sample)'
-  //   const index = questions.value.findIndex(item => item === qData)
-  //   const idx = answerList.value.findIndex(item => item.title === qData)
-  //   const targetId = answerList.value.find(item => item.title === qData)?.id
-  //   if (index !== -1) {
-  //     questions.value.splice(index, 1)
-  //   }
-  //   if (idx !== -1) {
-  //     answerList.value.splice(index, 1)
-  //   }
-  //   await asizeRef.value.deleteData(targetId, isRefresh)
-  // }
 
   const anList = JSON.parse(JSON.stringify(answerList.value))
   const hasId = anList.some(item => item.id === currentId.value)
