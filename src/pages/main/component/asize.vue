@@ -18,7 +18,7 @@
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
       </div>
-      <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
+      <!-- <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
         <div class="aside_img" :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }">
           <img
             :src="selectType === 3 ? IntelligenceBlue : IntelligenceGray"
@@ -26,7 +26,7 @@
           />
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 3 ? '#1B6CFF' : '#9D9D9D' }">智能体</div>
-      </div>
+      </div> -->
 
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
