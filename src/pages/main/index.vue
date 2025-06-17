@@ -1295,6 +1295,7 @@ const submitSample = async (val, isRefresh) => {
   dynamicRows.value = 1
   isSampleLoad.value = true
   limitLoading.value = true
+  console.log(chatQuery.messages)
   if (chatQuery.messages.length === 1 && chatQuery.messages[0].files) {
     chatQuery.messages = []
   }
@@ -1302,6 +1303,8 @@ const submitSample = async (val, isRefresh) => {
   if (fileInput && fileInput.length > 0) {
     for (var me = 0; me < fileInput.length; me++) {
       filesSample.push(fileInput[me].fileId)
+      fileInput[me].local = fileInput[me].fileId.local
+      fileInput[me].fileId = fileInput[me].fileId.fileId
     }
   }
 
@@ -1318,6 +1321,7 @@ const submitSample = async (val, isRefresh) => {
   }
   mes = JSON.parse(JSON.stringify(chatQuery))
   mes.messages.push(currentData)
+  console.log(mes)
   limitSample.value = JSON.parse(JSON.stringify(mes))
   const params = JSON.parse(JSON.stringify(mes))
   for (var j = 0; j < params.messages.length; j++) {

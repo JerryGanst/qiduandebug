@@ -326,8 +326,22 @@ const startUpload = async file => {
             if (res.data.status) {
               file[i].status = STATUS.SUCCESS
               file[i].progress = 100
-              ary.push(res.data?.data[0])
+              const obj = {
+                fileId: {
+                  fileId: res.data?.data[0].fileId,
+                  local: true
+                },
+                fileName: res.data?.data[0].fileName,
+                filePath: res.data?.data[0].filePath,
+                fileType: res.data?.data[0].fileType,
+                originalFileName: res.data?.data[0].originalFileName,
+                uploadTime: res.data?.data[0].uploadTime
+              }
+
+              ary.push(obj)
+
               if (i === fileQueue.value.length - 1) {
+                console.log(ary)
                 eventBus.emit('submit-sampleFile', ary)
                 dialogVisible.value = false
               }
@@ -371,8 +385,20 @@ const startUpload = async file => {
           if (res.data.status) {
             file.status = STATUS.SUCCESS
             file.progress = 100
+            const obj = {
+              fileId: {
+                fileId: res.data?.data[0].fileId,
+                local: true
+              },
+              fileName: res.data?.data[0].fileName,
+              filePath: res.data?.data[0].filePath,
+              fileType: res.data?.data[0].fileType,
+              originalFileName: res.data?.data[0].originalFileName,
+              uploadTime: res.data?.data[0].uploadTime
+            }
+
             fileObj.value = res.data?.data[0]
-            emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', res.data?.data[0])
+            emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', obj)
           } else {
             ElMessage.error(res.data.message)
             file.status = STATUS.ERROR

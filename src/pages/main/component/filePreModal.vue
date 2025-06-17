@@ -9,90 +9,6 @@ handlePreview
   >
     <!-- <div class="file_loading" v-if="isLoading">加载中...</div> -->
     <div class="upload-layout">
-      <!-- 左侧附件列表 -->
-      <!-- <div class="file-list">
-        <div class="upload_list">
-          <el-upload
-            drag
-            :auto-upload="false"
-            :multiple="type === 'sample' ? true : false"
-            :accept="allowedFileTypes"
-            :on-change="handleFileAdd"
-            :show-file-list="false"
-            :file-list="fileQueue"
-            :before-upload="checkFileSize"
-            :limit="5"
-          >
-            <i class="el-icon-upload" />
-            <div class="el-upload__text">
-              拖拽附件到此或
-              <em>点击上传</em>
-              <div class="el-upload__subtext">
-                <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
-              </div>
-              <div class="el-upload__subtext" v-if="type === 'sample'">
-                <span style="color: #868686">一次性最多上传五个附件,单个大小不超过50M</span>
-              </div>
-              <div class="el-upload__subtext" v-else>
-                <span style="color: #868686">大小不超过50M</span>
-              </div>
-            </div>
-          </el-upload>
-        </div>
-
-        <div class="file_item" :style="{ marginTop: type === 'sample' ? '115px' : '115px' }">
-          <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
-            <div class="file_img">
-              <img :src="file.extension === 'txt' ? text : file.extension === 'pdf' ? pdf : word" />
-            </div>
-            <div class="file-info">
-              <span class="filename">{{ file.name }}</span>
-              <div class="file-actions">
-                <span
-                  @click.stop="handleDelete(index)"
-                  style="width: 20px; height: 20px; cursor: pointer"
-                  :style="{ marginRight: file.status === 'pending' ? '0px' : '10px' }"
-                >
-                  <img src="@/assets/deleteFile.svg" style="width: 100%; height: 100%" />
-                </span>
-                <span
-                  v-if="file.status === 'uploading'"
-                  @click.stop="pauseUpload(file)"
-                  style="width: 20px; height: 20px; cursor: pointer"
-                >
-                  <img src="@/assets/continue.svg" style="width: 100%; height: 100%" />
-                </span>
-                <span
-                  v-else-if="file.status === 'paused'"
-                  @click.stop="resumeUpload(file)"
-                  style="width: 20px; height: 20px; cursor: pointer"
-                >
-                  <img src="@/assets/pause.svg" style="width: 100%; height: 100%" />
-                </span>
-                <span
-                  v-else-if="file.status === 'error'"
-                  @click.stop="retryUpload(file)"
-                  style="width: 20px; height: 20px; cursor: pointer"
-                >
-                  <img src="@/assets/refreshFile.svg" style="width: 100%; height: 100%" />
-                </span>
-                <span v-else-if="file.status === 'success'" style="width: 20px; height: 20px">
-                  <img src="@/assets/doneFile.svg" style="width: 100%; height: 100%" />
-                </span>
-              </div>
-            </div>
-            <div style="font-size: 12px; color: #bebebe; margin-top: 2px; margin-bottom: 4px">
-              {{ file.size ? (file.size / 1024).toFixed(1) : 0 }}KB
-            </div>
-            <el-progress
-              :percentage="file.progress"
-              :color="customProgressColor(file)"
-              :status="getStatusType(file.status)"
-            />
-          </div>
-        </div>
-      </div> -->
-
       <!-- 右侧上传区域 -->
       <div class="upload-area">
         <div class="file_info">
@@ -266,7 +182,7 @@ const downloads = url => {
   }
 }
 const downloadFile = async val => {
-  const id = fileObj.value.fileId
+  const id = fileObj.value.fileId.fileId ? fileObj.value.fileId.fileId : fileObj.value.fileId
 
   request
     .post(`/Files/getDownloadUrlFromTemp?fileId=${id}`)
@@ -666,10 +582,22 @@ const getTextAfterLastDot = str => {
 }
 const getFileAry = () => {
   fileQueue.value = []
+  console.log(fileAry.value)
   for (var i = 0; i < fileAry.value.length; i++) {
     const name = fileAry.value[i].originalFileName
-    fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById?id=' + fileAry.value[i].fileId, {
-      method: 'POST'
+    if (typeof fileAry.value[i].local === 'undefined') {
+      fileAry.value[i].local = true
+    }
+    const obj = {
+      fileId: fileAry.value[i].fileId,
+      local: fileAry.value[i].local
+    }
+    fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(obj)
     })
       .then(response => {
         // 从 Content-Disposition 中解析附件名
@@ -729,9 +657,22 @@ const getSampleFile = id => {
     })
 }
 const getFile = () => {
+  console.log(fileObj.value)
+  if (typeof fileObj.value.local === 'undefined') {
+    fileObj.value.local = true
+  }
+  const obj = {
+    fileId: fileObj.value.fileId.fileId ? fileObj.value.fileId.fileId : fileObj.value.fileId,
+    local: fileObj.value.fileId.local === false ? fileObj.value.fileId.local : fileObj.value.local
+  }
+  console.log(obj)
   // 使用 POST 请求（与后端 @PostMapping 匹配）
-  fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById?id=' + fileObj.value.fileId, {
-    method: 'POST'
+  fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(obj)
   })
     .then(response => {
       // 从 Content-Disposition 中解析附件名
@@ -740,7 +681,7 @@ const getFile = () => {
       if (disposition && disposition.indexOf('filename=') !== -1) {
         filename = disposition.split('filename=')[1].replace(/"/g, '')
       }
-
+      console.log(filename)
       // 获取二进制数据
       return response.blob().then(blob => ({ blob, filename }))
     })
