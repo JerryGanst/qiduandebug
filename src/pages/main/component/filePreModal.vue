@@ -657,7 +657,7 @@ const getSampleFile = id => {
     })
 }
 const getFile = () => {
-  console.log(fileObj.value)
+  previewContent.value = null
   if (typeof fileObj.value.local === 'undefined') {
     fileObj.value.local = true
   }
