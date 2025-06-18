@@ -18,7 +18,7 @@
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
       </div>
-      <!-- <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
+      <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
         <div class="aside_img" :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }">
           <img
             :src="selectType === 3 ? IntelligenceBlue : IntelligenceGray"
@@ -26,7 +26,7 @@
           />
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 3 ? '#1B6CFF' : '#9D9D9D' }">智能体</div>
-      </div> -->
+      </div>
 
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
@@ -200,7 +200,7 @@
             </template>
           </el-input>
         </div>
-        <el-menu :default-active="activeIndexIntel" class="el_menu">
+        <el-menu :default-active="activeIndexIntel" class="el_menu" style="margin-top: 10px;">
           <el-menu-item
             v-for="(question, index) in intelList"
             :key="index"
@@ -270,7 +270,7 @@
             </el-popover>
           </el-menu-item>
         </el-menu>
-        <div class="create_intel">创建智能体</div>
+        <div class="create_intel" @click="createIntel" v-if="!isCreate">创建智能体</div>
       </div>
     </div>
   </el-aside>
@@ -518,6 +518,10 @@ const togglePopover = index => {
 const togglePopoverIntel = index => {
   popoverVisibleIntel[index] = !popoverVisibleIntel[index]
 }
+const createIntel = () => {
+  isCreate.value = true
+  // 这里可以添加额外的搜索逻辑
+}
 //获取用户信息接口
 const getUserInfo = async id => {
   request
@@ -615,7 +619,26 @@ const submitTitle = val => {
   changeTitle(answerList.value[titleIndex.value].id, params)
 }
 
-const changeTitleIntel = async (id, val) => {}
+const changeTitleIntel = async (id, val) => {
+  request
+    .post('/Message/changeTitle?id=' + id + '&title=' + val.replace(/\([^)]*\)/g, ''))
+    .then(res => {
+      if (res.status) {
+        titleQuestion.value = ''
+        titleIndex.value = ''
+        ElMessage.success('修改对话标题成功')
+        emit('change-history')
+      } else {
+        titleQuestion.value = ''
+        titleIndex.value = ''
+      }
+    })
+    .catch(err => {
+      titleQuestion.value = ''
+      titleIndex.value = ''
+      console.error(err)
+    })
+}
 const changeTitle = async (id, val) => {
   request
     .post('/Message/changeTitle?id=' + id + '&title=' + val.replace(/\([^)]*\)/g, ''))
@@ -623,11 +646,6 @@ const changeTitle = async (id, val) => {
       if (res.status) {
         titleQuestion.value = ''
         titleIndex.value = ''
-        // for (var i = 0; i < answerList.value.length; i++) {
-        //   if (id === answerList.value[i].id) {
-        //     answerList.value[i].title = val.replace(/\([^)]*\)/g, '')
-        //   }
-        // }
         ElMessage.success('修改对话标题成功')
         emit('change-history')
       } else {
@@ -786,7 +804,21 @@ const handleConfirmDelete = (val, index) => {
   }
   deleteData(id)
 }
-const deleteDataIntel = async (id, isRefresh) => {}
+const deleteDataIntel = async (id, isRefresh) => {
+
+  request
+    .post('/Agent/deleteAgentById?id=' + id, {})
+    .then(res => {
+      if (res.status) {
+        if (!isRefresh) {
+
+        }
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
 // 删除数据
 const deleteData = async (id, isRefresh) => {
   // GET 请求
@@ -931,11 +963,6 @@ const queryAn = (val, index, data) => {
         transQuest.value = anList[idx].data.files ? anList[idx].data.files.originalFileName : anList[idx].data.question
         selectedLan.value = anList[idx].data.target
         currentId.value = anList[idx].id
-
-        // transData.value = anList[j].data.answer
-        // transQuest.value = anList[j].data.files ? anList[j].data.files.originalFileName : anList[j].data.question
-        // selectedLan.value = anList[j].data.target
-        // currentId.value = anList[j].id
       }
     } else if (anList[j].type === '总结') {
       queryFinal.push(anList[j].title)
@@ -993,11 +1020,6 @@ const queryAn = (val, index, data) => {
         if (anList.length === queryList.length) {
           finalQuest.value = anList[i].data.question
         }
-        //  else {
-        //   const data = getMatchingIndexes(limitAry.value, queryList[i])
-
-        //   finalQuest.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
-        // }
       }
     }
   }

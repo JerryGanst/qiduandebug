@@ -18,11 +18,11 @@ export default defineConfig({
     host: '0.0.0.0', // 监听所有网络接口
     proxy: {
       // 代理所有以 `/api` 开头的请求
-      '/Files': {
-        target: 'https://10.180.8.215:8443', // 目标服务器地址
+      '/api': {
+        target: 'https://ai-test.luxshare-tech.com', // 目标服务器地址
         changeOrigin: true, // 允许跨域
         secure: false, // 禁用 HTTPS 校验
-        rewrite: path => path.replace(/^\/Files/, '') // 重写路径，去掉 `/api` 前缀
+        rewrite: path => path.replace(/^\/api/, '') // 重写路径，去掉 `/api` 前缀
       }
     }
   }
