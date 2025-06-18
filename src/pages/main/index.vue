@@ -1064,40 +1064,45 @@ const refreshData = () => {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
+  const anList = answerList.value
+  // console.log(answerList.value)
+  console.log(anList)
   if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
     queryIng.value = false
     submitQuestion(tipQuery.value, true)
   } else if (pageType.value === 'tran') {
     let obj = ''
     if (activeIndex.value || activeIndex.value == 0) {
-      const idx = answerList.value.findIndex(item => item.data.question === transQuest.value)
-      obj = answerList.value[idx]?.data?.files
+      const idx = anList.findIndex(item => item.data.question === transQuest.value)
+      obj = anList[idx]?.data?.files
     }
     const val = transQuest.value
     submitTran(val, true, obj)
   } else if (pageType.value === 'final') {
     let obj = ''
     if (activeIndex.value || activeIndex.value == 0) {
-      const idx = answerList.value.findIndex(item => item.data.question === finalQuest.value)
-      obj = answerList.value[idx]?.data?.files
+      const idx = anList.findIndex(item => item.data.question === finalQuest.value)
+      obj = anList[idx]?.data?.files
     }
     const val = finalQuest.value
     submitFinal(finalQuest.value, true, obj)
   } else if (pageType.value === 'sample') {
     let ary = []
     if (activeIndex.value || activeIndex.value == 0) {
-      const length = answerList.value[activeIndex.value].data.length
+      const length = anList[activeIndex.value].data.length
       if (length === 1) {
-        ary = answerList.value[activeIndex.value].data[0].files
+        ary = anList[activeIndex.value].data[0].files
       } else if (length > 1) {
-        if (answerList.value[activeIndex.value].data[length - 1].role === 'user') {
-          ary = answerList.value[activeIndex.value].data[length - 1].files
+        if (anList[activeIndex.value].data[length - 1].role === 'user') {
+          ary = anList[activeIndex.value].data[length - 1].files
+          console.log(anList)
         } else {
-          ary = answerList.value[activeIndex.value].data[length - 2].files
+          ary = anList[activeIndex.value].data[length - 2].files
         }
       }
     }
-    fileInputAry.value = ary
+    fileInputAry.value =  ary
+    console.log(fileInputAry.value)
     submitSample(chatQuery.messages[chatQuery.messages.length - 2].content, true)
   }
 }
@@ -1278,7 +1283,14 @@ const quickJSONCheck = str => {
   str = str.trim()
   return (str.startsWith('{') && str.endsWith('}')) || (str.startsWith('[') && str.endsWith(']'))
 }
-
+const isPureObject = value => {
+  // 排除 null 和基础类型
+  if (typeof value !== 'object' || value === null) return false;
+  
+  // 排除数组、日期、正则等
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
 const submitSample = async (val, isRefresh) => {
   const fileInput = fileInputAry.value
   if (fileInput.length === 0 || !fileInput) {
@@ -1295,19 +1307,27 @@ const submitSample = async (val, isRefresh) => {
   dynamicRows.value = 1
   isSampleLoad.value = true
   limitLoading.value = true
-  console.log(chatQuery.messages)
   if (chatQuery.messages.length === 1 && chatQuery.messages[0].files) {
     chatQuery.messages = []
   }
   let filesSample = []
   if (fileInput && fileInput.length > 0) {
     for (var me = 0; me < fileInput.length; me++) {
-      filesSample.push(fileInput[me].fileId)
-      fileInput[me].local = fileInput[me].fileId.local
-      fileInput[me].fileId = fileInput[me].fileId.fileId
+      if(isPureObject(fileInput[me].fileId)){
+        filesSample.push(fileInput[me].fileId)
+      }else{
+        const objSample = {
+          fileId:fileInput[me].fileId,
+          local:fileInput[me].local
+        }
+        filesSample.push(objSample)
+      }
+      
+      fileInput[me].local = fileInput[me].fileId.local===false?fileInput[me].fileId.local:fileInput[me].local
+      fileInput[me].fileId = fileInput[me].fileId.fileId?fileInput[me].fileId.fileId:fileInput[me].fileId
     }
   }
-
+  console.log(filesSample)
   const currentData = {
     role: 'user',
     content: queryValue ? queryValue : '',
@@ -2108,6 +2128,7 @@ const getHistory = async (id, page, val, ids) => {
       if (res.status) {
         // getMessageTitle()
         answerList.value = res.data
+        console.log(answerList.value)
         questions.value = []
         const limitData = JSON.parse(JSON.stringify(queryTypes.value))
         if (res.data && res.data.length > 0) {
@@ -2235,6 +2256,7 @@ const getHistory = async (id, page, val, ids) => {
     .catch(err => {
       console.error('获取回复失败:', err)
     })
+    console.log(answerList.value)
 }
 
 // 终止请求方法

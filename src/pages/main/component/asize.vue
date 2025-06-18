@@ -1034,6 +1034,7 @@ const queryAn = (val, index, data) => {
   if (pageType.value === 'final' && (queryFinal.includes(val) || queryFinalQs.includes(val))) {
     docIng.value = false
   }
+  console.log(answerList.value)
 }
 
 const powerList = ref([
