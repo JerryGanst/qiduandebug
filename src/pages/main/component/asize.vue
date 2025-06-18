@@ -18,7 +18,7 @@
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
       </div>
-      <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
+      <!-- <div class="aside_left_file" @click="changeContent(3)" style="top: 225px" >
         <div class="aside_img" :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }">
           <img
             :src="selectType === 3 ? IntelligenceBlue : IntelligenceGray"
@@ -26,7 +26,7 @@
           />
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 3 ? '#1B6CFF' : '#9D9D9D' }">智能体</div>
-      </div>
+      </div> -->
 
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
@@ -452,7 +452,7 @@ const {
   contentType,
   knowSelect,
   intelList,
-  isCreate
+  isNet
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -466,7 +466,7 @@ const titleVisibleIntel = ref(false)
 const selectType = ref(1)
 // 当前url的路由信息(由luxshare传来的参数)
 const queryParams = route.query
-const emit = defineEmits(['change-history', 'set-isLaw', 'set-message', 'set-FileModel'])
+const emit = defineEmits(['change-history', 'set-isLaw', 'set-message', 'set-FileModel','setNet'])
 // 实时搜索结果
 const searchResults = computed(() => {
   if (!searchText.value) return []
@@ -621,21 +621,18 @@ const submitTitle = val => {
 
 const changeTitleIntel = async (id, val) => {
   request
-    .post('/Message/changeTitle?id=' + id + '&title=' + val.replace(/\([^)]*\)/g, ''))
+    .post('/Message/changeTitle?id=' + id + '&title=' + val)
     .then(res => {
       if (res.status) {
-        titleQuestion.value = ''
-        titleIndex.value = ''
-        ElMessage.success('修改对话标题成功')
-        emit('change-history')
+
+        ElMessage.success('修改智能体标题成功')
+
       } else {
-        titleQuestion.value = ''
-        titleIndex.value = ''
+
       }
     })
     .catch(err => {
-      titleQuestion.value = ''
-      titleIndex.value = ''
+
       console.error(err)
     })
 }
@@ -807,11 +804,11 @@ const handleConfirmDelete = (val, index) => {
 const deleteDataIntel = async (id, isRefresh) => {
 
   request
-    .post('/Agent/deleteAgentById?id=' + id, {})
+    .post('/Agent/deleteAgentById?agentId=' + id, {})
     .then(res => {
       if (res.status) {
         if (!isRefresh) {
-
+          eventBus.emit('getHistory')
         }
       }
     })
@@ -1076,6 +1073,22 @@ const powerList = ref([
   '13829448'
 ])
 const powerArr = ref([])
+
+const getUserPower = () => {
+  request
+    .get('/UserInfo/getUserIP')
+    .then(res => {
+      if (res.status) {
+        localStorage.setItem('isNet',false)
+        isNet.value = false
+        emit('setNet')
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+  
+}
 const getPower = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
@@ -1112,6 +1125,7 @@ onMounted(() => {
       localStorage.setItem('isLaw', false)
     }
     getPower()
+    // getUserPower()
     userInfo.value.name = loginData.name
     userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
     emit('change-history')

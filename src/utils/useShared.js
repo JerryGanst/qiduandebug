@@ -9,6 +9,7 @@ const questions = ref([]) // 左侧历史记录标题数组
 const intelList = ref([])
 const answerList = ref([]) //历史记录数组
 const answerListIntel = ref([])
+
 const isCreate = ref(false)
 const contentType = ref(1)
 const currentId = ref('') // 左侧历史记录当前选中的id
@@ -45,6 +46,7 @@ const chatCurrent = reactive({
 const isLogin = ref(false) // 判断是否登录
 const dynamicRows = ref(1) // 问答文本域的动态行数（高度）
 const isSampleLoad = ref(false) // 判断是否正在问答状态
+const isNet = ref(false)
 const dragUploads = ref(null)
 const finalData = ref({
   title: '',
@@ -336,7 +338,10 @@ export function useShared() {
   const updateIsCreate = newName => {
     isCreate.value = newName
   }
-
+  const updateIsNet = newName => {
+    isNet.value = newName
+  }
+  
   watch(
     newQuestion,
     newVal => {
@@ -349,6 +354,7 @@ export function useShared() {
   return {
     currentQuestion,
     newQuestion,
+    isNet,
     isCreate,
     isSampleStop,
     isQueryStop,
@@ -449,6 +455,7 @@ export function useShared() {
     updateIntelList,
     updateActiveIndexIntel,
     updateIsCreate,
-    updateContentType
+    updateContentType,
+    updateIsNet
   }
 }

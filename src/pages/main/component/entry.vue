@@ -288,7 +288,7 @@
     >
       <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
         <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
-        <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
+        <el-radio-button label="人资行政专题" value="人资行政专题" >人资行政专题</el-radio-button>
         <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
         <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button>
       </el-radio-group>
@@ -553,6 +553,7 @@ const {
   showModelTip,
   fileInputAry,
   isLaw,
+  isNet,
   isLogin,
   dragUploads,
   isDragOver
@@ -818,7 +819,10 @@ const setDrag = val => {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   nextTick(() => {
-    isLaw.value = localStorage.getItem('isLaw')
+    const isLawValue = localStorage.getItem('isLaw')
+    const isNetValue = localStorage.getItem('isNet')
+    isLaw.value = isLawValue === 'true'
+    isNet.value = isNetValue === 'true'
   })
 })
 

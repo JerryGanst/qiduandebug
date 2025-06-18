@@ -21,10 +21,10 @@
       </div>
       <div class="create_name" style="margin-top: 20px;">
         <div class="create_text">
-          <span style="padding-left: 5px">智能体角色</span>
+          <span style="padding-left: 5px">智能体应该如何称呼您</span>
         </div>
         <div class="create_input">
-          <el-input placeholder="输入你的智能体角色" style="width: 100%" v-model="formIntel.nickName" maxlength="15">
+          <el-input placeholder="输入你的称呼" style="width: 100%" v-model="formIntel.nickName" maxlength="15">
             <template #suffix>
               <span class="char-counter">{{ formIntel.nickName.length }}/15</span>
             </template>
@@ -77,11 +77,12 @@
 
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref,onMounted,onUnmounted } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import request from '@/utils/request' // 导入封装的 axios 方法
-const { intelList,isCreate } = useShared()
+import eventBus from '@/utils/eventBus'
+const { intelList,isCreate,answerListIntel } = useShared()
 const formIntel = ref({
   name: '',
   description: '',
@@ -114,29 +115,51 @@ const createData = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   intelList.value.push(formIntel.value.name)
 
-  // request
-  //   .post('/Agent/saveAgent ', {
-  //     id:'',
-  //     userId:userInfo.id,
-  //     persona:{
-  //       name:formIntel.value.name,
-  //       role:formIntel.value.nickName,
-  //       description:formIntel.value.description,
-  //       goals:'',
-  //       tone:formIntel.value.tone,
-  //       behavior_guidelines:'',
-  //       example_queries:''
-  //     }
-  //   })
-  //   .then(res => {
+  request
+    .post('/Agent/saveAgent ', {
+      id:'',
+      userId:userInfo.id,
+      persona:{
+        name:formIntel.value.name,
+        role:formIntel.value.nickName,
+        description:formIntel.value.description,
+        tone:formIntel.value.tone,
+      }
+    })
+    .then(res => {
 
-  //   })
-  //   .catch(err => {
-  //     console.error(err)
-  //   })
+    })
+    .catch(err => {
+      console.error(err)
+    })
 }
+const getHistory = async () => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  request
+    .post('/Agent/findAgentByUserId?userId=' + userInfo.id)
+    .then(res => {
+      if (res.status) {
+        answerListIntel.value =res.data
+        intelList.value = []
+        for(var i=0;i<res.data.length;i++){
+          intelList.value.push(res.data[i].persona.name)
+        }
+      }
+    })
+    .catch(err => {
+      console.error('获取回复失败:', err)
+    })
 
-
+}
+// 组件挂载时订阅事件
+onMounted(() => {
+  eventBus.on('getHistory',getHistory)
+  getHistory()
+})
+// 组件卸载时关闭 SSE 连接
+onUnmounted(() => {
+  eventBus.off('getHistory',getHistory)
+})
 </script>
 <style lang="less" scoped>
 .empty {

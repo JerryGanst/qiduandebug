@@ -6,6 +6,7 @@
       @set-isLaw="setlaw"
       @set-message="setMessage"
       @set-FileModel="setFileModel"
+      @set-Net="setNet"
       ref="asizeRef"
     ></AsizeComponent>
 
@@ -282,9 +283,9 @@
               >
                 <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
                   <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
-                  <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
-                  <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
-                  <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button>
+                  <el-radio-button label="人资行政专题" value="人资行政专题" >人资行政专题</el-radio-button>
+                  <el-radio-button label="IT专题" value="IT专题" >IT专题</el-radio-button>
+                  <el-radio-button label="法务专题" value="法务专题" v-if="isLaw" >法务专题</el-radio-button>
                 </el-radio-group>
               </div>
               <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
@@ -569,7 +570,8 @@ const {
   isLaw,
   contentType,
   dragUploads,
-  isDragOver
+  isDragOver,
+  isNet
 } = useShared()
 
 const queryIng = ref(false)
@@ -623,6 +625,15 @@ const fileModal = ref(1)
 const setFileModel = val => {
   fileModal.value = val
 }
+
+const setNet = () => {
+  nextTick(() => {
+    const isNetValue = localStorage.getItem('isNet')
+    isNet.value = isNetValue === 'true'
+    console.log(isNet.value)
+  })
+}
+
 const showListFile = val => {
   fileAry.value = []
   console.log(val)
@@ -852,6 +863,9 @@ const submitFinal = async (val, isRefresh, ob) => {
   let title = ''
   if (isRefresh) {
     let current = currentId.value
+    if(!current){
+      current = answerList.value[activeIndex.value].id
+    }
     const idx = answerList.value.findIndex(item => item.id === current)
     title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
     let limitTitle = ''
@@ -1467,6 +1481,7 @@ const submitTran = async (val, isRefresh, obj) => {
   if (!obj && !checkData(val)) {
     return
   }
+  console.log(answerList.value)
   isDragOver.value = false
   finalIng.value = true
   docIng.value = true
@@ -1478,22 +1493,16 @@ const submitTran = async (val, isRefresh, obj) => {
   transQuest.value = ''
   transData.value = ''
   let title = ''
-  // if (!isRefresh && obj) {
-  //   const qData = obj.originalFileName + '(tran)'
-  //   const index = questions.value.findIndex(item => item === qData)
-  //   // const idx = answerList.value.findIndex(item => item.title === qData)
-  //   const targetId = answerList.value.find(item => item.title === qData)?.id
-  //   if (index !== -1) {
-  //     questions.value.splice(index, 1)
-  //   }
-  //   if (targetId) {
-  //     asizeRef.value.deleteData(targetId, true)
-  //   }
-  //   questions.value.unshift(qData)
-  // }
   if (isRefresh) {
     let current = currentId.value
+    if(!current){
+      current = answerList.value[activeIndex.value].id
+      console.log(activeIndex.value)
+    }
+    console.log(currentId.value)
     const idx = answerList.value.findIndex(item => item.id === current)
+    console.log(idx)
+    console.log(answerList.value[idx])
     title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
     let limitTitle = ''
     limitTitle = questions.value[idx]
@@ -1502,100 +1511,8 @@ const submitTran = async (val, isRefresh, obj) => {
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
     questions.value.unshift(limitTitle)
-    // for (var m = 0; m < answerList.value.length; m++) {
-    //   if (answerList.value[m].type === '翻译' && limitQuery.value === answerList.value[m].data.question) {
-    //     const id = answerList.value[m].id
-    //     title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
-    //     const index = questions.value.findIndex(item => item === title + '(tran)')
-    //     let limitTitle = ''
-    //     if (index !== -1) {
-    //       limitTitle = questions.value[index]
-    //       questions.value.splice(index, 1)
-    //     }
-    //     const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
-    //     if (idx !== -1) {
-    //       answerList.value.splice(index, 1)
-    //     }
 
-    //     await asizeRef.value.deleteData(id, true)
-    //     console.log(id)
-    //     activeIndex.value = 0
-    //     const limit = limitTitle
-    //       ? limitTitle.length > 15
-    //         ? limitQuery.value.substring(0, 15) + '(tran)'
-    //         : limitTitle + '(tran)'
-    //       : limitQuery.value.length > 15
-    //         ? limitQuery.value.substring(0, 15) + '(tran)'
-    //         : limitQuery.value + '(tran)'
-    //     questions.value.unshift(limit)
-    //   }
-    // }
   }
-  // if (isRefresh && obj) {
-  //   for (var m = 0; m < answerList.value.length; m++) {
-  //     if (
-  //       answerList.value[m].type === '翻译' &&
-  //       answerList.value[m].data.files &&
-  //       obj.originalFileName === answerList.value[m].data.files.originalFileName
-  //     ) {
-  //       const id = answerList.value[m].id
-  //       title = answerList.value[m].title
-  //       const index = questions.value.findIndex(item => item === title)
-  //       let limitObj = {}
-  //       if (index !== -1) {
-  //         questions.value.splice(index, 1)
-  //       }
-  //       const idx = answerList.value.findIndex(
-  //         item => item.data.files && item.data.files.originalFileName === obj.originalFileName
-  //       )
-  //       if (idx !== -1) {
-  //         limitObj = answerList.value[idx]
-  //         answerList.value.splice(idx, 1)
-  //       }
-  //       await asizeRef.value.deleteData(id, true)
-  //       activeIndex.value = 0
-  //       questions.value.unshift(title)
-  //       answerList.value.unshift(limitObj)
-  //     }
-  //   }
-  // }
-  // if (questions.value.includes(limitQuery.value + '(tran)') && !isRefresh && !obj) {
-  //   const qData = limitQuery.value + '(tran)'
-  //   for (var ms = 0; ms < questions.value.length; ms++) {
-  //     if (qData === questions.value[ms]) {
-  //       activeIndex.value = ms
-  //     }
-  //   }
-  //   if (selectedLan.value === answerList.value[activeIndex.value].data.target) {
-  //     asizeRef.value.queryAn(qData, '')
-  //     finalIng.value = false
-  //     docIng.value = false
-  //     return
-  //   } else {
-  //     const idx = answerList.value.findIndex(item => item.title === qData)
-  //     const targetId = answerList.value.find(item => item.title === qData)?.id
-  //     await asizeRef.value.deleteData(targetId, true)
-  //   }
-  // }
-  // if (questions.value.includes(limitQuery.value + '(tran)') && isRefresh && !obj) {
-  //   const qData = limitQuery.value + '(tran)'
-  //   const index = questions.value.findIndex(item => item === qData)
-  //   const idx = answerList.value.findIndex(item => item.title === qData)
-  //   const targetId = answerList.value.find(item => item.title === qData)?.id
-  //   if (index !== -1) {
-  //     questions.value.splice(index, 1)
-  //   }
-  //   if (idx !== -1) {
-  //     answerList.value.splice(index, 1)
-  //   }
-  //   await asizeRef.value.deleteData(targetId, isRefresh)
-  // }
-  // console.log(!questions.value.includes(limitQuery.value + '(tran)'))
-  // if (!questions.value.includes(limitQuery.value + '(tran)') && !title && !obj) {
-  //   const qData = '新对话' + '(tran)'
-  //   questions.value.unshift(qData)
-  //   console.log(questions.value)
-  // }
   if (!isRefresh) {
     const qData = '新对话' + '(tran)'
     questions.value.unshift(qData)
@@ -1727,77 +1644,7 @@ const submitQuestion = async (val, isRefresh) => {
     questions.value.unshift(title + addTitle)
     answerList.value.unshift(limitObj)
   }
-  // if (!questions.value.includes(queryValue + addTitle) && isRefresh) {
-  //   for (var m = 0; m < answerList.value.length; m++) {
-  //     if (
-  //       (answerList.value[m].type === '人资行政专题' ||
-  //         answerList.value[m].type === 'IT专题' ||
-  //         answerList.value[m].type === '法务专题') &&
-  //       queryValue === answerList.value[m].data.question
-  //     ) {
-  //       const id = answerList.value[m].id
-  //       title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
-  //       const index = questions.value.findIndex(item => item === title + addTitle)
-  //       if (index !== -1) {
-  //         questions.value.splice(index, 1)
-  //       }
-  //       activeIndex.value = 0
-  //       await asizeRef.value.deleteData(id, true)
-  //       questions.value.unshift(title + addTitle)
-  //     }
-  //   }
-  // }
-  // if (questions.value.includes(queryValue + addTitle) && !isRefresh) {
-  //   queryIng.value = false
-  //   const qData = queryValue + addTitle
-  //   for (var i = 0; i < questions.value.length; i++) {
-  //     if (qData === questions.value[i]) {
-  //       activeIndex.value = i
-  //     }
-  //   }
-  //   asizeRef.value.queryAn(qData, '')
-  //   isSampleLoad.value = false
-  //   return
-  // }
-  // if (!isRefresh) {
-  //   for (var s = 0; s < answerList.value.length; s++) {
-  //     if (answerList.value[s].type === '人资行政专题' && queryValue === answerList.value[s].data.question) {
-  //       activeIndex.value = s
-  //       asizeRef.value.queryAn(queryValue + '(query)', '')
-  //       queryIng.value = false
-  //       isSampleLoad.value = false
-  //       return
-  //     }
-  //     if (answerList.value[s].type === 'IT专题' && queryValue === answerList.value[s].data.question) {
-  //       activeIndex.value = s
-  //       asizeRef.value.queryAn(queryValue + '(it)', '')
-  //       queryIng.value = false
-  //       isSampleLoad.value = false
-  //       return
-  //     }
-  //     if (answerList.value[s].type === '法务专题' && queryValue === answerList.value[s].data.question) {
-  //       activeIndex.value = s
-  //       asizeRef.value.queryAn(queryValue + '(law)', '')
-  //       queryIng.value = false
-  //       isSampleLoad.value = false
-  //       return
-  //     }
-  //   }
-  // }
-  // if (questions.value.includes(queryValue + addTitle) && isRefresh) {
-  //   const qData = queryValue + addTitle
-  //   const index = questions.value.findIndex(item => item === qData)
-  //   const idx = answerList.value.findIndex(item => item.title === qData)
-  //   const targetId = answerList.value.find(item => item.title === qData)?.id
-  //   if (index !== -1) {
-  //     questions.value.splice(index, 1)
-  //   }
-  //   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
-  //   if (idx !== -1) {
-  //     answerList.value.splice(index, 1)
-  //   }
-  //   await asizeRef.value.deleteData(targetId, isRefresh)
-  // }
+
   if (!questions.value.includes(queryValue) && !title) {
     questions.value.unshift('新对话' + addTitle)
     const data = {
@@ -2295,6 +2142,7 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   nextTick(() => {
     isLaw.value = localStorage.getItem('isLaw')
+    isNet.value = localStorage.getItem('isNet')
   })
 })
 // 组件卸载时关闭 SSE 连接
