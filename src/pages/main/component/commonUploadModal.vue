@@ -652,54 +652,6 @@ const postData = async () => {
     ElMessage.warning('请先上传附件再提交')
     return
   }
-  // const CancelToken = axios.CancelToken
-  // const source = CancelToken.source()
-  // let ary = []
-  // for (var i = 0; i < selectList.value.length; i++) {
-  //   // 清除旧预览状态
-  //   previewFileId.value = null
-  //   previewContent.value = null
-  //   previewType.value = ''
-  //   try {
-  //     previewFileId.value = selectList.value[i].uid
-  //     const formData = new FormData()
-  //     formData.append('files', selectList.value[i].raw)
-  //     formData.set('files', selectList.value[i].raw, decodeURIComponent(selectList.value[i].raw.name)) // 新文件
-  //     await axios
-  //       .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
-  //         cancelToken: source.token,
-  //         onUploadProgress: progressEvent => {
-  //           selectList.value[i].progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-  //         }
-  //       })
-  //       .then(res => {
-  //         if (res.data.status) {
-  //           ary.push(res.data?.data[0])
-  //           if (i === selectList.value.length - 1) {
-  //             if (type.value === 'sample') {
-  //               eventBus.emit('submit-sampleFile', ary)
-  //             } else {
-  //               ary[0].fileName = decodeURIComponent(ary[0].fileName)
-  //               ary[0].originalFileName = decodeURIComponent(ary[0].originalFileName)
-  //               emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', ary[0])
-  //             }
-
-  //             dialogVisible.value = false
-  //           }
-  //         } else {
-  //           ElMessage.error(res.data.message)
-  //           previewFileId.value = null
-  //         }
-  //       })
-  //   } catch (error) {
-  //     previewFileId.value = null
-  //     if (axios.isCancel(error)) {
-  //     } else {
-  //       console.error('Upload failed:', error)
-  //     }
-  //     throw error
-  //   }
-  // }
   const aryData = []
   for (var i = 0; i < selectList.value.length; i++) {
     const file = {

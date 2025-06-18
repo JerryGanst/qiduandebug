@@ -22,6 +22,7 @@ const setFiles = val => {
 const uploadSingleFile = async file => {
   const formData = new FormData()
   formData.append('files', file.raw)
+  formData.append('local', true)
   const CancelToken = axios.CancelToken
   const source = CancelToken.source()
   await axios

@@ -5,7 +5,6 @@ handlePreview
     title="附件上传"
     width="1200px"
     class="custom-upload-dialog"
-    v-bind="dialogEvents"
     style="margin-top: 3vh; border-radius: 10px"
   >
     <div class="upload-layout no-drag">
@@ -146,10 +145,6 @@ handlePreview
           <div
             class="unsupported-preview"
             style="padding: 0px"
-            @dragover.stop
-            @dragenter.stop
-            @dragleave.stop
-            @drop.stop
           >
             请先上传附件即可预览
           </div>
@@ -218,20 +213,7 @@ const knowList = ref([
   //   label: '通用知识库'
   // }
 ])
-const dialogEvents = reactive({
-  onDragover: e => {
-    e.preventDefault()
-    // 你的处理逻辑
-  },
-  onDragleave: e => {
-    e.preventDefault()
-    // 你的处理逻辑
-  },
-  onDrop: e => {
-    e.preventDefault()
-    // 你的处理逻辑
-  }
-})
+
 const selectedValues = ref([]) // 存储选中的值（数组）
 const knowOptions = ref([])
 const allowedFileTypes = '.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx'
@@ -314,7 +296,7 @@ const startUpload = async file => {
         previewFileId.value = file[i].uid
         const formData = new FormData()
         formData.append('files', file[i].raw)
-
+        formData.append('local', true)
         await axios
           .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
             cancelToken: source.token,
@@ -374,6 +356,7 @@ const startUpload = async file => {
       previewFileId.value = file.uid
       const formData = new FormData()
       formData.append('files', file.raw)
+      formData.append('local', true)
       await axios
         .post(import.meta.env.VITE_API_BASE_URL + '/AI/fileUpload', formData, {
           cancelToken: source.token,
@@ -734,8 +717,19 @@ const getFileAry = () => {
   fileQueue.value = []
   for (var i = 0; i < fileAry.value.length; i++) {
     const name = fileAry.value[i].originalFileName
-    fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById?id=' + fileAry.value[i].fileId, {
-      method: 'POST'
+    if (typeof fileAry.value[i].local === 'undefined') {
+      fileAry.value[i].local = true
+    }
+    const obj = {
+      fileId: fileAry.value[i].fileId,
+      local: fileAry.value[i].local
+    }
+    fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(obj)
     })
       .then(response => {
         // 从 Content-Disposition 中解析附件名
@@ -795,9 +789,20 @@ const getSampleFile = id => {
     })
 }
 const getFile = () => {
+  if (typeof fileObj.value.local === 'undefined') {
+    fileObj.value.local = true
+  }
+  const obj = {
+    fileId: fileObj.value.fileId.fileId ? fileObj.value.fileId.fileId : fileObj.value.fileId,
+    local: fileObj.value.fileId.local === false ? fileObj.value.fileId.local : fileObj.value.local
+  }
   // 使用 POST 请求（与后端 @PostMapping 匹配）
-  fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById?id=' + fileObj.value.fileId, {
-    method: 'POST'
+  fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(obj)
   })
     .then(response => {
       // 从 Content-Disposition 中解析附件名

@@ -665,7 +665,6 @@ const getFile = () => {
     fileId: fileObj.value.fileId.fileId ? fileObj.value.fileId.fileId : fileObj.value.fileId,
     local: fileObj.value.fileId.local === false ? fileObj.value.fileId.local : fileObj.value.local
   }
-  console.log(obj)
   // 使用 POST 请求（与后端 @PostMapping 匹配）
   fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById', {
     method: 'POST',

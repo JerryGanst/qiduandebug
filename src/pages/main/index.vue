@@ -838,6 +838,7 @@ const submitFinal = async (val, isRefresh, ob) => {
   if (!ob && !checkData(val)) {
     return
   }
+  isDragOver.value = false
   const queryData = newQuestion.value
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
@@ -849,23 +850,6 @@ const submitFinal = async (val, isRefresh, ob) => {
   finalIng.value = true
   docIng.value = true
   let title = ''
-  // if (!isRefresh && ob) {
-  //   const qData = ob.originalFileName + '(final)'
-  //   const index = questions.value.findIndex(item => item === qData)
-  //   // const idx = answerList.value.findIndex(item => item.title === qData)
-
-  //   const targetId = answerList.value.find(item => item.title === qData)?.id
-  //   if (index !== -1) {
-  //     questions.value.splice(index, 1)
-  //   }
-  //   // if (idx !== -1) {
-  //   //   answerList.value.splice(index, 1)
-  //   // }
-  //   if (targetId) {
-  //     asizeRef.value.deleteData(targetId, true)
-  //   }
-  //   questions.value.unshift(qData)
-  // }
   if (isRefresh) {
     let current = currentId.value
     const idx = answerList.value.findIndex(item => item.id === current)
@@ -884,91 +868,7 @@ const submitFinal = async (val, isRefresh, ob) => {
         think: {}
       }
     }
-    // for (var m = 0; m < answerList.value.length; m++) {
-    //   if (answerList.value[m].type === '总结' && limitQuery.value === answerList.value[m].data.question) {
-    //     const id = answerList.value[m].id
-    //     title = answerList.value[m].title.replace(/\([^)]*\)/g, '')
-    //     const index = questions.value.findIndex(item => item === title + '(final)')
-    //     let limitTitle = ''
-    //     if (index !== -1) {
-    //       limitTitle = questions.value[index]
-    //       questions.value.splice(index, 1)
-    //     }
-    //     const idx = answerList.value.findIndex(item => item.title === limitQuery.value)
-    //     if (idx !== -1) {
-    //       answerList.value.splice(index, 1)
-    //     }
-    //     await asizeRef.value.deleteData(id, true)
-    //     activeIndex.value = 0
-    //     const limit = limitTitle
-    //       ? limitTitle.length > 15
-    //         ? limitQuery.value.substring(0, 15) + '(final)'
-    //         : limitTitle + '(final)'
-    //       : limitQuery.value.length > 15
-    //         ? limitQuery.value.substring(0, 15) + '(final)'
-    //         : limitQuery.value + '(final)'
-    //     questions.value.unshift(limit)
-    //   }
-    // }
   }
-  // if (isRefresh && ob) {
-  //   for (var m = 0; m < answerList.value.length; m++) {
-  //     if (
-  //       answerList.value[m].type === '总结' &&
-  //       answerList.value[m].data.files &&
-  //       ob.originalFileName === answerList.value[m].data.files.originalFileName
-  //     ) {
-  //       const id = answerList.value[m].id
-  //       title = answerList.value[m].title
-  //       const index = questions.value.findIndex(item => item === title)
-  //       let limitObj = {}
-  //       if (index !== -1) {
-  //         questions.value.splice(index, 1)
-  //       }
-  //       const idx = answerList.value.findIndex(
-  //         item => item.data.files && item.data.files.originalFileName === ob.originalFileName
-  //       )
-  //       if (idx !== -1) {
-  //         limitObj = answerList.value[idx]
-  //         answerList.value.splice(idx, 1)
-  //       }
-  //       await asizeRef.value.deleteData(id, true)
-  //       activeIndex.value = 0
-  //       questions.value.unshift(title)
-  //       answerList.value.unshift(limitObj)
-  //     }
-  //   }
-  // }
-  // if (questions.value.includes(limitQuery.value + '(final)') && !isRefresh && !ob) {
-  //   const qData = limitQuery.value + '(final)'
-  //   for (var ms = 0; ms < questions.value.length; ms++) {
-  //     if (qData === questions.value[ms]) {
-  //       activeIndex.value = ms
-  //     }
-  //   }
-  //   asizeRef.value.queryAn(qData, '')
-  //   finalIng.value = false
-  //   docIng.value = false
-  //   return
-  // }
-  // if (questions.value.includes(limitQuery.value + '(final)') && isRefresh && !ob) {
-  //   const qData = limitQuery.value + '(final)'
-  //   const index = questions.value.findIndex(item => item === qData)
-  //   const idx = answerList.value.findIndex(item => item.title === qData)
-  //   const targetId = answerList.value.find(item => item.title === qData)?.id
-  //   if (index !== -1) {
-  //     questions.value.splice(index, 1)
-  //   }
-  //   if (idx !== -1) {
-  //     answerList.value.splice(index, 1)
-  //   }
-  //   await asizeRef.value.deleteData(targetId, isRefresh)
-  // }
-
-  // if (!questions.value.includes(limitQuery.value + '(final)') && !title && !ob) {
-  //   const qData = limitQuery.value + '(final)'
-  //   questions.value.unshift(qData)
-  // }
   if (!isRefresh) {
     const qData = '新对话' + '(final)'
     questions.value.unshift(qData)
@@ -993,6 +893,13 @@ const submitFinal = async (val, isRefresh, ob) => {
   finalQuest.value = ob ? ob.originalFileName : queryData
   const passQuery = ob ? ob.originalFileName : queryData
   entryRef.value.changeDynamicRows()
+  if(!isPureObject(ob.fileId)){
+    const objSample = {
+          fileId:ob.fileId,
+          local:ob.local
+    }
+    ob.fileId = objSample
+  }
   nextTick(() => {
     if (entryRef.value?.fileRef) {
       entryRef.value.fileRef.closeFile()
@@ -1560,6 +1467,7 @@ const submitTran = async (val, isRefresh, obj) => {
   if (!obj && !checkData(val)) {
     return
   }
+  isDragOver.value = false
   finalIng.value = true
   docIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
@@ -1709,7 +1617,15 @@ const submitTran = async (val, isRefresh, obj) => {
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   transQuest.value = obj ? obj.originalFileName : passData
   const passQuery = obj ? obj.originalFileName : passData
+
   currentRequestUrl.value = '/AI/translate'
+  if(!isPureObject(obj.fileId)){
+    const objSample = {
+          fileId:obj.fileId,
+          local:obj.local
+    }
+    obj.fileId = objSample
+  }
   nextTick(() => {
     if (entryRef.value?.fileRef) {
       entryRef.value.fileRef.closeFile()
