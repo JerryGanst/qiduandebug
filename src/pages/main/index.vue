@@ -283,9 +283,39 @@
               >
                 <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
                   <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
-                  <el-radio-button label="人资行政专题" value="人资行政专题" >人资行政专题</el-radio-button>
-                  <el-radio-button label="IT专题" value="IT专题" >IT专题</el-radio-button>
-                  <el-radio-button label="法务专题" value="法务专题" v-if="isLaw" >法务专题</el-radio-button>
+                  <!-- <el-radio-button label="人资行政专题" value="人资行政专题" :disabled="!isNet">人资行政专题</el-radio-button>
+                  <el-radio-button label="IT专题" value="IT专题" :disabled="!isNet">IT专题</el-radio-button> -->
+                  <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="!isNet">
+                    <el-radio-button label="人资行政专题" value="人资行政专题" disabled>人资行政专题</el-radio-button>
+                  </el-tooltip>
+                  <el-radio-button 
+                    label="人资行政专题" 
+                    value="人资行政专题" 
+                    v-if="isNet"
+                  >
+                   人资行政专题
+                  </el-radio-button>
+                  <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="!isNet">
+                    <el-radio-button label="IT专题" value="IT专题" disabled>法IT专题</el-radio-button>
+                  </el-tooltip>
+                  <el-radio-button 
+                    label="IT专题" 
+                    value="IT专题" 
+                    v-if="isNet"
+                  >
+                    IT专题
+                  </el-radio-button>
+                  <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="isLaw && !isNet">
+                    <el-radio-button label="法务专题" value="法务专题" disabled>法务专题</el-radio-button>
+                  </el-tooltip>
+                  <el-radio-button 
+                    label="法务专题" 
+                    value="法务专题" 
+                    v-if="isLaw && isNet"
+                  >
+                    法务专题
+                  </el-radio-button>
+                  <!-- <el-radio-button label="法务专题" value="法务专题" v-if="isLaw" :disabled="!isNet">法务专题</el-radio-button> -->
                 </el-radio-group>
               </div>
               <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
@@ -326,19 +356,19 @@
                   <img
                     :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
                     class="arrow"
-                    v-if="pageType === 'query'"
+                    v-if="isNet&&pageType === 'query'"
                     @click="submitQuestionSend"
                   />
                   <img
                     :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
                     class="arrow"
-                    v-if="pageType === 'it'"
+                    v-if="isNet&&pageType === 'it'"
                     @click="submitITSend"
                   />
                   <img
                     :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
                     class="arrow"
-                    v-if="pageType === 'law'"
+                    v-if="isNet&&pageType === 'law'"
                     @click="submitLawSend"
                   />
                 </div>
@@ -630,13 +660,11 @@ const setNet = () => {
   nextTick(() => {
     const isNetValue = localStorage.getItem('isNet')
     isNet.value = isNetValue === 'true'
-    console.log(isNet.value)
   })
 }
 
 const showListFile = val => {
   fileAry.value = []
-  console.log(val)
   fileAry.value.push(val)
   filePreRef.value.openFile('sample')
 }
@@ -738,26 +766,11 @@ const updateDots = () => {
   }
 }
 
-// const toDoc = async data => {
-//   request
-//     .post('/Files/getFileInfoByName', {
-//       fileName: data.document_title
-//       // showLoading: true
-//     })
-//     .then(res => {
-//       if (res.status) {
-//         if (res.data && res.data.fileLink) {
-//           window.open(res.data.fileLink, '_blank')
-//         }
-//       }
-//     })
-//     .catch(err => {
-//       // loadingInstance.close();
-//       console.error('获取回复失败:', err)
-//       // botMessage.text = '抱歉，暂时无法获取回复';
-//     })
-// }
 const toDoc = async data => {
+  if(!isNet.value){
+    ElMessage.warning('该模式仅支持通过office网络访问')
+    return
+  }
   request
     .post(
       '/Files/getFileLinkByName?fileName=' +
@@ -986,8 +999,6 @@ const refreshData = () => {
     return
   }
   const anList = answerList.value
-  // console.log(answerList.value)
-  console.log(anList)
   if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
     queryIng.value = false
     submitQuestion(tipQuery.value, true)
@@ -1016,14 +1027,12 @@ const refreshData = () => {
       } else if (length > 1) {
         if (anList[activeIndex.value].data[length - 1].role === 'user') {
           ary = anList[activeIndex.value].data[length - 1].files
-          console.log(anList)
         } else {
           ary = anList[activeIndex.value].data[length - 2].files
         }
       }
     }
     fileInputAry.value =  ary
-    console.log(fileInputAry.value)
     submitSample(chatQuery.messages[chatQuery.messages.length - 2].content, true)
   }
 }
@@ -1248,7 +1257,6 @@ const submitSample = async (val, isRefresh) => {
       fileInput[me].fileId = fileInput[me].fileId.fileId?fileInput[me].fileId.fileId:fileInput[me].fileId
     }
   }
-  console.log(filesSample)
   const currentData = {
     role: 'user',
     content: queryValue ? queryValue : '',
@@ -1262,7 +1270,6 @@ const submitSample = async (val, isRefresh) => {
   }
   mes = JSON.parse(JSON.stringify(chatQuery))
   mes.messages.push(currentData)
-  console.log(mes)
   limitSample.value = JSON.parse(JSON.stringify(mes))
   const params = JSON.parse(JSON.stringify(mes))
   for (var j = 0; j < params.messages.length; j++) {
@@ -1481,7 +1488,6 @@ const submitTran = async (val, isRefresh, obj) => {
   if (!obj && !checkData(val)) {
     return
   }
-  console.log(answerList.value)
   isDragOver.value = false
   finalIng.value = true
   docIng.value = true
@@ -1497,12 +1503,8 @@ const submitTran = async (val, isRefresh, obj) => {
     let current = currentId.value
     if(!current){
       current = answerList.value[activeIndex.value].id
-      console.log(activeIndex.value)
     }
-    console.log(currentId.value)
     const idx = answerList.value.findIndex(item => item.id === current)
-    console.log(idx)
-    console.log(answerList.value[idx])
     title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
     let limitTitle = ''
     limitTitle = questions.value[idx]
@@ -1891,7 +1893,6 @@ const getHistory = async (id, page, val, ids) => {
       if (res.status) {
         // getMessageTitle()
         answerList.value = res.data
-        console.log(answerList.value)
         questions.value = []
         const limitData = JSON.parse(JSON.stringify(queryTypes.value))
         if (res.data && res.data.length > 0) {
@@ -2019,7 +2020,6 @@ const getHistory = async (id, page, val, ids) => {
     .catch(err => {
       console.error('获取回复失败:', err)
     })
-    console.log(answerList.value)
 }
 
 // 终止请求方法

@@ -288,9 +288,39 @@
     >
       <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
         <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
-        <el-radio-button label="人资行政专题" value="人资行政专题" >人资行政专题</el-radio-button>
-        <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
-        <el-radio-button label="法务专题" value="法务专题" v-if="isLaw">法务专题</el-radio-button>
+        <!-- <el-radio-button label="人资行政专题" value="人资行政专题"  :disabled="!isNet">人资行政专题</el-radio-button>
+        <el-radio-button label="IT专题" value="IT专题" :disabled="!isNet">IT专题</el-radio-button>
+        <el-radio-button label="法务专题" value="法务专题" v-if="isLaw"  :disabled="!isNet">法务专题</el-radio-button> -->
+        <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="!isNet">
+                    <el-radio-button label="人资行政专题" value="人资行政专题" disabled>人资行政专题</el-radio-button>
+                  </el-tooltip>
+                  <el-radio-button 
+                    label="人资行政专题" 
+                    value="人资行政专题" 
+                    v-if="isNet"
+                  >
+                   人资行政专题
+                  </el-radio-button>
+                  <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="!isNet">
+                    <el-radio-button label="IT专题" value="IT专题" disabled>法IT专题</el-radio-button>
+                  </el-tooltip>
+                  <el-radio-button 
+                    label="IT专题" 
+                    value="IT专题" 
+                    v-if="isNet"
+                  >
+                    IT专题
+                  </el-radio-button>
+                  <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="isLaw && !isNet">
+                    <el-radio-button label="法务专题" value="法务专题" disabled>法务专题</el-radio-button>
+                  </el-tooltip>
+                  <el-radio-button 
+                    label="法务专题" 
+                    value="法务专题" 
+                    v-if="isLaw && isNet"
+                  >
+                    法务专题
+                  </el-radio-button>
       </el-radio-group>
     </div>
     <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
@@ -326,19 +356,19 @@
           :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
           class="arrow"
           @click="submitQuestionSend"
-          v-if="pageType === 'query'"
+          v-if="isNet&&pageType === 'query'"
         />
         <img
           :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
           class="arrow"
           @click="submitItSend"
-          v-if="pageType === 'it'"
+          v-if="isNet&&pageType === 'it'"
         />
         <img
           :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
           class="arrow"
           @click="submitLawSend"
-          v-if="pageType === 'law'"
+          v-if="isNet&&pageType === 'law'"
         />
       </div>
     </div>

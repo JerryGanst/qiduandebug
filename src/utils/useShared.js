@@ -46,7 +46,7 @@ const chatCurrent = reactive({
 const isLogin = ref(false) // 判断是否登录
 const dynamicRows = ref(1) // 问答文本域的动态行数（高度）
 const isSampleLoad = ref(false) // 判断是否正在问答状态
-const isNet = ref(false)
+const isNet = ref(true)
 const dragUploads = ref(null)
 const finalData = ref({
   title: '',

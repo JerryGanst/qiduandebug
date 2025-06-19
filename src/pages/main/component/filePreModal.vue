@@ -582,7 +582,6 @@ const getTextAfterLastDot = str => {
 }
 const getFileAry = () => {
   fileQueue.value = []
-  console.log(fileAry.value)
   for (var i = 0; i < fileAry.value.length; i++) {
     const name = fileAry.value[i].originalFileName
     if (typeof fileAry.value[i].local === 'undefined') {
@@ -680,7 +679,6 @@ const getFile = () => {
       if (disposition && disposition.indexOf('filename=') !== -1) {
         filename = disposition.split('filename=')[1].replace(/"/g, '')
       }
-      console.log(filename)
       // 获取二进制数据
       return response.blob().then(blob => ({ blob, filename }))
     })
