@@ -2,6 +2,8 @@ import { ref, reactive, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 const currentQuestion = ref('') // 控制页面展示问答页还是介绍页
 const newQuestion = ref('') // 文本域输入值
+const intelQuestion = ref('') // 文本域输入值
+
 const isSampleStop = ref(false) // 控制通用模式 终止之后的状态
 const isQueryStop = ref(false) // 控制人资模式 终止之后的状态
 const limitLoading = ref(false) // 切换左侧历史记录，判断当前选中的记录是否处于问答状态中
@@ -9,7 +11,12 @@ const questions = ref([]) // 左侧历史记录标题数组
 const intelList = ref([])
 const answerList = ref([]) //历史记录数组
 const answerListIntel = ref([])
-
+const currentIntel = ref({
+  name:'',
+  role:'',
+  tone:'',
+  description:''
+})
 const isCreate = ref(false)
 const contentType = ref(1)
 const currentId = ref('') // 左侧历史记录当前选中的id
@@ -55,7 +62,9 @@ const finalData = ref({
 const handleShiftEnter = val => {
   const textareaRef =
     val === 'textareaInputQuery'
-      ? textareaInputQuery
+      ? textareaInputQuery:
+          val === 'textareaInputIntel'?
+          textareaInputIntel
       : val === 'textareaInputSample'
         ? textareaInputSample
         : val === 'textareaInputTran'
@@ -84,6 +93,8 @@ const textareaInputQuery = ref(null) // 获取 textarea 元素的引用
 const textareaInputSample = ref(null) // 获取 textarea 元素的引用
 const textareaInputTran = ref(null) // 获取 textarea 元素的引用
 const textareaInputFinal = ref(null) // 获取 textarea 元素的引用
+const textareaInputIntel = ref(null) // 获取 textarea 元素的引用
+
 const finalIng = ref(false)
 const finalQuest = ref('')
 const selectedLan = ref('中文')
@@ -103,11 +114,14 @@ const knowSelect = ref(1)
 const fileInputAry = ref([])
 const isDragOver = ref(false)
 const adjustTextareaHeight = val => {
+  console.log(val)
   const textareaRef =
     val === 'textareaInputQuery'
       ? textareaInputQuery
       : val === 'textareaInputSample'
-        ? textareaInputSample
+        ? textareaInputSample       
+           :val === 'textareaInputIntel'?
+        textareaInputIntel
         : val === 'textareaInputTran'
           ? textareaInputTran
           : textareaInputFinal
@@ -232,6 +246,10 @@ export function useShared() {
   const updateCurrentObj = newName => {
     currentObj.value = newName
   }
+  const updateCurrentIntel = newName => {
+    currentIntel.value = newName
+  }
+  
   const updateTipQuery = newName => {
     tipQuery.value = newName
   }
@@ -341,6 +359,9 @@ export function useShared() {
   const updateIsNet = newName => {
     isNet.value = newName
   }
+  const updateIntelQuestion = newName => {
+    intelQuestion.value = newName
+  }
   
   watch(
     newQuestion,
@@ -360,6 +381,7 @@ export function useShared() {
     isQueryStop,
     isDragOver,
     limitLoading,
+    intelQuestion,
     knowSelect,
     dragUploads,
     limitId,
@@ -371,6 +393,7 @@ export function useShared() {
     pageType,
     selectedMode,
     currentObj,
+    currentIntel,
     tipQuery,
     userInfo,
     activeIndex,
@@ -405,6 +428,7 @@ export function useShared() {
     isLaw,
     contentType,
     changeMode,
+    updateCurrentIntel,
     updateCurrentQuestion,
     updateNewQuestion,
     updateIsSampleStop,
@@ -456,6 +480,7 @@ export function useShared() {
     updateActiveIndexIntel,
     updateIsCreate,
     updateContentType,
-    updateIsNet
+    updateIsNet,
+    updateIntelQuestion
   }
 }

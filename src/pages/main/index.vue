@@ -305,7 +305,7 @@
                   >
                     IT专题
                   </el-radio-button>
-                  <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="isLaw && !isNet">
+                  <!-- <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="isLaw && !isNet">
                     <el-radio-button label="法务专题" value="法务专题" disabled>法务专题</el-radio-button>
                   </el-tooltip>
                   <el-radio-button 
@@ -314,7 +314,7 @@
                     v-if="isLaw && isNet"
                   >
                     法务专题
-                  </el-radio-button>
+                  </el-radio-button> -->
                   <!-- <el-radio-button label="法务专题" value="法务专题" v-if="isLaw" :disabled="!isNet">法务专题</el-radio-button> -->
                 </el-radio-group>
               </div>
@@ -488,7 +488,7 @@
           <commonModal ref="commonLedge" v-if="fileModal === 2"></commonModal>
         </div>
         <div v-if="contentType === 3">
-          <createIntel ref="createIntel"></createIntel>
+          <createIntel  ></createIntel>
         </div>
       </el-main>
     </el-container>
@@ -601,7 +601,9 @@ const {
   contentType,
   dragUploads,
   isDragOver,
-  isNet
+  isNet,
+  isCreate,
+ 
 } = useShared()
 
 const queryIng = ref(false)
@@ -669,7 +671,9 @@ const showListFile = val => {
   filePreRef.value.openFile('sample')
 }
 const setMessage = val => {
-  contentType.value = val
+  nextTick(() => {
+    contentType.value = val
+  })
 }
 const showFileMenu = ref(false)
 const showFileSample = val => {
@@ -920,7 +924,7 @@ const submitFinal = async (val, isRefresh, ob) => {
   finalQuest.value = ob ? ob.originalFileName : queryData
   const passQuery = ob ? ob.originalFileName : queryData
   entryRef.value.changeDynamicRows()
-  if(!isPureObject(ob.fileId)){
+  if(ob&&!isPureObject(ob.fileId)){
     const objSample = {
           fileId:ob.fileId,
           local:ob.local
@@ -936,7 +940,9 @@ const submitFinal = async (val, isRefresh, ob) => {
     .post('/AI/summarize', {
       user_id: userInfo.value.id,
       question: passQuery,
-      file: ob ? ob.fileId : ''
+      file: ob ? ob.fileId : {
+        fileId:''
+      }
       // showLoading: true
     })
     .then(res => {
@@ -1538,7 +1544,8 @@ const submitTran = async (val, isRefresh, obj) => {
   const passQuery = obj ? obj.originalFileName : passData
 
   currentRequestUrl.value = '/AI/translate'
-  if(!isPureObject(obj.fileId)){
+  console.log(obj)
+  if(obj&&!isPureObject(obj.fileId)){
     const objSample = {
           fileId:obj.fileId,
           local:obj.local
@@ -1555,7 +1562,9 @@ const submitTran = async (val, isRefresh, obj) => {
       user_id: userInfo.value.id,
       source_text: obj ? '' : passData,
       target_language: selectedLan.value,
-      file: obj ? obj.fileId : ''
+      file: obj ? obj.fileId : {
+        fileId:''
+      }
       // showLoading: true
     })
     .then(res => {

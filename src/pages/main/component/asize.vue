@@ -9,7 +9,7 @@
         <div class="aside_message_text" :style="{ color: selectType === 1 ? '#1B6CFF' : '#9D9D9D' }">对话</div>
       </div>
 
-      <div class="aside_left_file" v-if="isPowerFile" @click="changeContent(2)" :disabled="!isNet">
+      <div class="aside_left_file" v-if="isPowerFile" @click="changeContent(2)" >
         <div class="aside_img" :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }">
           <img
             :src="selectType === 2 ? fileBlue : fileGray"
@@ -18,7 +18,7 @@
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
       </div>
-      <div class="aside_left_file" @click="changeContent(3)" style="top: 225px"  :disabled="!isNet">
+      <!-- <div class="aside_left_file" @click="changeContent(3)" style="top: 225px"  >
         <div class="aside_img" :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }">
           <img
             :src="selectType === 3 ? IntelligenceBlue : IntelligenceGray"
@@ -26,7 +26,7 @@
           />
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 3 ? '#1B6CFF' : '#9D9D9D' }">智能体</div>
-      </div>
+      </div> -->
 
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
@@ -194,9 +194,11 @@
           <span class="intel_title">我的智能体</span>
         </div>
         <div style="width: 190px; margin-left: 10px; margin-top: 5px">
-          <el-input v-model="searchTextIntel" placeholder="搜索历史对话" clearable @input="handleSearchIntel">
+          <el-input v-model="searchTextIntel" placeholder="搜索历史对话" clearable
+              @clear="clearData"
+              @keydown.enter.prevent="searchData">
             <template #suffix>
-              <el-icon class="search-icon"><Search /></el-icon>
+              <el-icon class="search-icon" @click="searchData" style="cursor: pointer"><Search /></el-icon>
             </template>
           </el-input>
         </div>
@@ -264,7 +266,7 @@
                 </el-popconfirm>
                 <div class="edit_img rename_img" @click="handleEditIntel(question, index)">
                   <img src="@/assets/edit.png" class="aside_right_img" />
-                  <div style="width: 60px; text-align: left; margin-left: 6px">重命名</div>
+                  <div style="width: 60px; text-align: left; margin-left: 6px">编辑</div>
                 </div>
               </div>
             </el-popover>
@@ -308,9 +310,6 @@
               @click="togglePasswordVisibility"
               style="cursor: pointer; width: 16px; height: 16px"
             />
-            <!-- <el-icon @click="togglePasswordVisibility" style="cursor: pointer">
-              <component :is="loginForm.password ? (passwordVisible ? Lock : View) : ''" />
-            </el-icon> -->
           </template>
         </el-input>
       </el-form-item>
@@ -452,7 +451,9 @@ const {
   contentType,
   knowSelect,
   intelList,
-  isNet
+  isNet,
+  isCreate,
+  currentIntel,
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -467,17 +468,21 @@ const selectType = ref(1)
 // 当前url的路由信息(由luxshare传来的参数)
 const queryParams = route.query
 const emit = defineEmits(['change-history', 'set-isLaw', 'set-message', 'set-FileModel','setNet'])
-// 实时搜索结果
-const searchResults = computed(() => {
-  if (!searchText.value) return []
-  const query = searchTextIntel.value.toLowerCase()
-  return intelList.value.filter(item => item.toLowerCase().includes(query))
-})
 
-// 搜索处理函数（自动触发）
-const handleSearch = () => {
-  // 这里可以添加额外的搜索逻辑
-}
+// 过滤后的数据（使用计算属性）
+const filterIntelData = computed(() => {
+  if (!searchTextIntel.value) {
+    return intelList.value;
+  }
+  
+  const searchText = searchTextIntel.value.toLowerCase();
+  return intelList.value.filter(item => 
+    Object.values(item).some(
+      val => String(val).toLowerCase().includes(searchText)
+    )
+  );
+});
+
 // 左上角折叠控制函数
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
@@ -506,7 +511,6 @@ const handleHover = (index, isHovering) => {
 const handleHoverIntel = (index, isHovering) => {
   hoverStatesIntel.value = {
     ...hoverStatesIntel.value,
-
     [index]: isHovering
   }
 }
@@ -518,7 +522,8 @@ const togglePopoverIntel = index => {
   popoverVisibleIntel[index] = !popoverVisibleIntel[index]
 }
 const createIntel = () => {
-  isCreate.value = true
+  eventBus.emit('setInfo','create')
+  // isCreate.value = true
   // 这里可以添加额外的搜索逻辑
 }
 //获取用户信息接口
@@ -602,9 +607,13 @@ const handleEdit = (val, index) => {
   titleIndex.value = index
 }
 const handleEditIntel = (val, index) => {
-  titleVisibleIntel.value = true
-  titleQuestionIntel.value = val
-  titleIndexIntel.value = index
+  eventBus.emit('setInfo',   {
+    param1: 'edit',
+    param2: val
+  })
+  // titleVisibleIntel.value = true
+  // titleQuestionIntel.value = val
+  // titleIndexIntel.value = index
 }
 
 const submitTitleIntel = val => {
@@ -813,7 +822,7 @@ const deleteDataIntel = async (id, isRefresh) => {
     .then(res => {
       if (res.status) {
         if (!isRefresh) {
-          eventBus.emit('getHistory')
+          eventBus.emit('getHistoryData','')
         }
       }
     })
@@ -855,6 +864,16 @@ const querySelectIntel = (val, index) => {
   activeIndexIntel.value = index
   queryAnIntel(val, index)
 }
+// 搜索方法
+const searchData = () => {
+  eventBus.emit('getHistoryData', searchTextIntel.value)
+  // 调用后端接口或其他搜索逻辑
+}
+const clearData= () => {
+  eventBus.emit('getHistoryData', '')
+  // 调用后端接口或其他搜索逻辑
+}
+
 const getMatchingIndexes = (arr1, val) => {
   for (var i = 0; i < arr1.length; i++) {
     if (val === arr1[i].title) {
@@ -863,7 +882,10 @@ const getMatchingIndexes = (arr1, val) => {
   }
 }
 
-const queryAnIntel = (val, index, data) => {}
+const queryAnIntel = (val, index) => {
+  const data = answerListIntel.value[index]
+  currentIntel.value = data.persona
+}
 // 点击切换左侧栏，控制左侧栏和右侧面板的数据
 const queryAn = (val, index, data) => {
   currentQuestion.value = val
