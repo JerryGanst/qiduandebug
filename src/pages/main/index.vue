@@ -591,6 +591,7 @@ const {
   deepType,
   checkDeepType,
   docIng,
+  tranIng,
   limitAry,
   fileObj,
   showFileTip,
@@ -859,7 +860,7 @@ const displayMessagesSequentially = async () => {
 }
 
 const submitFinal = async (val, isRefresh, ob) => {
-  if (finalIng.value) {
+  if (queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
@@ -936,6 +937,7 @@ const submitFinal = async (val, isRefresh, ob) => {
       entryRef.value.fileRef.closeFile()
     }
   })
+  activeIndex.value = 0
   request
     .post('/AI/summarize', {
       user_id: userInfo.value.id,
@@ -991,7 +993,7 @@ const submitFinal = async (val, isRefresh, ob) => {
 const samplePost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
-    if (isSampleLoad.value) {
+    if (isSampleLoad.value  || queryIng.value || docIng.value || tranIng.value || finalIng.value) {
       ElMessage.warning('有问答正在进行中,请稍后再试')
       return
     }
@@ -1000,7 +1002,7 @@ const samplePost = event => {
 }
 
 const refreshData = () => {
-  if (isSampleLoad.value || finalIng.value) {
+  if (isSampleLoad.value || queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
@@ -1187,7 +1189,7 @@ const submitSampleFile = val => {
 }
 
 const submitSampleTitle = val => {
-  if (isSampleLoad.value) {
+  if (isSampleLoad.value || queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
@@ -1487,7 +1489,10 @@ const submitSample = async (val, isRefresh) => {
   }
 }
 const submitTran = async (val, isRefresh, obj) => {
-  if (finalIng.value) {
+  console.log(val)
+  console.log(isRefresh)
+  console.log(obj)
+  if (queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
@@ -1496,7 +1501,7 @@ const submitTran = async (val, isRefresh, obj) => {
   }
   isDragOver.value = false
   finalIng.value = true
-  docIng.value = true
+  tranIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   limitQuery.value = newQuestion.value
   const passData = newQuestion.value
@@ -1557,6 +1562,7 @@ const submitTran = async (val, isRefresh, obj) => {
       entryRef.value.fileRef.closeFile()
     }
   })
+  activeIndex.value = 0
   request
     .post('/AI/translate', {
       user_id: userInfo.value.id,
@@ -1599,7 +1605,7 @@ const submitTran = async (val, isRefresh, obj) => {
       }
 
       finalIng.value = false
-      docIng.value = false
+      tranIng.value = false
       clearInterval(interval)
       nextTick(() => {
         adjustTextareaHeight('textareaInputTran')
@@ -1614,7 +1620,7 @@ const summitPost = event => {
 }
 
 const submitQuestion = async (val, isRefresh) => {
-  if (queryIng.value) {
+  if (queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
@@ -1849,16 +1855,16 @@ const postTran = async (obj, title, ob) => {
     .then(res => {
       if (res.status) {
         finalIng.value = false
-        docIng.value = false
+        tranIng.value = false
         getHistory('', 'tran', obj.question, res.data)
       } else {
         finalIng.value = false
-        docIng.value = false
+        tranIng.value = false
       }
     })
     .catch(err => {
       finalIng.value = false
-      docIng.value = false
+      tranIng.value = false
       console.error('获取回复失败:', err)
     })
 }
@@ -2082,7 +2088,7 @@ const cancelCurrentRequest = async val => {
   }
   if (val === 'tran') {
     finalIng.value = false
-    docIng.value = false
+    tranIng.value = false
     let title = ''
     let obj = ''
     for (var i = 0; i < answerList.value.length; i++) {

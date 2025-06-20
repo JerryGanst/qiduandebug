@@ -160,7 +160,7 @@
         {{ transQuest }}
       </div>
     </div>
-    <div v-if="pageType === 'tran' && finalIng && docIng && !isDragOver" class="title_wait">
+    <div v-if="pageType === 'tran' && finalIng && tranIng && !isDragOver" class="title_wait">
       <span>
         <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
       </span>
@@ -177,7 +177,7 @@
       <p>{{ transData }}</p>
     </div> -->
 
-    <div class="query_common" v-if="pageType === 'tran' && transQuest && !docIng && !isDragOver">
+    <div class="query_common" v-if="pageType === 'tran' && transQuest && !tranIng && !isDragOver">
       <div>
         <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
@@ -564,6 +564,7 @@ const {
   textareaInputFinal,
   finalIng,
   docIng,
+  tranIng,
   isSampleLoad,
   updateFinalQuest,
   selectedLan,
@@ -669,7 +670,7 @@ const tranPost = event => {
     emit('submit-tran')
   }
 }
-const submitFileTran = obj => {
+const submitFileTran = (obj) => {
   emit('submit-tran', '', false, obj)
 }
 const submitFileFinal = obj => {

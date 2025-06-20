@@ -106,6 +106,8 @@ const fileObj = ref('')
 const fileAry = ref([])
 const deepType = ref(false)
 const docIng = ref(false)
+const tranIng = ref(false)
+const currentTip = ref(false)
 const limitAry = ref([])
 const showFileTip = ref(false)
 const showModelTip = ref(false)
@@ -114,17 +116,17 @@ const knowSelect = ref(1)
 const fileInputAry = ref([])
 const isDragOver = ref(false)
 const adjustTextareaHeight = val => {
-  console.log(val)
   const textareaRef =
     val === 'textareaInputQuery'
       ? textareaInputQuery
       : val === 'textareaInputSample'
         ? textareaInputSample       
-           :val === 'textareaInputIntel'?
-        textareaInputIntel
+           : val === 'textareaInputIntel'
+           ? textareaInputIntel
         : val === 'textareaInputTran'
           ? textareaInputTran
           : textareaInputFinal
+          console.log(textareaRef)
   const textarea = textareaRef.value?.textarea
 
   if (textarea) {
@@ -253,6 +255,10 @@ export function useShared() {
   const updateTipQuery = newName => {
     tipQuery.value = newName
   }
+  const updateCurrentTip = newName => {
+    currentTip.value = newName
+  }
+  
   const updateActiveIndex = newName => {
     activeIndex.value = newName
   }
@@ -326,6 +332,10 @@ export function useShared() {
   const updateDocIng = newName => {
     docIng.value = newName
   }
+  const updateTranIng = newName => {
+    tranIng.value = newName
+  }
+  
   const updateLimitAry = newName => {
     limitAry.value = newName
   }
@@ -395,6 +405,7 @@ export function useShared() {
     currentObj,
     currentIntel,
     tipQuery,
+    currentTip,
     userInfo,
     activeIndex,
     activeIndexIntel,
@@ -415,12 +426,14 @@ export function useShared() {
     textareaInputSample,
     textareaInputTran,
     textareaInputFinal,
+    textareaInputIntel,
     transQuest,
     dots,
     chatCurrent,
     messageContainer,
     deepType,
     docIng,
+    tranIng,
     limitAry,
     showFileTip,
     showModelTip,
@@ -467,6 +480,7 @@ export function useShared() {
     updateDeepType,
     checkDeepType,
     updateDocIng,
+    updateTranIng,
     updateLimitAry,
     updateShowFileTip,
     updateShowModelTip,
@@ -481,6 +495,7 @@ export function useShared() {
     updateIsCreate,
     updateContentType,
     updateIsNet,
-    updateIntelQuestion
+    updateIntelQuestion,
+    updateCurrentTip
   }
 }

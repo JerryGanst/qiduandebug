@@ -10,7 +10,7 @@ import { useShared } from '@/utils/useShared'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import eventBus from '@/utils/eventBus'
 import axios from 'axios'
-const { pageType, isDragOver } = useShared()
+const { pageType, isDragOver,currentQuestion } = useShared()
 const uploadTimer = ref(null)
 const fileList = ref([])
 const emit = defineEmits(['submit-tran', 'submit-final'])
@@ -38,6 +38,9 @@ const uploadSingleFile = async file => {
         if (pageType.value === 'sample') {
           eventBus.emit('submit-sampleFile', res.data?.data)
         } else {
+          // const isRefresh = currentQuestion.value===''?false:true
+          // console.log(isRefresh)
+          // console.log(res.data?.data[0])
           emit(pageType.value === 'tran' ? 'submit-tran' : 'submit-final', res.data?.data[0])
         }
       } else {

@@ -78,7 +78,7 @@
         <div class="select_content">
           <div
                 class="textarea"
-                :class="[fileInputAry && fileInputAry.length > 0 ? 'sampleAreaAry' : 'sampleArea']"
+                :class="[fileInputAry && fileInputAry.length > 0 ? 'intelAreaAry' : 'intelArea']"
               >
                 <el-input
                   v-model="intelQuestion"
@@ -181,7 +181,7 @@ import eventBus from '@/utils/eventBus'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
 import imageC from '@/assets/stop.png'
-const { intelList,isCreate,answerListIntel,activeIndexIntel,currentIntel,isSampleLoad,fileInputAry,isLogin,adjustTextareaHeight,textareaInputIntel,intelQuestion } = useShared()
+const { intelList,isCreate,answerListIntel,activeIndexIntel,currentIntel,isSampleLoad,fileInputAry,isLogin,adjustTextareaHeight,textareaInputIntel,intelQuestion,dynamicRows,  handleShiftEnter } = useShared()
 const formIntel = ref({
   name: '',
   description: '',
@@ -417,12 +417,12 @@ onUnmounted(() => {
     opacity: 0;
   }
 }
-.sampleArea {
+.intelArea {
   .el-textarea__inner {
     padding: 18px 100px 18px 15px !important;
   }
 }
-.sampleAreaAry {
+.intelAreaAry {
   .el-textarea__inner {
     padding: 56px 100px 18px 15px !important;
   }
