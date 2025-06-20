@@ -574,11 +574,14 @@ onUnmounted(() => {
         margin-top: 30px;
         margin-left: 30px;
         .content_robot{
-          width: 36px;
-          height: 36px;
+          width: 46px;
+          height: 46px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
           img{
-            width: 100%;
-            height: 100%;
+            width: 36px;
+            height: 36px;
           }
         }
         .tip_text{
@@ -586,8 +589,8 @@ onUnmounted(() => {
           background-color: #fafafa;
           padding: 0px 20px;
           font-size: 14px;
-          height: 36px;
-          line-height: 36px;
+          height: 46px;
+          line-height: 46px;
           border-radius: 10px;
           letter-spacing: 1px;
           box-sizing: border-box;

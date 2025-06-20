@@ -435,7 +435,7 @@ const openFile = (val, ary) => {
         }
       ]
     }
-
+    console.log(powerList)
     let str = ''
     for (var i = 0; i < powerList.length; i++) {
       str += powerList[i].target + ','
@@ -537,6 +537,8 @@ onMounted(() => {
   eventBus.on('changeKnow', getKnow)
 
   let powerList = JSON.parse(localStorage.getItem('powerList'))
+  console.log(powerList[0])
+  selectedKnow.value = powerList[0].target
   isUpload.value = powerList[0].upload
   isDelete.value = powerList[0].delete
   getFileList()

@@ -1133,7 +1133,9 @@ const getPower = () => {
       if (res.status) {
         localStorage.setItem('powerList', JSON.stringify(res.data))
         powerArr.value = res.data
+        
         if (powerArr.value.length > 0) {
+          
           for (var i = 0; i < powerArr.value.length; i++) {
             powerArr.value[i].name =
               powerArr.value[i].target === 'IT'
@@ -1144,6 +1146,7 @@ const getPower = () => {
           }
         }
         setPower(JSON.stringify(res.data))
+        eventBus.emit('changeKnow', powerArr.value[0])
       }
     })
     .catch(err => {
