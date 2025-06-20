@@ -18,7 +18,7 @@
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
       </div>
-      <div class="aside_left_file" @click="changeContent(3)" style="top: 225px"  >
+      <!-- <div class="aside_left_file" @click="changeContent(3)" style="top: 225px"  >
         <div class="aside_img" :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }">
           <img
             :src="selectType === 3 ? IntelligenceBlue : IntelligenceGray"
@@ -26,7 +26,7 @@
           />
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 3 ? '#1B6CFF' : '#9D9D9D' }">智能体</div>
-      </div>
+      </div> -->
 
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
@@ -576,6 +576,7 @@ const changeContent = val => {
   selectType.value = val
   contentType.value = val
   ItemSelect.value = 0
+  fileInputAry.value = []
   emit('set-message', contentType.value)
 }
 const changeFileModel = val => {
@@ -608,6 +609,12 @@ const handleEdit = (val, index) => {
   titleIndex.value = index
 }
 const handleEditIntel = (val, index) => {
+  // let id = ''
+  // for(var i=0;i<answerListIntel.value.length;i++){
+  //     if(answerListIntel.value[i].persona.name === val){
+  //       id = answerListIntel.value[i].id
+  //     }
+  //   }
   eventBus.emit('setInfo',   {
     param1: 'edit',
     param2: val
@@ -886,6 +893,8 @@ const getMatchingIndexes = (arr1, val) => {
 const queryAnIntel = (val, index) => {
   const data = answerListIntel.value[index]
   currentIntel.value = data.persona
+  eventBus.emit('closeIntel')
+  
 }
 // 点击切换左侧栏，控制左侧栏和右侧面板的数据
 const queryAn = (val, index, data) => {
@@ -1107,7 +1116,7 @@ const getUserPower = () => {
     .then(res => {
       if (res.status) {
         localStorage.setItem('isNet',res.data)
-        isNet.value = res.data
+        isNet.value = false
         emit('setNet')
       }
     })

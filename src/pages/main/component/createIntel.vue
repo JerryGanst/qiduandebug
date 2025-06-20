@@ -21,10 +21,11 @@
       </div>
       <div class="create_name" style="margin-top: 20px;">
         <div class="create_text">
-          <span style="padding-left: 5px">智能体应该如何称呼您</span>
+          <span style="color: #ff4d4f">*</span>
+          <span style="padding-left: 5px">智能体应该扮演什么角色</span>
         </div>
         <div class="create_input">
-          <el-input placeholder="输入你的称呼" style="width: 100%" v-model="formIntel.nickName" maxlength="15">
+          <el-input placeholder="输入你的角色" style="width: 100%" v-model="formIntel.nickName" maxlength="15">
             <template #suffix>
               <span class="char-counter">{{ formIntel.nickName.length }}/15</span>
             </template>
@@ -60,8 +61,8 @@
       </div>
       <div class="create_btn">
         <div class="create_cancel" @click="cancelIntel">取消</div>
-        <div class="create_confirm" @click="createData" v-if="type==='create'">创建</div>
-        <div class="create_confirm" @click="saveData" v-if="type==='edit'">保存</div>
+        <div class="create_confirm" @click="createData()" v-if="type==='create'">创建</div>
+        <div class="create_confirm" @click="createData('edit')" v-if="type==='edit'">保存</div>
     
       </div>
     </div>
@@ -78,7 +79,7 @@
         <div class="select_content">
           <div
                 class="textarea"
-                :class="[fileInputAry && fileInputAry.length > 0 ? 'intelAreaAry' : 'intelArea']"
+                :class="[fileInputAry && fileInputAry.length > 0 ? 'sampleAreaAry' : 'sampleArea']"
               >
                 <el-input
                   v-model="intelQuestion"
@@ -132,7 +133,7 @@
                         justify-content: center;
                         align-items: center;
                       "
-                      @click="deleteImg(index)"
+                      @click.stop="deleteImg(index)"
                     >
                       <img src="@/assets/close.png" style="width: 10px; height: 10px" />
                     </span>
@@ -169,25 +170,40 @@
       <div class="empty_text">暂无智能体</div>
       <div class="empty_create" @click="createIntel('create')">创建智能体</div>
     </div>
+    <FileUpload ref="fileRefs"></FileUpload>
+    <commonUploadModal ref="commonUploadModals"></commonUploadModal>
+    <FilePreUpload ref="filePreRef"></FilePreUpload>
   </div>
 
 </template>
 <script setup>
-import { ref,onMounted,onUnmounted } from 'vue'
+import { ref,onMounted,onUnmounted,nextTick } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import request from '@/utils/request' // 导入封装的 axios 方法
 import eventBus from '@/utils/eventBus'
+import FileUpload from '../component/fileUploadModal.vue'
+import commonUploadModal from '../component/commonUploadModal.vue'
+import FilePreUpload from '../component/filePreModal.vue'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
 import imageC from '@/assets/stop.png'
-const { intelList,isCreate,answerListIntel,activeIndexIntel,currentIntel,isSampleLoad,fileInputAry,isLogin,adjustTextareaHeight,textareaInputIntel,intelQuestion,dynamicRows,  handleShiftEnter } = useShared()
+import word from '@/assets/w.png'
+import text from '@/assets/text.png'
+import pdf from '@/assets/pdf.png'
+import excel from '@/assets/excl.png'
+import ppt from '@/assets/ppt.png'
+const { intelList,isCreate,answerListIntel,activeIndexIntel,currentIntel,isSampleLoad,fileInputAry,isLogin,adjustTextareaHeight,textareaInputIntel,intelQuestion,dynamicRows,  handleShiftEnter,isDragOver,fileAry } = useShared()
 const formIntel = ref({
   name: '',
   description: '',
   nickName:'',
-  tone:''
+  tone:'',
+  id:''
 })
+const fileRefs = ref(null)
+const commonUploadModals = ref(null)
+const filePreRef = ref(null)
 const type = ref('create')
 const placeholderText = ref(`# 设定
 你是一位营销文案奇才，擅长通过对话引导用户明确其产品或服务需求，并能创作出既幽默诙谐又信息准确、吸引力十足的广告语、宣传文案和社交媒体内容。
@@ -207,6 +223,7 @@ const createIntel = (val) => {
         formIntel.value.nickName = data.role
         formIntel.value.description = data.description
         formIntel.value.tone = data.tone
+        formIntel.value.id = answerListIntel.value[i].id
       }
     }
   }else{
@@ -215,20 +232,23 @@ const createIntel = (val) => {
     formIntel.value.nickName = ''
     formIntel.value.description = ''
     formIntel.value.tone = ''
+    formIntel.value.id = ''
   }
+  console.log(formIntel.value)
   isCreate.value = true
 }
 const cancelIntel = () => {
   isCreate.value = false
 }
 
-const saveData = () => {
 
+const showFileMenu = ref(false)
+const showFileSample = val => {
+  showFileMenu.value = !showFileMenu.value
 }
 const submitSampleSend = () => {
   if (isSampleLoad.value) {
     stopQuery('sample')
-    // cancelCurrentRequest('sample')
     return
   }
   submitSample()
@@ -245,6 +265,7 @@ const stopQuery = async type => {
     })
     .catch(err => {})
 }
+
 const handleFileSelect = (val1, val2) => {
   showFileMenu.value = false
   if (!isLogin.value) {
@@ -259,7 +280,15 @@ const handleFileSelect = (val1, val2) => {
     }
   })
 }
-
+const deleteImg = index => {
+  fileInputAry.value.splice(index, 1)
+  if (!fileInputAry.value || fileInputAry.value.length === 0) {
+    fileInputAry.value = []
+    nextTick(() => {
+      adjustTextareaHeight('textareaInputIntel')
+    })
+  }
+}
 const samplePost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
@@ -278,21 +307,34 @@ const showListFile = val => {
   fileAry.value.push(val)
   filePreRef.value.openFile('sample')
 }
-const createData = () => {
+const saveData = () => {
+
+}
+const createData = (val) => {
   if(!formIntel.value.name){
     ElMessage.warning('请输入智能体名称')
     return
   }
+  if(!formIntel.value.nickName){
+    ElMessage.warning('请输入智能体角色')
+    return
+  }
+  
   if(!formIntel.value.description){
     ElMessage.warning('请输入智能体设定')
     return
   }
+  let id = ''
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-  intelList.value.push(formIntel.value.name)
   const params = JSON.parse(JSON.stringify(formIntel.value))
+  console.log(params)
+  if(!val){
+    intelList.value.push(formIntel.value.name)
+  }
+
   request
     .post('/Agent/saveAgent ', {
-      id:'',
+      id:params.id,
       userId:userInfo.id,
       persona:{
         name:params.name,
@@ -306,7 +348,6 @@ const createData = () => {
       currentIntel.value.role = params.role
       currentIntel.value.tone = params.tone
       currentIntel.value.description = params.description
-      console.log(currentIntel.value)
       isCreate.value = false
       getHistory()
     })
@@ -323,6 +364,19 @@ const isPureObject = value => {
   const proto = Object.getPrototypeOf(value);
   return proto === Object.prototype || proto === null;
 }
+const submitSampleFile = val => {
+  // isDragOver.value = false
+  for (var i = 0; i < val.length; i++) {
+    val[i].fileName = decodeURIComponent(val[i].fileName)
+    val[i].originalFileName = decodeURIComponent(val[i].originalFileName)
+  }
+  fileAry.value = val
+  fileInputAry.value = JSON.parse(JSON.stringify(val))
+  console.log(fileInputAry.value)
+  nextTick(() => {
+    adjustTextareaHeight('textareaInputIntel')
+  })
+}
 const getHistory = async (val) => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
@@ -334,8 +388,11 @@ const getHistory = async (val) => {
         for(var i=0;i<res.data.length;i++){
           intelList.value.push(res.data[i].persona.name)
         }
-        activeIndexIntel.value = 0
-        currentIntel.value = answerListIntel.value[0].persona
+        if(res.data.length>0){
+          activeIndexIntel.value = 0
+          currentIntel.value = answerListIntel.value[0].persona
+        }
+
    
       }
     })
@@ -348,6 +405,8 @@ const getHistory = async (val) => {
 onMounted(() => {
   eventBus.on('getHistoryData',getHistory)
   eventBus.on('setInfo', createIntel)
+  eventBus.on('closeIntel', cancelIntel)
+  eventBus.on('submit-sampleFile', submitSampleFile)
   activeIndexIntel.value = 0
   adjustTextareaHeight('textareaInputIntel')
   getHistory()
@@ -356,6 +415,8 @@ onMounted(() => {
 onUnmounted(() => {
   eventBus.off('getHistoryData',getHistory)
   eventBus.off('setInfo', createIntel)
+  eventBus.off('closeIntel', cancelIntel)
+  eventBus.off('submit-sampleFile', submitSampleFile)
 })
 </script>
 <style lang="less" scoped>
@@ -417,12 +478,12 @@ onUnmounted(() => {
     opacity: 0;
   }
 }
-.intelArea {
+.sampleArea {
   .el-textarea__inner {
     padding: 18px 100px 18px 15px !important;
   }
 }
-.intelAreaAry {
+.sampleAreaAry {
   .el-textarea__inner {
     padding: 56px 100px 18px 15px !important;
   }
@@ -592,7 +653,7 @@ onUnmounted(() => {
       margin-top: 30px;
       position: relative;
       .create_ai {
-        width: 90px;
+        width: 116px;
         border-radius: 4px;
         height: 32px;
         font-size: 14px;

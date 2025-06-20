@@ -727,24 +727,6 @@ const getFile = fileObj => {
         source: null
       }
       previewFileId.value = fileOther.uid
-      // if (selectList.value.length < 5) {
-      //   // 检查obj的name是否已存在于selectList中
-      //   const isNameExist = selectList.value.some(item => item.name === fileOther.name)
-      //   if (!isNameExist) {
-      //     if (type.value !== 'sample') {
-      //       selectList.value = []
-      //     }
-      //     selectList.value.push(fileOther)
-      //     fileQueue.value = fileQueue.value.map(item => {
-      //       const isNameMatch = selectList.value.some(listItem => listItem.name === item.fileName)
-      //       return {
-      //         ...item,
-      //         isBorder: isNameMatch
-      //       }
-      //     })
-      //   }
-      // }
-
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
       handlePreview(fileOther)
     })

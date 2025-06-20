@@ -430,7 +430,7 @@
                         justify-content: center;
                         align-items: center;
                       "
-                      @click="deleteImg(index)"
+                      @click.stop="deleteImg(index)"
                     >
                       <img src="@/assets/close.png" style="width: 10px; height: 10px" />
                     </span>
