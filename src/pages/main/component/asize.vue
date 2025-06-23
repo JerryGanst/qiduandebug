@@ -1170,7 +1170,7 @@ onMounted(() => {
       localStorage.setItem('isLaw', false)
     }
     getPower()
-    getUserPower()
+
     userInfo.value.name = loginData.name
     userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
     emit('change-history')
@@ -1207,6 +1207,7 @@ watch(
   () => networkState.networkType,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
+      getUserPower()
       console.log(`网络类型从 ${oldVal} 切换到 ${newVal}`)
       // 在这里触发你的业务逻辑
     }
