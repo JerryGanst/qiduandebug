@@ -288,33 +288,21 @@
                   <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="!isNet">
                     <el-radio-button label="人资行政专题" value="人资行政专题" disabled>人资行政专题</el-radio-button>
                   </el-tooltip>
-                  <el-radio-button 
-                    label="人资行政专题" 
-                    value="人资行政专题" 
-                    v-if="isNet"
-                  >
-                   人资行政专题
-                  </el-radio-button>
+                  <el-radio-button label="人资行政专题" value="人资行政专题" v-if="isNet">人资行政专题</el-radio-button>
                   <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="!isNet">
-                    <el-radio-button label="IT专题" value="IT专题" disabled>法IT专题</el-radio-button>
+                    <el-radio-button label="IT专题" value="IT专题" disabled>IT专题</el-radio-button>
                   </el-tooltip>
-                  <el-radio-button 
-                    label="IT专题" 
-                    value="IT专题" 
-                    v-if="isNet"
+                  <el-radio-button label="IT专题" value="IT专题" v-if="isNet">IT专题</el-radio-button>
+                  <el-tooltip
+                    content="该模式仅支持通过office网络访问"
+                    placement="top"
+                    v-if="isLaw === 'true' && !isNet"
                   >
-                    IT专题
-                  </el-radio-button>
-                  <!-- <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="isLaw && !isNet">
                     <el-radio-button label="法务专题" value="法务专题" disabled>法务专题</el-radio-button>
                   </el-tooltip>
-                  <el-radio-button 
-                    label="法务专题" 
-                    value="法务专题" 
-                    v-if="isLaw && isNet"
-                  >
+                  <el-radio-button label="法务专题" value="法务专题" v-if="isLaw === 'true' && isNet">
                     法务专题
-                  </el-radio-button> -->
+                  </el-radio-button>
                   <!-- <el-radio-button label="法务专题" value="法务专题" v-if="isLaw" :disabled="!isNet">法务专题</el-radio-button> -->
                 </el-radio-group>
               </div>
@@ -356,19 +344,19 @@
                   <img
                     :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
                     class="arrow"
-                    v-if="isNet&&pageType === 'query'"
+                    v-if="isNet && pageType === 'query'"
                     @click="submitQuestionSend"
                   />
                   <img
                     :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
                     class="arrow"
-                    v-if="isNet&&pageType === 'it'"
+                    v-if="isNet && pageType === 'it'"
                     @click="submitITSend"
                   />
                   <img
                     :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
                     class="arrow"
-                    v-if="isNet&&pageType === 'law'"
+                    v-if="isNet && pageType === 'law'"
                     @click="submitLawSend"
                   />
                 </div>
@@ -488,7 +476,7 @@
           <commonModal ref="commonLedge" v-if="fileModal === 2"></commonModal>
         </div>
         <div v-if="contentType === 3">
-          <createIntel  ></createIntel>
+          <createIntel></createIntel>
         </div>
       </el-main>
     </el-container>
@@ -603,8 +591,7 @@ const {
   dragUploads,
   isDragOver,
   isNet,
-  isCreate,
- 
+  isCreate
 } = useShared()
 
 const queryIng = ref(false)
@@ -772,7 +759,7 @@ const updateDots = () => {
 }
 
 const toDoc = async data => {
-  if(!isNet.value){
+  if (!isNet.value) {
     ElMessage.warning('该模式仅支持通过office网络访问')
     return
   }
@@ -881,7 +868,7 @@ const submitFinal = async (val, isRefresh, ob) => {
   let title = ''
   if (isRefresh) {
     let current = currentId.value
-    if(!current){
+    if (!current) {
       current = answerList.value[activeIndex.value].id
     }
     const idx = answerList.value.findIndex(item => item.id === current)
@@ -925,10 +912,10 @@ const submitFinal = async (val, isRefresh, ob) => {
   finalQuest.value = ob ? ob.originalFileName : queryData
   const passQuery = ob ? ob.originalFileName : queryData
   entryRef.value.changeDynamicRows()
-  if(ob&&!isPureObject(ob.fileId)){
+  if (ob && !isPureObject(ob.fileId)) {
     const objSample = {
-          fileId:ob.fileId,
-          local:ob.local
+      fileId: ob.fileId,
+      local: ob.local
     }
     ob.fileId = objSample
   }
@@ -942,9 +929,11 @@ const submitFinal = async (val, isRefresh, ob) => {
     .post('/AI/summarize', {
       user_id: userInfo.value.id,
       question: passQuery,
-      file: ob ? ob.fileId : {
-        fileId:''
-      }
+      file: ob
+        ? ob.fileId
+        : {
+            fileId: ''
+          }
       // showLoading: true
     })
     .then(res => {
@@ -993,7 +982,7 @@ const submitFinal = async (val, isRefresh, ob) => {
 const samplePost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault() // 阻止默认的换行行为
-    if (isSampleLoad.value  || queryIng.value || docIng.value || tranIng.value || finalIng.value) {
+    if (isSampleLoad.value || queryIng.value || docIng.value || tranIng.value || finalIng.value) {
       ElMessage.warning('有问答正在进行中,请稍后再试')
       return
     }
@@ -1040,7 +1029,7 @@ const refreshData = () => {
         }
       }
     }
-    fileInputAry.value =  ary
+    fileInputAry.value = ary
     submitSample(chatQuery.messages[chatQuery.messages.length - 2].content, true)
   }
 }
@@ -1223,11 +1212,11 @@ const quickJSONCheck = str => {
 }
 const isPureObject = value => {
   // 排除 null 和基础类型
-  if (typeof value !== 'object' || value === null) return false;
-  
+  if (typeof value !== 'object' || value === null) return false
+
   // 排除数组、日期、正则等
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || proto === null;
+  const proto = Object.getPrototypeOf(value)
+  return proto === Object.prototype || proto === null
 }
 const submitSample = async (val, isRefresh) => {
   const fileInput = fileInputAry.value
@@ -1251,18 +1240,18 @@ const submitSample = async (val, isRefresh) => {
   let filesSample = []
   if (fileInput && fileInput.length > 0) {
     for (var me = 0; me < fileInput.length; me++) {
-      if(isPureObject(fileInput[me].fileId)){
+      if (isPureObject(fileInput[me].fileId)) {
         filesSample.push(fileInput[me].fileId)
-      }else{
+      } else {
         const objSample = {
-          fileId:fileInput[me].fileId,
-          local:fileInput[me].local
+          fileId: fileInput[me].fileId,
+          local: fileInput[me].local
         }
         filesSample.push(objSample)
       }
-      
-      fileInput[me].local = fileInput[me].fileId.local===false?fileInput[me].fileId.local:fileInput[me].local
-      fileInput[me].fileId = fileInput[me].fileId.fileId?fileInput[me].fileId.fileId:fileInput[me].fileId
+
+      fileInput[me].local = fileInput[me].fileId.local === false ? fileInput[me].fileId.local : fileInput[me].local
+      fileInput[me].fileId = fileInput[me].fileId.fileId ? fileInput[me].fileId.fileId : fileInput[me].fileId
     }
   }
   const currentData = {
@@ -1408,7 +1397,9 @@ const submitSample = async (val, isRefresh) => {
         chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
 
         nextTick(() => {
+          // dynamicRows.value = 1
           adjustTextareaHeight('textareaInputSample')
+          // adjustTextareaHeight('textareaInputSampleCurrent')
           // 滚动到底部
           if (messageContainer.value) {
             const messages = messageContainer.value.children
@@ -1483,7 +1474,9 @@ const submitSample = async (val, isRefresh) => {
     limitId.value = ''
     queryIng.value = false
     nextTick(() => {
+      // dynamicRows.value = 1
       adjustTextareaHeight('textareaInputSample')
+      // adjustTextareaHeight('textareaInputSampleCurrent')
     })
     ElMessage.error('服务器繁忙,请稍后再试')
   }
@@ -1512,7 +1505,7 @@ const submitTran = async (val, isRefresh, obj) => {
   let title = ''
   if (isRefresh) {
     let current = currentId.value
-    if(!current){
+    if (!current) {
       current = answerList.value[activeIndex.value].id
     }
     const idx = answerList.value.findIndex(item => item.id === current)
@@ -1524,7 +1517,6 @@ const submitTran = async (val, isRefresh, obj) => {
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
     questions.value.unshift(limitTitle)
-
   }
   if (!isRefresh) {
     const qData = '新对话' + '(tran)'
@@ -1550,10 +1542,10 @@ const submitTran = async (val, isRefresh, obj) => {
 
   currentRequestUrl.value = '/AI/translate'
   console.log(obj)
-  if(obj&&!isPureObject(obj.fileId)){
+  if (obj && !isPureObject(obj.fileId)) {
     const objSample = {
-          fileId:obj.fileId,
-          local:obj.local
+      fileId: obj.fileId,
+      local: obj.local
     }
     obj.fileId = objSample
   }
@@ -1568,9 +1560,11 @@ const submitTran = async (val, isRefresh, obj) => {
       user_id: userInfo.value.id,
       source_text: obj ? '' : passData,
       target_language: selectedLan.value,
-      file: obj ? obj.fileId : {
-        fileId:''
-      }
+      file: obj
+        ? obj.fileId
+        : {
+            fileId: ''
+          }
       // showLoading: true
     })
     .then(res => {
@@ -2144,6 +2138,7 @@ const getPower = () => {
 }
 const setlaw = () => {
   isLaw.value = localStorage.getItem('isLaw')
+  console.log(isLaw.value)
   getPower()
 }
 const handleClickOutside = event => {
@@ -2158,6 +2153,7 @@ onMounted(() => {
   nextTick(() => {
     isLaw.value = localStorage.getItem('isLaw')
     isNet.value = localStorage.getItem('isNet')
+    console.log(isLaw.value)
   })
 })
 // 组件卸载时关闭 SSE 连接

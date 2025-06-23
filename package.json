@@ -18,6 +18,7 @@
     "@vue-office/excel": "^1.7.14",
     "@vue-office/pptx": "^1.0.1",
     "highlight.js": "^11.11.1",
+    "jsencrypt": "^3.3.2",
     "lodash-es": "^4.17.21",
     "mammoth": "^1.9.0",
     "marked": "^15.0.7",

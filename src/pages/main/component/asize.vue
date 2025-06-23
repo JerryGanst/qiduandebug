@@ -9,7 +9,7 @@
         <div class="aside_message_text" :style="{ color: selectType === 1 ? '#1B6CFF' : '#9D9D9D' }">对话</div>
       </div>
 
-      <div class="aside_left_file" v-if="isPowerFile" @click="changeContent(2)" >
+      <div class="aside_left_file" v-if="isPowerFile" @click="changeContent(2)">
         <div class="aside_img" :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }">
           <img
             :src="selectType === 2 ? fileBlue : fileGray"
@@ -18,7 +18,7 @@
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
       </div>
-      <!-- <div class="aside_left_file" @click="changeContent(3)" style="top: 225px"  >
+      <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
         <div class="aside_img" :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }">
           <img
             :src="selectType === 3 ? IntelligenceBlue : IntelligenceGray"
@@ -26,7 +26,7 @@
           />
         </div>
         <div class="aside_message_text" :style="{ color: selectType === 3 ? '#1B6CFF' : '#9D9D9D' }">智能体</div>
-      </div> -->
+      </div>
 
       <div class="user-avatar-container" v-if="isLogin">
         <!-- 头像 -->
@@ -194,15 +194,19 @@
           <span class="intel_title">我的智能体</span>
         </div>
         <div style="width: 190px; margin-left: 10px; margin-top: 5px">
-          <el-input v-model="searchTextIntel" placeholder="搜索历史对话" clearable
-              @clear="clearData"
-              @keydown.enter.prevent="searchData">
+          <el-input
+            v-model="searchTextIntel"
+            placeholder="搜索历史对话"
+            clearable
+            @clear="clearData"
+            @keydown.enter.prevent="searchData"
+          >
             <template #suffix>
               <el-icon class="search-icon" @click="searchData" style="cursor: pointer"><Search /></el-icon>
             </template>
           </el-input>
         </div>
-        <el-menu :default-active="activeIndexIntel" class="el_menu" style="margin-top: 10px;">
+        <el-menu :default-active="activeIndexIntel" class="el_menu" style="margin-top: 10px">
           <el-menu-item
             v-for="(question, index) in intelList"
             :key="index"
@@ -366,6 +370,7 @@
 import { ref, onMounted, computed, nextTick, reactive } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElButton, ElDivider, ElMessage, ElPopover } from 'element-plus' // 引入 ElMessage
+import { encryptData } from '@/utils/rsa'
 import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import eventBus from '@/utils/eventBus'
@@ -454,7 +459,7 @@ const {
   intelList,
   isNet,
   isCreate,
-  currentIntel,
+  currentIntel
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -468,21 +473,17 @@ const titleVisibleIntel = ref(false)
 const selectType = ref(1)
 // 当前url的路由信息(由luxshare传来的参数)
 const queryParams = route.query
-const emit = defineEmits(['change-history', 'set-isLaw', 'set-message', 'set-FileModel','setNet'])
+const emit = defineEmits(['change-history', 'set-isLaw', 'set-message', 'set-FileModel', 'setNet'])
 
 // 过滤后的数据（使用计算属性）
 const filterIntelData = computed(() => {
   if (!searchTextIntel.value) {
-    return intelList.value;
+    return intelList.value
   }
-  
-  const searchText = searchTextIntel.value.toLowerCase();
-  return intelList.value.filter(item => 
-    Object.values(item).some(
-      val => String(val).toLowerCase().includes(searchText)
-    )
-  );
-});
+
+  const searchText = searchTextIntel.value.toLowerCase()
+  return intelList.value.filter(item => Object.values(item).some(val => String(val).toLowerCase().includes(searchText)))
+})
 
 // 左上角折叠控制函数
 const toggleCollapse = () => {
@@ -523,7 +524,7 @@ const togglePopoverIntel = index => {
   popoverVisibleIntel[index] = !popoverVisibleIntel[index]
 }
 const createIntel = () => {
-  eventBus.emit('setInfo','create')
+  eventBus.emit('setInfo', 'create')
   // isCreate.value = true
   // 这里可以添加额外的搜索逻辑
 }
@@ -567,8 +568,8 @@ const changeContent = val => {
     ElMessage.warning('请先登录再使用')
     return false
   }
-  if(val===2||val===3){
-    if(!isNet.value){
+  if (val === 2 || val === 3) {
+    if (!isNet.value) {
       ElMessage.warning('该模式仅支持通过office网络访问')
       return
     }
@@ -615,7 +616,7 @@ const handleEditIntel = (val, index) => {
   //       id = answerListIntel.value[i].id
   //     }
   //   }
-  eventBus.emit('setInfo',   {
+  eventBus.emit('setInfo', {
     param1: 'edit',
     param2: val
   })
@@ -646,15 +647,11 @@ const changeTitleIntel = async (id, val) => {
     .post('/Message/changeTitle?id=' + id + '&title=' + val)
     .then(res => {
       if (res.status) {
-
         ElMessage.success('修改智能体标题成功')
-
       } else {
-
       }
     })
     .catch(err => {
-
       console.error(err)
     })
 }
@@ -684,16 +681,27 @@ const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value
 }
 //登录接口
-const submitForm = async () => {
-  const data = {
-    userid: loginForm.value.username,
-    password: loginForm.value.password
-  }
+const submitForm = () => {
+  request
+    .get('/UserInfo/getPublicKey')
+    .then(res => {
+      if (res.status) {
+        console.log(loginForm.value.password)
+        const password = encryptData(res.data.publicKey, loginForm.value.password)
+
+        submitLoginForm(res.data.requestId, password)
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
+const submitLoginForm = async (id, password) => {
   request
     .post('/UserInfo/login', {
       userid: loginForm.value.username,
-      password: loginForm.value.password
-      // showLoading: true
+      password: password,
+      requestId: id
     })
     .then(res => {
       if (res.data && res.data.clientStatus === 'PASS') {
@@ -702,7 +710,8 @@ const submitForm = async () => {
         activeIndex.value = ''
         activeIndexIntel.value = ''
         isLogin.value = true
-        getUserInfo(data.userid)
+        console.log(res.data)
+        getUserInfo(loginForm.value.username)
         dialogVisible.value = false
       } else if (res.data && res.data.clientStatus !== 'PASS') {
         ElMessage.error(res.data.message)
@@ -824,13 +833,12 @@ const handleConfirmDelete = (val, index) => {
   deleteData(id)
 }
 const deleteDataIntel = async (id, isRefresh) => {
-
   request
     .post('/Agent/deleteAgentById?agentId=' + id, {})
     .then(res => {
       if (res.status) {
         if (!isRefresh) {
-          eventBus.emit('getHistoryData','')
+          eventBus.emit('getHistoryData', '')
         }
       }
     })
@@ -877,7 +885,7 @@ const searchData = () => {
   eventBus.emit('getHistoryData', searchTextIntel.value)
   // 调用后端接口或其他搜索逻辑
 }
-const clearData= () => {
+const clearData = () => {
   eventBus.emit('getHistoryData', '')
   // 调用后端接口或其他搜索逻辑
 }
@@ -894,7 +902,6 @@ const queryAnIntel = (val, index) => {
   const data = answerListIntel.value[index]
   currentIntel.value = data.persona
   eventBus.emit('closeIntel')
-  
 }
 // 点击切换左侧栏，控制左侧栏和右侧面板的数据
 const queryAn = (val, index, data) => {
@@ -1115,15 +1122,14 @@ const getUserPower = () => {
     .get('/UserInfo/getUserIP')
     .then(res => {
       if (res.status) {
-        localStorage.setItem('isNet',res.data)
-        isNet.value = false
+        localStorage.setItem('isNet', res.data)
+        isNet.value = res.data
         emit('setNet')
       }
     })
     .catch(err => {
       console.error(err)
     })
-  
 }
 const getPower = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
@@ -1133,9 +1139,8 @@ const getPower = () => {
       if (res.status) {
         localStorage.setItem('powerList', JSON.stringify(res.data))
         powerArr.value = res.data
-        
+
         if (powerArr.value.length > 0) {
-          
           for (var i = 0; i < powerArr.value.length; i++) {
             powerArr.value[i].name =
               powerArr.value[i].target === 'IT'

@@ -12,10 +12,10 @@ const intelList = ref([])
 const answerList = ref([]) //历史记录数组
 const answerListIntel = ref([])
 const currentIntel = ref({
-  name:'',
-  role:'',
-  tone:'',
-  description:''
+  name: '',
+  role: '',
+  tone: '',
+  description: ''
 })
 const isCreate = ref(false)
 const contentType = ref(1)
@@ -46,7 +46,16 @@ const chatQuery = reactive({
   //通用模式数据对象
   messages: []
 })
+const intelQuery = reactive({
+  //智能体数据对象
+  messages: []
+})
+
 const chatCurrent = reactive({
+  //通用模式数据对象
+  messages: []
+})
+const intelCurrent = reactive({
   //通用模式数据对象
   messages: []
 })
@@ -62,14 +71,16 @@ const finalData = ref({
 const handleShiftEnter = val => {
   const textareaRef =
     val === 'textareaInputQuery'
-      ? textareaInputQuery:
-          val === 'textareaInputIntel'?
-          textareaInputIntel
-      : val === 'textareaInputSample'
-        ? textareaInputSample
-        : val === 'textareaInputTran'
-          ? textareaInputTran
-          : textareaInputFinal
+      ? textareaInputQuery
+      : val === 'textareaInputIntel'
+        ? textareaInputIntel
+        : val === 'textareaInputSample'
+          ? textareaInputSample
+          : val === 'textareaInputSampleCurrent'
+            ? textareaInputSampleCurrent
+            : val === 'textareaInputTran'
+              ? textareaInputTran
+              : textareaInputFinal
   const textarea = textareaRef.value?.textarea
   if (textarea) {
     const startPos = textarea.selectionStart
@@ -91,6 +102,7 @@ const handleShiftEnter = val => {
 }
 const textareaInputQuery = ref(null) // 获取 textarea 元素的引用
 const textareaInputSample = ref(null) // 获取 textarea 元素的引用
+const textareaInputSampleCurrent = ref(null) // 获取 textarea 元素的引用
 const textareaInputTran = ref(null) // 获取 textarea 元素的引用
 const textareaInputFinal = ref(null) // 获取 textarea 元素的引用
 const textareaInputIntel = ref(null) // 获取 textarea 元素的引用
@@ -120,13 +132,15 @@ const adjustTextareaHeight = val => {
     val === 'textareaInputQuery'
       ? textareaInputQuery
       : val === 'textareaInputSample'
-        ? textareaInputSample       
-           : val === 'textareaInputIntel'
-           ? textareaInputIntel
-        : val === 'textareaInputTran'
-          ? textareaInputTran
-          : textareaInputFinal
-          console.log(textareaRef)
+        ? textareaInputSample
+        : val === 'textareaInputSampleCurrent'
+          ? textareaInputSampleCurrent
+          : val === 'textareaInputIntel'
+            ? textareaInputIntel
+            : val === 'textareaInputTran'
+              ? textareaInputTran
+              : textareaInputFinal
+  console.log(textareaRef)
   const textarea = textareaRef.value?.textarea
 
   if (textarea) {
@@ -251,14 +265,14 @@ export function useShared() {
   const updateCurrentIntel = newName => {
     currentIntel.value = newName
   }
-  
+
   const updateTipQuery = newName => {
     tipQuery.value = newName
   }
   const updateCurrentTip = newName => {
     currentTip.value = newName
   }
-  
+
   const updateActiveIndex = newName => {
     activeIndex.value = newName
   }
@@ -272,8 +286,15 @@ export function useShared() {
   const updateChatQuery = newName => {
     chatQuery.messages = newName
   }
+  const updateIntelQuery = newName => {
+    intelQuery.messages = newName
+  }
+
   const updateChatCurrent = newName => {
     chatCurrent.messages = newName
+  }
+  const updateIntelCurrent = newName => {
+    intelCurrent.messages = newName
   }
 
   const updateIsLogin = newName => {
@@ -335,7 +356,7 @@ export function useShared() {
   const updateTranIng = newName => {
     tranIng.value = newName
   }
-  
+
   const updateLimitAry = newName => {
     limitAry.value = newName
   }
@@ -372,7 +393,7 @@ export function useShared() {
   const updateIntelQuestion = newName => {
     intelQuestion.value = newName
   }
-  
+
   watch(
     newQuestion,
     newVal => {
@@ -399,6 +420,7 @@ export function useShared() {
     intelList,
     answerList,
     answerListIntel,
+    intelCurrent,
     currentId,
     pageType,
     selectedMode,
@@ -411,6 +433,7 @@ export function useShared() {
     activeIndexIntel,
     queryTypes,
     chatQuery,
+    intelQuery,
     isLogin,
     fileObj,
     fileAry,
@@ -424,6 +447,7 @@ export function useShared() {
     transData,
     textareaInputQuery,
     textareaInputSample,
+    textareaInputSampleCurrent,
     textareaInputTran,
     textareaInputFinal,
     textareaInputIntel,
@@ -496,6 +520,8 @@ export function useShared() {
     updateContentType,
     updateIsNet,
     updateIntelQuestion,
-    updateCurrentTip
+    updateCurrentTip,
+    updateIntelQuery,
+    updateIntelCurrent
   }
 }
