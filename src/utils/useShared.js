@@ -10,6 +10,7 @@ const limitLoading = ref(false) // 切换左侧历史记录，判断当前选中
 const questions = ref([]) // 左侧历史记录标题数组
 const intelList = ref([])
 const answerList = ref([]) //历史记录数组
+const selectType = ref(1)
 const answerListIntel = ref([])
 const currentIntel = ref({
   name: '',
@@ -393,6 +394,9 @@ export function useShared() {
   const updateIntelQuestion = newName => {
     intelQuestion.value = newName
   }
+  const updateSelectType = newName => {
+    selectType.value = newName
+  }
 
   watch(
     newQuestion,
@@ -406,6 +410,7 @@ export function useShared() {
   return {
     currentQuestion,
     newQuestion,
+    selectType,
     isNet,
     isCreate,
     isSampleStop,
@@ -522,6 +527,7 @@ export function useShared() {
     updateIntelQuestion,
     updateCurrentTip,
     updateIntelQuery,
-    updateIntelCurrent
+    updateIntelCurrent,
+    updateSelectType
   }
 }

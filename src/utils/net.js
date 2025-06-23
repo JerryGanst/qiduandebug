@@ -5,7 +5,7 @@ import request from '@/utils/request'
 import { useShared } from '@/utils/useShared'
 const isOnline = ref(navigator.onLine)
 const networkType = ref('unknown')
-const { isNet } = useShared()
+const { isNet, selectType } = useShared()
 // 判断是否为内网的函数（根据你的实际需求调整）
 function checkIsInternalNetwork() {
   // 示例：通过域名或IP判断
@@ -36,7 +36,7 @@ function initNetworkListener() {
   window.addEventListener('offline', updateNetworkStatus)
 
   // 定期检查网络类型（因为切换网络不一定会触发online/offline事件）
-  setInterval(updateNetworkStatus, 5000)
+  setInterval(updateNetworkStatus, 60000)
 
   // 初始检查
   updateNetworkStatus()
@@ -48,6 +48,9 @@ function getUserPower() {
       if (res.status) {
         localStorage.setItem('isNet', res.data)
         isNet.value = res.data
+        if (!isNet.value) {
+          selectType.value = 1
+        }
       }
     })
     .catch(err => {

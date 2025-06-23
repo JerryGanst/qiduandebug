@@ -460,7 +460,8 @@ const {
   intelList,
   isNet,
   isCreate,
-  currentIntel
+  currentIntel,
+  selectType
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -471,7 +472,6 @@ const passwordVisible = ref(false)
 const knowOptions = ref([])
 const titleVisible = ref(false)
 const titleVisibleIntel = ref(false)
-const selectType = ref(1)
 // 当前url的路由信息(由luxshare传来的参数)
 const queryParams = route.query
 const emit = defineEmits(['change-history', 'set-isLaw', 'set-message', 'set-FileModel', 'setNet'])
