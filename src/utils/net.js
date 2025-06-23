@@ -5,7 +5,7 @@ import request from '@/utils/request'
 import { useShared } from '@/utils/useShared'
 const isOnline = ref(navigator.onLine)
 const networkType = ref('unknown')
-const { isNet, selectType } = useShared()
+const { isNet, selectType, contentType } = useShared()
 // 判断是否为内网的函数（根据你的实际需求调整）
 function checkIsInternalNetwork() {
   // 示例：通过域名或IP判断
@@ -50,6 +50,7 @@ function getUserPower() {
         isNet.value = res.data
         if (!isNet.value) {
           selectType.value = 1
+          contentType.value = 1
         }
       }
     })
