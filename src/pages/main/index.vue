@@ -1618,7 +1618,7 @@ const submitQuestion = async (val, isRefresh) => {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
-  if (!isNet) {
+  if (!isNet.value) {
     ElMessage.warning('该模式仅支持通过office网络访问')
     return
   }
