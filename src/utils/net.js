@@ -1,9 +1,12 @@
 // src/utils/networkService.js
 import { ref, readonly } from 'vue'
-
+import request from '@/utils/request'
+// 导入封装的 axios 方法
+import { useShared } from '@/utils/useShared'
 const isOnline = ref(navigator.onLine)
 const networkType = ref('unknown')
-
+const emit = defineEmits(['setNet'])
+const { isNet } = useShared()
 // 判断是否为内网的函数（根据你的实际需求调整）
 function checkIsInternalNetwork() {
   // 示例：通过域名或IP判断
@@ -24,7 +27,7 @@ function updateNetworkStatus() {
   } else {
     networkType.value = 'external'
   }
-
+  getUserPower()
   console.log(`网络状态变化: ${isOnline.value ? '在线' : '离线'}, 类型: ${networkType.value}`)
 }
 
@@ -39,7 +42,20 @@ function initNetworkListener() {
   // 初始检查
   updateNetworkStatus()
 }
-
+function getUserPower() {
+  request
+    .get('/UserInfo/getUserIP')
+    .then(res => {
+      if (res.status) {
+        localStorage.setItem('isNet', res.data)
+        isNet.value = res.data
+        emit('setNet')
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
 // 暴露只读的状态
 export const networkState = readonly({
   isOnline,
