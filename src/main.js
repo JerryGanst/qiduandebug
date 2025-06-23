@@ -7,7 +7,9 @@ import 'element-plus/dist/index.css'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue' // 引入所有图标
 import disableDrag from '@/utils/directives.js'
+import { setupNetworkListener } from '@/utils/net'
 const app = createApp(App)
+setupNetworkListener()
 // 添加全局事件监听
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.key === 'a') {
@@ -27,4 +29,5 @@ app.directive('disable-drag', disableDrag) // 注册为全局指令
 app.use(ElementPlus, {
   locale: zhCn
 })
+
 app.mount('#app')

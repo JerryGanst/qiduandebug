@@ -367,9 +367,10 @@
   <!-- <commonModal ref="commonLedge"></commonModal> -->
 </template>
 <script setup>
-import { ref, onMounted, computed, nextTick, reactive } from 'vue'
+import { ref, onMounted, computed, nextTick, reactive, watch } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElButton, ElDivider, ElMessage, ElPopover } from 'element-plus' // 引入 ElMessage
+import { networkState } from '@/utils/net'
 import { encryptData } from '@/utils/rsa'
 import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
@@ -1201,7 +1202,16 @@ const processedQuerys = computed(() => {
     return query.replace(/\([^)]*\)/g, '')
   })
 })
-
+// 监听网络类型变化
+watch(
+  () => networkState.networkType,
+  (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      console.log(`网络类型从 ${oldVal} 切换到 ${newVal}`)
+      // 在这里触发你的业务逻辑
+    }
+  }
+)
 defineExpose({ queryAn, deleteData, setPower })
 </script>
 <style lang="less" scoped>
