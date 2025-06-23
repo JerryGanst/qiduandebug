@@ -36,7 +36,7 @@ function initNetworkListener() {
   window.addEventListener('offline', updateNetworkStatus)
 
   // 定期检查网络类型（因为切换网络不一定会触发online/offline事件）
-  setInterval(updateNetworkStatus, 60000)
+  setInterval(updateNetworkStatus, 5000)
 
   // 初始检查
   updateNetworkStatus()
