@@ -5,7 +5,6 @@ import request from '@/utils/request'
 import { useShared } from '@/utils/useShared'
 const isOnline = ref(navigator.onLine)
 const networkType = ref('unknown')
-const emit = defineEmits(['setNet'])
 const { isNet } = useShared()
 // 判断是否为内网的函数（根据你的实际需求调整）
 function checkIsInternalNetwork() {
@@ -49,7 +48,6 @@ function getUserPower() {
       if (res.status) {
         localStorage.setItem('isNet', res.data)
         isNet.value = res.data
-        emit('setNet')
       }
     })
     .catch(err => {
