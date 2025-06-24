@@ -293,7 +293,7 @@
         </el-tooltip>
         <el-radio-button label="人资行政专题" value="人资行政专题" v-if="isNet">人资行政专题</el-radio-button>
         <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="!isNet">
-          <el-radio-button label="IT专题" value="IT专题" disabled>法IT专题</el-radio-button>
+          <el-radio-button label="IT专题" value="IT专题" disabled>IT专题</el-radio-button>
         </el-tooltip>
         <el-radio-button label="IT专题" value="IT专题" v-if="isNet">IT专题</el-radio-button>
         <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="isLaw === 'true' && !isNet">
