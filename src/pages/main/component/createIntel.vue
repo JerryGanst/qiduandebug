@@ -628,12 +628,15 @@ const postSample = async (id, agentId, title, mes) => {
       // showLoading: true
     })
     .then(res => {
+      console.log(res.status)
       if (res.status) {
         // recordId.value = res.data.id
         getHistory()
         // currentIntelId.value = res.data
         // const id = currentIntelId.value
         // getHistory(id)
+      } else {
+        ElMessage.warning(res.message)
       }
     })
     .catch(err => {
@@ -988,9 +991,6 @@ const createData = val => {
   let id = ''
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   const params = JSON.parse(JSON.stringify(formIntel.value))
-  if (!val) {
-    intelList.value.push(formIntel.value.name)
-  }
 
   request
     .post('/Agent/saveAgent ', {
@@ -1004,12 +1004,19 @@ const createData = val => {
       }
     })
     .then(res => {
-      currentIntel.value.name = params.name
-      currentIntel.value.role = params.role
-      currentIntel.value.tone = params.tone
-      currentIntel.value.description = params.description
-      isCreate.value = false
-      getHistory()
+      if (res.status) {
+        currentIntel.value.name = params.name
+        currentIntel.value.role = params.role
+        currentIntel.value.tone = params.tone
+        currentIntel.value.description = params.description
+        isCreate.value = false
+        if (!val) {
+          intelList.value.push(formIntel.value.name)
+        }
+        getHistory()
+      } else {
+        ElMessage.error(res.message)
+      }
     })
     .catch(err => {
       ElMessage.warning('创建智能体失败,请稍后再试')
