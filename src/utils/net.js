@@ -27,7 +27,6 @@ function updateNetworkStatus() {
     networkType.value = 'external'
   }
   getUserPower()
-  console.log(`网络状态变化: ${isOnline.value ? '在线' : '离线'}, 类型: ${networkType.value}`)
 }
 
 // 初始化监听
@@ -36,7 +35,7 @@ function initNetworkListener() {
   window.addEventListener('offline', updateNetworkStatus)
 
   // 定期检查网络类型（因为切换网络不一定会触发online/offline事件）
-  setInterval(updateNetworkStatus, 5000)
+  setInterval(updateNetworkStatus, 500000)
 
   // 初始检查
   updateNetworkStatus()

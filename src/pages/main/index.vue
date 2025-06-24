@@ -1482,9 +1482,6 @@ const submitSample = async (val, isRefresh) => {
   }
 }
 const submitTran = async (val, isRefresh, obj) => {
-  console.log(val)
-  console.log(isRefresh)
-  console.log(obj)
   if (queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
@@ -2157,7 +2154,6 @@ onMounted(() => {
   nextTick(() => {
     isLaw.value = localStorage.getItem('isLaw')
     isNet.value = localStorage.getItem('isNet')
-    console.log(isLaw.value)
   })
 })
 // 组件卸载时关闭 SSE 连接

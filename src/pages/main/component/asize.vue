@@ -423,6 +423,7 @@ const {
   isSampleStop,
   isQueryStop,
   limitLoading,
+  limitIntelLoading,
   questions,
   answerList,
   answerListIntel,
@@ -461,7 +462,11 @@ const {
   isNet,
   isCreate,
   currentIntel,
-  selectType
+  selectType,
+  intelQuery,
+  intelQuestion,
+  isIntelStop,
+  currentIntelId
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -687,7 +692,6 @@ const submitForm = () => {
     .get('/UserInfo/getPublicKey')
     .then(res => {
       if (res.status) {
-        console.log(loginForm.value.password)
         const password = encryptData(res.data.publicKey, loginForm.value.password)
 
         submitLoginForm(res.data.requestId, password)
@@ -711,7 +715,6 @@ const submitLoginForm = async (id, password) => {
         activeIndex.value = ''
         activeIndexIntel.value = ''
         isLogin.value = true
-        console.log(res.data)
         getUserInfo(loginForm.value.username)
         dialogVisible.value = false
       } else if (res.data && res.data.clientStatus !== 'PASS') {
@@ -900,8 +903,46 @@ const getMatchingIndexes = (arr1, val) => {
 }
 
 const queryAnIntel = (val, index) => {
-  const data = answerListIntel.value[index]
-  currentIntel.value = data.persona
+  intelQuestion.value = ''
+  isIntelStop.value = false
+  limitIntelLoading.value = false
+  val = index || index === 0 ? intelList.value[index] : val
+  const queryList = intelList.value
+  const anList = JSON.parse(JSON.stringify(answerListIntel.value))
+  const querySample = []
+
+  fileInputAry.value = []
+  const id = anList[index].id
+  currentIntelId.value = id
+  eventBus.emit('changeInfo', id)
+  eventBus.emit('getRecord', id)
+  // for (var j = 0; j < anList.length; j++) {
+  //   querySample.push(anList[j].title)
+  //   if (
+  //     val == anList[j].title ||
+  //     val ==
+  //       anList[j].data[0].content +
+  //         (answerListIntel.value[j].data[0].files
+  //           ? answerListIntel.value[j].data[0].files.map(item => item.originalFileName).join(',')
+  //           : '')
+  //   ) {
+  //     const idx = anList.length === intelList.value.length ? index : index - 1
+  //     intelQuery.messages = anList[idx].data
+  //     intelQuery.isLoading = false
+  //     currentIntelId.value = anList[idx].id
+  //     nextTick(() => {
+  //       // 滚动到底部
+  //       if (messageContainer.value) {
+  //         const messages = messageContainer.value.children
+  //         if (messages.length > 0) {
+  //           const lastMessage = messages[messages.length - 2]
+  //           // 滚动到最后一个消息的开头部分
+  //           lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  //         }
+  //       }
+  //     })
+  //   }
+  // }
   eventBus.emit('closeIntel')
 }
 // 点击切换左侧栏，控制左侧栏和右侧面板的数据
@@ -1080,10 +1121,6 @@ const queryAn = (val, index, data) => {
   if (pageType.value === 'law' && !queryLaw.includes(val) && !queryLawQs.includes(val)) {
     currentObj.value.messages = {}
   }
-  // if (pageType.value === 'sample' && !querySample.includes(val)) {
-  //   chatQuery.messages = []
-  //   chatQuery.isLoading = false
-  // }
   if (pageType.value === 'tran' && !queryTran.includes(val) && !queryTranQs.includes(val)) {
     tranIng.value = true
     transData.value = ''
@@ -1207,10 +1244,7 @@ watch(
   () => networkState.networkType,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
-      console.log(1)
       getUserPower()
-      console.log(2)
-      console.log(`网络类型从 ${oldVal} 切换到 ${newVal}`)
       // 在这里触发你的业务逻辑
     }
   }

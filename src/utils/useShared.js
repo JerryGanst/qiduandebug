@@ -5,13 +5,16 @@ const newQuestion = ref('') // 文本域输入值
 const intelQuestion = ref('') // 文本域输入值
 
 const isSampleStop = ref(false) // 控制通用模式 终止之后的状态
+
 const isQueryStop = ref(false) // 控制人资模式 终止之后的状态
 const limitLoading = ref(false) // 切换左侧历史记录，判断当前选中的记录是否处于问答状态中
 const questions = ref([]) // 左侧历史记录标题数组
 const intelList = ref([])
 const answerList = ref([]) //历史记录数组
 const selectType = ref(1)
+const recordId = ref('')
 const answerListIntel = ref([])
+const currentIntelId = ref('')
 const currentIntel = ref({
   name: '',
   role: '',
@@ -43,6 +46,7 @@ const userInfo = ref({
   url: ''
 })
 const messageContainer = ref(null)
+const messageContainerIntel = ref(null)
 const chatQuery = reactive({
   //通用模式数据对象
   messages: []
@@ -51,7 +55,7 @@ const intelQuery = reactive({
   //智能体数据对象
   messages: []
 })
-
+const limitIntelLoading = ref(false)
 const chatCurrent = reactive({
   //通用模式数据对象
   messages: []
@@ -128,6 +132,7 @@ const isLaw = ref(false)
 const knowSelect = ref(1)
 const fileInputAry = ref([])
 const isDragOver = ref(false)
+const isIntelStop = ref(false)
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -141,7 +146,6 @@ const adjustTextareaHeight = val => {
             : val === 'textareaInputTran'
               ? textareaInputTran
               : textareaInputFinal
-  console.log(textareaRef)
   const textarea = textareaRef.value?.textarea
 
   if (textarea) {
@@ -233,6 +237,10 @@ export function useShared() {
   const updateIsSampleStop = newName => {
     isSampleStop.value = newName
   }
+  const updateIsIntelStop = newName => {
+    isIntelStop.value = newName
+  }
+
   const updateIsQueryStop = newName => {
     isQueryStop.value = newName
   }
@@ -341,6 +349,10 @@ export function useShared() {
   const updateMessageContainer = newName => {
     messageContainer.value = newName
   }
+  const updateMessageContainerIntel = newName => {
+    messageContainerIntel.value = newName
+  }
+
   const updateFileObj = newName => {
     fileObj.value = newName
   }
@@ -397,6 +409,15 @@ export function useShared() {
   const updateSelectType = newName => {
     selectType.value = newName
   }
+  const updateLimitIntelLoading = newName => {
+    limitIntelLoading.value = newName
+  }
+  const updateCurrentIntelId = newName => {
+    currentIntelId.value = newName
+  }
+  const updateRecordId = newName => {
+    recordId.value = newName
+  }
 
   watch(
     newQuestion,
@@ -411,12 +432,16 @@ export function useShared() {
     currentQuestion,
     newQuestion,
     selectType,
+    recordId,
     isNet,
     isCreate,
+    currentIntelId,
     isSampleStop,
+    isIntelStop,
     isQueryStop,
     isDragOver,
     limitLoading,
+    limitIntelLoading,
     intelQuestion,
     knowSelect,
     dragUploads,
@@ -460,6 +485,7 @@ export function useShared() {
     dots,
     chatCurrent,
     messageContainer,
+    messageContainerIntel,
     deepType,
     docIng,
     tranIng,
@@ -471,6 +497,7 @@ export function useShared() {
     contentType,
     changeMode,
     updateCurrentIntel,
+    updateIsIntelStop,
     updateCurrentQuestion,
     updateNewQuestion,
     updateIsSampleStop,
@@ -505,6 +532,7 @@ export function useShared() {
     updateLimitId,
     checkData,
     updateMessageContainer,
+    updateMessageContainerIntel,
     updateFileObj,
     updateDeepType,
     checkDeepType,
@@ -528,6 +556,9 @@ export function useShared() {
     updateCurrentTip,
     updateIntelQuery,
     updateIntelCurrent,
-    updateSelectType
+    updateSelectType,
+    updateLimitIntelLoading,
+    updateCurrentIntelId,
+    updateRecordId
   }
 }

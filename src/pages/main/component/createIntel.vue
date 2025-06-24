@@ -49,7 +49,7 @@
         </div>
       </div>
       <div class="create_set">
-        <div class="create_ai">智能补充</div>
+        <div class="create_ai" @click="addIntel">智能补充</div>
         <div class="create_text">
           <span style="color: #ff4d4f">*</span>
           <span style="padding-left: 5px">设定</span>
@@ -57,7 +57,7 @@
         <div class="create_input">
           <el-input
             :placeholder="placeholderText"
-            style="width: 100%"
+            style="width: 100%; white-space: pre; font-family: monospace"
             v-model="formIntel.description"
             type="textarea"
           ></el-input>
@@ -80,10 +80,10 @@
             Hi,我是你创建的智能体{{ currentIntel.name }},在这段对话中，我将扮演{{ currentIntel.role }}的角色
           </div>
         </div>
-        <div class="sample_item" ref="messageContainer">
+        <div class="sample_item" ref="messageContainerIntel">
           <div
             class="sample_chat"
-            v-if="intelQuery.messages.length > 0 && !limitLoading"
+            v-if="intelQuery.messages.length > 0 && !limitIntelLoading"
             v-for="(item, index) in intelQuery.messages"
           >
             <div
@@ -111,6 +111,11 @@
                 <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
               </div>
             </div>
+            <!-- <div class="tip_load" v-if="index === intelQuery.messages.length - 1 && limitIntelLoading">
+              <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
+              <span style="padding-left: 10px">正在为您解答,请稍等</span>
+              <span>{{ dots }}</span>
+            </div> -->
             <div
               v-if="index % 2 === 0"
               class="sample_chat_query"
@@ -147,7 +152,7 @@
           </div>
           <div
             class="sample_chat"
-            v-if="limitLoading && intelCurrent.messages.length > 0 && limitLoading"
+            v-if="intelCurrent.messages.length > 0 && limitIntelLoading"
             v-for="(item, index) in intelCurrent.messages"
           >
             <div
@@ -196,8 +201,8 @@
               <span style="padding-left: 10px">正在为您解答,请稍等</span>
               <span>{{ dots }}</span>
             </div>
-            <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
-            <div v-if="index % 2 !== 0" class="stream-response">
+            <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" />
+            <!-- <div v-if="index % 2 !== 0" class="stream-response">
               <MarkdownRenderer
                 :markdown="item.before"
                 class="normal-text"
@@ -209,13 +214,22 @@
                   color: #666;
                 "
               />
-              <!-- 后半部分 -->
               <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
-            </div>
+            </div> -->
+          </div>
+        </div>
+        <div class="query_common" v-if="!limitIntelLoading && intelQuery.messages.length > 0">
+          <div>
+            <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
+          </div>
+          <div>
+            <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+          </div>
+          <div>
+            <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
           </div>
         </div>
       </div>
-
       <div class="select_content">
         <div class="textarea" :class="[fileInputAry && fileInputAry.length > 0 ? 'sampleAreaAry' : 'sampleArea']">
           <el-input
@@ -289,7 +303,13 @@
               </transition>
             </div>
             <img
-              :src="isIntelLoad ? imageC : intelQuestion || fileInputAry.length > 0 ? imageB : imageA"
+              :src="
+                isIntelLoad && loadingId && loadingId === currentIntelId
+                  ? imageC
+                  : intelQuestion || fileInputAry.length > 0
+                    ? imageB
+                    : imageA
+              "
               class="arrow"
               @click="submitSampleSend"
             />
@@ -302,13 +322,36 @@
       <div class="empty_text">暂无智能体</div>
       <div class="empty_create" @click="createIntel('create')">创建智能体</div>
     </div>
-    <FileUpload ref="fileRefs"></FileUpload>
-    <commonUploadModal ref="commonUploadModals"></commonUploadModal>
-    <FilePreUpload ref="filePreRef"></FilePreUpload>
   </div>
+
+  <FileUpload ref="fileRefs"></FileUpload>
+  <commonUploadModal ref="commonUploadModals"></commonUploadModal>
+  <FilePreUpload ref="filePreRef"></FilePreUpload>
+
+  <el-dialog
+    v-model="commonVisible"
+    title="评价"
+    width="500px"
+    :before-close="handleCommonClose"
+    style="border-radius: 10px"
+  >
+    <el-input
+      v-model="commonQuestion"
+      placeholder="请输入您的宝贵建议"
+      :maxlength="4096"
+      style="width: 100%"
+      clearable
+      type="textarea"
+      rows="5"
+    />
+    <div class="button-item_common">
+      <el-button @click="commonVisible = false" style="width: 100px; height: 40px; margin-left: 15px">取消</el-button>
+      <el-button type="primary" @click="submitCommon" style="width: 100px; height: 40px">提交</el-button>
+    </div>
+  </el-dialog>
 </template>
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, toRaw } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import request from '@/utils/request' // 导入封装的 axios 方法
@@ -331,7 +374,7 @@ const {
   answerListIntel,
   activeIndexIntel,
   currentIntel,
-  limitLoading,
+  limitIntelLoading,
   fileInputAry,
   isLogin,
   adjustTextareaHeight,
@@ -341,10 +384,13 @@ const {
   handleShiftEnter,
   isDragOver,
   fileAry,
-  messageContainer,
+  messageContainerIntel,
   intelQuery,
   intelCurrent,
-  dots
+  dots,
+  isIntelStop,
+  currentIntelId,
+  recordId
 } = useShared()
 const formIntel = ref({
   name: '',
@@ -354,11 +400,17 @@ const formIntel = ref({
   id: ''
 })
 const isIntelLoad = ref(false)
-
+const loadingId = ref('')
+const isDisabled = ref(false)
+const commonQuestion = ref('')
+const limitQuery = ref('')
 const fileRefs = ref(null)
 const commonUploadModals = ref(null)
 const filePreRef = ref(null)
+const commonVisible = ref(false)
 const type = ref('create')
+const currentRequestUrl = ref('')
+let interval
 const placeholderText = ref(`# 设定
 你是一位营销文案奇才，擅长通过对话引导用户明确其产品或服务需求，并能创作出既幽默诙谐又信息准确、吸引力十足的广告语、宣传文案和社交媒体内容。
 
@@ -367,6 +419,14 @@ const placeholderText = ref(`# 设定
 - 通过提问和互动，帮助用户清晰定义他们的产品特性和目标受众。
 - 识别用户的核心价值主张，并将其转化为文案的关键信息。`)
 
+const setInfo = id => {
+  const anList = JSON.parse(JSON.stringify(answerListIntel.value))
+  for (var i = 0; i < answerListIntel.value.length; i++) {
+    if (id === answerListIntel.value[i].id) {
+      currentIntel.value = anList[i].persona
+    }
+  }
+}
 const createIntel = val => {
   if (isPureObject(val)) {
     type.value = val.param1
@@ -388,7 +448,6 @@ const createIntel = val => {
     formIntel.value.tone = ''
     formIntel.value.id = ''
   }
-  console.log(formIntel.value)
   isCreate.value = true
 }
 const cancelIntel = () => {
@@ -402,26 +461,52 @@ const updateDots = () => {
     dots.value += '.' // 增加一个点
   }
 }
-
+const refreshData = () => {
+  if (isIntelLoad.value) {
+    ElMessage.warning('有问答正在进行中,请稍后再试')
+    return
+  }
+  // const anList = answerListIntel.value
+  let ary = []
+  if (activeIndexIntel.value || activeIndexIntel.value == 0) {
+    const length = intelQuery.messages.length
+    if (length === 1) {
+      ary = intelQuery.messages[0].files
+    } else if (length > 1) {
+      if (intelQuery.messages[length - 1].role === 'user') {
+        ary = intelQuery.messages[length - 1].files
+      } else {
+        ary = intelQuery.messages[length - 2].files
+      }
+    }
+  }
+  fileInputAry.value = ary
+  submitSample(intelQuery.messages[intelQuery.messages.length - 2].content, true)
+}
 const showFileMenu = ref(false)
 const showFileSample = val => {
   showFileMenu.value = !showFileMenu.value
 }
+const handleCommonClose = done => {
+  // 这里可以添加一些关闭前的逻辑
+  done()
+}
 const submitSampleSend = () => {
-  if (isIntelLoad.value) {
-    stopQuery('sample')
+  if (isIntelLoad && loadingId.value && loadingId.value === currentIntelId.value) {
+    stopQuery()
     return
   }
   submitSample()
 }
-const stopQuery = async type => {
+const stopQuery = async () => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request
-    .post('/AI/stop?userId=' + userInfo.value.id, {
+    .post('/AI/stop?userId=' + userInfo.id, {
       // showLoading: true
     })
     .then(res => {
       if (res.status) {
-        // cancelCurrentRequest(type)
+        cancelCurrentRequest()
       }
     })
     .catch(err => {})
@@ -449,6 +534,36 @@ const deleteImg = index => {
       adjustTextareaHeight('textareaInputIntel')
     })
   }
+}
+
+const limitIntelId = ref('')
+// 终止请求方法
+const cancelCurrentRequest = async val => {
+  request.cancelRequest(currentRequestUrl.value)
+  ElMessage.success('请求已中止')
+
+  isIntelLoad.value = false
+  limitIntelLoading.value = false
+  isIntelStop.value = true
+  intelQuery.messages = JSON.parse(JSON.stringify(intelCurrent.messages))
+  const mes = intelQuery.messages
+  // let title = ''
+  // for (var i = 0; i < answerListIntel.value.length; i++) {
+  //   if (
+  //     intelQuery.messages[intelQuery.messages.length - 2].content ===
+  //     answerListIntel.value[i].data[answerListIntel.value[i].data.length - 2].content
+  //   ) {
+  //     title = answerListIntel.value[i].title
+  //   }
+  // }
+  const id = recordId.value
+  const agentId = currentIntelId.value
+  postSample(id, agentId, '11', mes)
+  // limitIntelId.value = ''
+}
+const isObject = variable => {
+  const type = Object.prototype.toString.call(variable)
+  return type === '[object PointerEvent]' || type === '[object KeyboardEvent]'
 }
 const samplePost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
@@ -483,6 +598,138 @@ const checkIntelData = val => {
   }
   return true
 }
+// 逐个字显示消息内容的函数
+const displayMessage = async message => {
+  return new Promise(resolve => {
+    let i = 0
+    const interval = setInterval(() => {
+      if (i < message.content.length) {
+        // 逐个字添加到 currentMessage 中
+        currentMessage.value += message.content[i]
+        i++
+      } else {
+        // 停止定时器
+        clearInterval(interval)
+        resolve() // 当前消息显示完成
+      }
+    }, 30) // 每个字的显示间隔为 30 毫秒
+  })
+}
+const postSample = async (id, agentId, title, mes) => {
+  // let titleStr = ''
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  request
+    .post('/Agent/saveAgentChat', {
+      userId: userInfo.id,
+      id: id,
+      agentId: agentId,
+      messages: mes,
+      title: title
+      // showLoading: true
+    })
+    .then(res => {
+      if (res.status) {
+        // recordId.value = res.data.id
+        getHistory()
+        // currentIntelId.value = res.data
+        // const id = currentIntelId.value
+        // getHistory(id)
+      }
+    })
+    .catch(err => {
+      console.error('获取回复失败:', err)
+    })
+}
+const upCommon = async () => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  console.log(1)
+  if (isDisabled.value) return // 如果按钮已禁用，直接返回
+  let id = recordId.value
+  isDisabled.value = true
+  // 2 秒后重新启用按钮
+  setTimeout(() => {
+    isDisabled.value = false
+  }, 3000)
+
+  request
+    .post('/Agent/feedback', {
+      id: id,
+      feedback: {
+        agree: true,
+        content: ''
+      }
+      // showLoading: true
+    })
+    .then(res => {
+      if (res.status) {
+        ElMessage.success('谢谢您的点赞,您的支持是我们最大的动力！')
+      } else {
+        ElMessage.error('评价失败,请稍后再试')
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
+const downCommon = () => {
+  commonVisible.value = true
+}
+const submitCommon = async () => {
+  if (!isLogin.value) {
+    ElMessage.warning('请先登录再使用')
+    return false
+  }
+  let id = recordId.value
+  // if (currentIntelId.value) {
+  //   id = currentIntelId.value
+  // } else {
+  //   for (var i = 0; i < answerListIntel.value.length; i++) {
+  //     if (limitQuery.value === answerListIntel.value[i].title) {
+  //       id = answerListIntel.value[i].id
+  //     }
+  //   }
+  // }
+  request
+    .post('/Message/feedback', {
+      id: id,
+      feedback: {
+        agree: false,
+        content: commonQuestion.value
+      }
+      // showLoading: true
+    })
+    .then(res => {
+      if (res.status) {
+        ElMessage.success('评价成功,我们会继续努力的！')
+        commonVisible.value = false
+        commonQuestion.value = ''
+      } else {
+        ElMessage.error('评价失败,请稍后再试')
+      }
+    })
+    .catch(err => {
+      commonVisible.value = false
+      commonQuestion.value = ''
+      console.error('获取回复失败:', err)
+    })
+}
+// 自动滚动
+const autoScroll = () => {
+  nextTick(() => {
+    const container = document.querySelector('.message-container')
+    if (container) {
+      container.scrollTop = container.scrollHeight + 100
+    }
+  })
+}
+const quickJSONCheck = str => {
+  if (typeof str !== 'string') return false
+  str = str.trim()
+  return (str.startsWith('{') && str.endsWith('}')) || (str.startsWith('[') && str.endsWith(']'))
+}
 const submitSample = async (val, isRefresh) => {
   const fileInput = fileInputAry.value
   if (fileInput.length === 0 || !fileInput) {
@@ -493,9 +740,18 @@ const submitSample = async (val, isRefresh) => {
   if (val) {
     intelQuestion.value = val
   }
+  const id = recordId.value
+  const agentId = currentIntelId.value
+  loadingId.value = agentId
   const queryValue = intelQuestion.value
+  isIntelStop.value = false
+  limitQuery.value = intelQuestion.value
+  limitIntelLoading.value = true
   dynamicRows.value = 1
   isIntelLoad.value = true
+
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+
   if (intelQuery.messages.length === 1 && intelQuery.messages[0].files) {
     intelQuery.messages = []
   }
@@ -537,71 +793,36 @@ const submitSample = async (val, isRefresh) => {
       params.messages[j].role = 'assistant'
     }
   }
-  params.userId = userInfo.value.id
-  params.model = deepType.value ? 1 : 0
+  params.userId = userInfo.id
+  params.model = 0
   params.files = filesSample
-
+  params.agentId = currentIntelId.value
   intelQuestion.value = ''
   let title = ''
-  if (!intelList.value.includes(queryValue) && isRefresh && mes.messages.length === 1) {
-    for (var m = 0; m < intelList.value.length; m++) {
-      if (
-        queryValue === intelList.value[m].data[intelList.value[m].data.length - 2].content &&
-        intelList.value[m].data[intelList.value[m].data.length - 2].files.length === 0
-      ) {
-        const id = intelList.value[m].id
-        title = intelList.value[m].title
-        const index = intelList.value.findIndex(item => item === title)
-        if (index !== -1) {
-          intelList.value.splice(index, 1)
-        }
-        await asizeRef.value.deleteData(id, true)
-        intelList.value.unshift(title)
-        activeIndexIntel.value = 0
-      }
-    }
-  }
+  // if (!intelList.value.includes(queryValue) && isRefresh && mes.messages.length === 1) {
+  //   for (var m = 0; m < intelList.value.length; m++) {
+  //     if (
+  //       queryValue === intelList.value[m].data[intelList.value[m].data.length - 2].content &&
+  //       intelList.value[m].data[intelList.value[m].data.length - 2].files.length === 0
+  //     ) {
+  //       const id = intelList.value[m].id
+  //       title = intelList.value[m].title
+  //       const index = intelList.value.findIndex(item => item === title)
+  //       if (index !== -1) {
+  //         intelList.value.splice(index, 1)
+  //       }
+  //       await asizeRef.value.deleteData(id, true)
+  //       intelList.value.unshift(title)
+  //       activeIndexIntel.value = 0
+  //     }
+  //   }
+  // }
 
-  const anList = JSON.parse(JSON.stringify(intelList.value))
-  const hasId = anList.some(item => item.id === currentId.value)
-  let id = ''
-  if (!hasId) {
-    let titleStr = ''
-    for (var i = 0; i < fileInput.length; i++) {
-      titleStr += fileInput[i].originalFileName + ','
-    }
-    intelList.value.unshift('新对话')
-    activeIndexIntel.value = '0'
-  }
-  if (hasId) {
-    id = currentId.value
-    const index = intelList.value.findIndex(item => item.id === id)
-    for (var k = 0; k < intelList.value.length; k++) {
-      if (id === intelList.value[k].id) {
-        title = intelList.value[k].title.replace(/\([^)]*\)/g, '')
-      }
-    }
-  }
-  const limitData = JSON.parse(JSON.stringify(queryTypes.value))
-
-  for (var k = 0; k < intelList.value.length; k++) {
-    const queryObj = {
-      name: '',
-      type: ''
-    }
-    queryObj.name = intelList.value[k]
-    queryObj.type = 'sample'
-    const hasVal = limitData.some(item => item.name === queryObj.name)
-    if (!hasVal) {
-      limitData.unshift(queryObj)
-    }
-  }
-  queryTypes.value = JSON.parse(JSON.stringify(limitData))
   interval = setInterval(updateDots, 500)
 
   nextTick(() => {
-    if (messageContainer.value) {
-      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    if (messageContainerIntel.value) {
+      messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
     }
   })
   // currentRequestUrl.value = '/AI/chatStream'
@@ -611,12 +832,13 @@ const submitSample = async (val, isRefresh) => {
   // 使用一个对象记录哪些 content 已经有 user 了
   intelCurrent.messages = mes.messages
   intelQuery.isLoading = true
-  const isThink = deepType.value
+  const isThink = false
   fileInputAry.value = []
   fileAry.value = []
+  // intelQuery.messages = params.messages
   try {
     // 替换为实际的后端接口地址
-    const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/chatStream', {
+    const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/agentChat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -648,27 +870,29 @@ const submitSample = async (val, isRefresh) => {
       if (done) {
         clearInterval(interval)
         isIntelLoad.value = false
-        limitLoading.value = false
+        limitIntelLoading.value = false
         intelQuery.isLoading = false
+        limitIntelId.value = ''
         currentRequestUrl.value = ''
+        loadingId.value = ''
         intelQuery.messages = JSON.parse(JSON.stringify(intelCurrent.messages))
-
+        const query = intelQuery.messages
         nextTick(() => {
           // dynamicRows.value = 1
-          adjustTextareaHeight('textareaInputSample')
+          adjustTextareaHeight('textareaInputIntel')
           // adjustTextareaHeight('textareaInputSampleCurrent')
           // 滚动到底部
-          if (messageContainer.value) {
-            const messages = messageContainer.value.children
+          if (messageContainerIntel.value) {
+            const messages = messageContainerIntel.value.children
             if (messages.length > 0) {
               const lastMessage = messages[messages.length - 2]
               // 滚动到最后一个消息的开头部分
               lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }
-            // messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+            // messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
           }
         })
-        postSample(id, title, isThink, filesSample)
+        postSample(id, agentId, queryValue, query)
         break
       }
       buffer += decoder.decode(value, { stream: true })
@@ -687,8 +911,8 @@ const submitSample = async (val, isRefresh) => {
         const jsonMatch = chunk.match(/data:\s*({[\s\S]*?})(?=\ndata:|\n\n|$)/)
         // 2. 添加条件判断包裹
         if (jsonMatch) {
-          if (messageContainer.value) {
-            messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+          if (messageContainerIntel.value) {
+            messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
           }
           try {
             const { content } = JSON.parse(jsonMatch[1])
@@ -711,6 +935,7 @@ const submitSample = async (val, isRefresh) => {
                 assistantMsg.hasSplit = true
               }
             }
+
             // 立即更新视图（无需防抖）
             intelCurrent.messages.splice(-1, 1, {
               ...toRaw(assistantMsg),
@@ -719,6 +944,7 @@ const submitSample = async (val, isRefresh) => {
               content: assistantMsg.before + assistantMsg.after // 兼容旧字段
             })
           } catch (e) {
+            loadingId.value = ''
             console.error('JSON 解析失败:', jsonMatch[1], '错误:', e)
             ElMessage.error('数据格式异常')
           }
@@ -727,7 +953,9 @@ const submitSample = async (val, isRefresh) => {
     }
   } catch (error) {
     intelQuery.isLoading = false
+    loadingId.value = ''
     isIntelLoad.value = false
+    limitIntelId.value = ''
     // queryIng.value = false
     nextTick(() => {
       // dynamicRows.value = 1
@@ -760,7 +988,6 @@ const createData = val => {
   let id = ''
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   const params = JSON.parse(JSON.stringify(formIntel.value))
-  console.log(params)
   if (!val) {
     intelList.value.push(formIntel.value.name)
   }
@@ -805,10 +1032,45 @@ const submitSampleFile = val => {
   }
   fileAry.value = val
   fileInputAry.value = JSON.parse(JSON.stringify(val))
-  console.log(fileInputAry.value)
   nextTick(() => {
     adjustTextareaHeight('textareaInputIntel')
   })
+}
+
+const getInfo = async id => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  request
+    .post('/Agent/findAgentChat?userId=' + userInfo.id + '&agentId=' + id)
+    .then(res => {
+      if (res.status) {
+        intelQuery.messages = res?.data[0]?.messages ? res?.data[0]?.messages : []
+        // intelQuery.messages = res?.data[0]?.messages ? res?.data[0]?.messages : []
+        if (res.data && res.data.length > 0) {
+          recordId.value = res.data[0].id
+        } else {
+          recordId.value = ''
+        }
+        nextTick(() => {
+          // 滚动到底部
+          if (messageContainerIntel.value) {
+            const messages = messageContainerIntel.value.children
+            if (messages.length > 0) {
+              const lastMessage = messages[messages.length - 2]
+              // 滚动到最后一个消息的开头部分
+              lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          }
+        })
+        // nextTick(() => {
+        //   if (messageContainerIntel.value) {
+        //     messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
+        //   }
+        // })
+      }
+    })
+    .catch(err => {
+      console.error('获取回复失败:', err)
+    })
 }
 const getHistory = async val => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
@@ -824,7 +1086,30 @@ const getHistory = async val => {
         if (res.data.length > 0) {
           activeIndexIntel.value = 0
           currentIntel.value = answerListIntel.value[0].persona
+          currentIntelId.value = answerListIntel.value[0].id
+          getInfo(answerListIntel.value[0].id)
         }
+      }
+    })
+    .catch(err => {
+      console.error('获取回复失败:', err)
+    })
+}
+// 格式化服务器返回的内容
+const formatServerContent = content => {
+  return content.replace(/\\n/g, '\n').replace(/\\t/g, '    ').replace(/\\r/g, '\r')
+}
+const addIntel = async () => {
+  request
+    .post('/Agent/generateAgentDescription', {
+      agent_name: formIntel.value.name,
+      agent_role: formIntel.value.nickName,
+      agent_tone: formIntel.value.tone,
+      agent_description: formIntel.value.description
+    })
+    .then(res => {
+      if (res.status) {
+        formIntel.value.description = formatServerContent(res.data)
       }
     })
     .catch(err => {
@@ -837,38 +1122,40 @@ onMounted(() => {
   eventBus.on('setInfo', createIntel)
   eventBus.on('closeIntel', cancelIntel)
   eventBus.on('submit-sampleFile', submitSampleFile)
+  eventBus.on('getRecord', getInfo)
+  eventBus.on('changeInfo', setInfo)
   activeIndexIntel.value = 0
   adjustTextareaHeight('textareaInputIntel')
   getHistory()
   intelQuery.messages = [
-    {
-      role: 'user',
-      content: '',
-      files: [
-        {
-          fileId: '683587ecf3f3ed574473a7fe',
-          originalFileName: '大文本翻译.txt',
-          fileName: '大文本翻译.txt',
-          local: false
-        },
-        {
-          fileId: '683587ecf3f3ed574473a7fc',
-          originalFileName: 'LDP介绍.txt',
-          fileName: 'LDP介绍.txt',
-          local: false
-        }
-      ]
-    },
-    {
-      role: 'assistant',
-      content:
-        '文件1提供了关于合理营养搭配的基本原则，强调了均衡摄入多样化食物、关注膳食纤维、适量摄入蛋白质和碳水化合物、控制脂肪摄入、注意维生素和矿物质的摄入以及多喝水的重要性。这些原则有助于维持健康，但强调了根据个人情况调整饮食结构或咨询专业营养师的建议。\n\n文件2则描述了一个技术项目，使用了Vue2、Ant Design、vxe-table、Less、Webpack和Echarts等技术栈，项目结构包括一个主应用和一个微服务，两者独立部署和打包。文件还指出了项目当前的局限性，如缺少组件库代码和低代码本身的局限性，并列出了项目特性，如低代码实现和微服务架构。此外，文件还提到了项目前的准备工作，包括熟悉开发技术文档、Git提交规范流程和项目启动运行文档。',
-      before: '',
-      after:
-        '文件1提供了关于合理营养搭配的基本原则，强调了均衡摄入多样化食物、关注膳食纤维、适量摄入蛋白质和碳水化合物、控制脂肪摄入、注意维生素和矿物质的摄入以及多喝水的重要性。这些原则有助于维持健康，但强调了根据个人情况调整饮食结构或咨询专业营养师的建议。\n\n文件2则描述了一个技术项目，使用了Vue2、Ant Design、vxe-table、Less、Webpack和Echarts等技术栈，项目结构包括一个主应用和一个微服务，两者独立部署和打包。文件还指出了项目当前的局限性，如缺少组件库代码和低代码本身的局限性，并列出了项目特性，如低代码实现和微服务架构。此外，文件还提到了项目前的准备工作，包括熟悉开发技术文档、Git提交规范流程和项目启动运行文档。',
-      hasSplit: true,
-      isNewData: true
-    }
+    // {
+    //   role: 'user',
+    //   content: '',
+    //   files: [
+    //     {
+    //       fileId: '683587ecf3f3ed574473a7fe',
+    //       originalFileName: '大文本翻译.txt',
+    //       fileName: '大文本翻译.txt',
+    //       local: false
+    //     },
+    //     {
+    //       fileId: '683587ecf3f3ed574473a7fc',
+    //       originalFileName: 'LDP介绍.txt',
+    //       fileName: 'LDP介绍.txt',
+    //       local: false
+    //     }
+    //   ]
+    // },
+    // {
+    //   role: 'assistant',
+    //   content:
+    //     '文件1提供了关于合理营养搭配的基本原则，强调了均衡摄入多样化食物、关注膳食纤维、适量摄入蛋白质和碳水化合物、控制脂肪摄入、注意维生素和矿物质的摄入以及多喝水的重要性。这些原则有助于维持健康，但强调了根据个人情况调整饮食结构或咨询专业营养师的建议。\n\n文件2则描述了一个技术项目，使用了Vue2、Ant Design、vxe-table、Less、Webpack和Echarts等技术栈，项目结构包括一个主应用和一个微服务，两者独立部署和打包。文件还指出了项目当前的局限性，如缺少组件库代码和低代码本身的局限性，并列出了项目特性，如低代码实现和微服务架构。此外，文件还提到了项目前的准备工作，包括熟悉开发技术文档、Git提交规范流程和项目启动运行文档。',
+    //   before: '',
+    //   after:
+    //     '文件1提供了关于合理营养搭配的基本原则，强调了均衡摄入多样化食物、关注膳食纤维、适量摄入蛋白质和碳水化合物、控制脂肪摄入、注意维生素和矿物质的摄入以及多喝水的重要性。这些原则有助于维持健康，但强调了根据个人情况调整饮食结构或咨询专业营养师的建议。\n\n文件2则描述了一个技术项目，使用了Vue2、Ant Design、vxe-table、Less、Webpack和Echarts等技术栈，项目结构包括一个主应用和一个微服务，两者独立部署和打包。文件还指出了项目当前的局限性，如缺少组件库代码和低代码本身的局限性，并列出了项目特性，如低代码实现和微服务架构。此外，文件还提到了项目前的准备工作，包括熟悉开发技术文档、Git提交规范流程和项目启动运行文档。',
+    //   hasSplit: true,
+    //   isNewData: true
+    // }
   ]
 })
 // 组件卸载时关闭 SSE 连接
@@ -877,9 +1164,24 @@ onUnmounted(() => {
   eventBus.off('setInfo', createIntel)
   eventBus.off('closeIntel', cancelIntel)
   eventBus.off('submit-sampleFile', submitSampleFile)
+  eventBus.off('getRecord', getInfo)
+  eventBus.off('changeInfo', setInfo)
+  if (interval) {
+    clearInterval(interval)
+  }
 })
 </script>
 <style lang="less" scoped>
+.query_common {
+  margin-top: 20px;
+  width: 100%;
+  display: flex;
+  .query_common_img {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+}
 .sample_item::-webkit-scrollbar {
   width: 1px; /* 滚动条宽度 */
 }
@@ -901,7 +1203,7 @@ onUnmounted(() => {
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
-  margin-top: 10px;
+  margin-top: 20px;
   scroll-behavior: smooth;
   .sample_chat {
     font-size: 14px;
@@ -1092,11 +1394,30 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    .main_content::-webkit-scrollbar {
+      width: 1px; /* 滚动条宽度 */
+    }
+    .main_content::-webkit-scrollbar-track {
+      background: #fff; /* 轨道背景颜色 */
+      border-radius: 0px; /* 轨道圆角 */
+    }
+    .main_content::-webkit-scrollbar-thumb {
+      background: #fff; /* 轨道背景颜色 */
+      border-radius: 0px; /* 滑块圆角 */
+      border: 1px solid #fff; /* 滑块边框 */
+    }
+    .main_content::-webkit-scrollbar-thumb:hover {
+      background: #fff; /* 滑块悬停时的颜色 */
+    }
     .main_content {
       max-width: 860px;
-      height: 100%;
       box-sizing: border-box;
+      overflow-y: auto;
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 10px;
       .content_title {
         color: #333333;
         padding-top: 30px;
