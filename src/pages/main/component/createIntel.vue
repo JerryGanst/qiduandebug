@@ -89,7 +89,7 @@
             <div
               v-if="index % 2 === 0 && item.files && item.files.length > 0"
               class="sample_chat_file"
-              :style="{ marginTop: index === 0 ? '28px' : '20px' }"
+              :style="{ marginTop: index === 0 ? '28px' : '40px' }"
             >
               <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
                 <span style="display: flex; align-items: center">
@@ -125,7 +125,7 @@
                     ? '10px'
                     : index === 0
                       ? '30px'
-                      : '20px'
+                      : '40px'
                   : '0px',
                 padding: item.content ? '13px 15px' : '0px'
               }"
@@ -158,7 +158,7 @@
             <div
               v-if="index % 2 === 0 && item.files && item.files.length > 0"
               class="sample_chat_file"
-              :style="{ marginTop: index === 0 ? '30px' : '20px' }"
+              :style="{ marginTop: index === 0 ? '30px' : '40px' }"
             >
               <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
                 <span style="display: flex; align-items: center">
@@ -189,7 +189,7 @@
                     ? '10px'
                     : index === 0
                       ? '30px'
-                      : '20px'
+                      : '40px'
                   : '0px',
                 padding: item.content ? '13px 15px' : '0px'
               }"
@@ -304,7 +304,7 @@
             </div>
             <img
               :src="
-                isIntelLoad && loadingId && loadingId === currentIntelId
+                isIntelLoad && loadingIntelId && loadingIntelId === currentIntelId
                   ? imageC
                   : intelQuestion || fileInputAry.length > 0
                     ? imageB
@@ -400,7 +400,7 @@ const formIntel = ref({
   id: ''
 })
 const isIntelLoad = ref(false)
-const loadingId = ref('')
+const loadingIntelId = ref('')
 const isDisabled = ref(false)
 const commonQuestion = ref('')
 const limitQuery = ref('')
@@ -492,7 +492,7 @@ const handleCommonClose = done => {
   done()
 }
 const submitSampleSend = () => {
-  if (isIntelLoad && loadingId.value && loadingId.value === currentIntelId.value) {
+  if (isIntelLoad && loadingIntelId.value && loadingIntelId.value === currentIntelId.value) {
     stopQuery()
     return
   }
@@ -745,7 +745,7 @@ const submitSample = async (val, isRefresh) => {
   }
   const id = recordId.value
   const agentId = currentIntelId.value
-  loadingId.value = agentId
+  loadingIntelId.value = agentId
   const queryValue = intelQuestion.value
   isIntelStop.value = false
   limitQuery.value = intelQuestion.value
@@ -877,7 +877,7 @@ const submitSample = async (val, isRefresh) => {
         intelQuery.isLoading = false
         limitIntelId.value = ''
         currentRequestUrl.value = ''
-        loadingId.value = ''
+        loadingIntelId.value = ''
         intelQuery.messages = JSON.parse(JSON.stringify(intelCurrent.messages))
         const query = intelQuery.messages
         nextTick(() => {
@@ -947,7 +947,7 @@ const submitSample = async (val, isRefresh) => {
               content: assistantMsg.before + assistantMsg.after // 兼容旧字段
             })
           } catch (e) {
-            loadingId.value = ''
+            loadingIntelId.value = ''
             console.error('JSON 解析失败:', jsonMatch[1], '错误:', e)
             ElMessage.error('数据格式异常')
           }
@@ -956,7 +956,7 @@ const submitSample = async (val, isRefresh) => {
     }
   } catch (error) {
     intelQuery.isLoading = false
-    loadingId.value = ''
+    loadingIntelId.value = ''
     isIntelLoad.value = false
     limitIntelId.value = ''
     // queryIng.value = false

@@ -1283,6 +1283,7 @@ const submitSample = async (val, isRefresh) => {
   tipQuery.value = queryValue
   newQuestion.value = ''
   let title = ''
+
   if (!questions.value.includes(queryValue + '(sample)') && isRefresh && mes.messages.length === 1) {
     for (var m = 0; m < answerList.value.length; m++) {
       if (

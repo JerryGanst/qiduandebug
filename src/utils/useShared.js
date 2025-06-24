@@ -51,6 +51,7 @@ const chatQuery = reactive({
   //通用模式数据对象
   messages: []
 })
+const loadingId = ref('')
 const intelQuery = reactive({
   //智能体数据对象
   messages: []
@@ -274,6 +275,9 @@ export function useShared() {
   const updateCurrentIntel = newName => {
     currentIntel.value = newName
   }
+  const updateloadingId = newName => {
+    loadingId.value = newName
+  }
 
   const updateTipQuery = newName => {
     tipQuery.value = newName
@@ -447,6 +451,7 @@ export function useShared() {
     dragUploads,
     limitId,
     questions,
+    loadingId,
     intelList,
     answerList,
     answerListIntel,
@@ -512,6 +517,7 @@ export function useShared() {
     updateCurrentObj,
     updateTipQuery,
     updateActiveIndex,
+    updateloadingId,
     updateQueryTypes,
     updateChatQuery,
     updateIsLogin,
