@@ -1139,6 +1139,7 @@ const queryAn = (val, index, data) => {
 
 const powerList = ref([
   'T10802004',
+  '31005892',
   '10353965',
   '10353964',
   'T10802005',
