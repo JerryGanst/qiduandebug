@@ -1046,7 +1046,6 @@ const getInfo = async id => {
     .then(res => {
       if (res.status) {
         intelQuery.messages = res?.data[0]?.messages ? res?.data[0]?.messages : []
-        // intelQuery.messages = res?.data[0]?.messages ? res?.data[0]?.messages : []
         if (res.data && res.data.length > 0) {
           recordId.value = res.data[0].id
         } else {
@@ -1065,11 +1064,6 @@ const getInfo = async id => {
             }
           }
         })
-        // nextTick(() => {
-        //   if (messageContainerIntel.value) {
-        //     messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
-        //   }
-        // })
       }
     })
     .catch(err => {
