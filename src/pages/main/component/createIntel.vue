@@ -75,9 +75,8 @@
   <div v-else class="create_main">
     <div v-if="intelList.length > 0" class="create_ask">
       <div class="main_content">
-        <div class="content_title">{{ currentIntel.name }}</div>
-
         <div class="sample_item" ref="messageContainerIntel">
+          <div class="content_title">{{ currentIntel.name }}</div>
           <div class="content_tip">
             <div class="content_robot"><img src="@/assets/robot.png" /></div>
             <div class="tip_text">
@@ -1193,6 +1192,11 @@ onUnmounted(() => {
   overflow-x: hidden;
   margin-top: 20px;
   scroll-behavior: smooth;
+  .content_title {
+    color: #333333;
+    padding-top: 10px;
+    font-size: 16px;
+  }
   .content_tip {
     display: flex;
     flex-direction: row;
@@ -1435,11 +1439,6 @@ onUnmounted(() => {
       flex-direction: column;
       align-items: flex-start;
       margin-bottom: 10px;
-      .content_title {
-        color: #333333;
-        padding-top: 30px;
-        font-size: 16px;
-      }
     }
   }
   .create_title {
