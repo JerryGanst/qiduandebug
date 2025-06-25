@@ -343,19 +343,37 @@
                     </transition>
                   </div>
                   <img
-                    :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                    :src="
+                      isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+                        ? imageC
+                        : newQuestion
+                          ? imageB
+                          : imageA
+                    "
                     class="arrow"
                     v-if="isNet && pageType === 'query'"
                     @click="submitQuestionSend"
                   />
                   <img
-                    :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                    :src="
+                      isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+                        ? imageC
+                        : newQuestion
+                          ? imageB
+                          : imageA
+                    "
                     class="arrow"
                     v-if="isNet && pageType === 'it'"
                     @click="submitITSend"
                   />
                   <img
-                    :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+                    :src="
+                      isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+                        ? imageC
+                        : newQuestion
+                          ? imageB
+                          : imageA
+                    "
                     class="arrow"
                     v-if="isNet && pageType === 'law'"
                     @click="submitLawSend"
@@ -460,7 +478,13 @@
                     </transition>
                   </div>
                   <img
-                    :src="isSampleLoad ? imageC : newQuestion || fileInputAry.length > 0 ? imageB : imageA"
+                    :src="
+                      isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+                        ? imageC
+                        : newQuestion || fileInputAry.length > 0
+                          ? imageB
+                          : imageA
+                    "
                     class="arrow"
                     @click="submitSampleSend"
                   />
@@ -592,12 +616,14 @@ const {
   dragUploads,
   isDragOver,
   isNet,
-  isCreate
+  isCreate,
+  currentIndex
 } = useShared()
 
 const queryIng = ref(false)
 const asizeRef = ref(null)
 const entryRef = ref(null)
+
 const sampleData = ref('')
 const commonLedge = ref(null)
 const commonQuestion = ref('')
@@ -880,6 +906,7 @@ const submitFinal = async (val, isRefresh, ob) => {
     answerList.value.splice(idx, 1)
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
+    currentIndex.value = 0
     questions.value.unshift(limitTitle)
     const data = {
       data: {
@@ -891,6 +918,8 @@ const submitFinal = async (val, isRefresh, ob) => {
   }
   if (!isRefresh) {
     const qData = '新对话' + '(final)'
+    currentIndex.value = 0
+    currentIndex.value = 0
     questions.value.unshift(qData)
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
@@ -941,6 +970,7 @@ const submitFinal = async (val, isRefresh, ob) => {
       finalIng.value = false
       docIng.value = false
       currentRequestUrl.value = ''
+      currentIndex.value = ''
       clearInterval(interval)
       nextTick(() => {
         adjustTextareaHeight('textareaInputFinal')
@@ -968,6 +998,7 @@ const submitFinal = async (val, isRefresh, ob) => {
       }
     })
     .catch(err => {
+      currentIndex.value = ''
       if (err.message !== 'canceled') {
         ElMessage.error('总结失败' + err.message)
       }
@@ -1111,21 +1142,33 @@ const submitCommon = async () => {
 }
 
 const submitQuestionSend = () => {
-  if (isSampleLoad.value) {
+  if (
+    isSampleLoad.value &&
+    (currentIndex.value || currentIndex.value == 0) &&
+    currentIndex.value == activeIndex.value
+  ) {
     stopQuery('query')
     return
   }
   submitQuestion()
 }
 const submitITSend = () => {
-  if (isSampleLoad.value) {
+  if (
+    isSampleLoad.value &&
+    (currentIndex.value || currentIndex.value == 0) &&
+    currentIndex.value == activeIndex.value
+  ) {
     stopQuery('it')
     return
   }
   submitQuestion()
 }
 const submitLawSend = () => {
-  if (isSampleLoad.value) {
+  if (
+    isSampleLoad.value &&
+    (currentIndex.value || currentIndex.value == 0) &&
+    currentIndex.value == activeIndex.value
+  ) {
     stopQuery('law')
     return
   }
@@ -1133,7 +1176,11 @@ const submitLawSend = () => {
 }
 
 const submitSampleSend = () => {
-  if (isSampleLoad.value) {
+  if (
+    isSampleLoad.value &&
+    (currentIndex.value || currentIndex.value == 0) &&
+    currentIndex.value == activeIndex.value
+  ) {
     stopQuery('sample')
     // cancelCurrentRequest('sample')
     return
@@ -1141,14 +1188,14 @@ const submitSampleSend = () => {
   submitSample()
 }
 const submitTranSend = () => {
-  if (finalIng.value) {
+  if (finalIng.value && (currentIndex.value || currentIndex.value == 0) && currentIndex.value == activeIndex.value) {
     cancelCurrentRequest('tran')
     return
   }
   submitTran()
 }
 const submitFinalSend = () => {
-  if (finalIng.value) {
+  if (finalIng.value && (currentIndex.value || currentIndex.value == 0) && currentIndex.value == activeIndex.value) {
     cancelCurrentRequest('final')
     return
   }
@@ -1265,6 +1312,7 @@ const submitSample = async (val, isRefresh) => {
   }
   if (isRefresh) {
     chatQuery.messages.length -= 2
+    currentIndex.value = activeIndex.value
   }
   mes = JSON.parse(JSON.stringify(chatQuery))
   mes.messages.push(currentData)
@@ -1298,8 +1346,10 @@ const submitSample = async (val, isRefresh) => {
         if (index !== -1) {
           questions.value.splice(index, 1)
         }
+        console.log(activeIndex.value)
         await asizeRef.value.deleteData(id, true)
         questions.value.unshift(title + '(sample)')
+
         activeIndex.value = 0
       }
     }
@@ -1314,7 +1364,9 @@ const submitSample = async (val, isRefresh) => {
       titleStr += fileInput[i].originalFileName + ','
     }
     questions.value.unshift('新对话' + '(sample)')
+    currentIndex.value = 0
     activeIndex.value = '0'
+    console.log(activeIndex.value)
   }
   if (hasId) {
     id = currentId.value
@@ -1325,6 +1377,8 @@ const submitSample = async (val, isRefresh) => {
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
       }
     }
+    currentIndex.value = activeIndex.value
+    console.log(currentIndex.value)
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
 
@@ -1391,6 +1445,7 @@ const submitSample = async (val, isRefresh) => {
       const { value, done } = await reader.read()
       if (done) {
         clearInterval(interval)
+        currentIndex.value = ''
         isSampleLoad.value = false
         limitLoading.value = false
         chatQuery.isLoading = false
@@ -1464,6 +1519,7 @@ const submitSample = async (val, isRefresh) => {
               content: assistantMsg.before + assistantMsg.after // 兼容旧字段
             })
           } catch (e) {
+            currentIndex.value = ''
             console.error('JSON 解析失败:', jsonMatch[1], '错误:', e)
             ElMessage.error('数据格式异常')
           }
@@ -1471,6 +1527,7 @@ const submitSample = async (val, isRefresh) => {
       })
     }
   } catch (error) {
+    currentIndex.value = ''
     chatQuery.isLoading = false
     isSampleLoad.value = false
     limitId.value = ''
@@ -1515,10 +1572,12 @@ const submitTran = async (val, isRefresh, obj) => {
     answerList.value.splice(idx, 1)
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
+    currentIndex.value = 0
     questions.value.unshift(limitTitle)
   }
   if (!isRefresh) {
     const qData = '新对话' + '(tran)'
+    currentIndex.value = activeIndex.value
     questions.value.unshift(qData)
   }
 
@@ -1540,7 +1599,6 @@ const submitTran = async (val, isRefresh, obj) => {
   const passQuery = obj ? obj.originalFileName : passData
 
   currentRequestUrl.value = '/AI/translate'
-  console.log(obj)
   if (obj && !isPureObject(obj.fileId)) {
     const objSample = {
       fileId: obj.fileId,
@@ -1568,6 +1626,7 @@ const submitTran = async (val, isRefresh, obj) => {
     })
     .then(res => {
       currentRequestUrl.value = ''
+      currentIndex.value = ''
       clearInterval(interval)
       nextTick(() => {
         adjustTextareaHeight('textareaInputTran')
@@ -1593,6 +1652,7 @@ const submitTran = async (val, isRefresh, obj) => {
     })
 
     .catch(err => {
+      currentIndex.value = ''
       if (err.message !== 'canceled') {
         ElMessage.error('翻译失败' + err.message)
       }
@@ -1655,6 +1715,7 @@ const submitQuestion = async (val, isRefresh) => {
     answerList.value.splice(idx, 1)
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
+    currentIndex.value = 0
     questions.value.unshift(title + addTitle)
     answerList.value.unshift(limitObj)
   }
@@ -1671,6 +1732,7 @@ const submitQuestion = async (val, isRefresh) => {
     }
     answerList.value.unshift(data)
     activeIndex.value = '0'
+    currentIndex.value = 0
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
   for (var k = 0; k < questions.value.length; k++) {
@@ -1714,6 +1776,7 @@ const submitQuestion = async (val, isRefresh) => {
     while (true) {
       const { value, done } = await reader.read()
       if (done) {
+        currentIndex.value = ''
         nextTick(() => {
           adjustTextareaHeight('textareaInputQuery')
         })
@@ -1766,6 +1829,7 @@ const submitQuestion = async (val, isRefresh) => {
       await displayMessagesSequentially()
     }
   } catch (error) {
+    currentIndex.value = ''
     isSampleLoad.value = false
     queryIng.value = false
     nextTick(() => {

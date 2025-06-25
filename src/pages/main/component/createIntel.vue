@@ -49,7 +49,9 @@
         </div>
       </div>
       <div class="create_set">
-        <div class="create_ai" @click="addIntel">智能补充</div>
+        <div @click="addIntel" :class="isComputed ? 'create_loading' : 'create_ai'">
+          {{ isComputed ? '停止' : '智能补充' }}
+        </div>
         <div class="create_text">
           <span style="color: #ff4d4f">*</span>
           <span style="padding-left: 5px">设定</span>
@@ -406,6 +408,7 @@ const commonQuestion = ref('')
 const limitQuery = ref('')
 const fileRefs = ref(null)
 const commonUploadModals = ref(null)
+const isComputed = ref(false)
 const filePreRef = ref(null)
 const commonVisible = ref(false)
 const type = ref('create')
@@ -451,7 +454,6 @@ const createIntel = val => {
   isCreate.value = true
 }
 const cancelIntel = () => {
-  console.log(1111)
   isCreate.value = false
 }
 // 点号变化逻辑
@@ -687,15 +689,6 @@ const submitCommon = async () => {
     return false
   }
   let id = recordId.value
-  // if (currentIntelId.value) {
-  //   id = currentIntelId.value
-  // } else {
-  //   for (var i = 0; i < answerListIntel.value.length; i++) {
-  //     if (limitQuery.value === answerListIntel.value[i].title) {
-  //       id = answerListIntel.value[i].id
-  //     }
-  //   }
-  // }
   request
     .post('/Message/feedback', {
       id: id,
@@ -1108,21 +1101,38 @@ const formatServerContent = content => {
   return content.replace(/\\n/g, '\n').replace(/\\t/g, '    ').replace(/\\r/g, '\r')
 }
 const addIntel = async () => {
-  request
-    .post('/Agent/generateAgentDescription', {
-      agent_name: formIntel.value.name,
-      agent_role: formIntel.value.nickName,
-      agent_tone: formIntel.value.tone,
-      agent_description: formIntel.value.description
-    })
-    .then(res => {
-      if (res.status) {
-        formIntel.value.description = formatServerContent(res.data)
-      }
-    })
-    .catch(err => {
-      console.error('获取回复失败:', err)
-    })
+  if (!isComputed.value) {
+    if (!formIntel.value.name) {
+      ElMessage.warning('请输入智能体名称')
+      return
+    }
+    if (!formIntel.value.nickName) {
+      ElMessage.warning('请输入智能体角色')
+      return
+    }
+    isComputed.value = true
+    request
+      .post('/Agent/generateAgentDescription', {
+        agent_name: formIntel.value.name,
+        agent_role: formIntel.value.nickName,
+        agent_tone: formIntel.value.tone,
+        agent_description: formIntel.value.description
+      })
+      .then(res => {
+        isComputed.value = false
+        if (res.status) {
+          formIntel.value.description = formatServerContent(res.data)
+        }
+      })
+      .catch(err => {
+        isComputed.value = false
+        console.error('获取回复失败:', err)
+      })
+  } else {
+    isComputed.value = false
+    request.cancelRequest('/Agent/generateAgentDescription')
+    ElMessage.success('请求已中止')
+  }
 }
 // 组件挂载时订阅事件
 onMounted(() => {
@@ -1137,36 +1147,7 @@ onMounted(() => {
   activeIndexIntel.value = 0
   adjustTextareaHeight('textareaInputIntel')
   getHistory()
-  intelQuery.messages = [
-    // {
-    //   role: 'user',
-    //   content: '',
-    //   files: [
-    //     {
-    //       fileId: '683587ecf3f3ed574473a7fe',
-    //       originalFileName: '大文本翻译.txt',
-    //       fileName: '大文本翻译.txt',
-    //       local: false
-    //     },
-    //     {
-    //       fileId: '683587ecf3f3ed574473a7fc',
-    //       originalFileName: 'LDP介绍.txt',
-    //       fileName: 'LDP介绍.txt',
-    //       local: false
-    //     }
-    //   ]
-    // },
-    // {
-    //   role: 'assistant',
-    //   content:
-    //     '文件1提供了关于合理营养搭配的基本原则，强调了均衡摄入多样化食物、关注膳食纤维、适量摄入蛋白质和碳水化合物、控制脂肪摄入、注意维生素和矿物质的摄入以及多喝水的重要性。这些原则有助于维持健康，但强调了根据个人情况调整饮食结构或咨询专业营养师的建议。\n\n文件2则描述了一个技术项目，使用了Vue2、Ant Design、vxe-table、Less、Webpack和Echarts等技术栈，项目结构包括一个主应用和一个微服务，两者独立部署和打包。文件还指出了项目当前的局限性，如缺少组件库代码和低代码本身的局限性，并列出了项目特性，如低代码实现和微服务架构。此外，文件还提到了项目前的准备工作，包括熟悉开发技术文档、Git提交规范流程和项目启动运行文档。',
-    //   before: '',
-    //   after:
-    //     '文件1提供了关于合理营养搭配的基本原则，强调了均衡摄入多样化食物、关注膳食纤维、适量摄入蛋白质和碳水化合物、控制脂肪摄入、注意维生素和矿物质的摄入以及多喝水的重要性。这些原则有助于维持健康，但强调了根据个人情况调整饮食结构或咨询专业营养师的建议。\n\n文件2则描述了一个技术项目，使用了Vue2、Ant Design、vxe-table、Less、Webpack和Echarts等技术栈，项目结构包括一个主应用和一个微服务，两者独立部署和打包。文件还指出了项目当前的局限性，如缺少组件库代码和低代码本身的局限性，并列出了项目特性，如低代码实现和微服务架构。此外，文件还提到了项目前的准备工作，包括熟悉开发技术文档、Git提交规范流程和项目启动运行文档。',
-    //   hasSplit: true,
-    //   isNewData: true
-    // }
-  ]
+  intelQuery.messages = []
 })
 // 组件卸载时关闭 SSE 连接
 onUnmounted(() => {
@@ -1535,6 +1516,26 @@ onUnmounted(() => {
         right: 0;
         top: -15px;
         background-image: url('@/assets/ai.png');
+        background-repeat: no-repeat;
+        background-size: 19px 16px;
+        background-position: 16px 8px;
+        cursor: pointer;
+      }
+      .create_loading {
+        width: 86px;
+        border-radius: 4px;
+        height: 32px;
+        font-size: 14px;
+        text-align: center;
+        box-sizing: border-box;
+        background-color: #e6f4ff;
+        color: #1b6cff;
+        line-height: 32px;
+        position: absolute;
+        text-indent: 20px;
+        right: 0;
+        top: -15px;
+        background-image: url('@/assets/loading.gif');
         background-repeat: no-repeat;
         background-size: 19px 16px;
         background-position: 16px 8px;

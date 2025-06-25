@@ -52,6 +52,7 @@ const chatQuery = reactive({
   messages: []
 })
 const loadingId = ref('')
+const currentIndex = ref('')
 const intelQuery = reactive({
   //智能体数据对象
   messages: []
@@ -422,6 +423,9 @@ export function useShared() {
   const updateRecordId = newName => {
     recordId.value = newName
   }
+  const updateCurrentIndex = newName => {
+    currentIndex.value = newName
+  }
 
   watch(
     newQuestion,
@@ -434,6 +438,7 @@ export function useShared() {
   )
   return {
     currentQuestion,
+    currentIndex,
     newQuestion,
     selectType,
     recordId,
@@ -514,6 +519,7 @@ export function useShared() {
     updateCurrentId,
     updatePageType,
     updateSelectedMode,
+    updateCurrentIndex,
     updateCurrentObj,
     updateTipQuery,
     updateActiveIndex,

@@ -334,19 +334,37 @@
           </transition>
         </div>
         <img
-          :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+          :src="
+            isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+              ? imageC
+              : newQuestion
+                ? imageB
+                : imageA
+          "
           class="arrow"
           @click="submitQuestionSend"
           v-if="isNet && pageType === 'query'"
         />
         <img
-          :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+          :src="
+            isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+              ? imageC
+              : newQuestion
+                ? imageB
+                : imageA
+          "
           class="arrow"
           @click="submitItSend"
           v-if="isNet && pageType === 'it'"
         />
         <img
-          :src="isSampleLoad ? imageC : newQuestion ? imageB : imageA"
+          :src="
+            isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+              ? imageC
+              : newQuestion
+                ? imageB
+                : imageA
+          "
           class="arrow"
           @click="submitLawSend"
           v-if="isNet && pageType === 'law'"
@@ -394,7 +412,13 @@
           </transition>
         </div>
         <img
-          :src="isSampleLoad ? imageC : newQuestion || fileInputAry.length > 0 ? imageB : imageA"
+          :src="
+            isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+              ? imageC
+              : newQuestion || fileInputAry.length > 0
+                ? imageB
+                : imageA
+          "
           class="arrow"
           @click="submitSampleSend"
         />
@@ -439,7 +463,17 @@
             </div>
           </transition>
         </div>
-        <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitTranSend" />
+        <img
+          :src="
+            finalIng && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+              ? imageC
+              : newQuestion
+                ? imageB
+                : imageA
+          "
+          class="arrow"
+          @click="submitTranSend"
+        />
       </div>
     </div>
 
@@ -477,7 +511,17 @@
             </div>
           </transition>
         </div>
-        <img :src="finalIng ? imageC : newQuestion ? imageB : imageA" class="arrow" @click="submitFinalSend" />
+        <img
+          :src="
+            finalIng && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+              ? imageC
+              : newQuestion
+                ? imageB
+                : imageA
+          "
+          class="arrow"
+          @click="submitFinalSend"
+        />
       </div>
     </div>
   </div>
@@ -569,7 +613,8 @@ const {
   isNet,
   isLogin,
   dragUploads,
-  isDragOver
+  isDragOver,
+  currentIndex
 } = useShared()
 const fileRef = ref(null)
 const filePreRef = ref(null)
