@@ -76,13 +76,14 @@
     <div v-if="intelList.length > 0" class="create_ask">
       <div class="main_content">
         <div class="content_title">{{ currentIntel.name }}</div>
-        <div class="content_tip">
-          <div class="content_robot"><img src="@/assets/robot.png" /></div>
-          <div class="tip_text">
-            Hi,我是你创建的智能体{{ currentIntel.name }},在这段对话中，我将扮演{{ currentIntel.role }}的角色
-          </div>
-        </div>
+
         <div class="sample_item" ref="messageContainerIntel">
+          <div class="content_tip">
+            <div class="content_robot"><img src="@/assets/robot.png" /></div>
+            <div class="tip_text">
+              Hi,我是你创建的智能体{{ currentIntel.name }},在这段对话中，我将扮演{{ currentIntel.role }}的角色
+            </div>
+          </div>
           <div
             class="sample_chat"
             v-if="intelQuery.messages.length > 0 && !limitIntelLoading"
@@ -1057,8 +1058,10 @@ const getInfo = async id => {
             const messages = messageContainerIntel.value.children
             if (messages.length > 0) {
               const lastMessage = messages[messages.length - 2]
-              // 滚动到最后一个消息的开头部分
-              lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              if (lastMessage) {
+                // 滚动到最后一个消息的开头部分
+                lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
             }
           }
         })
@@ -1196,6 +1199,35 @@ onUnmounted(() => {
   overflow-x: hidden;
   margin-top: 20px;
   scroll-behavior: smooth;
+  .content_tip {
+    display: flex;
+    flex-direction: row;
+    margin-top: 20px;
+    margin-left: 30px;
+    .content_robot {
+      width: 46px;
+      height: 46px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      img {
+        width: 36px;
+        height: 36px;
+      }
+    }
+    .tip_text {
+      width: 100%;
+      background-color: #fafafa;
+      padding: 0px 20px;
+      font-size: 14px;
+      height: 46px;
+      line-height: 46px;
+      border-radius: 10px;
+      letter-spacing: 1px;
+      box-sizing: border-box;
+      margin-left: 15px;
+    }
+  }
   .sample_chat {
     font-size: 14px;
     letter-spacing: 1px;
@@ -1413,35 +1445,6 @@ onUnmounted(() => {
         color: #333333;
         padding-top: 30px;
         font-size: 16px;
-      }
-      .content_tip {
-        display: flex;
-        flex-direction: row;
-        margin-top: 30px;
-        margin-left: 30px;
-        .content_robot {
-          width: 46px;
-          height: 46px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          img {
-            width: 36px;
-            height: 36px;
-          }
-        }
-        .tip_text {
-          width: 100%;
-          background-color: #fafafa;
-          padding: 0px 20px;
-          font-size: 14px;
-          height: 46px;
-          line-height: 46px;
-          border-radius: 10px;
-          letter-spacing: 1px;
-          box-sizing: border-box;
-          margin-left: 15px;
-        }
       }
     }
   }
