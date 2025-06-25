@@ -2719,9 +2719,9 @@ onUnmounted(() => {
                 -webkit-box-orient: vertical;
                 overflow: hidden;
               }
-              .item_hover:hover {
-                color: #1b6cff;
-              }
+            }
+            .arr_item:hover {
+              color: #1b6cff;
             }
           }
           .img_list {
