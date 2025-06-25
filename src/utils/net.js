@@ -26,7 +26,8 @@ function updateNetworkStatus() {
   } else {
     networkType.value = 'external'
   }
-  // getUserPower()
+
+  getUserPower()
 }
 
 // 初始化监听
@@ -47,10 +48,10 @@ function getUserPower() {
       if (res.status) {
         localStorage.setItem('isNet', res.data)
         isNet.value = res.data
-        if (!isNet.value) {
-          selectType.value = 1
-          contentType.value = 1
-        }
+        // if (!isNet.value) {
+        //   selectType.value = 1
+        //   contentType.value = 1
+        // }
       }
     })
     .catch(err => {
