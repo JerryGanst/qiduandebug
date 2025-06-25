@@ -1346,7 +1346,6 @@ const submitSample = async (val, isRefresh) => {
         if (index !== -1) {
           questions.value.splice(index, 1)
         }
-        console.log(activeIndex.value)
         await asizeRef.value.deleteData(id, true)
         questions.value.unshift(title + '(sample)')
 
@@ -1366,7 +1365,6 @@ const submitSample = async (val, isRefresh) => {
     questions.value.unshift('新对话' + '(sample)')
     currentIndex.value = 0
     activeIndex.value = '0'
-    console.log(activeIndex.value)
   }
   if (hasId) {
     id = currentId.value
@@ -1378,7 +1376,6 @@ const submitSample = async (val, isRefresh) => {
       }
     }
     currentIndex.value = activeIndex.value
-    console.log(currentIndex.value)
   }
   const limitData = JSON.parse(JSON.stringify(queryTypes.value))
 
@@ -2205,7 +2202,6 @@ const getPower = () => {
 }
 const setlaw = () => {
   isLaw.value = localStorage.getItem('isLaw')
-  console.log(isLaw.value)
   getPower()
 }
 const handleClickOutside = event => {

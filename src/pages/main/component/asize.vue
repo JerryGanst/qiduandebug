@@ -528,12 +528,9 @@ const togglePopover = index => {
 }
 const togglePopoverIntel = index => {
   popoverVisibleIntel[index] = !popoverVisibleIntel[index]
-  console.log(popoverVisibleIntel[0])
 }
 const createIntel = () => {
   eventBus.emit('setInfo', 'create')
-  // isCreate.value = true
-  // 这里可以添加额外的搜索逻辑
 }
 //获取用户信息接口
 const getUserInfo = async id => {

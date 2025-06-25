@@ -595,12 +595,10 @@ const checkKnow = val => {
   }
 }
 const handleDragOver = () => {
-  console.log(1)
   isDragOver.value = true
 }
 
 const handleDragLeave = () => {
-  console.log(2)
   isDragOver.value = false
 }
 const handleDrop = e => {

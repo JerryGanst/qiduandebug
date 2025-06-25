@@ -631,7 +631,6 @@ const postSample = async (id, agentId, title, mes) => {
       // showLoading: true
     })
     .then(res => {
-      console.log(res.status)
       if (res.status) {
         // recordId.value = res.data.id
         getHistory()
@@ -651,7 +650,6 @@ const upCommon = async () => {
     ElMessage.warning('请先登录再使用')
     return false
   }
-  console.log(1)
   if (isDisabled.value) return // 如果按钮已禁用，直接返回
   let id = recordId.value
   isDisabled.value = true
@@ -1284,7 +1282,6 @@ onUnmounted(() => {
   align-items: center;
   border-radius: 10px;
   flex-direction: column;
-  height: 140px;
   margin-bottom: 10px;
 }
 .tooltip-wrapper {
