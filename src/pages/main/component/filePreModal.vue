@@ -5,7 +5,7 @@ handlePreview
     title="文件预览"
     width="1200px"
     class="custom-upload-dialog"
-    style="margin-top: 3vh; border-radius: 10px"
+    style="margin-top: 3vh; border-radius: 10px; position: relative"
   >
     <!-- <div class="file_loading" v-if="isLoading">加载中...</div> -->
     <div class="upload-layout">
@@ -51,6 +51,12 @@ handlePreview
       <el-button @click="dialogVisible = false" style="width: 100px; height: 40px; margin-left: 15px">取消</el-button>
       <el-button type="primary" @click="downloadFile(fileInfo)" style="width: 100px; height: 40px">下载</el-button>
     </div>
+    <div v-if="loading" class="loading-mask">
+      <div class="loading-content">
+        <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+        <span class="loading-text">文件加载中...</span>
+      </div>
+    </div>
   </el-dialog>
 </template>
 
@@ -60,7 +66,6 @@ import axios from 'axios'
 import mammoth from 'mammoth'
 import VueOfficePptx from '@vue-office/pptx'
 import VueOfficeExcel from '@vue-office/excel'
-
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
@@ -69,7 +74,7 @@ import pdf from '@/assets/pdf.png'
 import ppt from '@/assets/ppt.png'
 import excel from '@/assets/excl.png'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
-import { Close } from '@element-plus/icons-vue'
+import { Close, Loading } from '@element-plus/icons-vue'
 import request from '@/utils/request' // 导入封装的 axios 方法
 const dialogVisible = ref(false)
 const fileQueue = ref([])
@@ -77,6 +82,7 @@ const previewContent = ref(null)
 const previewType = ref('')
 const previewFileId = ref(null)
 const type = ref('tran')
+const loading = ref(true)
 const fileInfo = ref({
   size: 0,
   name: '',
@@ -426,10 +432,10 @@ const retryUpload = file => {
 
 // 附件预览处理
 const handlePreview = async file => {
-  isLoading.value = false
   if (!file) {
     return
   }
+  console.log(1)
   try {
     if (['txt'].includes(file.extension)) {
       // 处理文本附件
@@ -439,6 +445,7 @@ const handlePreview = async file => {
         previewContent.value = e.target.result
         previewType.value = 'text'
         previewFileId.value = 123
+        loading.value = false
       }
 
       reader.readAsText(file.raw)
@@ -471,6 +478,7 @@ const handlePreview = async file => {
       `
       previewType.value = 'html'
       previewFileId.value = 123
+      loading.value = false
 
       // 处理图片显示（如果需要）
       result.messages.forEach(message => {})
@@ -480,7 +488,7 @@ const handlePreview = async file => {
       previewContent.value = pdfUrl
       previewFileId.value = 123
       previewType.value = 'pdf'
-
+      loading.value = false
       // 在组件销毁或关闭预览时记得释放URL
       // 例如在onUnmounted或关闭弹窗的方法中调用 URL.revokeObjectURL(pdfUrl)
     } else if (['pptx', 'ppt'].includes(file.extension)) {
@@ -495,11 +503,14 @@ const handlePreview = async file => {
       previewContent.value = arrayBuffer // 直接传递ArrayBuffer
       previewType.value = 'excel' // 标识为Excel类型
       previewFileId.value = 123
+      loading.value = false
     } else {
       previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'
+      loading.value = false
     }
   } catch (error) {
+    loading.value = false
     console.error('预览失败:', error)
     previewContent.value = '附件预览失败'
     previewType.value = 'error'
@@ -562,12 +573,14 @@ const openFile = (val, ary) => {
   if (val === 'sample') {
     if (fileAry.value.length > 0) {
       fileObj.value = JSON.parse(JSON.stringify(fileAry.value[0]))
+      loading.value = true
       getFile()
     } else {
       fileQueue.value = []
     }
   } else {
     if (fileObj.value) {
+      loading.value = true
       getFile()
     } else {
       fileQueue.value = []
@@ -581,6 +594,7 @@ const getTextAfterLastDot = str => {
   return str.slice(lastDotIndex + 1)
 }
 const getFileAry = () => {
+  console.log(2)
   fileQueue.value = []
   for (var i = 0; i < fileAry.value.length; i++) {
     const name = fileAry.value[i].originalFileName
@@ -636,6 +650,7 @@ const getFileAry = () => {
   }
 }
 const getSampleFile = id => {
+  console.log(3)
   return fetch(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileById?id=' + id, {
     method: 'POST'
   })
@@ -645,6 +660,7 @@ const getSampleFile = id => {
       if (disposition && disposition.indexOf('filename=') !== -1) {
         filename = disposition.split('filename=')[1].replace(/"/g, '')
       }
+
       return response.blob().then(blob => ({ blob, filename }))
     })
     .then(({ blob, filename }) => {
@@ -675,6 +691,7 @@ const getFile = () => {
     .then(response => {
       // 从 Content-Disposition 中解析附件名
       const disposition = response.headers.get('Content-Disposition')
+
       let filename = 'default_filename' // 默认附件名
       if (disposition && disposition.indexOf('filename=') !== -1) {
         filename = disposition.split('filename=')[1].replace(/"/g, '')
@@ -685,7 +702,6 @@ const getFile = () => {
     .then(({ blob, filename }) => {
       // 将 Blob 转换为 File 对象（类似 file.raw）
       const file = new File([blob], filename, { type: blob.type })
-
       const fileOther = {
         raw: file,
         uid: file.lastModified,
@@ -703,9 +719,11 @@ const getFile = () => {
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
       fileQueue.value = []
       fileQueue.value.push(fileOther)
+      loading.value = false
       handlePreview(fileOther)
     })
     .catch(error => {
+      loading.value = false
       console.error('获取附件失败:', error)
     })
 }
@@ -730,6 +748,44 @@ defineExpose({ openFile, closeFile })
 </script>
 
 <style scoped lang="less">
+.loading-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading-text {
+  color: #1b6cff;
+  font-size: 16px;
+}
+
+.is-loading {
+  color: #1b6cff;
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 .file_loading {
   width: 1170px;
   height: 648px;
