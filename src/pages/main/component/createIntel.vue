@@ -451,6 +451,7 @@ const createIntel = val => {
   isCreate.value = true
 }
 const cancelIntel = () => {
+  console.log(1111)
   isCreate.value = false
 }
 // 点号变化逻辑
@@ -1125,9 +1126,11 @@ const addIntel = async () => {
 }
 // 组件挂载时订阅事件
 onMounted(() => {
+  isCreate.value = false
   eventBus.on('getHistoryData', getHistory)
   eventBus.on('setInfo', createIntel)
   eventBus.on('closeIntel', cancelIntel)
+
   eventBus.on('submit-sampleFile', submitSampleFile)
   eventBus.on('getRecord', getInfo)
   eventBus.on('changeInfo', setInfo)

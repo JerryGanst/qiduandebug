@@ -26,7 +26,7 @@ function updateNetworkStatus() {
   } else {
     networkType.value = 'external'
   }
-  getUserPower()
+  // getUserPower()
 }
 
 // 初始化监听

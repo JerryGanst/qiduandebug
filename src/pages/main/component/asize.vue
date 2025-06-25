@@ -528,6 +528,7 @@ const togglePopover = index => {
 }
 const togglePopoverIntel = index => {
   popoverVisibleIntel[index] = !popoverVisibleIntel[index]
+  console.log(popoverVisibleIntel[0])
 }
 const createIntel = () => {
   eventBus.emit('setInfo', 'create')
@@ -574,12 +575,18 @@ const changeContent = val => {
     ElMessage.warning('请先登录再使用')
     return false
   }
-  if (val === 2 || val === 3) {
-    if (!isNet.value) {
-      ElMessage.warning('该模式仅支持通过office网络访问')
-      return
+  if (val === 3) {
+    for (var i = 0; i < 50; i++) {
+      popoverVisible[i] = false
+      popoverVisibleIntel[i] = false
     }
   }
+  // if (val === 2 || val === 3) {
+  //   if (!isNet.value) {
+  //     ElMessage.warning('该模式仅支持通过office网络访问')
+  //     return
+  //   }
+  // }
   selectType.value = val
   contentType.value = val
   ItemSelect.value = 0
@@ -603,6 +610,12 @@ const knowItemSelect = val => {
   ItemSelect.value = val
 
   const data = powerArr.value[val].target
+  if (data !== 'HR' && data !== 'IT') {
+    if (!isNet.value) {
+      return
+      ElMessage.warning('该模式仅支持通过office网络访问')
+    }
+  }
   eventBus.emit('changeKnow', powerArr.value[val])
 }
 
@@ -616,19 +629,10 @@ const handleEdit = (val, index) => {
   titleIndex.value = index
 }
 const handleEditIntel = (val, index) => {
-  // let id = ''
-  // for(var i=0;i<answerListIntel.value.length;i++){
-  //     if(answerListIntel.value[i].persona.name === val){
-  //       id = answerListIntel.value[i].id
-  //     }
-  //   }
   eventBus.emit('setInfo', {
     param1: 'edit',
     param2: val
   })
-  // titleVisibleIntel.value = true
-  // titleQuestionIntel.value = val
-  // titleIndexIntel.value = index
 }
 
 const submitTitleIntel = val => {
@@ -916,33 +920,7 @@ const queryAnIntel = (val, index) => {
   currentIntelId.value = id
   eventBus.emit('changeInfo', id)
   eventBus.emit('getRecord', id)
-  // for (var j = 0; j < anList.length; j++) {
-  //   querySample.push(anList[j].title)
-  //   if (
-  //     val == anList[j].title ||
-  //     val ==
-  //       anList[j].data[0].content +
-  //         (answerListIntel.value[j].data[0].files
-  //           ? answerListIntel.value[j].data[0].files.map(item => item.originalFileName).join(',')
-  //           : '')
-  //   ) {
-  //     const idx = anList.length === intelList.value.length ? index : index - 1
-  //     intelQuery.messages = anList[idx].data
-  //     intelQuery.isLoading = false
-  //     currentIntelId.value = anList[idx].id
-  //     nextTick(() => {
-  //       // 滚动到底部
-  //       if (messageContainer.value) {
-  //         const messages = messageContainer.value.children
-  //         if (messages.length > 0) {
-  //           const lastMessage = messages[messages.length - 2]
-  //           // 滚动到最后一个消息的开头部分
-  //           lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  //         }
-  //       }
-  //     })
-  //   }
-  // }
+
   eventBus.emit('closeIntel')
 }
 // 点击切换左侧栏，控制左侧栏和右侧面板的数据
