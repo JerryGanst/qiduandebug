@@ -590,6 +590,7 @@ const {
   textareaInputSample,
   finalIng,
   updateFinalQuest,
+  drayAry,
   selectedLan,
   changeMode,
   transData,
@@ -1204,6 +1205,7 @@ const submitFinalSend = () => {
 
 const deleteImg = index => {
   fileInputAry.value.splice(index, 1)
+  drayAry.value.splice(index, 1)
   if (!fileInputAry.value || fileInputAry.value.length === 0) {
     fileInputAry.value = []
     nextTick(() => {
@@ -1212,6 +1214,7 @@ const deleteImg = index => {
   }
 }
 const submitSampleFile = val => {
+  console.log(val.value)
   currentQuestion.value = true
   isDragOver.value = false
   for (var i = 0; i < val.length; i++) {
@@ -1220,6 +1223,7 @@ const submitSampleFile = val => {
   }
   fileAry.value = val
   fileInputAry.value = JSON.parse(JSON.stringify(val))
+  console.log(fileInputAry.value)
   nextTick(() => {
     adjustTextareaHeight('textareaInputSample')
   })
@@ -1409,6 +1413,7 @@ const submitSample = async (val, isRefresh) => {
   const isThink = deepType.value
   fileInputAry.value = []
   fileAry.value = []
+  drayAry.value = []
   try {
     // 替换为实际的后端接口地址
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/chatStream', {
@@ -1440,6 +1445,7 @@ const submitSample = async (val, isRefresh) => {
 
     while (true) {
       const { value, done } = await reader.read()
+
       if (done) {
         clearInterval(interval)
         currentIndex.value = ''

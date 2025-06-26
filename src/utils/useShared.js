@@ -123,6 +123,7 @@ const dots = ref('.') // 初始点号
 const limitId = ref('')
 const fileObj = ref('')
 const fileAry = ref([])
+const drayAry = ref([])
 const deepType = ref(false)
 const docIng = ref(false)
 const tranIng = ref(false)
@@ -206,6 +207,7 @@ const changeMode = () => {
   newQuestion.value = ''
   dynamicRows.value = 1
   currentId.value = ''
+  drayAry.value = []
   pageType.value =
     selectedMode.value === '通用模式'
       ? 'sample'
@@ -426,7 +428,9 @@ export function useShared() {
   const updateCurrentIndex = newName => {
     currentIndex.value = newName
   }
-
+  const updateDrayAry = newName => {
+    drayAry.value = newName
+  }
   watch(
     newQuestion,
     newVal => {
@@ -448,6 +452,7 @@ export function useShared() {
     isSampleStop,
     isIntelStop,
     isQueryStop,
+    drayAry,
     isDragOver,
     limitLoading,
     limitIntelLoading,
@@ -509,6 +514,7 @@ export function useShared() {
     updateCurrentIntel,
     updateIsIntelStop,
     updateCurrentQuestion,
+    updateDrayAry,
     updateNewQuestion,
     updateIsSampleStop,
     updateIsQueryStop,

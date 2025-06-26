@@ -466,6 +466,7 @@ const {
   intelQuery,
   intelQuestion,
   isIntelStop,
+  drayAry,
   currentIntelId
 } = useShared()
 // 校验用户登录信息
@@ -572,6 +573,7 @@ const changeContent = val => {
     ElMessage.warning('请先登录再使用')
     return false
   }
+  drayAry.value = []
   if (val === 3) {
     for (var i = 0; i < 50; i++) {
       popoverVisible[i] = false
@@ -941,6 +943,7 @@ const queryAn = (val, index, data) => {
   const queryTranQs = []
   const queryFinal = []
   const queryFinalQs = []
+  drayAry.value = []
   fileInputAry.value = []
   for (var j = 0; j < anList.length; j++) {
     if (anList[j].type === '人资行政专题') {
