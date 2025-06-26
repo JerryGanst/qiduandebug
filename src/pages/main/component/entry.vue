@@ -343,6 +343,7 @@
           "
           class="arrow"
           @click="submitQuestionSend"
+          v-if="pageType === 'query'"
         />
         <img
           :src="
@@ -354,6 +355,7 @@
           "
           class="arrow"
           @click="submitItSend"
+          v-if="pageType === 'it'"
         />
         <img
           :src="

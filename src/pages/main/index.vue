@@ -350,6 +350,7 @@
                           ? imageB
                           : imageA
                     "
+                    v-if="pageType === 'query'"
                     class="arrow"
                     @click="submitQuestionSend"
                   />
@@ -361,6 +362,7 @@
                           ? imageB
                           : imageA
                     "
+                    v-if="pageType === 'it'"
                     class="arrow"
                     @click="submitITSend"
                   />
