@@ -45,5 +45,8 @@ const renderedMarkdown = computed(() => {
   :deep(.language-json) {
     white-space: pre-wrap;
   }
+  :deep(pre) {
+    white-space: pre-wrap;
+  }
 }
 </style>

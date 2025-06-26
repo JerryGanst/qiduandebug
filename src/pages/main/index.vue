@@ -351,7 +351,6 @@
                           : imageA
                     "
                     class="arrow"
-                    v-if="isNet && pageType === 'query'"
                     @click="submitQuestionSend"
                   />
                   <img
@@ -363,7 +362,6 @@
                           : imageA
                     "
                     class="arrow"
-                    v-if="isNet && pageType === 'it'"
                     @click="submitITSend"
                   />
                   <img
@@ -786,7 +784,7 @@ const updateDots = () => {
 }
 
 const toDoc = async data => {
-  if (!isNet.value) {
+  if (selectedMode.value === '法务专题' && !isNet.value) {
     ElMessage.warning('该模式仅支持通过office网络访问')
     return
   }
@@ -1674,7 +1672,7 @@ const submitQuestion = async (val, isRefresh) => {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
-  if (!isNet.value) {
+  if (pageType.value === 'law' && !isNet.value) {
     ElMessage.warning('该模式仅支持通过office网络访问')
     return
   }

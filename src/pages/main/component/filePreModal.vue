@@ -435,7 +435,6 @@ const handlePreview = async file => {
   if (!file) {
     return
   }
-  console.log(1)
   try {
     if (['txt'].includes(file.extension)) {
       // 处理文本附件
@@ -594,7 +593,6 @@ const getTextAfterLastDot = str => {
   return str.slice(lastDotIndex + 1)
 }
 const getFileAry = () => {
-  console.log(2)
   fileQueue.value = []
   for (var i = 0; i < fileAry.value.length; i++) {
     const name = fileAry.value[i].originalFileName
@@ -650,7 +648,6 @@ const getFileAry = () => {
   }
 }
 const getSampleFile = id => {
-  console.log(3)
   return fetch(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileById?id=' + id, {
     method: 'POST'
   })

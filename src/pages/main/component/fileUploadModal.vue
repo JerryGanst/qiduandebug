@@ -142,12 +142,7 @@ handlePreview
           <div style="width: 100%; display: flex; justify-content: center; margin-top: 154px">
             <img src="@/assets/no-file.png" style="width: 150px; height: 150px" />
           </div>
-          <div
-            class="unsupported-preview"
-            style="padding: 0px"
-          >
-            请先上传附件即可预览
-          </div>
+          <div class="unsupported-preview" style="padding: 0px">请先上传附件即可预览</div>
         </div>
       </div>
     </div>
@@ -323,7 +318,6 @@ const startUpload = async file => {
               ary.push(obj)
 
               if (i === fileQueue.value.length - 1) {
-                console.log(ary)
                 eventBus.emit('submit-sampleFile', ary)
                 dialogVisible.value = false
               }
