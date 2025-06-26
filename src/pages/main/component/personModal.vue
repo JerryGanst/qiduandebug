@@ -4,6 +4,7 @@
     @dragover.prevent="handleDragOver"
     @dragleave="handleDragLeave"
     @drop.prevent="handleDrop"
+    style="position: relative"
     :class="{ 'drag-over': isDragOver }"
   >
     <!-- 左侧附件列表 -->
@@ -205,6 +206,12 @@
         <div class="download" @click="downloadFile(fileInfo)">下载</div>
       </div>
     </div>
+    <div v-if="loading" class="loading-mask">
+      <div class="loading-content">
+        <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+        <span class="loading-text">数据加载中...</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -243,6 +250,7 @@ const currentPage = ref(1)
 const pageSize = ref(100)
 const totals = ref(100)
 const isCollapsed = ref(false)
+const loading = ref(true)
 const knowOptions = ref([
   {
     value: 1,
@@ -646,6 +654,7 @@ const getFileList = () => {
       pageSize: pageSize.value
     })
     .then(res => {
+      loading.value = false
       if (res.status) {
         fileQueue.value = res.data.content
         totals.value = res.data.totalElements
@@ -656,6 +665,7 @@ const getFileList = () => {
       }
     })
     .catch(err => {
+      loading.value = false
       isDragOver.value = false
       console.error(err)
     })
@@ -728,12 +738,51 @@ const getFile = fileObj => {
 }
 onMounted(() => {
   eventBus.on('setCollapsed', getCollapsed)
+  loading.value = true
   openFile()
 })
 defineExpose({ openFile })
 </script>
 
 <style scoped lang="less">
+.loading-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading-text {
+  color: #1b6cff;
+  font-size: 16px;
+}
+
+.is-loading {
+  color: #1b6cff;
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 /* 上传中状态样式 */
 .uploading-file {
   background: rgba(0, 0, 0, 0.5) !important; /* 轨道背景颜色 */

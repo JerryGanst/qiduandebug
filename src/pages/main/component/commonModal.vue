@@ -1,6 +1,7 @@
 <template>
   <div
     class="upload-layout"
+    style="position: relative"
     @dragover.prevent="handleDragOver"
     @dragleave="handleDragLeave"
     @drop.prevent="handleDrop"
@@ -118,6 +119,12 @@
         />
       </div>
     </div>
+    <div v-if="loading" class="loading-mask">
+      <div class="loading-content">
+        <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+        <span class="loading-text">数据加载中...</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -142,6 +149,7 @@ import { Search } from '@element-plus/icons-vue'
 
 const searchText = ref('')
 const dialogVisible = ref(false)
+const loading = ref(true)
 const fileQueue = ref([])
 const previewContent = ref(null)
 const previewType = ref('')
@@ -399,11 +407,13 @@ const getFileList = () => {
     )
     .then(res => {
       if (res.status) {
+        loading.value = false
         isDragOver.value = false
         fileQueue.value = res.data.content
         totals.value = res.data.totalElements
         getInfo()
       } else {
+        loading.value = false
         isDragOver.value = false
         fileQueue.value = []
         ElMessage.error(res.message)
@@ -538,6 +548,7 @@ onMounted(() => {
   selectedKnow.value = powerList[0].target
   isUpload.value = powerList[0].upload
   isDelete.value = powerList[0].delete
+  loading.value = true
   getFileList()
 })
 watch(
@@ -576,6 +587,44 @@ defineExpose({ openFile })
 </script>
 
 <style scoped lang="less">
+.loading-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading-text {
+  color: #1b6cff;
+  font-size: 16px;
+}
+
+.is-loading {
+  color: #1b6cff;
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 /* 上传中状态样式 */
 .uploading-file {
   background: rgba(0, 0, 0, 0.5) !important; /* 轨道背景颜色 */

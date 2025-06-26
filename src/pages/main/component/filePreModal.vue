@@ -751,7 +751,7 @@ defineExpose({ openFile, closeFile })
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -783,15 +783,7 @@ defineExpose({ openFile, closeFile })
     transform: rotate(360deg);
   }
 }
-.file_loading {
-  width: 1170px;
-  height: 648px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  background-color: rgba(0, 0, 0, 0.2) !important;
-}
+
 /* 覆盖遮罩透明度 */
 :deep(.el-overlay) {
   background-color: rgba(0, 0, 0, 0.5) !important;
