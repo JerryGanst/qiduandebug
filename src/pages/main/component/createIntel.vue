@@ -794,24 +794,7 @@ const submitSample = async (val, isRefresh) => {
   params.agentId = currentIntelId.value
   intelQuestion.value = ''
   let title = ''
-  // if (!intelList.value.includes(queryValue) && isRefresh && mes.messages.length === 1) {
-  //   for (var m = 0; m < intelList.value.length; m++) {
-  //     if (
-  //       queryValue === intelList.value[m].data[intelList.value[m].data.length - 2].content &&
-  //       intelList.value[m].data[intelList.value[m].data.length - 2].files.length === 0
-  //     ) {
-  //       const id = intelList.value[m].id
-  //       title = intelList.value[m].title
-  //       const index = intelList.value.findIndex(item => item === title)
-  //       if (index !== -1) {
-  //         intelList.value.splice(index, 1)
-  //       }
-  //       await asizeRef.value.deleteData(id, true)
-  //       intelList.value.unshift(title)
-  //       activeIndexIntel.value = 0
-  //     }
-  //   }
-  // }
+
 
   interval = setInterval(updateDots, 500)
 
@@ -836,12 +819,16 @@ const submitSample = async (val, isRefresh) => {
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/agentChat', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Connection': 'keep-alive', // 明确保持连接
+        'X-Response-Streaming': 'true',  // 自定义头通知服务器
+        'Accept': 'text/event-stream' // 明确接受事件流
       },
       body: JSON.stringify(params)
     })
     // 处理流式数据
     const reader = res.body.getReader()
+    console.log(reader)
     if (res.status === 429) {
       ElMessage.error('服务器繁忙,请稍后再试')
       return
@@ -891,6 +878,7 @@ const submitSample = async (val, isRefresh) => {
         break
       }
       buffer += decoder.decode(value, { stream: true })
+      console.log(buffer)
       // 使用更安全的分割方式（避免截断 JSON 结构）[3](@ref)
       const chunks = buffer.split(/(?=data:)/g)
       buffer = chunks.pop() || ''
