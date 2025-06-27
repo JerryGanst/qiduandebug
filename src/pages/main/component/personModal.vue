@@ -212,6 +212,12 @@
         <span class="loading-text">数据加载中...</span>
       </div>
     </div>
+    <div v-if="fileLoading" class="loading-mask">
+      <div class="loading-content">
+        <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+        <span class="loading-text">文件加载中...</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -250,7 +256,8 @@ const currentPage = ref(1)
 const pageSize = ref(100)
 const totals = ref(100)
 const isCollapsed = ref(false)
-const loading = ref(true)
+const loading = ref(false)
+const fileLoading = ref(false)
 const knowOptions = ref([
   {
     value: 1,
@@ -699,6 +706,7 @@ const getTextAfterLastDot = str => {
   return str.slice(lastDotIndex + 1)
 }
 const getFile = fileObj => {
+  fileLoading.value = true
   // 使用 POST 请求（与后端 @PostMapping 匹配）
   fetch(import.meta.env.VITE_API_BASE_URL + '/Files/knowledgeFileById?id=' + fileObj.id, {
     method: 'POST',
@@ -729,10 +737,12 @@ const getFile = fileObj => {
         source: null
       }
       previewFileId.value = fileOther.uid
+      fileLoading.value = false
       // 此时可以像处理 el-upload 的 file.raw 一样处理 file
       handlePreview(fileOther)
     })
     .catch(error => {
+      fileLoading.value = false
       console.error('获取附件失败:', error)
     })
 }
@@ -751,7 +761,7 @@ defineExpose({ openFile })
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: transparent;
   display: flex;
   justify-content: center;
   align-items: center;
