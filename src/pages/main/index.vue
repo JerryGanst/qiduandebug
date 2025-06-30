@@ -1787,13 +1787,16 @@ const submitQuestion = async (val, isRefresh) => {
       }
       // 将二进制数据解码并添加到缓冲区
       buffer += decoder.decode(value, { stream: true })
+      console.log(buffer)
       //处理buffer数据
       // 清理数据
       buffer = buffer.replace(/data:\s*/g, '')
       // 尝试按分隔符分割数据
       const jsonStr = buffer.split('\n\n')
+
       // 如果最后一个部分不完整，保留在缓冲区中
       buffer = jsonStr.pop() || ''
+    
       let finalAnswer = {}
 
       jsonStr.forEach(element => {

@@ -820,9 +820,7 @@ const submitSample = async (val, isRefresh) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Connection': 'keep-alive', // 明确保持连接
-        'X-Response-Streaming': 'true',  // 自定义头通知服务器
-        'Accept': 'text/event-stream' // 明确接受事件流
+        
       },
       body: JSON.stringify(params)
     })
