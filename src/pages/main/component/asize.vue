@@ -1153,7 +1153,6 @@ const getUserPower = () => {
 }
 const getPower = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-  console.log(123)
   request
     .post('/Files/permissionCheck?userId=' + userInfo.id)
     .then(res => {
@@ -1212,7 +1211,6 @@ const commonLedge = ref(null)
 // }
 const setPower = data => {
   const isPower = JSON.parse(data)
-  console.log(isPower)
   // isPowerFile.value = isPower && isPower.length > 0
 }
 
@@ -1241,7 +1239,7 @@ defineExpose({ queryAn, deleteData, setPower })
   top: calc(50% - 15px);
   left: 290px;
   cursor: pointer;
-  z-index: 10001;
+  z-index: 1001;
   img {
     width: 10px;
     height: 31px;

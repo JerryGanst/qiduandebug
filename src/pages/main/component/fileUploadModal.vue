@@ -185,7 +185,7 @@ const previewType = ref('')
 const previewFileId = ref(null)
 const type = ref('tran')
 const emit = defineEmits(['submit-tran', 'submit-final'])
-const { fileObj, isSampleLoad, finalIng, isLogin, fileAry } = useShared()
+const { fileObj, isSampleLoad, finalIng, isLogin, fileAry,limitFile } = useShared()
 // 常量定义
 const STATUS = {
   PENDING: 'pending',
@@ -375,6 +375,7 @@ const startUpload = async file => {
             }
 
             fileObj.value = res.data?.data[0]
+            limitFile.value =obj
             emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', obj)
           } else {
             ElMessage.error(res.data.message)
