@@ -1241,6 +1241,7 @@ defineExpose({ queryAn, deleteData, setPower })
   top: calc(50% - 15px);
   left: 290px;
   cursor: pointer;
+  z-index: 10001;
   img {
     width: 10px;
     height: 31px;
