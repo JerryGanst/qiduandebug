@@ -1398,6 +1398,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     .main_content::-webkit-scrollbar {
       width: 1px; /* 滚动条宽度 */
     }
