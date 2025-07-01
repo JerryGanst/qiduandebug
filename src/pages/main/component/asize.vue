@@ -542,12 +542,14 @@ const getUserInfo = async id => {
         localStorage.setItem('userInfo', JSON.stringify(res.data))
         userInfo.value = res.data
         userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
+    
         if (powerList.value.includes(userInfo.value.id)) {
           localStorage.setItem('isLaw', true)
         } else {
           localStorage.setItem('isLaw', false)
         }
         nextTick(() => {
+          getPower()
           emit('set-isLaw')
           emit('change-history')
         })
@@ -718,6 +720,7 @@ const submitLoginForm = async (id, password) => {
         activeIndex.value = ''
         activeIndexIntel.value = ''
         isLogin.value = true
+
         getUserInfo(loginForm.value.username)
         dialogVisible.value = false
       } else if (res.data && res.data.clientStatus !== 'PASS') {
@@ -1150,6 +1153,7 @@ const getUserPower = () => {
 }
 const getPower = () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  console.log(123)
   request
     .post('/Files/permissionCheck?userId=' + userInfo.id)
     .then(res => {
@@ -1208,6 +1212,7 @@ const commonLedge = ref(null)
 // }
 const setPower = data => {
   const isPower = JSON.parse(data)
+  console.log(isPower)
   // isPowerFile.value = isPower && isPower.length > 0
 }
 
