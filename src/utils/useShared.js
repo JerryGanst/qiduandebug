@@ -6,6 +6,7 @@ const intelQuestion = ref('') // 文本域输入值
 
 const isSampleStop = ref(false) // 控制通用模式 终止之后的状态
 const limitFile = ref({})
+const limitFinalFile = ref({})
 const isQueryStop = ref(false) // 控制人资模式 终止之后的状态
 const limitLoading = ref(false) // 切换左侧历史记录，判断当前选中的记录是否处于问答状态中
 const questions = ref([]) // 左侧历史记录标题数组
@@ -298,7 +299,9 @@ export function useShared() {
   const updateLimitFile = newName => {
     limitFile.value = newName
   }
-  
+  const updateLimitFinalFile = newName => {
+    limitFinalFile.value = newName
+  }
   const updateQueryTypes = newName => {
     queryTypes.value = newName
   }
@@ -480,6 +483,7 @@ export function useShared() {
     userInfo,
     activeIndex,
     activeIndexIntel,
+    limitFinalFile,
     queryTypes,
     chatQuery,
     intelQuery,
@@ -518,6 +522,7 @@ export function useShared() {
     updateCurrentIntel,
     updateIsIntelStop,
     updateCurrentQuestion,
+    updateLimitFinalFile,
     updateDrayAry,
     updateNewQuestion,
     updateIsSampleStop,

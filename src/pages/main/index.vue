@@ -619,7 +619,8 @@ const {
   isNet,
   isCreate,
   currentIndex,
-  limitFile
+  limitFile,
+  limitFinalFile
 } = useShared()
 
 const queryIng = ref(false)
@@ -905,19 +906,15 @@ const submitFinal = async (val, isRefresh, ob) => {
     title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
     let limitTitle = ''
     limitTitle = questions.value[idx]
+    const anObj = answerList.value[idx]
     questions.value.splice(idx, 1)
     answerList.value.splice(idx, 1)
+    
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
     currentIndex.value = 0
     questions.value.unshift(limitTitle)
-    const data = {
-      data: {
-        answer: '',
-        question: '桌面云规划怎么做？',
-        think: {}
-      }
-    }
+    answerList.value.unshift(anObj)
   }
   if (!isRefresh) {
     const qData = '新对话' + '(final)'
@@ -958,6 +955,7 @@ const submitFinal = async (val, isRefresh, ob) => {
     }
   })
   activeIndex.value = 0
+  console.log(ob)
   request
     .post('/AI/summarize', {
       user_id: userInfo.value.id,
@@ -979,6 +977,7 @@ const submitFinal = async (val, isRefresh, ob) => {
         adjustTextareaHeight('textareaInputFinal')
       })
       if (res.status) {
+                    answerList.value.splice(0, 1)
         finalData.value.title = res.data.summary
 
         if (res.data.key_points) {
@@ -988,12 +987,19 @@ const submitFinal = async (val, isRefresh, ob) => {
           question: passQuery,
           answer: finalData.value
         }
+        if(isRefresh){
+          answerList.value.splice(0, 1)
+        }
+
         postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
       } else {
         if (res.code === 400) {
           const obj = {
             question: passQuery,
             answer: ''
+          }
+          if(isRefresh){
+            answerList.value.splice(0, 1)
           }
           postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
           ElMessage.warning(res.message)
@@ -1574,11 +1580,13 @@ const submitTran = async (val, isRefresh, obj) => {
     let limitTitle = ''
     limitTitle = questions.value[idx]
     questions.value.splice(idx, 1)
+    const anObj =answerList.value[idx]
     answerList.value.splice(idx, 1)
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
     currentIndex.value = 0
     questions.value.unshift(limitTitle)
+    answerList.value.unshift(anObj)
   }
   if (!isRefresh) {
     const qData = '新对话' + '(tran)'
@@ -1642,13 +1650,18 @@ const submitTran = async (val, isRefresh, obj) => {
           question: passQuery,
           answer: res.data
         }
-
+        if(isRefresh){
+          answerList.value.splice(0, 1)
+        }
         postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
       } else {
         if (res.code === 400) {
           const passData = {
             question: passQuery,
             answer: ''
+          }
+          if(isRefresh){
+            answerList.value.splice(0, 1)
           }
           postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
           ElMessage.warning(res.message)
@@ -1958,6 +1971,7 @@ const postFinal = async (obj, title, ob) => {
       // showLoading: true
     })
     .then(res => {
+      limitFinalFile.value = {}
       if (res.status) {
         finalIng.value = false
         docIng.value = false
@@ -1968,6 +1982,7 @@ const postFinal = async (obj, title, ob) => {
       }
     })
     .catch(err => {
+      limitFinalFile.value = {}
       console.error('获取回复失败:', err)
     })
 }
@@ -2179,7 +2194,6 @@ const cancelCurrentRequest = async val => {
       question: transQuest.value,
       answer: ''
     }
-    console.log(obj)
     postTran(passData, title, obj)
   }
   if (val === 'final') {
@@ -2187,6 +2201,7 @@ const cancelCurrentRequest = async val => {
     docIng.value = false
     let title = ''
     let ob = ''
+    console.log(answerList.value)
     for (var i = 0; i < answerList.value.length; i++) {
       if (answerList.value[i].type === '总结') {
         if (answerList.value[i].data.question === finalQuest.value) {
@@ -2195,6 +2210,11 @@ const cancelCurrentRequest = async val => {
         }
       }
     }
+    console.log(ob)
+    if(!ob && limitFinalFile.value.fileName){
+      ob = limitFinalFile.value
+    }
+    console.log(ob)
     const obj = {
       question: finalQuest.value,
       answer: {
