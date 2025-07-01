@@ -56,6 +56,10 @@ const uploadSingleFile = async file => {
         fileLoading.value = false
         ElMessage.error(res.data.message)
       }
+    }).catch(err => {
+      fileLoading.value = false
+      isDragOver.value = false
+      ElMessage.error('上传失败')
     })
 }
 
