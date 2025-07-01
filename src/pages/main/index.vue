@@ -699,10 +699,11 @@ const handleDragOver = () => {
   if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
     return
   }
-
+  console.log(1)
   isDragOver.value = true
   nextTick(() => {
     if (entryRef.value) {
+      console.log(2)
       entryRef.value.setDrag(isDragOver.value)
     }
   })

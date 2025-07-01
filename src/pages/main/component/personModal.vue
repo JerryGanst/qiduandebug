@@ -94,6 +94,7 @@
         </div>
       </div>
       <div class="file_item">
+        
         <div
           v-for="(file, index) in fileQueue"
           :key="file.uid"
