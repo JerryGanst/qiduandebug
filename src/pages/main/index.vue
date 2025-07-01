@@ -618,7 +618,8 @@ const {
   isDragOver,
   isNet,
   isCreate,
-  currentIndex
+  currentIndex,
+  limitFile
 } = useShared()
 
 const queryIng = ref(false)
@@ -1921,6 +1922,7 @@ const postTran = async (obj, title, ob) => {
       // showLoading: true
     })
     .then(res => {
+      limitFile.value = {}
       if (res.status) {
         finalIng.value = false
         tranIng.value = false
@@ -1931,6 +1933,7 @@ const postTran = async (obj, title, ob) => {
       }
     })
     .catch(err => {
+      limitFile.value = {}
       finalIng.value = false
       tranIng.value = false
       console.error('获取回复失败:', err)
@@ -2159,6 +2162,8 @@ const cancelCurrentRequest = async val => {
     tranIng.value = false
     let title = ''
     let obj = ''
+    console.log(answerList.value)
+    console.log(transQuest.value)
     for (var i = 0; i < answerList.value.length; i++) {
       if (answerList.value[i].type === '翻译') {
         if (answerList.value[i].data.question === transQuest.value) {
@@ -2167,10 +2172,14 @@ const cancelCurrentRequest = async val => {
         }
       }
     }
+    if(!obj && limitFile.value.fileName){
+      obj = limitFile.value
+    }
     const passData = {
       question: transQuest.value,
       answer: ''
     }
+    console.log(obj)
     postTran(passData, title, obj)
   }
   if (val === 'final') {
