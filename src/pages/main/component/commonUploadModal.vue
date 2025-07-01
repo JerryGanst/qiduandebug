@@ -235,7 +235,8 @@ const selectNum = ref(0)
 const selectList = ref([])
 const type = ref('sample')
 const {
-  limitFile
+  limitFile,
+  limitFinalFile
 } = useShared()
 const knowOptions = ref([
   {
@@ -674,7 +675,11 @@ const postData = async () => {
   } else {
     aryData[0].fileName = decodeURIComponent(aryData[0].fileName)
     aryData[0].originalFileName = decodeURIComponent(aryData[0].originalFileName)
-    limitFile.value = aryData[0]
+    if(type.value === 'tran'){
+      limitFile.value = aryData[0]
+    } else{
+      limitFinalFile.value = aryData[0]
+    }
     emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', aryData[0])
     // eventBus.emit('submit-sampleFile', aryData[0])
   }
