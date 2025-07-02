@@ -8,7 +8,7 @@
   >
     <div class="upload-layout">
       <!-- 左侧附件列表 -->
-      <div class="file-list" :style="{ width: isPre ? '735px' : '100%' }">
+      <div class="file-list" :style="{ width: isPre ? '780px' : '100%' }" ref="leftPanel">
         <div class="file_search">
           <div class="file_left">
             <div class="file_content">
@@ -145,9 +145,14 @@
           <div class="btn_confirm" @click="postData">确定</div>
         </div>
       </div>
-
       <!-- 右侧上传区域 -->
-      <div class="upload-area" v-if="isPre">
+      <div class="upload-area" v-if="isPre"     
+      ref="rightPanel"
+      :style="{ 
+        'margin-left': `-${overlayWidth}px`,
+        'width': `calc(100% - 780px + ${overlayWidth}px)`
+      }">
+        <div class="drag-bar" @mousedown="startDrag"></div>
         <div class="file_text" v-if="previewFileId" style="position: relative">
           <div class="text_title">{{ fileInfo.name }}</div>
           <div class="text_list">
@@ -157,6 +162,7 @@
           </div>
           <div class="close_pre" @click="closePre">关闭预览</div>
         </div>
+        
         <!-- 附件预览 -->
         <div
           v-if="previewFileId"
@@ -165,17 +171,17 @@
           style="height: 480px; margin: 15px"
           :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
         >
-          <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px">
+          <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px;width: 100%;">
             <pre>{{ previewContent }}</pre>
           </div>
-          <div v-else-if="previewType === 'html'" class="html-preview" v-html="previewContent"></div>
-          <div v-else-if="previewType === 'pdf'">
+          <div v-else-if="previewType === 'html'" class="html-preview" v-html="previewContent" style="width: 100%;"></div>
+          <div v-else-if="previewType === 'pdf'"  style="width: 100%;">
             <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
           </div>
-          <div v-else-if="previewType === 'pptx'">
+          <div v-else-if="previewType === 'pptx'" style="width: 100%;">
             <vue-office-pptx :src="previewContent" />
           </div>
-          <div v-else-if="previewType === 'excel'">
+          <div v-else-if="previewType === 'excel'" style="width: 100%;">
             <vue-office-excel :src="previewContent" />
           </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
@@ -233,6 +239,10 @@ const isPower = ref(false)
 const permission = ref([])
 const selectNum = ref(0)
 const selectList = ref([])
+const overlayWidth = ref(0) // 右侧覆盖左侧的宽度
+const isDragging = ref(false)
+const startX = ref(0)
+const startOverlay = ref(0)
 const type = ref('sample')
 const {
   limitFile,
@@ -259,7 +269,36 @@ const emit = defineEmits(['submit-tran', 'submit-final'])
 const closePre = () => {
   isPre.value = false
 }
+const startDrag = (e) => {
+  isDragging.value = true
+  startX.value = e.clientX
+  startOverlay.value = overlayWidth.value
+  
+  document.addEventListener('mousemove', handleDrag)
+  document.addEventListener('mouseup', stopDrag)
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+}
 
+const handleDrag = (e) => {
+  if (!isDragging.value) return
+  
+  const dx = startX.value - e.clientX // 向左拖动为负值
+  let newOverlay = startOverlay.value + dx
+  
+  // 限制覆盖范围 (0到735px)
+  newOverlay = Math.max(0, Math.min(newOverlay, 780))
+  
+  overlayWidth.value = newOverlay
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', handleDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+}
 const clearData = () => {
   searchText.value = ''
   getFileList()
@@ -802,10 +841,23 @@ defineExpose({ openFile })
   display: flex;
   height: 100%;
   gap: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.drag-bar {
+  position: absolute;
+  left: 0px;
+  height: 100%;
+  top: 0px;
+  width: 5px;
+  background-color: #f0f0f0;
+  cursor: col-resize;
+  flex-shrink: 0;
+  z-index: 3; /* 确保在顶层 */
 }
 
 .file-list {
-  width: 735px;
+  width: 780px;
   height: 630px;
   border-radius: 4px;
 
@@ -1025,13 +1077,20 @@ defineExpose({ openFile })
     color: #fff;
   }
 }
-
+.drag-bar:hover {
+  background-color: #d9d9d9;
+}
 .upload-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   border: 1px solid #dcdfe6;
+  border-left: none;
   border-radius: 4px;
+  position: relative;
+  z-index: 2;
+  background: white; /* 确保背景不透明 */
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* 添加阴影增强覆盖效果 */
   .file_text {
     display: flex;
     flex: 1;
@@ -1091,7 +1150,6 @@ defineExpose({ openFile })
   border-radius: 4px;
   margin: 0 15px 15px 15px;
   overflow: auto;
-  width: 450px;
   background-color: #f8f9fb;
 }
 .preview-container::-webkit-scrollbar {

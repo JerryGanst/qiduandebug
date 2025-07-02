@@ -9,7 +9,7 @@ handlePreview
   >
     <div class="upload-layout no-drag">
       <!-- 左侧附件列表 -->
-      <div class="file-list">
+      <div class="file-list" ref="leftPanel">
         <div class="upload_list">
           <el-upload
             drag
@@ -120,20 +120,33 @@ handlePreview
       </div>
 
       <!-- 右侧上传区域 -->
-      <div class="upload-area">
+      <div
+        class="upload-area"
+        ref="rightPanel"
+        :style="{
+          'margin-left': `-${overlayWidth}px`,
+          width: `calc(100% - 500px + ${overlayWidth}px)`
+        }"
+      >
+        <div class="drag-bar" @mousedown="startDrag"></div>
         <!-- 附件预览 -->
         <div v-if="previewFileId" class="preview-container" :key="previewFileId">
-          <div v-if="previewType === 'text'" class="text-preview">
+          <div v-if="previewType === 'text'" class="text-preview" style="width: 100%">
             <pre>{{ previewContent }}</pre>
           </div>
-          <div v-else-if="previewType === 'html'" class="html-preview" v-html="previewContent"></div>
-          <div v-else-if="previewType === 'pdf'">
+          <div
+            v-else-if="previewType === 'html'"
+            class="html-preview"
+            v-html="previewContent"
+            style="width: 100%"
+          ></div>
+          <div v-else-if="previewType === 'pdf'" style="width: 100%">
             <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
           </div>
-          <div v-else-if="previewType === 'pptx'">
+          <div v-else-if="previewType === 'pptx'" style="width: 100%">
             <vue-office-pptx :src="previewContent" />
           </div>
-          <div v-else-if="previewType === 'excel'">
+          <div v-else-if="previewType === 'excel'" style="width: 100%">
             <vue-office-excel :src="previewContent" />
           </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
@@ -185,7 +198,7 @@ const previewType = ref('')
 const previewFileId = ref(null)
 const type = ref('tran')
 const emit = defineEmits(['submit-tran', 'submit-final'])
-const { fileObj, isSampleLoad, finalIng, isLogin, fileAry,limitFile,limitFinalFile } = useShared()
+const { fileObj, isSampleLoad, finalIng, isLogin, fileAry, limitFile, limitFinalFile } = useShared()
 // 常量定义
 const STATUS = {
   PENDING: 'pending',
@@ -198,6 +211,10 @@ const selectedKnow = ref(1)
 const selectedMode = ref('')
 const selectedFile = ref([])
 const fileOptions = ref([])
+const overlayWidth = ref(0) // 右侧覆盖左侧的宽度
+const isDragging = ref(false)
+const startX = ref(0)
+const startOverlay = ref(0)
 const knowList = ref([
   {
     value: 1,
@@ -220,6 +237,37 @@ const statusColors = {
   [STATUS.SUCCESS]: '#52C41A',
   [STATUS.ERROR]: '#FF4D4F'
 }
+const startDrag = e => {
+  isDragging.value = true
+  startX.value = e.clientX
+  startOverlay.value = overlayWidth.value
+
+  document.addEventListener('mousemove', handleDrag)
+  document.addEventListener('mouseup', stopDrag)
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+}
+
+const handleDrag = e => {
+  if (!isDragging.value) return
+
+  const dx = startX.value - e.clientX // 向左拖动为负值
+  let newOverlay = startOverlay.value + dx
+
+  // 限制覆盖范围 (0到735px)
+  newOverlay = Math.max(0, Math.min(newOverlay, 500))
+
+  overlayWidth.value = newOverlay
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', handleDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+}
+
 // 新增删除处理函数
 const handleDelete = index => {
   const deletedFile = fileQueue.value[index]
@@ -375,12 +423,12 @@ const startUpload = async file => {
             }
 
             fileObj.value = res.data?.data[0]
-            if(type.value === 'tran'){
-              limitFile.value =obj
-            }else{
+            if (type.value === 'tran') {
+              limitFile.value = obj
+            } else {
               limitFinalFile.value = obj
             }
-           
+
             emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', obj)
           } else {
             ElMessage.error(res.data.message)
@@ -904,6 +952,20 @@ defineExpose({ openFile, closeFile })
   display: flex;
   height: 100%;
   gap: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.drag-bar {
+  width: 5px;
+  background-color: #f0f0f0;
+  cursor: col-resize;
+  flex-shrink: 0;
+  z-index: 3; /* 确保在顶层 */
+  height: 100%;
+}
+
+.drag-bar:hover {
+  background-color: #d9d9d9;
 }
 
 .file-list {
@@ -917,6 +979,9 @@ defineExpose({ openFile, closeFile })
   position: relative;
   flex-direction: column;
   border: 1px solid #dcdfe6;
+  z-index: 1;
+  background: white; /* 确保背景不透明 */
+  flex-shrink: 0;
   .file_item {
     width: 100%;
     height: 430px;
@@ -993,8 +1058,10 @@ defineExpose({ openFile, closeFile })
 .upload-area {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  position: relative;
+  z-index: 2;
+  background: white; /* 确保背景不透明 */
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* 添加阴影增强覆盖效果 */
 }
 
 .preview-container {
@@ -1003,7 +1070,7 @@ defineExpose({ openFile, closeFile })
   border-radius: 4px;
   padding: 15px;
   overflow: auto;
-  width: 670px;
+  width: 100%;
 }
 .preview-container::-webkit-scrollbar {
   width: 1px; /* 滚动条宽度 */

@@ -686,8 +686,8 @@ defineExpose({ openFile })
   background-color: rgba(64, 158, 255, 0.1);
 }
 .file-list {
-  width: calc(100% - 80px);
-  margin-left: 80px;
+  width: calc(100% - 40px);
+  margin-left: 40px;
   height: 100%;
 
   overflow-y: hidden;
