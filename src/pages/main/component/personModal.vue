@@ -999,6 +999,7 @@ defineExpose({ openFile })
       display: flex;
       flex-direction: row-reverse;
       flex: 1;
+      margin-right: 40px;
       .file_content {
         display: flex;
         flex-direction: column;
