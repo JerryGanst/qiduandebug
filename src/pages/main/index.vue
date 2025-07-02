@@ -344,7 +344,7 @@
                   </div>
                   <img
                     :src="
-                      isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
                         ? imageC
                         : newQuestion
                           ? imageB
@@ -356,7 +356,7 @@
                   />
                   <img
                     :src="
-                      isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
                         ? imageC
                         : newQuestion
                           ? imageB
@@ -368,7 +368,7 @@
                   />
                   <img
                     :src="
-                      isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
                         ? imageC
                         : newQuestion
                           ? imageB
@@ -479,7 +479,7 @@
                   </div>
                   <img
                     :src="
-                      isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
                         ? imageC
                         : newQuestion || fileInputAry.length > 0
                           ? imageB
@@ -701,11 +701,9 @@ const handleDragOver = () => {
   if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
     return
   }
-  console.log(1)
   isDragOver.value = true
   nextTick(() => {
     if (entryRef.value) {
-      console.log(2)
       entryRef.value.setDrag(isDragOver.value)
     }
   })
@@ -918,7 +916,7 @@ const submitFinal = async (val, isRefresh, ob) => {
   }
   if (!isRefresh) {
     const qData = '新对话' + '(final)'
-    currentIndex.value = 0
+    activeIndex.value = 0
     currentIndex.value = 0
     questions.value.unshift(qData)
   }
@@ -955,7 +953,6 @@ const submitFinal = async (val, isRefresh, ob) => {
     }
   })
   activeIndex.value = 0
-  console.log(ob)
   request
     .post('/AI/summarize', {
       user_id: userInfo.value.id,
@@ -1153,7 +1150,7 @@ const submitCommon = async () => {
 const submitQuestionSend = () => {
   if (
     isSampleLoad.value &&
-    (currentIndex.value || currentIndex.value == 0) &&
+    (currentIndex.value || currentIndex.value === 0) &&
     currentIndex.value == activeIndex.value
   ) {
     stopQuery('query')
@@ -1164,7 +1161,7 @@ const submitQuestionSend = () => {
 const submitITSend = () => {
   if (
     isSampleLoad.value &&
-    (currentIndex.value || currentIndex.value == 0) &&
+    (currentIndex.value || currentIndex.value === 0) &&
     currentIndex.value == activeIndex.value
   ) {
     stopQuery('it')
@@ -1175,7 +1172,7 @@ const submitITSend = () => {
 const submitLawSend = () => {
   if (
     isSampleLoad.value &&
-    (currentIndex.value || currentIndex.value == 0) &&
+    (currentIndex.value || currentIndex.value === 0) &&
     currentIndex.value == activeIndex.value
   ) {
     stopQuery('law')
@@ -1187,7 +1184,7 @@ const submitLawSend = () => {
 const submitSampleSend = () => {
   if (
     isSampleLoad.value &&
-    (currentIndex.value || currentIndex.value == 0) &&
+    (currentIndex.value || currentIndex.value === 0) &&
     currentIndex.value == activeIndex.value
   ) {
     stopQuery('sample')
@@ -1197,14 +1194,14 @@ const submitSampleSend = () => {
   submitSample()
 }
 const submitTranSend = () => {
-  if (finalIng.value && (currentIndex.value || currentIndex.value == 0) && currentIndex.value == activeIndex.value) {
+  if (finalIng.value && (currentIndex.value || currentIndex.value === 0) && currentIndex.value == activeIndex.value) {
     cancelCurrentRequest('tran')
     return
   }
   submitTran()
 }
 const submitFinalSend = () => {
-  if (finalIng.value && (currentIndex.value || currentIndex.value == 0) && currentIndex.value == activeIndex.value) {
+  if (finalIng.value && (currentIndex.value || currentIndex.value === 0) && currentIndex.value == activeIndex.value) {
     cancelCurrentRequest('final')
     return
   }
@@ -1222,7 +1219,6 @@ const deleteImg = index => {
   }
 }
 const submitSampleFile = val => {
-  console.log(val.value)
   currentQuestion.value = true
   isDragOver.value = false
   for (var i = 0; i < val.length; i++) {
@@ -1231,7 +1227,6 @@ const submitSampleFile = val => {
   }
   fileAry.value = val
   fileInputAry.value = JSON.parse(JSON.stringify(val))
-  console.log(fileInputAry.value)
   nextTick(() => {
     adjustTextareaHeight('textareaInputSample')
   })
@@ -1802,7 +1797,6 @@ const submitQuestion = async (val, isRefresh) => {
       }
       // 将二进制数据解码并添加到缓冲区
       buffer += decoder.decode(value, { stream: true })
-      console.log(buffer)
       //处理buffer数据
       // 清理数据
       buffer = buffer.replace(/data:\s*/g, '')
@@ -2177,8 +2171,6 @@ const cancelCurrentRequest = async val => {
     tranIng.value = false
     let title = ''
     let obj = ''
-    console.log(answerList.value)
-    console.log(transQuest.value)
     for (var i = 0; i < answerList.value.length; i++) {
       if (answerList.value[i].type === '翻译') {
         if (answerList.value[i].data.question === transQuest.value) {
@@ -2201,7 +2193,6 @@ const cancelCurrentRequest = async val => {
     docIng.value = false
     let title = ''
     let ob = ''
-    console.log(answerList.value)
     for (var i = 0; i < answerList.value.length; i++) {
       if (answerList.value[i].type === '总结') {
         if (answerList.value[i].data.question === finalQuest.value) {
@@ -2210,11 +2201,9 @@ const cancelCurrentRequest = async val => {
         }
       }
     }
-    console.log(ob)
     if(!ob && limitFinalFile.value.fileName){
       ob = limitFinalFile.value
     }
-    console.log(ob)
     const obj = {
       question: finalQuest.value,
       answer: {

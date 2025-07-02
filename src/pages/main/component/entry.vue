@@ -335,7 +335,7 @@
         </div>
         <img
           :src="
-            isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+            isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
               ? imageC
               : newQuestion
                 ? imageB
@@ -347,7 +347,7 @@
         />
         <img
           :src="
-            isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+            isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
               ? imageC
               : newQuestion
                 ? imageB
@@ -359,7 +359,7 @@
         />
         <img
           :src="
-            isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+            isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
               ? imageC
               : newQuestion
                 ? imageB
@@ -413,7 +413,7 @@
         </div>
         <img
           :src="
-            isSampleLoad && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+            isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
               ? imageC
               : newQuestion || fileInputAry.length > 0
                 ? imageB
@@ -465,7 +465,7 @@
         </div>
         <img
           :src="
-            finalIng && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+            finalIng && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
               ? imageC
               : newQuestion
                 ? imageB
@@ -513,7 +513,7 @@
         </div>
         <img
           :src="
-            finalIng && (currentIndex || currentIndex == 0) && currentIndex == activeIndex
+            finalIng && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
               ? imageC
               : newQuestion
                 ? imageB

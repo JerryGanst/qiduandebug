@@ -422,6 +422,7 @@ const {
   newQuestion,
   isSampleStop,
   isQueryStop,
+  currentIndex,
   limitLoading,
   limitIntelLoading,
   questions,
@@ -748,6 +749,7 @@ const startNewConversation = () => {
   tipQuery.value = ''
   dynamicRows.value = 1
   activeIndex.value = ''
+  currentIndex.value = ''
   chatQuery.messages = []
   chatQuery.isLoading = false
   fileObj.value = ''
@@ -932,6 +934,9 @@ const queryAn = (val, index, data) => {
   isSampleStop.value = false
   isQueryStop.value = false
   limitLoading.value = false
+  if(!currentIndex.value&&currentIndex.value!==0){
+    currentIndex.value = activeIndex.value
+  }
   val = index || index === 0 ? questions.value[index] : val
   const queryList = questions.value
   const anList = JSON.parse(JSON.stringify(answerList.value))
