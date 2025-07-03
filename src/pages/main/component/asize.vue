@@ -543,7 +543,7 @@ const getUserInfo = async id => {
         localStorage.setItem('userInfo', JSON.stringify(res.data))
         userInfo.value = res.data
         userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
-    
+
         if (powerList.value.includes(userInfo.value.id)) {
           localStorage.setItem('isLaw', true)
         } else {
@@ -934,7 +934,7 @@ const queryAn = (val, index, data) => {
   isSampleStop.value = false
   isQueryStop.value = false
   limitLoading.value = false
-  if(!currentIndex.value&&currentIndex.value!==0){
+  if (!currentIndex.value && currentIndex.value !== 0) {
     currentIndex.value = activeIndex.value
   }
   val = index || index === 0 ? questions.value[index] : val
@@ -953,6 +953,8 @@ const queryAn = (val, index, data) => {
   const queryFinalQs = []
   drayAry.value = []
   fileInputAry.value = []
+  console.log(index)
+  console.log(anList)
   for (var j = 0; j < anList.length; j++) {
     if (anList[j].type === '人资行政专题') {
       queryLimit.push(anList[j].title)
@@ -961,10 +963,11 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'query'
         selectedMode.value = '人资行政专题'
-        tipQuery.value = anList[index].data.question
-        currentObj.value.messages = anList[index].data.answer
-        currentObj.value.list = anList[index].data?.think
-        deepType.value = anList[index].isThink
+        const idx = anList.length === questions.value.length ? index : index - 1
+        tipQuery.value = anList[idx].data.question
+        currentObj.value.messages = anList[idx].data.answer
+        currentObj.value.list = anList[idx].data?.think
+        deepType.value = anList[idx].isThink
       }
     } else if (anList[j].type === 'IT专题') {
       queryIt.push(anList[j].title)
@@ -973,10 +976,11 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'it'
         selectedMode.value = 'IT专题'
-        tipQuery.value = anList[index].data.question
-        currentObj.value.messages = anList[index].data.answer
-        currentObj.value.list = anList[index].data?.think
-        deepType.value = anList[index].isThink
+        const idx = anList.length === questions.value.length ? index : index - 1
+        tipQuery.value = anList[idx].data.question
+        currentObj.value.messages = anList[idx].data.answer
+        currentObj.value.list = anList[idx].data?.think
+        deepType.value = anList[idx].isThink
       }
     } else if (anList[j].type === '法务专题') {
       queryLaw.push(anList[j].title)
@@ -985,10 +989,13 @@ const queryAn = (val, index, data) => {
         currentId.value = anList[j].id
         pageType.value = 'law'
         selectedMode.value = '法务专题'
-        tipQuery.value = anList[index].data.question
-        currentObj.value.messages = anList[index].data.answer
-        currentObj.value.list = anList[index].data?.think
-        deepType.value = anList[index].isThink
+        const idx = anList.length === questions.value.length ? index : index - 1
+        tipQuery.value = anList[idx].data.question
+        console.log(anList[idx])
+        currentObj.value.messages = anList[idx].data.answer
+        currentObj.value.list = anList[idx].data?.think
+        console.log(currentObj.value)
+        deepType.value = anList[idx].isThink
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
@@ -1121,6 +1128,7 @@ const queryAn = (val, index, data) => {
   if (pageType.value === 'final' && (queryFinal.includes(val) || queryFinalQs.includes(val))) {
     docIng.value = false
   }
+  console.log(currentObj.value)
 }
 
 const powerList = ref([
