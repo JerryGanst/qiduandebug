@@ -991,10 +991,8 @@ const queryAn = (val, index, data) => {
         selectedMode.value = '法务专题'
         const idx = anList.length === questions.value.length ? index : index - 1
         tipQuery.value = anList[idx].data.question
-        console.log(anList[idx])
         currentObj.value.messages = anList[idx].data.answer
         currentObj.value.list = anList[idx].data?.think
-        console.log(currentObj.value)
         deepType.value = anList[idx].isThink
       }
     } else if (anList[j].type === '通用模式') {

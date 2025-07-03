@@ -76,6 +76,9 @@ const handleBeforeUnload = () => {
 }
 </script>
 <style lang="less">
+html {
+  overflow-y: hidden;
+}
 .el-upload {
   --el-upload-dragger-padding-horizontal: 20px !important;
 }
