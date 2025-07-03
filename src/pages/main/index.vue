@@ -52,11 +52,11 @@
                 </div>
               </div>
               <div class="title_float" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
-                <span v-if="!currentObj.messages.type">
+                <span v-if="!currentObj?.messages?.type">
                   <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
                 </span>
-                <span style="padding-left: 10px" v-if="!currentObj.messages.type">
-                  {{ currentObj.messages.isHistory ? '' : currentMessage }}
+                <span style="padding-left: 10px" v-if="!currentObj?.messages?.type">
+                  {{ currentObj?.messages?.isHistory ? '' : currentMessage }}
                 </span>
               </div>
               <div
@@ -907,7 +907,7 @@ const submitFinal = async (val, isRefresh, ob) => {
     const anObj = answerList.value[idx]
     questions.value.splice(idx, 1)
     answerList.value.splice(idx, 1)
-    
+
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
     currentIndex.value = 0
@@ -974,7 +974,7 @@ const submitFinal = async (val, isRefresh, ob) => {
         adjustTextareaHeight('textareaInputFinal')
       })
       if (res.status) {
-                    answerList.value.splice(0, 1)
+        answerList.value.splice(0, 1)
         finalData.value.title = res.data.summary
 
         if (res.data.key_points) {
@@ -984,7 +984,7 @@ const submitFinal = async (val, isRefresh, ob) => {
           question: passQuery,
           answer: finalData.value
         }
-        if(isRefresh){
+        if (isRefresh) {
           answerList.value.splice(0, 1)
         }
 
@@ -995,7 +995,7 @@ const submitFinal = async (val, isRefresh, ob) => {
             question: passQuery,
             answer: ''
           }
-          if(isRefresh){
+          if (isRefresh) {
             answerList.value.splice(0, 1)
           }
           postFinal(obj, title.replace(/\([^)]*\)/g, ''), ob)
@@ -1575,7 +1575,7 @@ const submitTran = async (val, isRefresh, obj) => {
     let limitTitle = ''
     limitTitle = questions.value[idx]
     questions.value.splice(idx, 1)
-    const anObj =answerList.value[idx]
+    const anObj = answerList.value[idx]
     answerList.value.splice(idx, 1)
     await asizeRef.value.deleteData(current, true)
     activeIndex.value = 0
@@ -1645,7 +1645,7 @@ const submitTran = async (val, isRefresh, obj) => {
           question: passQuery,
           answer: res.data
         }
-        if(isRefresh){
+        if (isRefresh) {
           answerList.value.splice(0, 1)
         }
         postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
@@ -1655,7 +1655,7 @@ const submitTran = async (val, isRefresh, obj) => {
             question: passQuery,
             answer: ''
           }
-          if(isRefresh){
+          if (isRefresh) {
             answerList.value.splice(0, 1)
           }
           postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
@@ -1805,7 +1805,7 @@ const submitQuestion = async (val, isRefresh) => {
 
       // 如果最后一个部分不完整，保留在缓冲区中
       buffer = jsonStr.pop() || ''
-    
+
       let finalAnswer = {}
 
       jsonStr.forEach(element => {
@@ -2179,7 +2179,7 @@ const cancelCurrentRequest = async val => {
         }
       }
     }
-    if(!obj && limitFile.value.fileName){
+    if (!obj && limitFile.value.fileName) {
       obj = limitFile.value
     }
     const passData = {
@@ -2201,7 +2201,7 @@ const cancelCurrentRequest = async val => {
         }
       }
     }
-    if(!ob && limitFinalFile.value.fileName){
+    if (!ob && limitFinalFile.value.fileName) {
       ob = limitFinalFile.value
     }
     const obj = {
