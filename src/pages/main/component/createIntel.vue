@@ -795,7 +795,6 @@ const submitSample = async (val, isRefresh) => {
   intelQuestion.value = ''
   let title = ''
 
-
   interval = setInterval(updateDots, 500)
 
   nextTick(() => {
@@ -819,8 +818,7 @@ const submitSample = async (val, isRefresh) => {
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/agentChat', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(params)
     })
@@ -1398,6 +1396,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     .main_content::-webkit-scrollbar {
       width: 1px; /* 滚动条宽度 */
     }

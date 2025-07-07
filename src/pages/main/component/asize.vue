@@ -953,8 +953,6 @@ const queryAn = (val, index, data) => {
   const queryFinalQs = []
   drayAry.value = []
   fileInputAry.value = []
-  console.log(index)
-  console.log(anList)
   for (var j = 0; j < anList.length; j++) {
     if (anList[j].type === '人资行政专题') {
       queryLimit.push(anList[j].title)
@@ -1126,7 +1124,6 @@ const queryAn = (val, index, data) => {
   if (pageType.value === 'final' && (queryFinal.includes(val) || queryFinalQs.includes(val))) {
     docIng.value = false
   }
-  console.log(currentObj.value)
 }
 
 const powerList = ref([
