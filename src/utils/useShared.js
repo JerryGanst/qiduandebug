@@ -9,6 +9,8 @@ const limitFile = ref({})
 const limitFinalFile = ref({})
 const isQueryStop = ref(false) // 控制人资模式 终止之后的状态
 const limitLoading = ref(false) // 切换左侧历史记录，判断当前选中的记录是否处于问答状态中
+const limitTranLoading = ref(false)
+
 const questions = ref([]) // 左侧历史记录标题数组
 const intelList = ref([])
 const answerList = ref([]) //历史记录数组
@@ -48,6 +50,7 @@ const userInfo = ref({
 })
 const messageContainer = ref(null)
 const messageContainerIntel = ref(null)
+const messageContainerTran = ref(null)
 const chatQuery = reactive({
   //通用模式数据对象
   messages: []
@@ -119,9 +122,11 @@ const finalIng = ref(false)
 const finalQuest = ref('')
 const selectedLan = ref('中文')
 const transData = ref('')
+const currentTransData = ref('')
 const transQuest = ref('')
 const dots = ref('.') // 初始点号
 const limitId = ref('')
+const limitTranId = ref('')
 const fileObj = ref('')
 const fileAry = ref([])
 const drayAry = ref([])
@@ -252,6 +257,10 @@ export function useShared() {
   const updateLimitLoading = newName => {
     limitLoading.value = newName
   }
+  const updateLimitTranLoading = newName => {
+    limitTranLoading.value = newName
+  }
+
   const updateQuestions = newName => {
     questions.value = newName
   }
@@ -350,6 +359,10 @@ export function useShared() {
   const updateTransData = newName => {
     transData.value = newName
   }
+  const updateCurrentTransData = newName => {
+    currentTransData.value = newName
+  }
+
   const updateTransQuest = newName => {
     transQuest.value = newName
   }
@@ -359,9 +372,17 @@ export function useShared() {
   const updateLimitId = newName => {
     limitId.value = newName
   }
+  const updateLimitTranId = newName => {
+    limitTranId.value = newName
+  }
+
   const updateMessageContainer = newName => {
     messageContainer.value = newName
   }
+  const updateMessageContainerTran = newName => {
+    messageContainerTran.value = newName
+  }
+
   const updateMessageContainerIntel = newName => {
     messageContainerIntel.value = newName
   }
@@ -449,6 +470,7 @@ export function useShared() {
   return {
     currentQuestion,
     currentIndex,
+    messageContainerTran,
     newQuestion,
     selectType,
     recordId,
@@ -467,6 +489,7 @@ export function useShared() {
     knowSelect,
     dragUploads,
     limitId,
+    limitTranId,
     questions,
     loadingId,
     intelList,
@@ -487,6 +510,7 @@ export function useShared() {
     queryTypes,
     chatQuery,
     intelQuery,
+    limitTranLoading,
     isLogin,
     fileObj,
     fileAry,
@@ -498,6 +522,7 @@ export function useShared() {
     finalQuest,
     selectedLan,
     transData,
+    currentTransData,
     textareaInputQuery,
     textareaInputSample,
     textareaInputSampleCurrent,
@@ -523,6 +548,7 @@ export function useShared() {
     updateIsIntelStop,
     updateCurrentQuestion,
     updateLimitFinalFile,
+    updateLimitTranId,
     updateDrayAry,
     updateNewQuestion,
     updateIsSampleStop,
@@ -538,6 +564,7 @@ export function useShared() {
     updateCurrentIndex,
     updateCurrentObj,
     updateTipQuery,
+    updateCurrentTransData,
     updateActiveIndex,
     updateloadingId,
     updateQueryTypes,
@@ -560,6 +587,7 @@ export function useShared() {
     updateLimitId,
     checkData,
     updateMessageContainer,
+    updateMessageContainerTran,
     updateMessageContainerIntel,
     updateFileObj,
     updateDeepType,
@@ -587,6 +615,7 @@ export function useShared() {
     updateSelectType,
     updateLimitIntelLoading,
     updateCurrentIntelId,
-    updateRecordId
+    updateRecordId,
+    updateLimitTranLoading
   }
 }

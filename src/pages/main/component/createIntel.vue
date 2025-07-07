@@ -824,7 +824,6 @@ const submitSample = async (val, isRefresh) => {
     })
     // 处理流式数据
     const reader = res.body.getReader()
-    console.log(reader)
     if (res.status === 429) {
       ElMessage.error('服务器繁忙,请稍后再试')
       return
@@ -874,7 +873,6 @@ const submitSample = async (val, isRefresh) => {
         break
       }
       buffer += decoder.decode(value, { stream: true })
-      console.log(buffer)
       // 使用更安全的分割方式（避免截断 JSON 结构）[3](@ref)
       const chunks = buffer.split(/(?=data:)/g)
       buffer = chunks.pop() || ''
