@@ -624,7 +624,8 @@ const {
   limitFile,
   limitFinalFile,
   messageContainerTran,
-  limitTranLoading
+  limitTranLoading,
+  isTranStop
 } = useShared()
 
 const queryIng = ref(false)
@@ -1595,6 +1596,7 @@ const submitTran = async (val, isRefresh, obj) => {
     return
   }
   isDragOver.value = false
+  isTranStop.value = false
   finalIng.value = true
   tranIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
@@ -1770,7 +1772,9 @@ const submitTran = async (val, isRefresh, obj) => {
         if (buffer.trim()) console.warn('未处理的缓冲区内容:', buffer)
         break
       }
-
+      if (isTranStop.value) {
+        return
+      }
       buffer += decoder.decode(value, { stream: true })
       const lines = buffer.split('\n')
 
@@ -2343,11 +2347,12 @@ const cancelCurrentRequest = async val => {
     finalIng.value = false
     tranIng.value = false
     limitTranLoading.value = false
+    const query = transQuest.value
     let title = ''
     let obj = ''
     for (var i = 0; i < answerList.value.length; i++) {
       if (answerList.value[i].type === '翻译') {
-        if (answerList.value[i].data.question === transQuest.value) {
+        if (answerList.value[i].data.question === query) {
           title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
           obj = answerList.value[i].data.files
         }
@@ -2357,10 +2362,11 @@ const cancelCurrentRequest = async val => {
       obj = limitFile.value
     }
     const passData = {
-      question: transQuest.value,
+      question: query,
       answer: currentTransData.value
     }
     transData.value = JSON.parse(JSON.stringify(currentTransData.value))
+    isTranStop.value = true
     postTran(passData, title, obj)
   }
   if (val === 'final') {

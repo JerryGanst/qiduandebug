@@ -15,6 +15,7 @@ const questions = ref([]) // 左侧历史记录标题数组
 const intelList = ref([])
 const answerList = ref([]) //历史记录数组
 const selectType = ref(1)
+const isTranStop = ref(false)
 const recordId = ref('')
 const answerListIntel = ref([])
 const currentIntelId = ref('')
@@ -270,6 +271,10 @@ export function useShared() {
   const updateAnswerList = newName => {
     answerList.value = newName
   }
+  const updateIsTranStop = newName => {
+    isTranStop.value = newName
+  }
+
   const updateAnswerListIntel = newName => {
     answerListIntel.value = newName
   }
@@ -475,6 +480,7 @@ export function useShared() {
     selectType,
     recordId,
     isNet,
+    isTranStop,
     isCreate,
     currentIntelId,
     isSampleStop,
@@ -567,6 +573,7 @@ export function useShared() {
     updateCurrentTransData,
     updateActiveIndex,
     updateloadingId,
+    updateIsTranStop,
     updateQueryTypes,
     updateChatQuery,
     updateIsLogin,
