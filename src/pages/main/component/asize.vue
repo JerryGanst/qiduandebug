@@ -1035,6 +1035,7 @@ const queryAn = (val, index, data) => {
         selectedMode.value = '翻译'
         const idx = anList.length === questions.value.length ? index : index - 1
         transData.value = anList[idx].data.answer
+        console.log(anList)
         transQuest.value = anList[idx].data.files ? anList[idx].data.files.originalFileName : anList[idx].data.question
         selectedLan.value = anList[idx].data.target
         currentId.value = anList[idx].id
@@ -1049,6 +1050,7 @@ const queryAn = (val, index, data) => {
         const idx = anList.length === questions.value.length ? index : index - 1
         finalData.value.data = anList[idx].data.answer.key_points
         finalData.value.title = anList[idx].data.answer.summary
+
         finalQuest.value = anList[idx].data.files ? anList[idx].data.files.originalFileName : anList[idx].data.question
         currentId.value = anList[idx].id
       }
