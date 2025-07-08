@@ -1641,6 +1641,15 @@ const submitTran = async (val, isRefresh, obj) => {
   }
   if (!isRefresh) {
     const qData = '新对话' + '(tran)'
+    const data = {
+      data: {
+        answer: '',
+        question: obj ? obj.originalFileName : passData,
+        think: ''
+      },
+      title: passData
+    }
+    answerList.value.unshift(data)
     activeIndex.value = '0'
     currentIndex.value = 0
     currentIndex.value = activeIndex.value
@@ -1740,7 +1749,7 @@ const submitTran = async (val, isRefresh, obj) => {
         try {
           const jsonStr = line.substring(5).trim()
           if (!jsonStr) continue
-          if (messageContainerTran.value) {
+          if (messageContainerTran.value && limitTranLoading.value) {
             messageContainerTran.value.scrollTop = messageContainerTran.value.scrollHeight
           }
           // 安全解析检查
