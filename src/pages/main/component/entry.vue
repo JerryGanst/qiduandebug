@@ -5,7 +5,12 @@
     @submit-final="submitFileFinal"
     v-if="isDragOver && (pageType === 'sample' || pageType === 'tran' || pageType === 'final')"
   ></DragUpload>
-  <div class="main_content" :style="{ marginBottom: isDragOver ? '0px' : '10px' }" v-if="!isDragOver">
+  <div
+    class="main_content"
+    :style="{ marginBottom: isDragOver ? '0px' : '10px' }"
+    v-if="!isDragOver"
+    ref="messageContainerTran"
+  >
     <div
       class="title"
       v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || (pageType === 'sample' && !isDragOver)"
@@ -160,24 +165,31 @@
         {{ transQuest }}
       </div>
     </div>
-    <div v-if="pageType === 'tran' && finalIng && tranIng && !isDragOver" class="title_wait">
+    <div v-if="pageType === 'tran' && !isDragOver && limitTranLoading" class="title_wait">
       <span>
         <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
       </span>
-      <span style="padding-left: 10px">正在为您翻译,请稍等</span>
+      <span style="padding-left: 10px">翻译中...</span>
       <span v-if="!transData">{{ dots }}</span>
     </div>
     <MarkdownRenderer
       class="title_tran_data"
-      v-if="pageType === 'tran' && !isDragOver"
+      v-if="pageType === 'tran' && !isDragOver && limitTranLoading"
+      :style="{ padding: currentTransData ? '0px 15px' : '0px' }"
+      :markdown="currentTransData"
+    />
+    <MarkdownRenderer
+      class="title_tran_data"
+      v-if="pageType === 'tran' && !isDragOver && !limitTranLoading"
       :style="{ padding: transData ? '0px 15px' : '0px' }"
       :markdown="transData"
     />
+
     <!-- <div class="title_tran_data" v-if="pageType === 'tran'" :style="{ padding: transData ? '0px 15px' : '0px' }">
       <p>{{ transData }}</p>
     </div> -->
 
-    <div class="query_common" v-if="pageType === 'tran' && transQuest && !tranIng && !isDragOver">
+    <div class="query_common" v-if="pageType === 'tran' && transQuest && !limitTranLoading && !isDragOver">
       <div>
         <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
       </div>
@@ -596,6 +608,8 @@ const {
   selectedLan,
   changeMode,
   transData,
+  currentTransData,
+  limitTranLoading,
   activeIndex,
   finalQuest,
   transQuest,
@@ -614,7 +628,8 @@ const {
   isLogin,
   dragUploads,
   isDragOver,
-  currentIndex
+  currentIndex,
+  messageContainerTran
 } = useShared()
 const fileRef = ref(null)
 const filePreRef = ref(null)

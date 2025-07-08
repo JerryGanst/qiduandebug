@@ -594,11 +594,13 @@ const {
   selectedLan,
   changeMode,
   transData,
+  currentTransData,
   transQuest,
   finalQuest,
   finalData,
   chatCurrent,
   limitId,
+  limitTranId,
   checkData,
   dots,
   messageContainer,
@@ -620,7 +622,9 @@ const {
   isCreate,
   currentIndex,
   limitFile,
-  limitFinalFile
+  limitFinalFile,
+  messageContainerTran,
+  limitTranLoading
 } = useShared()
 
 const queryIng = ref(false)
@@ -636,6 +640,7 @@ const filePreRef = ref(null)
 const commonVisible = ref(false)
 // 当前正在显示的消息索引
 const currentMessageIndex = ref(0)
+const currentMessageTranIndex = ref(0)
 const isDisabled = ref(false)
 const limitQuery = ref('')
 const currentRequestUrl = ref('')
@@ -865,6 +870,7 @@ const displayMessage = async message => {
     }, 30) // 每个字的显示间隔为 30 毫秒
   })
 }
+
 // 逐条显示消息
 const displayMessagesSequentially = async () => {
   while (currentMessageIndex.value < currentObj.value.messageList.length) {
@@ -874,7 +880,36 @@ const displayMessagesSequentially = async () => {
     currentMessageIndex.value++ // 移动到下一条消息
   }
 }
+let fullContent = '' // 保存所有已显示内容
+let currentDisplayIndex = 0 // 当前显示位置
+// 改进后的逐字显示函数
+const display = async message => {
+  return new Promise(resolve => {
+    let i = 0
+    const interval = setInterval(() => {
+      if (i < message.length) {
+        // 逐个字追加到完整内容中
+        fullContent += message[i]
+        currentTransData.value = fullContent // 显示完整内容
+        i++
+      } else {
+        clearInterval(interval)
+        resolve()
+      }
+    }, 1)
+  })
+}
 
+// 改进后的消息序列显示函数
+const displayMessagesTran = async () => {
+  // 获取当前需要显示的新内容部分
+  const newContent = currentTransData.value.slice(currentDisplayIndex)
+
+  if (newContent) {
+    await display(newContent) // 只显示新内容部分
+    currentDisplayIndex = currentTransData.value.length // 更新显示位置
+  }
+}
 const submitFinal = async (val, isRefresh, ob) => {
   if (queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
@@ -1195,7 +1230,8 @@ const submitSampleSend = () => {
 }
 const submitTranSend = () => {
   if (finalIng.value && (currentIndex.value || currentIndex.value === 0) && currentIndex.value == activeIndex.value) {
-    cancelCurrentRequest('tran')
+    // cancelCurrentRequest('tran')
+    stopQuery('tran')
     return
   }
   submitTran()
@@ -1247,6 +1283,10 @@ const stopQuery = async type => {
     .then(res => {
       if (res.status) {
         cancelCurrentRequest(type)
+      } else {
+        finalIng.value = false
+        tranIng.value = false
+        ElMessage.error(res.message)
       }
     })
     .catch(err => {})
@@ -1559,11 +1599,15 @@ const submitTran = async (val, isRefresh, obj) => {
   tranIng.value = true
   interval = setInterval(updateDots, 500) // 每 500ms 更新一次
   limitQuery.value = newQuestion.value
+  limitTranLoading.value = true
+  fullContent = ''
+  currentDisplayIndex = 0
   const passData = newQuestion.value
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
   transQuest.value = ''
   transData.value = ''
+  currentTransData.value = ''
   let title = ''
   if (isRefresh) {
     let current = currentId.value
@@ -1585,6 +1629,8 @@ const submitTran = async (val, isRefresh, obj) => {
   }
   if (!isRefresh) {
     const qData = '新对话' + '(tran)'
+    activeIndex.value = '0'
+    currentIndex.value = 0
     currentIndex.value = activeIndex.value
     questions.value.unshift(qData)
   }
@@ -1620,63 +1666,188 @@ const submitTran = async (val, isRefresh, obj) => {
     }
   })
   activeIndex.value = 0
-  request
-    .post('/AI/translate', {
-      user_id: userInfo.value.id,
-      source_text: obj ? '' : passData,
-      target_language: selectedLan.value,
-      file: obj
-        ? obj.fileId
-        : {
-            fileId: ''
-          }
-      // showLoading: true
-    })
-    .then(res => {
-      currentRequestUrl.value = ''
-      currentIndex.value = ''
-      clearInterval(interval)
-      nextTick(() => {
-        adjustTextareaHeight('textareaInputTran')
-      })
-      if (res.status) {
-        transData.value = res.data
-        const passData = {
-          question: passQuery,
-          answer: res.data
-        }
-        if (isRefresh) {
-          answerList.value.splice(0, 1)
-        }
-        postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
-      } else {
-        if (res.code === 400) {
-          const passData = {
-            question: passQuery,
-            answer: ''
-          }
-          if (isRefresh) {
-            answerList.value.splice(0, 1)
-          }
-          postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
-          ElMessage.warning(res.message)
-        }
+  nextTick(() => {
+    adjustTextareaHeight('textareaInputTran')
+  })
+  const anList = JSON.parse(JSON.stringify(answerList.value))
+  const hasId = anList.some(item => item.id === currentId.value)
+  let id = ''
+  if (hasId) {
+    id = currentId.value
+    limitTranId.value = id
+    const index = answerList.value.findIndex(item => item.id === id)
+    for (var k = 0; k < answerList.value.length; k++) {
+      if (id === answerList.value[k].id) {
+        title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
       }
+    }
+    currentIndex.value = activeIndex.value
+  }
+  // request
+  //   .post('/AI/translate', {
+  //     user_id: userInfo.value.id,
+  //     source_text: obj ? '' : passData,
+  //     target_language: selectedLan.value,
+  //     file: obj
+  //       ? obj.fileId
+  //       : {
+  //           fileId: ''
+  //         }
+  //     // showLoading: true
+  //   })
+  //   .then(res => {
+  //     currentRequestUrl.value = ''
+  //     currentIndex.value = ''
+  //     clearInterval(interval)
+  //     nextTick(() => {
+  //       adjustTextareaHeight('textareaInputTran')
+  //     })
+  //     if (res.status) {
+  //       transData.value = res.data
+  //       const passData = {
+  //         question: passQuery,
+  //         answer: res.data
+  //       }
+  //       if (isRefresh) {
+  //         answerList.value.splice(0, 1)
+  //       }
+  //       postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
+  //     } else {
+  //       if (res.code === 400) {
+  //         const passData = {
+  //           question: passQuery,
+  //           answer: ''
+  //         }
+  //         if (isRefresh) {
+  //           answerList.value.splice(0, 1)
+  //         }
+  //         postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
+  //         ElMessage.warning(res.message)
+  //       }
+  //     }
+  //   })
+
+  //   .catch(err => {
+  //     currentIndex.value = ''
+  //     if (err.message !== 'canceled') {
+  //       ElMessage.error('翻译失败' + err.message)
+  //     }
+
+  //     finalIng.value = false
+  //     tranIng.value = false
+  //     clearInterval(interval)
+  //     nextTick(() => {
+  //       adjustTextareaHeight('textareaInputTran')
+  //     })
+  //   })
+
+  try {
+    const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/translateStream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userInfo.value.id,
+        source_text: obj ? '' : passData,
+        target_language: selectedLan.value,
+        file: obj ? obj.fileId : { fileId: '' }
+      })
     })
 
-    .catch(err => {
-      currentIndex.value = ''
-      if (err.message !== 'canceled') {
-        ElMessage.error('翻译失败' + err.message)
+    if (res.status === 429) {
+      ElMessage.error('服务器繁忙,请稍后再试')
+      return
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let accumulatedContent = ''
+
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) {
+        // 确保处理完缓冲区剩余数据
+        if (buffer.trim()) console.warn('未处理的缓冲区内容:', buffer)
+        break
       }
 
-      finalIng.value = false
-      tranIng.value = false
-      clearInterval(interval)
-      nextTick(() => {
-        adjustTextareaHeight('textareaInputTran')
-      })
-    })
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+
+      // 保留最后不完整的行在缓冲区
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue
+
+        try {
+          const jsonStr = line.substring(5).trim()
+          if (!jsonStr) continue
+          if (messageContainerTran.value) {
+            messageContainerTran.value.scrollTop = messageContainerTran.value.scrollHeight
+          }
+          // 安全解析检查
+          if (!isValidJson(jsonStr)) {
+            console.warn('不完整JSON:', jsonStr)
+            buffer = line + '\n' + buffer // 回退到缓冲区
+            continue
+          }
+
+          const data = JSON.parse(jsonStr)
+          if (data.content !== undefined) {
+            accumulatedContent += data.content
+            currentTransData.value = accumulatedContent
+            await displayMessagesTran()
+          }
+
+          if (data.end === 2) {
+            limitTranLoading.value = false
+            limitTranId.value = ''
+            transData.value = JSON.parse(JSON.stringify(currentTransData.value))
+            const passData = {
+              question: passQuery,
+              answer: accumulatedContent
+            }
+            if (isRefresh) answerList.value.splice(0, 1)
+
+            postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
+            accumulatedContent = ''
+          }
+        } catch (e) {
+          currentIndex.value = ''
+          limitTranId.value = ''
+          limitTranLoading.value = false
+          ElMessage.error('翻译失败' + err.message)
+
+          finalIng.value = false
+          tranIng.value = false
+          clearInterval(interval)
+        }
+      }
+    }
+  } catch (error) {
+    currentIndex.value = ''
+    limitTranId.value = ''
+    limitTranLoading.value = false
+    if (err.message !== 'canceled') {
+      ElMessage.error('翻译失败' + err.message)
+    }
+    finalIng.value = false
+    tranIng.value = false
+    clearInterval(interval)
+  }
+
+  // 辅助函数：验证JSON完整性
+  function isValidJson(str) {
+    try {
+      JSON.parse(str)
+      return true
+    } catch {
+      // 检查基本结构完整性（简易版）
+      const trimmed = str.trim()
+      return (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    }
+  }
 }
 const summitPost = event => {
   if (event.key === 'Enter' && !event.shiftKey) {
@@ -2124,6 +2295,7 @@ const cancelCurrentRequest = async val => {
   if (val === 'sample') {
     isSampleLoad.value = false
     limitLoading.value = false
+    limitTranLoading.value = false
     isSampleStop.value = true
     chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
     let title = ''
@@ -2144,6 +2316,7 @@ const cancelCurrentRequest = async val => {
   if (val === 'query' || val === 'it' || val === 'law') {
     isSampleLoad.value = false
     limitLoading.value = false
+    limitTranLoading.value = false
     isQueryStop.value = true
     queryIng.value = false
     let title = ''
@@ -2169,6 +2342,7 @@ const cancelCurrentRequest = async val => {
   if (val === 'tran') {
     finalIng.value = false
     tranIng.value = false
+    limitTranLoading.value = false
     let title = ''
     let obj = ''
     for (var i = 0; i < answerList.value.length; i++) {
@@ -2184,13 +2358,15 @@ const cancelCurrentRequest = async val => {
     }
     const passData = {
       question: transQuest.value,
-      answer: ''
+      answer: currentTransData.value
     }
+    transData.value = JSON.parse(JSON.stringify(currentTransData.value))
     postTran(passData, title, obj)
   }
   if (val === 'final') {
     finalIng.value = false
     docIng.value = false
+    limitTranLoading.value = false
     let title = ''
     let ob = ''
     for (var i = 0; i < answerList.value.length; i++) {

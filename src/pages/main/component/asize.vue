@@ -424,6 +424,7 @@ const {
   isQueryStop,
   currentIndex,
   limitLoading,
+  limitTranLoading,
   limitIntelLoading,
   questions,
   answerList,
@@ -440,6 +441,7 @@ const {
   chatQuery,
   isLogin,
   limitId,
+  limitTranId,
   finalIng,
   docIng,
   tranIng,
@@ -934,6 +936,7 @@ const queryAn = (val, index, data) => {
   isSampleStop.value = false
   isQueryStop.value = false
   limitLoading.value = false
+  limitTranLoading.value = false
   if (!currentIndex.value && currentIndex.value !== 0) {
     currentIndex.value = activeIndex.value
   }
@@ -1086,6 +1089,19 @@ const queryAn = (val, index, data) => {
         currentQuestion.value = false
         if (anList.length === queryList.length) {
           transQuest.value = anList[i].data.question
+        }
+        const hasName = anList.some(item => item.title === val)
+        if (hasName) {
+          if (currentId.value === limitTranId.value) {
+            limitTranLoading.value = true
+          } else {
+            limitTranLoading.value = false
+          }
+        } else {
+          nextTick(() => {
+            limitTranLoading.value = true
+            // chatQuery.messages = limitSample.value.messages
+          })
         }
       } else if (pageType.value === 'final') {
         currentQuestion.value = false
