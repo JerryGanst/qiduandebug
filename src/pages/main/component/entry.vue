@@ -847,6 +847,10 @@ const submitFinalSend = val => {
   emit('submit-finalSend', val)
 }
 const changeType = val => {
+  if (isSampleLoad.value || finalIng.value) {
+    ElMessage.warning('有问题正在回答中，请稍后再试')
+    return
+  }
   activeIndex.value = ''
   transQuest.value = ''
   transData.value = ''
