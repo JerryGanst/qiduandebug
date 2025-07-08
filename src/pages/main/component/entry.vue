@@ -848,7 +848,7 @@ const submitFinalSend = val => {
 }
 const changeType = val => {
   if (isSampleLoad.value || finalIng.value) {
-    ElMessage.warning('有问题正在回答中，请稍后再试')
+    ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
   activeIndex.value = ''
