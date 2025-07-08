@@ -1029,16 +1029,21 @@ const queryAn = (val, index, data) => {
     } else if (anList[j].type === '翻译') {
       queryTran.push(anList[j].title)
       queryTranQs.push(anList[j].data.question + '(tran)')
+      console.log(val)
+      console.log(anList[0].title)
       if (val == anList[j].title) {
         currentQuestion.value = false
         pageType.value = 'tran'
         selectedMode.value = '翻译'
         const idx = anList.length === questions.value.length ? index : index - 1
         transData.value = anList[idx].data.answer
-        console.log(anList)
         transQuest.value = anList[idx].data.files ? anList[idx].data.files.originalFileName : anList[idx].data.question
+        console.log(anList)
         selectedLan.value = anList[idx].data.target
         currentId.value = anList[idx].id
+      }
+      if (val === '新对话(tran)') {
+        selectedLan.value = anList[0].data.target
       }
     } else if (anList[j].type === '总结') {
       queryFinal.push(anList[j].title)

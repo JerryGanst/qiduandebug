@@ -1645,9 +1645,11 @@ const submitTran = async (val, isRefresh, obj) => {
       data: {
         answer: '',
         question: obj ? obj.originalFileName : passData,
-        think: ''
+        think: '',
+        target: selectedLan.value
       },
-      title: passData
+      type: '翻译',
+      title: obj ? obj.originalFileName : passData
     }
     answerList.value.unshift(data)
     activeIndex.value = '0'
@@ -1695,6 +1697,7 @@ const submitTran = async (val, isRefresh, obj) => {
   let id = ''
   if (hasId) {
     id = currentId.value
+    console.log(1)
     limitTranId.value = id
     const index = answerList.value.findIndex(item => item.id === id)
     for (var k = 0; k < answerList.value.length; k++) {
@@ -1775,7 +1778,7 @@ const submitTran = async (val, isRefresh, obj) => {
               answer: accumulatedContent
             }
             if (isRefresh) answerList.value.splice(0, 1)
-
+            console.log(title)
             postTran(passData, title.replace(/\([^)]*\)/g, ''), obj, target)
             accumulatedContent = ''
           }
