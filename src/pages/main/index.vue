@@ -1609,6 +1609,7 @@ const submitTran = async (val, isRefresh, obj) => {
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
   transQuest.value = ''
+  const lastData = transData.value
   transData.value = ''
   currentTransData.value = ''
   let title = ''
@@ -1620,7 +1621,7 @@ const submitTran = async (val, isRefresh, obj) => {
     const idx = answerList.value.findIndex(item => item.id === current)
     if (idx === -1) {
       console.log(123)
-      // transData.value = answerList.value[0].data.answer
+      transData.value = lastData
       limitTranLoading.value = false
       finalIng.value = false
       tranIng.value = false
