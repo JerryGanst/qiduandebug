@@ -1605,6 +1605,7 @@ const submitTran = async (val, isRefresh, obj) => {
   fullContent = ''
   currentDisplayIndex = 0
   const passData = newQuestion.value
+  const target = selectedLan.value
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   newQuestion.value = ''
   transQuest.value = ''
@@ -1617,7 +1618,15 @@ const submitTran = async (val, isRefresh, obj) => {
       current = answerList.value[activeIndex.value].id
     }
     const idx = answerList.value.findIndex(item => item.id === current)
-    title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
+    if (idx === -1) {
+      console.log(123)
+      // transData.value = answerList.value[0].data.answer
+      limitTranLoading.value = false
+      finalIng.value = false
+      tranIng.value = false
+      return
+    }
+    title = answerList.value[idx]?.title.replace(/\([^)]*\)/g, '')
     let limitTitle = ''
     limitTitle = questions.value[idx]
     questions.value.splice(idx, 1)
@@ -1685,63 +1694,6 @@ const submitTran = async (val, isRefresh, obj) => {
     }
     currentIndex.value = activeIndex.value
   }
-  // request
-  //   .post('/AI/translate', {
-  //     user_id: userInfo.value.id,
-  //     source_text: obj ? '' : passData,
-  //     target_language: selectedLan.value,
-  //     file: obj
-  //       ? obj.fileId
-  //       : {
-  //           fileId: ''
-  //         }
-  //     // showLoading: true
-  //   })
-  //   .then(res => {
-  //     currentRequestUrl.value = ''
-  //     currentIndex.value = ''
-  //     clearInterval(interval)
-  //     nextTick(() => {
-  //       adjustTextareaHeight('textareaInputTran')
-  //     })
-  //     if (res.status) {
-  //       transData.value = res.data
-  //       const passData = {
-  //         question: passQuery,
-  //         answer: res.data
-  //       }
-  //       if (isRefresh) {
-  //         answerList.value.splice(0, 1)
-  //       }
-  //       postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
-  //     } else {
-  //       if (res.code === 400) {
-  //         const passData = {
-  //           question: passQuery,
-  //           answer: ''
-  //         }
-  //         if (isRefresh) {
-  //           answerList.value.splice(0, 1)
-  //         }
-  //         postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
-  //         ElMessage.warning(res.message)
-  //       }
-  //     }
-  //   })
-
-  //   .catch(err => {
-  //     currentIndex.value = ''
-  //     if (err.message !== 'canceled') {
-  //       ElMessage.error('翻译失败' + err.message)
-  //     }
-
-  //     finalIng.value = false
-  //     tranIng.value = false
-  //     clearInterval(interval)
-  //     nextTick(() => {
-  //       adjustTextareaHeight('textareaInputTran')
-  //     })
-  //   })
 
   try {
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/translateStream', {
@@ -1814,7 +1766,7 @@ const submitTran = async (val, isRefresh, obj) => {
             }
             if (isRefresh) answerList.value.splice(0, 1)
 
-            postTran(passData, title.replace(/\([^)]*\)/g, ''), obj)
+            postTran(passData, title.replace(/\([^)]*\)/g, ''), obj, target)
             accumulatedContent = ''
           }
         } catch (e) {
@@ -2088,7 +2040,7 @@ const postQuestion = async (think, obj, val, type, isThink) => {
     })
 }
 
-const postTran = async (obj, title, ob) => {
+const postTran = async (obj, title, ob, target) => {
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
@@ -2098,7 +2050,7 @@ const postTran = async (obj, title, ob) => {
       data: {
         question: obj.question,
         answer: obj.answer,
-        target: selectedLan.value,
+        target: target,
         files: ob ? ob : ''
       }
       // showLoading: true
@@ -2276,6 +2228,7 @@ const getHistory = async (id, page, val, ids) => {
                 if (page === 'tran') {
                   currentQuestion.value = false
                   transQuest.value = answerList.value[h].data.question
+                  selectedLan.value = answerList.value[h].data.target
                 }
                 if (page === 'final') {
                   currentQuestion.value = false
@@ -2365,9 +2318,10 @@ const cancelCurrentRequest = async val => {
       question: query,
       answer: currentTransData.value
     }
+    const target = selectedLan.value
     transData.value = JSON.parse(JSON.stringify(currentTransData.value))
     isTranStop.value = true
-    postTran(passData, title, obj)
+    postTran(passData, title, obj, target)
   }
   if (val === 'final') {
     finalIng.value = false
