@@ -1459,7 +1459,7 @@ const submitSample = async (val, isRefresh) => {
         }
         await asizeRef.value.deleteData(id, true)
         questions.value.unshift(title + '(sample)')
-
+        console.log(title)
         activeIndex.value = 0
       }
     }
@@ -1483,7 +1483,10 @@ const submitSample = async (val, isRefresh) => {
     const index = answerList.value.findIndex(item => item.id === id)
     for (var k = 0; k < answerList.value.length; k++) {
       if (id === answerList.value[k].id) {
+        console.log(id)
+        console.log(answerList.value)
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
+        console.log(title)
       }
     }
     currentIndex.value = activeIndex.value
@@ -1708,7 +1711,6 @@ const submitTran = async (val, isRefresh, obj) => {
   }
   if (!isRefresh) {
     const qData = '新对话' + '(tran)'
-    console.log(obj)
     const data = {
       data: {
         answer: '',
@@ -1767,7 +1769,6 @@ const submitTran = async (val, isRefresh, obj) => {
     const index = answerList.value.findIndex(item => item.id === id)
     for (var k = 0; k < answerList.value.length; k++) {
       if (id === answerList.value[k].id) {
-        console.log(1)
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
       }
     }
@@ -2320,6 +2321,8 @@ const getHistory = async (id, page, val, ids) => {
                 }
               }
             }
+          } else if (page === 'sample') {
+            currentId.value = answerList.value[0].id
           }
         }
       }
@@ -2367,6 +2370,7 @@ const cancelCurrentRequest = async val => {
       limitTranLoading.value = false
       isSampleStop.value = true
       chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
+      console.log(chatQuery.messages)
       let title = ''
       for (var i = 0; i < answerList.value.length; i++) {
         if (answerList.value[i].type === '通用模式') {
