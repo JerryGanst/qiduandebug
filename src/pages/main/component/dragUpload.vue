@@ -16,7 +16,7 @@ import { useShared } from '@/utils/useShared'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import eventBus from '@/utils/eventBus'
 import axios from 'axios'
-const { pageType, isDragOver, currentQuestion, drayAry, limitFile, limitFinalFile } = useShared()
+const { pageType, isDragOver, currentQuestion, drayAry, limitFile, limitFinalFile, currentId } = useShared()
 const uploadTimer = ref(null)
 const fileLoading = ref(false)
 const fileList = ref([])
@@ -52,6 +52,7 @@ const uploadSingleFile = async file => {
           } else {
             limitFinalFile.value = res.data?.data[0]
           }
+          currentId.value = ''
 
           emit(pageType.value === 'tran' ? 'submit-tran' : 'submit-final', res.data?.data[0])
         }

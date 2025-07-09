@@ -252,7 +252,7 @@ const isDragging = ref(false)
 const startX = ref(0)
 const startOverlay = ref(0)
 const type = ref('sample')
-const { limitFile, limitFinalFile } = useShared()
+const { limitFile, limitFinalFile, currentId } = useShared()
 const knowOptions = ref([
   {
     value: 1,
@@ -724,6 +724,7 @@ const postData = async () => {
     } else {
       limitFinalFile.value = aryData[0]
     }
+    currentId.value = ''
     emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', aryData[0])
     // eventBus.emit('submit-sampleFile', aryData[0])
   }
