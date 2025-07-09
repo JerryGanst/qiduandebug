@@ -826,7 +826,6 @@ const submitSampleTitle = val => {
   emit('submit-sample-title', val)
 }
 const submitTranSend = val => {
-  console.log(val)
   emit('submit-tranSend', val)
 }
 const submitQuestionSend = () => {
