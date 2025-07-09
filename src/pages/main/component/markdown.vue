@@ -48,5 +48,15 @@ const renderedMarkdown = computed(() => {
   :deep(pre) {
     white-space: pre-wrap;
   }
+  :deep(tbody) {
+    white-space: pre-wrap; /* 保留空白符序列，但正常换行 */
+    word-break: break-all; /* 强制换行 */
+  }
+  :deep(td a) {
+    white-space: pre-wrap !important; /* 保留空白符序列，但正常换行 */
+    word-wrap: break-word !important; /* 允许长单词换行 */
+    overflow-wrap: break-word; /* 更现代的属性，效果类似 word-wrap */
+    word-break: break-all; /* 强制换行 */
+  }
 }
 </style>
