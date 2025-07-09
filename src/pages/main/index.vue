@@ -987,6 +987,7 @@ const submitFinal = async (val, isRefresh, ob) => {
     if (entryRef.value?.fileRef) {
       entryRef.value.fileRef.closeFile()
     }
+    adjustTextareaHeight('textareaInputFinal')
   })
   activeIndex.value = 0
   request
@@ -1006,9 +1007,7 @@ const submitFinal = async (val, isRefresh, ob) => {
       currentRequestUrl.value = ''
       currentIndex.value = ''
       clearInterval(interval)
-      nextTick(() => {
-        adjustTextareaHeight('textareaInputFinal')
-      })
+
       if (res.status) {
         answerList.value.splice(0, 1)
         finalData.value.title = res.data.summary
@@ -1446,7 +1445,9 @@ const submitSample = async (val, isRefresh) => {
     if (messageContainer.value) {
       messageContainer.value.scrollTop = messageContainer.value.scrollHeight
     }
+    adjustTextareaHeight('textareaInputSample')
   })
+
   // currentRequestUrl.value = '/AI/chatStream'
   const controller = new AbortController()
   const assistantMsg = { role: 'assistant', content: '', before: '', after: '', hasSplit: false, isNewData: true }
@@ -1686,11 +1687,9 @@ const submitTran = async (val, isRefresh, obj) => {
     if (entryRef.value?.fileRef) {
       entryRef.value.fileRef.closeFile()
     }
-  })
-  activeIndex.value = 0
-  nextTick(() => {
     adjustTextareaHeight('textareaInputTran')
   })
+  activeIndex.value = 0
   const anList = JSON.parse(JSON.stringify(answerList.value))
   const hasId = anList.some(item => item.id === currentId.value)
   let id = ''

@@ -718,10 +718,6 @@ const submitFileTran = obj => {
 const submitFileFinal = obj => {
   emit('submit-final', '', false, obj)
 }
-// const submitSampleFile = obj => {
-//   console.log(obj)
-//   emit('submit-sampleFile', obj)
-// }
 
 const openKnowledge = () => {
   if (!isLogin.value) {

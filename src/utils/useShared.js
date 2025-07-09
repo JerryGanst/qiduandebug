@@ -162,7 +162,7 @@ const adjustTextareaHeight = val => {
     // 强制重置高度（核心修改点）
     textarea.style.height = '0px' // 先压缩到最小高度
     const computedStyle = window.getComputedStyle(textarea)
-
+    console.log(textarea.style)
     // 计算行高（兼容 Element Plus 默认 line-height: 1.5）
     const lineHeight = parseFloat(computedStyle.lineHeight) || 24 // 默认24px备用
     const padding = parseFloat(computedStyle.paddingTop) + parseFloat(computedStyle.paddingBottom)

@@ -1,5 +1,5 @@
 <template>
-  <div class="drag_content" style="width: 86%; margin-left: 5%;position: relative;">
+  <div class="drag_content" style="width: 86%; margin-left: 5%; position: relative">
     <div v-if="!fileLoading">支持格式：.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx</div>
     <div v-if="!fileLoading">大小不超过50M</div>
     <div v-if="fileLoading" class="loading-mask">
@@ -16,7 +16,7 @@ import { useShared } from '@/utils/useShared'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import eventBus from '@/utils/eventBus'
 import axios from 'axios'
-const { pageType, isDragOver, currentQuestion, drayAry,limitFile,limitFinalFile } = useShared()
+const { pageType, isDragOver, currentQuestion, drayAry, limitFile, limitFinalFile } = useShared()
 const uploadTimer = ref(null)
 const fileLoading = ref(false)
 const fileList = ref([])
@@ -47,22 +47,20 @@ const uploadSingleFile = async file => {
           drayAry.value.push(res.data?.data[0])
           eventBus.emit('submit-sampleFile', drayAry.value)
         } else {
-          if(pageType.value === 'tran'){
-              limitFile.value =res.data?.data[0]
-            }else{
-              limitFinalFile.value =res.data?.data[0]
-            }
-           
-          // const isRefresh = currentQuestion.value===''?false:true
-          // console.log(isRefresh)
-          // console.log(res.data?.data[0])
+          if (pageType.value === 'tran') {
+            limitFile.value = res.data?.data[0]
+          } else {
+            limitFinalFile.value = res.data?.data[0]
+          }
+
           emit(pageType.value === 'tran' ? 'submit-tran' : 'submit-final', res.data?.data[0])
         }
       } else {
         fileLoading.value = false
         ElMessage.error(res.data.message)
       }
-    }).catch(err => {
+    })
+    .catch(err => {
       fileLoading.value = false
       isDragOver.value = false
       ElMessage.error('上传失败')
