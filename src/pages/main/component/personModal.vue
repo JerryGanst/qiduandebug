@@ -193,7 +193,7 @@
         <div v-else-if="previewType === 'pdf'" style="width: 100%">
           <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
         </div>
-        <div v-else-if="previewType === 'pptx'" style="width: 100%">
+        <div v-else-if="previewType === 'pptx'" style="width: 100%; height: 100%">
           <vue-office-pptx :src="previewContent" style="height: 620px" />
         </div>
         <div v-else-if="previewType === 'excel'" style="width: 100%">
