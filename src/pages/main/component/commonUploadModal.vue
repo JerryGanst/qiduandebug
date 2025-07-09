@@ -146,12 +146,15 @@
         </div>
       </div>
       <!-- 右侧上传区域 -->
-      <div class="upload-area" v-if="isPre"     
-      ref="rightPanel"
-      :style="{ 
-        'margin-left': `-${overlayWidth}px`,
-        'width': `calc(100% - 780px + ${overlayWidth}px)`
-      }">
+      <div
+        class="upload-area"
+        v-if="isPre"
+        ref="rightPanel"
+        :style="{
+          'margin-left': `-${overlayWidth}px`,
+          width: `calc(100% - 780px + ${overlayWidth}px)`
+        }"
+      >
         <div class="drag-bar" @mousedown="startDrag"></div>
         <div class="file_text" v-if="previewFileId" style="position: relative">
           <div class="text_title">{{ fileInfo.name }}</div>
@@ -162,7 +165,7 @@
           </div>
           <div class="close_pre" @click="closePre">关闭预览</div>
         </div>
-        
+
         <!-- 附件预览 -->
         <div
           v-if="previewFileId"
@@ -171,17 +174,22 @@
           style="height: 480px; margin: 15px"
           :style="{ height: previewFileId ? '480px' : '530px', margin: previewFileId ? '0 15px 10px 15px' : '15px' }"
         >
-          <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px;width: 100%;">
+          <div v-if="previewType === 'text'" class="text-preview" style="padding: 0 15px; width: 100%">
             <pre>{{ previewContent }}</pre>
           </div>
-          <div v-else-if="previewType === 'html'" class="html-preview" v-html="previewContent" style="width: 100%;"></div>
-          <div v-else-if="previewType === 'pdf'"  style="width: 100%;">
+          <div
+            v-else-if="previewType === 'html'"
+            class="html-preview"
+            v-html="previewContent"
+            style="width: 100%"
+          ></div>
+          <div v-else-if="previewType === 'pdf'" style="width: 100%">
             <iframe :src="previewContent" frameborder="0" class="pdf-frame"></iframe>
           </div>
-          <div v-else-if="previewType === 'pptx'" style="width: 100%;">
+          <div v-else-if="previewType === 'pptx'" style="width: 100%">
             <vue-office-pptx :src="previewContent" />
           </div>
-          <div v-else-if="previewType === 'excel'" style="width: 100%;">
+          <div v-else-if="previewType === 'excel'" style="width: 100%">
             <vue-office-excel :src="previewContent" />
           </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
@@ -244,10 +252,7 @@ const isDragging = ref(false)
 const startX = ref(0)
 const startOverlay = ref(0)
 const type = ref('sample')
-const {
-  limitFile,
-  limitFinalFile
-} = useShared()
+const { limitFile, limitFinalFile } = useShared()
 const knowOptions = ref([
   {
     value: 1,
@@ -269,26 +274,26 @@ const emit = defineEmits(['submit-tran', 'submit-final'])
 const closePre = () => {
   isPre.value = false
 }
-const startDrag = (e) => {
+const startDrag = e => {
   isDragging.value = true
   startX.value = e.clientX
   startOverlay.value = overlayWidth.value
-  
+
   document.addEventListener('mousemove', handleDrag)
   document.addEventListener('mouseup', stopDrag)
   document.body.style.cursor = 'col-resize'
   document.body.style.userSelect = 'none'
 }
 
-const handleDrag = (e) => {
+const handleDrag = e => {
   if (!isDragging.value) return
-  
+
   const dx = startX.value - e.clientX // 向左拖动为负值
   let newOverlay = startOverlay.value + dx
-  
+
   // 限制覆盖范围 (0到735px)
   newOverlay = Math.max(0, Math.min(newOverlay, 780))
-  
+
   overlayWidth.value = newOverlay
 }
 
@@ -714,9 +719,9 @@ const postData = async () => {
   } else {
     aryData[0].fileName = decodeURIComponent(aryData[0].fileName)
     aryData[0].originalFileName = decodeURIComponent(aryData[0].originalFileName)
-    if(type.value === 'tran'){
+    if (type.value === 'tran') {
       limitFile.value = aryData[0]
-    } else{
+    } else {
       limitFinalFile.value = aryData[0]
     }
     emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', aryData[0])

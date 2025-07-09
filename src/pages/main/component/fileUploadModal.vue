@@ -178,7 +178,7 @@ import { ref, computed, nextTick, watch, reactive } from 'vue'
 import axios from 'axios'
 import VueOfficePptx from '@vue-office/pptx'
 import VueOfficeExcel from '@vue-office/excel'
-
+import { read, utils, writeFile } from 'xlsx'
 import mammoth from 'mammoth'
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
@@ -450,7 +450,6 @@ const startUpload = async file => {
 }
 // 处理超出限制
 // const handleExceed = (files, fileList) => {
-//   console.log(fileQueue.value)
 //   ElMessage.warning('最多只能上传5个附件')
 // }
 // 进度条颜色计算
@@ -586,7 +585,7 @@ const retryUpload = file => {
   file.status = STATUS.PENDING
   startUpload(file)
 }
-
+// const downloadUrl = ref(null)
 // 附件预览处理
 const handlePreview = async file => {
   if (!file) {
@@ -653,10 +652,57 @@ const handlePreview = async file => {
       previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
       // 新增：处理Excel文件
-      const arrayBuffer = await file.raw.arrayBuffer()
-      previewContent.value = arrayBuffer // 直接传递ArrayBuffer
-      previewType.value = 'excel' // 标识为Excel类型
-      previewFileId.value = 123
+      // const arrayBuffer = await file.raw.arrayBuffer()
+      // previewContent.value = arrayBuffer // 直接传递ArrayBuffer
+      // previewType.value = 'excel' // 标识为Excel类型
+      // previewFileId.value = 123
+
+      try {
+        // downloadUrl.value = URL.createObjectURL(file)
+        console.log(file)
+        // 读取文件内容
+        const arrayBuffer = await file.raw.arrayBuffer()
+        const workbook = read(arrayBuffer)
+
+        // 获取第一个工作表
+        const firstSheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[firstSheetName]
+
+        // 获取原始范围
+        const range = utils.decode_range(worksheet['!ref'])
+
+        // 修改范围只包含前10行前2列
+        range.e.r = Math.min(range.e.r, 5) // 前10行 (0-9)
+        range.e.c = Math.min(range.e.c, 0) // 前2列 (0-1)
+        worksheet['!ref'] = utils.encode_range(range)
+
+        // 移除不需要的列数据
+        Object.keys(worksheet).forEach(key => {
+          if (key !== '!ref' && key !== '!margins') {
+            const cell = utils.decode_cell(key)
+            if (cell.c > 1) {
+              // 只保留前2列
+              delete worksheet[key]
+            }
+          }
+        })
+
+        // 创建新的工作簿
+        const newWorkbook = utils.book_new()
+        utils.book_append_sheet(newWorkbook, worksheet, 'Preview')
+
+        // 转换为Blob供vue-office-excel使用
+        const excelBlob = writeFile(newWorkbook, 'preview.xlsx', { type: 'array' })
+        previewContent.value = new Blob([excelBlob], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+        console.log(previewContent.value)
+        previewType.value = 'excel' // 标识为Excel类型
+        previewFileId.value = 123
+      } catch (err) {
+        console.error('Excel处理错误:', err)
+      } finally {
+      }
     } else {
       previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'
@@ -845,7 +891,6 @@ const getFile = () => {
     fileId: fileObj.value.fileId.fileId ? fileObj.value.fileId.fileId : fileObj.value.fileId,
     local: fileObj.value.fileId.local === false ? fileObj.value.fileId.local : fileObj.value.local
   }
-  console.log(123)
   // 使用 POST 请求（与后端 @PostMapping 匹配）
   fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById', {
     method: 'POST',
