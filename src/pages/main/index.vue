@@ -649,6 +649,15 @@ const fileRefs = ref(null)
 const commonUploadModals = ref(null)
 let interval
 const wrapperRef = ref(null)
+
+let abortController = new AbortController()
+
+const abortTranslation = () => {
+  if (abortController) {
+    abortController.abort()
+    abortController = new AbortController() // 重置以便下次使用
+  }
+}
 // 函数区域
 const removeItemById = (arr, id) => {
   for (let i = 0; i < arr.length; i++) {
@@ -1064,6 +1073,14 @@ const samplePost = event => {
 }
 
 const refreshData = () => {
+  const now = Date.now()
+
+  // Check if less than 3 seconds have passed since last click
+  if (now - lastRefreshTime < 1500) {
+    return
+  }
+
+  lastRefreshTime = now
   if (isSampleLoad.value || queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
@@ -1182,11 +1199,12 @@ const submitCommon = async () => {
     })
 }
 let lastClickTime = 0
+let lastRefreshTime = 0
 const submitQuestionSend = () => {
   const now = Date.now()
 
   // Check if less than 3 seconds have passed since last click
-  if (now - lastClickTime < 3000) {
+  if (now - lastClickTime < 1500) {
     return
   }
 
@@ -1196,7 +1214,8 @@ const submitQuestionSend = () => {
     (currentIndex.value || currentIndex.value === 0) &&
     currentIndex.value == activeIndex.value
   ) {
-    stopQuery('query')
+    abortTranslation()
+    cancelCurrentRequest('query')
     return
   }
   submitQuestion()
@@ -1205,7 +1224,7 @@ const submitITSend = () => {
   const now = Date.now()
 
   // Check if less than 3 seconds have passed since last click
-  if (now - lastClickTime < 3000) {
+  if (now - lastClickTime < 1500) {
     return
   }
 
@@ -1215,7 +1234,8 @@ const submitITSend = () => {
     (currentIndex.value || currentIndex.value === 0) &&
     currentIndex.value == activeIndex.value
   ) {
-    stopQuery('it')
+    abortTranslation()
+    cancelCurrentRequest('it')
     return
   }
   submitQuestion()
@@ -1224,7 +1244,7 @@ const submitLawSend = () => {
   const now = Date.now()
 
   // Check if less than 3 seconds have passed since last click
-  if (now - lastClickTime < 3000) {
+  if (now - lastClickTime < 1500) {
     return
   }
 
@@ -1234,7 +1254,8 @@ const submitLawSend = () => {
     (currentIndex.value || currentIndex.value === 0) &&
     currentIndex.value == activeIndex.value
   ) {
-    stopQuery('law')
+    abortTranslation()
+    cancelCurrentRequest('law')
     return
   }
   submitQuestion()
@@ -1244,7 +1265,7 @@ const submitSampleSend = () => {
   const now = Date.now()
 
   // Check if less than 3 seconds have passed since last click
-  if (now - lastClickTime < 3000) {
+  if (now - lastClickTime < 1500) {
     return
   }
 
@@ -1254,8 +1275,8 @@ const submitSampleSend = () => {
     (currentIndex.value || currentIndex.value === 0) &&
     currentIndex.value == activeIndex.value
   ) {
-    stopQuery('sample')
-    // cancelCurrentRequest('sample')
+    abortTranslation()
+    cancelCurrentRequest('sample')
     return
   }
   submitSample()
@@ -1264,14 +1285,17 @@ const submitTranSend = () => {
   const now = Date.now()
 
   // Check if less than 3 seconds have passed since last click
-  if (now - lastClickTime < 3000) {
+  if (now - lastClickTime < 1500) {
     return
   }
 
   lastClickTime = now
   if (finalIng.value && (currentIndex.value || currentIndex.value === 0) && currentIndex.value == activeIndex.value) {
-    // cancelCurrentRequest('tran')
-    stopQuery('tran')
+    abortTranslation()
+    finalIng.value = false
+    tranIng.value = false
+    cancelCurrentRequest('tran')
+    // stopQuery('tran')
     return
   }
   submitTran()
@@ -1506,7 +1530,8 @@ const submitSample = async (val, isRefresh) => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(params)
+      body: JSON.stringify(params),
+      signal: abortController.signal // 添加 abort signal
     })
     // 处理流式数据
     const reader = res.body.getReader()
@@ -1625,11 +1650,12 @@ const submitSample = async (val, isRefresh) => {
       adjustTextareaHeight('textareaInputSample')
       // adjustTextareaHeight('textareaInputSampleCurrent')
     })
-    ElMessage.error('服务器繁忙,请稍后再试')
+    if (error.name !== 'AbortError') {
+      ElMessage.error('服务器繁忙,请稍后再试')
+    }
   }
 }
 const submitTran = async (val, isRefresh, obj) => {
-  console.log(obj)
   if (queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
@@ -1757,7 +1783,8 @@ const submitTran = async (val, isRefresh, obj) => {
         source_text: obj ? '' : passData,
         target_language: selectedLan.value,
         file: obj ? obj.fileId : { fileId: '' }
-      })
+      }),
+      signal: abortController.signal // 添加 abort signal
     })
 
     if (res.status === 429) {
@@ -1821,11 +1848,13 @@ const submitTran = async (val, isRefresh, obj) => {
             postTran(passData, title.replace(/\([^)]*\)/g, ''), obj, target)
             accumulatedContent = ''
           }
-        } catch (e) {
+        } catch (error) {
           currentIndex.value = ''
           limitTranId.value = ''
           limitTranLoading.value = false
-          ElMessage.error('翻译失败' + err.message)
+          if (error.name !== 'AbortError') {
+            ElMessage.error('翻译失败' + error.message)
+          }
 
           finalIng.value = false
           tranIng.value = false
@@ -1837,8 +1866,8 @@ const submitTran = async (val, isRefresh, obj) => {
     currentIndex.value = ''
     limitTranId.value = ''
     limitTranLoading.value = false
-    if (err.message !== 'canceled') {
-      ElMessage.error('翻译失败' + err.message)
+    if (error.name !== 'AbortError') {
+      ElMessage.error('翻译失败' + error.message)
     }
     finalIng.value = false
     tranIng.value = false
@@ -1954,7 +1983,8 @@ const submitQuestion = async (val, isRefresh) => {
         user_id: userInfo.value.id,
         model: deepType.value ? 1 : 0,
         type: pageType.value === 'query' ? '人资行政专题' : pageType.value === 'it' ? 'IT专题' : '法务专题'
-      })
+      }),
+      signal: abortController.signal // 添加 abort signal
     })
     // 处理流式数据
     const reader = res.body.getReader()
@@ -2029,7 +2059,9 @@ const submitQuestion = async (val, isRefresh) => {
     nextTick(() => {
       adjustTextareaHeight('textareaInputQuery')
     })
-    ElMessage.error('服务器繁忙,请稍后再试')
+    if (error.name !== 'AbortError') {
+      ElMessage.error('服务器繁忙,请稍后再试')
+    }
   }
 }
 
@@ -2299,83 +2331,10 @@ const getHistory = async (id, page, val, ids) => {
 
 // 终止请求方法
 const cancelCurrentRequest = async val => {
-  request.cancelRequest(currentRequestUrl.value)
-  ElMessage.success('请求已中止')
-  if (val === 'sample') {
-    isSampleLoad.value = false
-    limitLoading.value = false
-    limitTranLoading.value = false
-    isSampleStop.value = true
-    chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
-    let title = ''
-    for (var i = 0; i < answerList.value.length; i++) {
-      if (answerList.value[i].type === '通用模式') {
-        if (
-          chatQuery.messages[chatQuery.messages.length - 2].content ===
-          answerList.value[i].data[answerList.value[i].data.length - 2].content
-        ) {
-          title = answerList.value[i].title
-        }
-      }
-    }
-    const id = limitId.value
-    postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value)
-    limitId.value = ''
-  }
-  if (val === 'query' || val === 'it' || val === 'law') {
-    isSampleLoad.value = false
-    limitLoading.value = false
-    limitTranLoading.value = false
-    isQueryStop.value = true
-    queryIng.value = false
-    let title = ''
-    for (var i = 0; i < answerList.value.length; i++) {
-      if (
-        answerList.value[i].type === '人资行政专题' ||
-        answerList.value[i].type === 'IT专题' ||
-        answerList.value[i].type === '法务专题'
-      ) {
-        if (answerList.value[i].data.question === tipQuery.value) {
-          title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
-        }
-      }
-    }
-    const paramsQuery = {
-      title: title ? title : tipQuery.value,
-      queryValue: tipQuery.value
-    }
-    currentObj.value.messages.type = 'final_answer'
-    const isThink = deepType.value === true ? true : false
-    postQuestion({}, { type: 'final_answer' }, paramsQuery, val, isThink)
-  }
-  if (val === 'tran') {
-    finalIng.value = false
-    tranIng.value = false
-    limitTranLoading.value = false
-    const query = transQuest.value
-    let title = ''
-    let obj = ''
-    for (var i = 0; i < answerList.value.length; i++) {
-      if (answerList.value[i].type === '翻译') {
-        if (answerList.value[i].data.question === query) {
-          title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
-          obj = answerList.value[i].data.files
-        }
-      }
-    }
-    if (!obj && limitFile.value.fileName) {
-      obj = limitFile.value
-    }
-    const passData = {
-      question: query,
-      answer: currentTransData.value
-    }
-    const target = selectedLan.value
-    transData.value = JSON.parse(JSON.stringify(currentTransData.value))
-    isTranStop.value = true
-    postTran(passData, title, obj, target)
-  }
   if (val === 'final') {
+    request.cancelRequest(currentRequestUrl.value)
+    ElMessage.success('请求已中止')
+
     finalIng.value = false
     docIng.value = false
     limitTranLoading.value = false
@@ -2400,6 +2359,82 @@ const cancelCurrentRequest = async val => {
       }
     }
     postFinal(obj, title, ob)
+  } else {
+    ElMessage.success('请求已中止')
+    if (val === 'sample') {
+      isSampleLoad.value = false
+      limitLoading.value = false
+      limitTranLoading.value = false
+      isSampleStop.value = true
+      chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
+      let title = ''
+      for (var i = 0; i < answerList.value.length; i++) {
+        if (answerList.value[i].type === '通用模式') {
+          if (
+            chatQuery.messages[chatQuery.messages.length - 2].content ===
+            answerList.value[i].data[answerList.value[i].data.length - 2].content
+          ) {
+            title = answerList.value[i].title
+          }
+        }
+      }
+      const id = limitId.value
+      postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value)
+      limitId.value = ''
+    }
+    if (val === 'query' || val === 'it' || val === 'law') {
+      isSampleLoad.value = false
+      limitLoading.value = false
+      limitTranLoading.value = false
+      isQueryStop.value = true
+      queryIng.value = false
+      let title = ''
+      for (var i = 0; i < answerList.value.length; i++) {
+        if (
+          answerList.value[i].type === '人资行政专题' ||
+          answerList.value[i].type === 'IT专题' ||
+          answerList.value[i].type === '法务专题'
+        ) {
+          if (answerList.value[i].data.question === tipQuery.value) {
+            title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+          }
+        }
+      }
+      const paramsQuery = {
+        title: title ? title : tipQuery.value,
+        queryValue: tipQuery.value
+      }
+      currentObj.value.messages.type = 'final_answer'
+      const isThink = deepType.value === true ? true : false
+      postQuestion({}, { type: 'final_answer' }, paramsQuery, val, isThink)
+    }
+    if (val === 'tran') {
+      finalIng.value = false
+      tranIng.value = false
+      limitTranLoading.value = false
+      const query = transQuest.value
+      let title = ''
+      let obj = ''
+      for (var i = 0; i < answerList.value.length; i++) {
+        if (answerList.value[i].type === '翻译') {
+          if (answerList.value[i].data.question === query) {
+            title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+            obj = answerList.value[i].data.files
+          }
+        }
+      }
+      if (!obj && limitFile.value.fileName) {
+        obj = limitFile.value
+      }
+      const passData = {
+        question: query,
+        answer: currentTransData.value
+      }
+      const target = selectedLan.value
+      transData.value = JSON.parse(JSON.stringify(currentTransData.value))
+      isTranStop.value = true
+      postTran(passData, title, obj, target)
+    }
   }
 }
 const getPower = () => {
