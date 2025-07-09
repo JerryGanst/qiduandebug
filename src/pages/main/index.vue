@@ -1181,8 +1181,16 @@ const submitCommon = async () => {
       console.error('获取回复失败:', err)
     })
 }
-
+let lastClickTime = 0
 const submitQuestionSend = () => {
+  const now = Date.now()
+
+  // Check if less than 3 seconds have passed since last click
+  if (now - lastClickTime < 3000) {
+    return
+  }
+
+  lastClickTime = now
   if (
     isSampleLoad.value &&
     (currentIndex.value || currentIndex.value === 0) &&
@@ -1194,6 +1202,14 @@ const submitQuestionSend = () => {
   submitQuestion()
 }
 const submitITSend = () => {
+  const now = Date.now()
+
+  // Check if less than 3 seconds have passed since last click
+  if (now - lastClickTime < 3000) {
+    return
+  }
+
+  lastClickTime = now
   if (
     isSampleLoad.value &&
     (currentIndex.value || currentIndex.value === 0) &&
@@ -1205,6 +1221,14 @@ const submitITSend = () => {
   submitQuestion()
 }
 const submitLawSend = () => {
+  const now = Date.now()
+
+  // Check if less than 3 seconds have passed since last click
+  if (now - lastClickTime < 3000) {
+    return
+  }
+
+  lastClickTime = now
   if (
     isSampleLoad.value &&
     (currentIndex.value || currentIndex.value === 0) &&
@@ -1217,6 +1241,14 @@ const submitLawSend = () => {
 }
 
 const submitSampleSend = () => {
+  const now = Date.now()
+
+  // Check if less than 3 seconds have passed since last click
+  if (now - lastClickTime < 3000) {
+    return
+  }
+
+  lastClickTime = now
   if (
     isSampleLoad.value &&
     (currentIndex.value || currentIndex.value === 0) &&
@@ -1229,6 +1261,14 @@ const submitSampleSend = () => {
   submitSample()
 }
 const submitTranSend = () => {
+  const now = Date.now()
+
+  // Check if less than 3 seconds have passed since last click
+  if (now - lastClickTime < 3000) {
+    return
+  }
+
+  lastClickTime = now
   if (finalIng.value && (currentIndex.value || currentIndex.value === 0) && currentIndex.value == activeIndex.value) {
     // cancelCurrentRequest('tran')
     stopQuery('tran')
@@ -1589,6 +1629,7 @@ const submitSample = async (val, isRefresh) => {
   }
 }
 const submitTran = async (val, isRefresh, obj) => {
+  console.log(obj)
   if (queryIng.value || docIng.value || tranIng.value || finalIng.value) {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
@@ -1641,6 +1682,7 @@ const submitTran = async (val, isRefresh, obj) => {
   }
   if (!isRefresh) {
     const qData = '新对话' + '(tran)'
+    console.log(obj)
     const data = {
       data: {
         answer: '',
@@ -1699,6 +1741,7 @@ const submitTran = async (val, isRefresh, obj) => {
     const index = answerList.value.findIndex(item => item.id === id)
     for (var k = 0; k < answerList.value.length; k++) {
       if (id === answerList.value[k].id) {
+        console.log(1)
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
       }
     }

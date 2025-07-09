@@ -178,7 +178,7 @@ import { ref, computed, nextTick, watch, reactive } from 'vue'
 import axios from 'axios'
 import VueOfficePptx from '@vue-office/pptx'
 import VueOfficeExcel from '@vue-office/excel'
-import { read, utils, writeFile } from 'xlsx'
+
 import mammoth from 'mammoth'
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
@@ -198,7 +198,7 @@ const previewType = ref('')
 const previewFileId = ref(null)
 const type = ref('tran')
 const emit = defineEmits(['submit-tran', 'submit-final'])
-const { fileObj, isSampleLoad, finalIng, isLogin, fileAry, limitFile, limitFinalFile } = useShared()
+const { fileObj, isSampleLoad, finalIng, isLogin, fileAry, limitFile, limitFinalFile, currentId } = useShared()
 // 常量定义
 const STATUS = {
   PENDING: 'pending',
@@ -428,7 +428,7 @@ const startUpload = async file => {
             } else {
               limitFinalFile.value = obj
             }
-
+            currentId.value = ''
             emit(type.value === 'tran' ? 'submit-tran' : 'submit-final', obj)
           } else {
             ElMessage.error(res.data.message)
@@ -585,7 +585,7 @@ const retryUpload = file => {
   file.status = STATUS.PENDING
   startUpload(file)
 }
-// const downloadUrl = ref(null)
+
 // 附件预览处理
 const handlePreview = async file => {
   if (!file) {
@@ -651,57 +651,56 @@ const handlePreview = async file => {
       previewType.value = 'pptx' // 标识为PPT类型
       previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
-      // 新增：处理Excel文件
-      // const arrayBuffer = await file.raw.arrayBuffer()
-      // previewContent.value = arrayBuffer // 直接传递ArrayBuffer
-      // previewType.value = 'excel' // 标识为Excel类型
-      // previewFileId.value = 123
-
-      try {
-        // downloadUrl.value = URL.createObjectURL(file)
-        console.log(file)
-        // 读取文件内容
+      if (file.size / 1024 / 1024 > 10) {
+        // 新增：处理Excel文件
         const arrayBuffer = await file.raw.arrayBuffer()
-        const workbook = read(arrayBuffer)
+
+        // 使用xlsx库处理Excel文件
+        const XLSX = await import('xlsx')
+        const workbook = XLSX.read(arrayBuffer, {
+          type: 'array',
+          sheetRows: 10 // 限制读取前10行
+        })
 
         // 获取第一个工作表
         const firstSheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[firstSheetName]
 
-        // 获取原始范围
-        const range = utils.decode_range(worksheet['!ref'])
-
-        // 修改范围只包含前10行前2列
-        range.e.r = Math.min(range.e.r, 5) // 前10行 (0-9)
-        range.e.c = Math.min(range.e.c, 0) // 前2列 (0-1)
-        worksheet['!ref'] = utils.encode_range(range)
-
-        // 移除不需要的列数据
-        Object.keys(worksheet).forEach(key => {
-          if (key !== '!ref' && key !== '!margins') {
-            const cell = utils.decode_cell(key)
-            if (cell.c > 1) {
-              // 只保留前2列
-              delete worksheet[key]
-            }
-          }
+        // 转换为JSON格式（包含表头）
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+          header: 1, // 包含标题行
+          defval: '', // 空单元格默认值
+          range: 0 // 从第一行开始
         })
 
-        // 创建新的工作簿
-        const newWorkbook = utils.book_new()
-        utils.book_append_sheet(newWorkbook, worksheet, 'Preview')
+        // 提取前10行前2列
+        const previewData = jsonData
+          .slice(0, 10) // 前10行
+          .map(row => [
+            row[0] || '', // 第一列（记录ID）
+            row[1] || '', // 第二列（用户ID）
+            row[2] || '', // 第二列（用户ID）
+            row[3] || '', // 第二列（用户ID）
+            row[4] || '' // 第二列（用户ID）
+          ])
+
+        // 创建新的工作簿只包含前10行前2列
+        const newWorkbook = XLSX.utils.book_new()
+        const newWorksheet = XLSX.utils.aoa_to_sheet(previewData)
+        XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, 'Preview')
 
         // 转换为Blob供vue-office-excel使用
-        const excelBlob = writeFile(newWorkbook, 'preview.xlsx', { type: 'array' })
+        const excelBlob = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'array' })
         previewContent.value = new Blob([excelBlob], {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         })
-        console.log(previewContent.value)
         previewType.value = 'excel' // 标识为Excel类型
         previewFileId.value = 123
-      } catch (err) {
-        console.error('Excel处理错误:', err)
-      } finally {
+      } else {
+        const arrayBuffer = await file.raw.arrayBuffer()
+        previewContent.value = arrayBuffer // 直接传递ArrayBuffer
+        previewType.value = 'excel' // 标识为Excel类型
+        previewFileId.value = 123
       }
     } else {
       previewContent.value = '不支持此附件预览'
