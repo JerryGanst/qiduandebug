@@ -549,11 +549,57 @@ const handlePreview = async file => {
       previewType.value = 'pptx' // 标识为PPT类型
       previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
-      // 新增：处理Excel文件
-      const arrayBuffer = await file.raw.arrayBuffer()
-      previewContent.value = arrayBuffer // 直接传递ArrayBuffer
-      previewType.value = 'excel' // 标识为Excel类型
-      previewFileId.value = 123
+      if (file.size / 1024 / 1024 > 10) {
+        // 新增：处理Excel文件
+        const arrayBuffer = await file.raw.arrayBuffer()
+
+        // 使用xlsx库处理Excel文件
+        const XLSX = await import('xlsx')
+        const workbook = XLSX.read(arrayBuffer, {
+          type: 'array',
+          sheetRows: 10 // 限制读取前10行
+        })
+
+        // 获取第一个工作表
+        const firstSheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[firstSheetName]
+
+        // 转换为JSON格式（包含表头）
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+          header: 1, // 包含标题行
+          defval: '', // 空单元格默认值
+          range: 0 // 从第一行开始
+        })
+
+        // 提取前10行前2列
+        const previewData = jsonData
+          .slice(0, 10) // 前10行
+          .map(row => [
+            row[0] || '', // 第一列（记录ID）
+            row[1] || '', // 第二列（用户ID）
+            row[2] || '', // 第二列（用户ID）
+            row[3] || '', // 第二列（用户ID）
+            row[4] || '' // 第二列（用户ID）
+          ])
+
+        // 创建新的工作簿只包含前10行前2列
+        const newWorkbook = XLSX.utils.book_new()
+        const newWorksheet = XLSX.utils.aoa_to_sheet(previewData)
+        XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, 'Preview')
+
+        // 转换为Blob供vue-office-excel使用
+        const excelBlob = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'array' })
+        previewContent.value = new Blob([excelBlob], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+        previewType.value = 'excel' // 标识为Excel类型
+        previewFileId.value = 123
+      } else {
+        const arrayBuffer = await file.raw.arrayBuffer()
+        previewContent.value = arrayBuffer // 直接传递ArrayBuffer
+        previewType.value = 'excel' // 标识为Excel类型
+        previewFileId.value = 123
+      }
     } else {
       previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'
