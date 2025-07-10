@@ -648,6 +648,7 @@ const currentRequestUrl = ref('')
 const fileRefs = ref(null)
 const commonUploadModals = ref(null)
 let interval
+let lastUploadTime = 0
 const wrapperRef = ref(null)
 
 let abortController = new AbortController()
@@ -714,6 +715,19 @@ const showFileSample = val => {
 }
 const handleDragOver = () => {
   if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+    return
+  }
+
+  if (isSampleLoad.value || queryIng.value || docIng.value || tranIng.value || finalIng.value) {
+    const now = Date.now()
+
+    // Check if less than 3 seconds have passed since last click
+    if (now - lastUploadTime < 2000) {
+      return
+    }
+
+    lastUploadTime = now
+    ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
   isDragOver.value = true
