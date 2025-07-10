@@ -719,15 +719,15 @@ const handleDragOver = () => {
   }
 
   if (isSampleLoad.value || queryIng.value || docIng.value || tranIng.value || finalIng.value) {
-    const now = Date.now()
+    // const now = Date.now()
 
-    // Check if less than 3 seconds have passed since last click
-    if (now - lastUploadTime < 2000) {
-      return
-    }
+    // // Check if less than 3 seconds have passed since last click
+    // if (now - lastUploadTime < 2000) {
+    //   return
+    // }
 
-    lastUploadTime = now
-    ElMessage.warning('有问答正在进行中,请稍后再试')
+    // lastUploadTime = now
+    // ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
   isDragOver.value = true
