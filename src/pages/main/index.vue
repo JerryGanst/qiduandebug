@@ -1539,6 +1539,15 @@ const submitSample = async (val, isRefresh) => {
     // 处理流式数据
     const reader = res.body.getReader()
     if (res.status === 429) {
+      console.log(1)
+
+      chatQuery.isLoading = false
+      limitLoading.value = false
+      isSampleLoad.value = false
+
+      limitId.value = ''
+      queryIng.value = false
+      chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
       ElMessage.error('服务器繁忙,请稍后再试')
       return
     }
@@ -1592,9 +1601,12 @@ const submitSample = async (val, isRefresh) => {
       const chunks = buffer.split(/(?=data:)/g)
       buffer = chunks.pop() || ''
       if (quickJSONCheck(buffer)) {
+        console.log(jsonData)
         const jsonData = JSON.parse(buffer)
         if (jsonData.code === 400) {
           ElMessage.error('文本过长，请重新尝试')
+        } else {
+          ElMessage.error('123')
         }
       }
 
@@ -1643,11 +1655,12 @@ const submitSample = async (val, isRefresh) => {
       })
     }
   } catch (error) {
-    currentIndex.value = ''
     chatQuery.isLoading = false
     isSampleLoad.value = false
+    limitLoading.value = false
     limitId.value = ''
     queryIng.value = false
+    chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
     nextTick(() => {
       // dynamicRows.value = 1
       adjustTextareaHeight('textareaInputSample')
