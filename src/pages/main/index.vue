@@ -1615,13 +1615,18 @@ const submitSample = async (val, isRefresh) => {
       const chunks = buffer.split(/(?=data:)/g)
       buffer = chunks.pop() || ''
       if (quickJSONCheck(buffer)) {
-        console.log(jsonData)
         const jsonData = JSON.parse(buffer)
         if (jsonData.code === 400) {
           ElMessage.error('文本过长，请重新尝试')
         } else {
-          ElMessage.error('123')
+          ElMessage.error('文本异常,请稍后再试')
         }
+        isSampleLoad.value = false
+        limitLoading.value = false
+        chatQuery.isLoading = false
+        limitId.value = ''
+        currentRequestUrl.value = ''
+        postSample(id, title, isThink, filesSample)
       }
 
       chunks.forEach(chunk => {
@@ -1801,7 +1806,7 @@ const submitTran = async (val, isRefresh, obj) => {
     }
     currentIndex.value = activeIndex.value
   }
-
+  console.log(1234)
   try {
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/translateStream', {
       method: 'POST',
@@ -1814,7 +1819,7 @@ const submitTran = async (val, isRefresh, obj) => {
       }),
       signal: abortController.signal // 添加 abort signal
     })
-
+    console.log(res.status)
     if (res.status === 429) {
       ElMessage.error('服务器繁忙,请稍后再试')
       return
@@ -1840,11 +1845,32 @@ const submitTran = async (val, isRefresh, obj) => {
 
       // 保留最后不完整的行在缓冲区
       buffer = lines.pop() || ''
+      if (quickJSONCheck(buffer)) {
+        const jsonData = JSON.parse(buffer)
+        if (jsonData.code === 400) {
+          ElMessage.error('文本过长，请重新尝试')
+        } else {
+          ElMessage.error('文本异常,请稍后再试')
+        }
 
+        limitTranId.value = ''
+        limitTranLoading.value = false
+
+        finalIng.value = false
+        tranIng.value = false
+        const passData = {
+          question: passQuery,
+          answer: ''
+        }
+        if (isRefresh) answerList.value.splice(0, 1)
+        console.log(123)
+        postTran(passData, title.replace(/\([^)]*\)/g, ''), obj, target)
+      }
       for (const line of lines) {
         if (!line.startsWith('data:')) continue
 
         try {
+          console.log(1)
           const jsonStr = line.substring(5).trim()
           if (!jsonStr) continue
           if (messageContainerTran.value && limitTranLoading.value) {
@@ -1852,6 +1878,7 @@ const submitTran = async (val, isRefresh, obj) => {
           }
           // 安全解析检查
           if (!isValidJson(jsonStr)) {
+            console.log(12)
             console.warn('不完整JSON:', jsonStr)
             buffer = line + '\n' + buffer // 回退到缓冲区
             continue
@@ -1877,22 +1904,34 @@ const submitTran = async (val, isRefresh, obj) => {
             accumulatedContent = ''
           }
         } catch (error) {
+          console.log(2)
           currentIndex.value = ''
           limitTranId.value = ''
           limitTranLoading.value = false
+          console.log(123)
           if (error.name !== 'AbortError') {
             ElMessage.error('翻译失败' + error.message)
+          } else {
+            ElMessage.error('翻译失败')
           }
-
           finalIng.value = false
           tranIng.value = false
+          const passData = {
+            question: passQuery,
+            answer: accumulatedContent
+          }
+          // if (isRefresh) answerList.value.splice(0, 1)
+          // console.log(123)
+          // postTran(passData, title.replace(/\([^)]*\)/g, ''), obj, target)
           clearInterval(interval)
         }
       }
     }
   } catch (error) {
+    console.log(error)
     currentIndex.value = ''
     limitTranId.value = ''
+    console.log(456)
     limitTranLoading.value = false
     if (error.name !== 'AbortError') {
       ElMessage.error('翻译失败' + error.message)
