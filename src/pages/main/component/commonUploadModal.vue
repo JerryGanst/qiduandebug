@@ -1107,7 +1107,7 @@ defineExpose({ openFile })
       font-size: 16px;
       color: #333333;
       line-height: 30px;
-      max-width: 330px;
+      max-width: 66%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
