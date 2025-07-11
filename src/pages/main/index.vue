@@ -907,23 +907,40 @@ const displayMessagesSequentially = async () => {
 let fullContent = '' // 保存所有已显示内容
 let currentDisplayIndex = 0 // 当前显示位置
 // 改进后的逐字显示函数
-const display = async message => {
+// const display = async message => {
+//   return new Promise(resolve => {
+//     let i = 0
+//     const interval = setInterval(() => {
+//       if (i < message.length) {
+//         // 逐个字追加到完整内容中
+//         fullContent += message[i]
+//         currentTransData.value = fullContent // 显示完整内容
+//         i++
+//       } else {
+//         clearInterval(interval)
+//         resolve()
+//       }
+//     }, 0)
+//   })
+// }
+const display = async (message, batchSize = 12) => {
   return new Promise(resolve => {
     let i = 0
-    const interval = setInterval(() => {
+    const render = () => {
+      const end = Math.min(i + batchSize, message.length)
+      fullContent += message.substring(i, end)
+      currentTransData.value = fullContent
+      i = end
+
       if (i < message.length) {
-        // 逐个字追加到完整内容中
-        fullContent += message[i]
-        currentTransData.value = fullContent // 显示完整内容
-        i++
+        requestAnimationFrame(render)
       } else {
-        clearInterval(interval)
         resolve()
       }
-    }, 1)
+    }
+    requestAnimationFrame(render)
   })
 }
-
 // 改进后的消息序列显示函数
 const displayMessagesTran = async () => {
   // 获取当前需要显示的新内容部分
@@ -1473,7 +1490,6 @@ const submitSample = async (val, isRefresh) => {
         }
         await asizeRef.value.deleteData(id, true)
         questions.value.unshift(title + '(sample)')
-        console.log(title)
         activeIndex.value = 0
       }
     }
@@ -1497,10 +1513,7 @@ const submitSample = async (val, isRefresh) => {
     const index = answerList.value.findIndex(item => item.id === id)
     for (var k = 0; k < answerList.value.length; k++) {
       if (id === answerList.value[k].id) {
-        console.log(id)
-        console.log(answerList.value)
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
-        console.log(title)
       }
     }
     currentIndex.value = activeIndex.value
@@ -1553,12 +1566,9 @@ const submitSample = async (val, isRefresh) => {
     // 处理流式数据
     const reader = res.body.getReader()
     if (res.status === 429) {
-      console.log(1)
-
       chatQuery.isLoading = false
       limitLoading.value = false
       isSampleLoad.value = false
-
       limitId.value = ''
       queryIng.value = false
       chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
@@ -1806,7 +1816,6 @@ const submitTran = async (val, isRefresh, obj) => {
     }
     currentIndex.value = activeIndex.value
   }
-  console.log(1234)
   try {
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/translateStream', {
       method: 'POST',
@@ -1819,7 +1828,6 @@ const submitTran = async (val, isRefresh, obj) => {
       }),
       signal: abortController.signal // 添加 abort signal
     })
-    console.log(res.status)
     if (res.status === 429) {
       ElMessage.error('服务器繁忙,请稍后再试')
       return
@@ -1863,14 +1871,12 @@ const submitTran = async (val, isRefresh, obj) => {
           answer: ''
         }
         if (isRefresh) answerList.value.splice(0, 1)
-        console.log(123)
         postTran(passData, title.replace(/\([^)]*\)/g, ''), obj, target)
       }
       for (const line of lines) {
         if (!line.startsWith('data:')) continue
 
         try {
-          console.log(1)
           const jsonStr = line.substring(5).trim()
           if (!jsonStr) continue
           if (messageContainerTran.value && limitTranLoading.value) {
@@ -1878,7 +1884,6 @@ const submitTran = async (val, isRefresh, obj) => {
           }
           // 安全解析检查
           if (!isValidJson(jsonStr)) {
-            console.log(12)
             console.warn('不完整JSON:', jsonStr)
             buffer = line + '\n' + buffer // 回退到缓冲区
             continue
@@ -1904,11 +1909,9 @@ const submitTran = async (val, isRefresh, obj) => {
             accumulatedContent = ''
           }
         } catch (error) {
-          console.log(2)
           currentIndex.value = ''
           limitTranId.value = ''
           limitTranLoading.value = false
-          console.log(123)
           if (error.name !== 'AbortError') {
             ElMessage.error('翻译失败' + error.message)
           } else {
@@ -1928,10 +1931,8 @@ const submitTran = async (val, isRefresh, obj) => {
       }
     }
   } catch (error) {
-    console.log(error)
     currentIndex.value = ''
     limitTranId.value = ''
-    console.log(456)
     limitTranLoading.value = false
     if (error.name !== 'AbortError') {
       ElMessage.error('翻译失败' + error.message)
@@ -2436,7 +2437,6 @@ const cancelCurrentRequest = async val => {
       limitTranLoading.value = false
       isSampleStop.value = true
       chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
-      console.log(chatQuery.messages)
       let title = ''
       for (var i = 0; i < answerList.value.length; i++) {
         if (answerList.value[i].type === '通用模式') {
@@ -2992,6 +2992,8 @@ onUnmounted(() => {
         line-height: 24px;
         border-radius: 10px;
         min-width: 696px;
+        will-change: contents;
+        contain: content;
       }
       .content_list {
         display: flex;
