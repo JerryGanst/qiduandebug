@@ -168,7 +168,7 @@
         width: `calc(100% - 700px + ${overlayWidth}px)`
       }"
     >
-      <div class="drag-bar" @mousedown="startDrag"></div>
+      <div class="drag-bar" @mousedown.stop="startDrag"></div>
       <div class="file_text" v-if="previewFileId" style="position: relative">
         <div class="text_title">{{ fileInfo.name }}</div>
         <div class="text_list">
@@ -960,6 +960,7 @@ defineExpose({ openFile })
   cursor: col-resize;
   flex-shrink: 0;
   z-index: 3; /* 确保在顶层 */
+  will-change: transform; /* 提示浏览器优化拖拽动画 */
 }
 
 .drag-bar:hover {
