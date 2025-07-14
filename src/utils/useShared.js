@@ -10,7 +10,7 @@ const limitFinalFile = ref({})
 const isQueryStop = ref(false) // 控制人资模式 终止之后的状态
 const limitLoading = ref(false) // 切换左侧历史记录，判断当前选中的记录是否处于问答状态中
 const limitTranLoading = ref(false)
-const limitQueryLoading = ref(false)
+
 const questions = ref([]) // 左侧历史记录标题数组
 const intelList = ref([])
 const answerList = ref([]) //历史记录数组
@@ -128,7 +128,6 @@ const transQuest = ref('')
 const dots = ref('.') // 初始点号
 const limitId = ref('')
 const limitTranId = ref('')
-const limitQueryId = ref('')
 const fileObj = ref('')
 const fileAry = ref([])
 const drayAry = ref([])
@@ -261,9 +260,6 @@ export function useShared() {
   const updateLimitTranLoading = newName => {
     limitTranLoading.value = newName
   }
-  const updateLimitQueryLoading = newName => {
-    limitQueryLoading.value = newName
-  }
 
   const updateQuestions = newName => {
     questions.value = newName
@@ -383,9 +379,6 @@ export function useShared() {
   const updateLimitTranId = newName => {
     limitTranId.value = newName
   }
-  const updateLimitQueryId = newName => {
-    limitQueryId.value = newName
-  }
 
   const updateMessageContainer = newName => {
     messageContainer.value = newName
@@ -502,7 +495,6 @@ export function useShared() {
     dragUploads,
     limitId,
     limitTranId,
-    limitQueryId,
     questions,
     loadingId,
     intelList,
@@ -524,7 +516,6 @@ export function useShared() {
     chatQuery,
     intelQuery,
     limitTranLoading,
-    limitQueryLoading,
     isLogin,
     fileObj,
     fileAry,
@@ -631,8 +622,6 @@ export function useShared() {
     updateLimitIntelLoading,
     updateCurrentIntelId,
     updateRecordId,
-    updateLimitTranLoading,
-    updateLimitQueryLoading,
-    updateLimitQueryId
+    updateLimitTranLoading
   }
 }
