@@ -38,6 +38,10 @@ const formatDateTimeUTC = isoString => {
 // 记录开始时间
 onMounted(() => {
   startTime.value = new Date() // 页面加载时间
+  if (!sessionStorage.getItem('count')) {
+    sessionStorage.setItem('count', 0)
+  }
+
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
@@ -60,7 +64,8 @@ const handleBeforeUnload = () => {
     .post('/Data/saveSession', {
       startTime: data.startTime,
       endTime: data.endTime,
-      userId: JSON.parse(localStorage.getItem('userInfo')).id
+      userId: JSON.parse(localStorage.getItem('userInfo')).id,
+      count: sessionStorage.getItem('count')
     })
     .then(res => {
       if (res.status) {

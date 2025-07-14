@@ -2003,7 +2003,6 @@ const submitQuestion = async (val, isRefresh) => {
   if (isRefresh) {
     let current = currentId.value
     const idx = answerList.value.findIndex(item => item.id === current)
-    console.log(idx)
     title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
     let limitTitle = ''
     let limitObj = {}
@@ -2154,6 +2153,8 @@ const submitQuestion = async (val, isRefresh) => {
 
 const postSample = async (ids, title, isThink, postSample) => {
   let titleStr = ''
+  let num = parseInt(sessionStorage.getItem('count'))
+  sessionStorage.setItem('count', num++)
   if (chatQuery.messages[0].files && chatQuery.messages[0].files.length > 0) {
     for (var i = 0; i < chatQuery.messages[0].files.length; i++) {
       titleStr += chatQuery.messages[0].files[i].originalFileName + ','
@@ -2183,6 +2184,8 @@ const postSample = async (ids, title, isThink, postSample) => {
 }
 
 const postQuestion = async (think, obj, val, type, isThink) => {
+  let num = parseInt(sessionStorage.getItem('count'))
+  sessionStorage.setItem('count', num++)
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
@@ -2212,6 +2215,8 @@ const postQuestion = async (think, obj, val, type, isThink) => {
 }
 
 const postTran = async (obj, title, ob, target) => {
+  let num = parseInt(sessionStorage.getItem('count'))
+  sessionStorage.setItem('count', num++)
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
@@ -2246,6 +2251,8 @@ const postTran = async (obj, title, ob, target) => {
 }
 
 const postFinal = async (obj, title, ob) => {
+  let num = parseInt(sessionStorage.getItem('count'))
+  sessionStorage.setItem('count', num++)
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
@@ -2480,9 +2487,7 @@ const cancelCurrentRequest = async val => {
       isQueryStop.value = true
       queryIng.value = false
       const query = tipQuery.value
-      console.log(currentId.value)
       let title = ''
-      console.log(answerList.value)
       if (currentId.value) {
         for (var i = 0; i < answerList.value.length; i++) {
           if (
