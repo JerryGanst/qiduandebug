@@ -2423,7 +2423,6 @@ const cancelCurrentRequest = async val => {
   if (val === 'final') {
     request.cancelRequest(currentRequestUrl.value)
     ElMessage.success('请求已中止')
-
     finalIng.value = false
     docIng.value = false
     limitTranLoading.value = false
@@ -2480,21 +2479,39 @@ const cancelCurrentRequest = async val => {
       limitQueryLoading.value = false
       isQueryStop.value = true
       queryIng.value = false
+      const query = tipQuery.value
+      console.log(currentId.value)
       let title = ''
-      for (var i = 0; i < answerList.value.length; i++) {
-        if (
-          answerList.value[i].type === '人资行政专题' ||
-          answerList.value[i].type === 'IT专题' ||
-          answerList.value[i].type === '法务专题'
-        ) {
-          if (answerList.value[i].data.question === tipQuery.value) {
-            title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+      console.log(answerList.value)
+      if (currentId.value) {
+        for (var i = 0; i < answerList.value.length; i++) {
+          if (
+            answerList.value[i].type === '人资行政专题' ||
+            answerList.value[i].type === 'IT专题' ||
+            answerList.value[i].type === '法务专题'
+          ) {
+            if (answerList.value[i].id === currentId.value) {
+              title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+            }
+          }
+        }
+      } else {
+        for (var i = 0; i < answerList.value.length; i++) {
+          if (
+            answerList.value[i].type === '人资行政专题' ||
+            answerList.value[i].type === 'IT专题' ||
+            answerList.value[i].type === '法务专题'
+          ) {
+            if (answerList.value[i].data.question === query) {
+              title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+            }
           }
         }
       }
+
       const paramsQuery = {
-        title: title ? title : tipQuery.value,
-        queryValue: tipQuery.value
+        title: title ? title : query,
+        queryValue: query
       }
       currentObj.value.messages.type = 'final_answer'
       const isThink = deepType.value === true ? true : false
@@ -2508,14 +2525,26 @@ const cancelCurrentRequest = async val => {
       const query = transQuest.value
       let title = ''
       let obj = ''
-      for (var i = 0; i < answerList.value.length; i++) {
-        if (answerList.value[i].type === '翻译') {
-          if (answerList.value[i].data.question === query) {
-            title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
-            obj = answerList.value[i].data.files
+      if (currentId.value) {
+        for (var i = 0; i < answerList.value.length; i++) {
+          if (answerList.value[i].type === '翻译') {
+            if (answerList.value[i].id === currentId.value) {
+              title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+              obj = answerList.value[i].data.files
+            }
+          }
+        }
+      } else {
+        for (var i = 0; i < answerList.value.length; i++) {
+          if (answerList.value[i].type === '翻译') {
+            if (answerList.value[i].data.question === query) {
+              title = answerList.value[i].title.replace(/\([^)]*\)/g, '')
+              obj = answerList.value[i].data.files
+            }
           }
         }
       }
+
       if (!obj && limitFile.value.fileName) {
         obj = limitFile.value
       }
