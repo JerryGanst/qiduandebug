@@ -425,6 +425,7 @@ const {
   currentIndex,
   limitLoading,
   limitTranLoading,
+  limitQueryLoading,
   limitIntelLoading,
   questions,
   answerList,
@@ -442,6 +443,7 @@ const {
   isLogin,
   limitId,
   limitTranId,
+  limitQueryId,
   finalIng,
   docIng,
   tranIng,
@@ -937,6 +939,7 @@ const queryAn = (val, index, data) => {
   isQueryStop.value = false
   limitLoading.value = false
   limitTranLoading.value = false
+  limitQueryLoading.value = false
   if (!currentIndex.value && currentIndex.value !== 0) {
     currentIndex.value = activeIndex.value
   }
@@ -1071,6 +1074,18 @@ const queryAn = (val, index, data) => {
         } else {
           const data = getMatchingIndexes(limitAry.value, queryList[i])
           tipQuery.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
+        }
+        const hasName = anList.some(item => item.title === val)
+        if (hasName) {
+          if (currentId.value === limitQueryId.value) {
+            limitQueryLoading.value = true
+          } else {
+            limitQueryLoading.value = false
+          }
+        } else {
+          nextTick(() => {
+            limitQueryLoading.value = true
+          })
         }
       } else if (pageType.value === 'sample') {
         const hasName = anList.some(item => item.title === val)
