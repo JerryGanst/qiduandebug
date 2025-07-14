@@ -1774,6 +1774,9 @@ const submitTran = async (val, isRefresh, obj) => {
     activeIndex.value = '0'
     currentIndex.value = 0
     currentIndex.value = activeIndex.value
+    currentId.value = ''
+    console.log(qData)
+    console.log(data)
     questions.value.unshift(qData)
   }
 
@@ -1821,6 +1824,7 @@ const submitTran = async (val, isRefresh, obj) => {
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
       }
     }
+    console.log(title)
     currentIndex.value = activeIndex.value
   }
   try {
