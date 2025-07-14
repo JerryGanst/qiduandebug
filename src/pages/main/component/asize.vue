@@ -964,7 +964,6 @@ const queryAn = (val, index, data) => {
       queryLimit.push(anList[j].title)
       queryLimitQs.push(anList[j].data.question + '(query)')
       if (val == anList[j].title || val == anList[j].data.question + '(query)') {
-        currentId.value = anList[j].id
         pageType.value = 'query'
         selectedMode.value = '人资行政专题'
         const idx = anList.length === questions.value.length ? index : index - 1
@@ -972,12 +971,12 @@ const queryAn = (val, index, data) => {
         currentObj.value.messages = anList[idx].data.answer
         currentObj.value.list = anList[idx].data?.think
         deepType.value = anList[idx].isThink
+        currentId.value = anList[idx].id
       }
     } else if (anList[j].type === 'IT专题') {
       queryIt.push(anList[j].title)
       queryItQs.push(anList[j].data.question + '(it)')
       if (val == anList[j].title || val == anList[j].data.question + '(it)') {
-        currentId.value = anList[j].id
         pageType.value = 'it'
         selectedMode.value = 'IT专题'
         const idx = anList.length === questions.value.length ? index : index - 1
@@ -985,12 +984,12 @@ const queryAn = (val, index, data) => {
         currentObj.value.messages = anList[idx].data.answer
         currentObj.value.list = anList[idx].data?.think
         deepType.value = anList[idx].isThink
+        currentId.value = anList[idx].id
       }
     } else if (anList[j].type === '法务专题') {
       queryLaw.push(anList[j].title)
       queryLawQs.push(anList[j].data.question + '(law)')
       if (val == anList[j].title || val == anList[j].data.question + '(law)') {
-        currentId.value = anList[j].id
         pageType.value = 'law'
         selectedMode.value = '法务专题'
         const idx = anList.length === questions.value.length ? index : index - 1
@@ -998,6 +997,7 @@ const queryAn = (val, index, data) => {
         currentObj.value.messages = anList[idx].data.answer
         currentObj.value.list = anList[idx].data?.think
         deepType.value = anList[idx].isThink
+        currentId.value = anList[idx].id
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
