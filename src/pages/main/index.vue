@@ -1995,6 +1995,7 @@ const submitQuestion = async (val, isRefresh) => {
   if (isRefresh) {
     let current = currentId.value
     const idx = answerList.value.findIndex(item => item.id === current)
+    console.log(idx)
     title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
     let limitTitle = ''
     let limitObj = {}
