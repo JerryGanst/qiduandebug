@@ -425,6 +425,7 @@ const {
   currentIndex,
   limitLoading,
   limitTranLoading,
+  limitQueryLoading,
   limitIntelLoading,
   questions,
   answerList,
@@ -442,6 +443,7 @@ const {
   isLogin,
   limitId,
   limitTranId,
+  limitQueryId,
   finalIng,
   docIng,
   tranIng,
@@ -937,6 +939,7 @@ const queryAn = (val, index, data) => {
   isQueryStop.value = false
   limitLoading.value = false
   limitTranLoading.value = false
+  limitQueryLoading.value = false
   if (!currentIndex.value && currentIndex.value !== 0) {
     currentIndex.value = activeIndex.value
   }
@@ -961,7 +964,6 @@ const queryAn = (val, index, data) => {
       queryLimit.push(anList[j].title)
       queryLimitQs.push(anList[j].data.question + '(query)')
       if (val == anList[j].title || val == anList[j].data.question + '(query)') {
-        currentId.value = anList[j].id
         pageType.value = 'query'
         selectedMode.value = '人资行政专题'
         const idx = anList.length === questions.value.length ? index : index - 1
@@ -969,12 +971,12 @@ const queryAn = (val, index, data) => {
         currentObj.value.messages = anList[idx].data.answer
         currentObj.value.list = anList[idx].data?.think
         deepType.value = anList[idx].isThink
+        currentId.value = anList[idx].id
       }
     } else if (anList[j].type === 'IT专题') {
       queryIt.push(anList[j].title)
       queryItQs.push(anList[j].data.question + '(it)')
       if (val == anList[j].title || val == anList[j].data.question + '(it)') {
-        currentId.value = anList[j].id
         pageType.value = 'it'
         selectedMode.value = 'IT专题'
         const idx = anList.length === questions.value.length ? index : index - 1
@@ -982,12 +984,12 @@ const queryAn = (val, index, data) => {
         currentObj.value.messages = anList[idx].data.answer
         currentObj.value.list = anList[idx].data?.think
         deepType.value = anList[idx].isThink
+        currentId.value = anList[idx].id
       }
     } else if (anList[j].type === '法务专题') {
       queryLaw.push(anList[j].title)
       queryLawQs.push(anList[j].data.question + '(law)')
       if (val == anList[j].title || val == anList[j].data.question + '(law)') {
-        currentId.value = anList[j].id
         pageType.value = 'law'
         selectedMode.value = '法务专题'
         const idx = anList.length === questions.value.length ? index : index - 1
@@ -995,6 +997,7 @@ const queryAn = (val, index, data) => {
         currentObj.value.messages = anList[idx].data.answer
         currentObj.value.list = anList[idx].data?.think
         deepType.value = anList[idx].isThink
+        currentId.value = anList[idx].id
       }
     } else if (anList[j].type === '通用模式') {
       querySample.push(anList[j].title)
@@ -1071,6 +1074,18 @@ const queryAn = (val, index, data) => {
         } else {
           const data = getMatchingIndexes(limitAry.value, queryList[i])
           tipQuery.value = data ? data : queryList[0].replace(/\([^)]*\)/g, '')
+        }
+        const hasName = anList.some(item => item.title === val)
+        if (hasName) {
+          if (currentId.value === limitQueryId.value) {
+            limitQueryLoading.value = true
+          } else {
+            limitQueryLoading.value = false
+          }
+        } else {
+          nextTick(() => {
+            limitQueryLoading.value = true
+          })
         }
       } else if (pageType.value === 'sample') {
         const hasName = anList.some(item => item.title === val)

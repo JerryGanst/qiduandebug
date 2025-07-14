@@ -52,11 +52,11 @@
                 </div>
               </div>
               <div class="title_float" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
-                <span v-if="!currentObj?.messages?.type">
+                <span v-if="limitQueryLoading">
                   <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
                 </span>
-                <span style="padding-left: 10px" v-if="!currentObj?.messages?.type">
-                  {{ currentObj?.messages?.isHistory ? '' : currentMessage }}
+                <span style="padding-left: 10px" v-if="limitQueryLoading">
+                  {{ currentMessage }}
                 </span>
               </div>
               <div
@@ -64,7 +64,8 @@
                 :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
                 v-if="
                   (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
-                  currentObj.messages.type === 'final_answer'
+                  currentObj.messages.type === 'final_answer' &&
+                  !limitQueryLoading
                 "
               >
                 <span>
@@ -75,7 +76,8 @@
                 v-if="
                   (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
                   currentObj.messages.type === 'final_answer' &&
-                  currentObj.messages.content
+                  currentObj.messages.content &&
+                  !limitQueryLoading
                 "
                 :markdown="currentObj.messages.content"
               />
@@ -83,7 +85,8 @@
                 v-if="
                   (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
                   currentObj.messages.type === 'final_answer' &&
-                  currentObj.messages.sources
+                  currentObj.messages.sources &&
+                  !limitQueryLoading
                 "
                 class="query_source"
               >
@@ -95,7 +98,8 @@
                 v-if="
                   (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
                   currentObj.messages.type === 'final_answer' &&
-                  currentObj.messages.sources
+                  currentObj.messages.sources &&
+                  !limitQueryLoading
                 "
                 @click="toDoc(it)"
               >
@@ -105,7 +109,8 @@
                 class="query_common"
                 v-if="
                   (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
-                  currentObj.messages.type === 'final_answer'
+                  currentObj.messages.type === 'final_answer' &&
+                  !limitQueryLoading
                 "
               >
                 <div>
@@ -601,6 +606,7 @@ const {
   chatCurrent,
   limitId,
   limitTranId,
+  limitQueryId,
   checkData,
   dots,
   messageContainer,
@@ -625,6 +631,7 @@ const {
   limitFinalFile,
   messageContainerTran,
   limitTranLoading,
+  limitQueryLoading,
   isTranStop
 } = useShared()
 
@@ -1981,6 +1988,7 @@ const submitQuestion = async (val, isRefresh) => {
   currentObj.value.messages = {}
   currentObj.value.messageList = []
   const queryValue = newQuestion.value
+  limitQueryLoading.value = true
   tipQuery.value = queryValue
   newQuestion.value = ''
   queryIng.value = true
@@ -2039,6 +2047,13 @@ const submitQuestion = async (val, isRefresh) => {
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   const isThink = deepType.value === true ? true : false
   let list = {}
+  const anList = JSON.parse(JSON.stringify(answerList.value))
+  const hasId = anList.some(item => item.id === currentId.value)
+  let id = ''
+  if (hasId) {
+    id = currentId.value
+    limitQueryId.value = id
+  }
   try {
     // 替换为实际的后端接口地址
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/query', {
@@ -2093,7 +2108,7 @@ const submitQuestion = async (val, isRefresh) => {
         }
         if (type === 'final_answer') {
           queryIng.value = false
-
+          limitQueryId.value = ''
           // loadingInstance.close();
           currentObj.value.messages = JSON.parse(element)
           finalAnswer = JSON.parse(element)
@@ -2103,6 +2118,7 @@ const submitQuestion = async (val, isRefresh) => {
             title: title ? title : queryValue,
             queryValue: queryValue
           }
+          limitQueryLoading.value = false
           setTimeout(() => {
             const think = isThink ? JSON.parse(JSON.stringify(list)) : {}
             postQuestion(think, finalAnswer, paramsQuery, pgType, isThink)
@@ -2124,6 +2140,8 @@ const submitQuestion = async (val, isRefresh) => {
     currentIndex.value = ''
     isSampleLoad.value = false
     queryIng.value = false
+    limitQueryId.value = ''
+    limitQueryLoading.value = false
     nextTick(() => {
       adjustTextareaHeight('textareaInputQuery')
     })
@@ -2408,6 +2426,7 @@ const cancelCurrentRequest = async val => {
     finalIng.value = false
     docIng.value = false
     limitTranLoading.value = false
+    limitQueryLoading.value = false
     let title = ''
     let ob = ''
     for (var i = 0; i < answerList.value.length; i++) {
@@ -2435,6 +2454,7 @@ const cancelCurrentRequest = async val => {
       isSampleLoad.value = false
       limitLoading.value = false
       limitTranLoading.value = false
+      limitQueryLoading.value = false
       isSampleStop.value = true
       chatQuery.messages = JSON.parse(JSON.stringify(chatCurrent.messages))
       let title = ''
@@ -2456,6 +2476,7 @@ const cancelCurrentRequest = async val => {
       isSampleLoad.value = false
       limitLoading.value = false
       limitTranLoading.value = false
+      limitQueryLoading.value = false
       isQueryStop.value = true
       queryIng.value = false
       let title = ''
@@ -2482,6 +2503,7 @@ const cancelCurrentRequest = async val => {
       finalIng.value = false
       tranIng.value = false
       limitTranLoading.value = false
+      limitQueryLoading.value = false
       const query = transQuest.value
       let title = ''
       let obj = ''
