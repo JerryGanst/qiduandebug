@@ -620,7 +620,8 @@ const displayMessage = async message => {
 }
 const postSample = async (id, agentId, title, mes) => {
   let num = parseInt(sessionStorage.getItem('count'))
-  sessionStorage.setItem('count', num++)
+  num = num + 1
+  sessionStorage.setItem('count', num)
   // let titleStr = ''
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   request

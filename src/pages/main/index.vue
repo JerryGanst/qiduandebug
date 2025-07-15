@@ -1775,8 +1775,6 @@ const submitTran = async (val, isRefresh, obj) => {
     currentIndex.value = 0
     currentIndex.value = activeIndex.value
     currentId.value = ''
-    console.log(qData)
-    console.log(data)
     questions.value.unshift(qData)
   }
 
@@ -1824,7 +1822,6 @@ const submitTran = async (val, isRefresh, obj) => {
         title = answerList.value[k].title.replace(/\([^)]*\)/g, '')
       }
     }
-    console.log(title)
     currentIndex.value = activeIndex.value
   }
   try {
@@ -2158,7 +2155,8 @@ const submitQuestion = async (val, isRefresh) => {
 const postSample = async (ids, title, isThink, postSample) => {
   let titleStr = ''
   let num = parseInt(sessionStorage.getItem('count'))
-  sessionStorage.setItem('count', num++)
+  num = num + 1
+  sessionStorage.setItem('count', num)
   if (chatQuery.messages[0].files && chatQuery.messages[0].files.length > 0) {
     for (var i = 0; i < chatQuery.messages[0].files.length; i++) {
       titleStr += chatQuery.messages[0].files[i].originalFileName + ','
@@ -2189,7 +2187,8 @@ const postSample = async (ids, title, isThink, postSample) => {
 
 const postQuestion = async (think, obj, val, type, isThink) => {
   let num = parseInt(sessionStorage.getItem('count'))
-  sessionStorage.setItem('count', num++)
+  num = num + 1
+  sessionStorage.setItem('count', num)
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
@@ -2220,7 +2219,8 @@ const postQuestion = async (think, obj, val, type, isThink) => {
 
 const postTran = async (obj, title, ob, target) => {
   let num = parseInt(sessionStorage.getItem('count'))
-  sessionStorage.setItem('count', num++)
+  num = num + 1
+  sessionStorage.setItem('count', num)
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
@@ -2256,7 +2256,8 @@ const postTran = async (obj, title, ob, target) => {
 
 const postFinal = async (obj, title, ob) => {
   let num = parseInt(sessionStorage.getItem('count'))
-  sessionStorage.setItem('count', num++)
+  num = num + 1
+  sessionStorage.setItem('count', num)
   request
     .post('/Message/save', {
       userId: userInfo.value.id,
