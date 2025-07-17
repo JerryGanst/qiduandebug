@@ -45,7 +45,7 @@
 
           <div v-else class="center-container" style="padding-top: 0px">
             <DragUpload v-if="isDragOver" ref="dragUploads"></DragUpload>
-            <div class="main_content" v-if="!isDragOver" style="width: 860px">
+            <div class="main_content" v-if="!isDragOver" style="width: 862px">
               <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'" class="title_tiQuery">
                 <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
                   {{ tipQuery }}
@@ -2843,7 +2843,7 @@ onUnmounted(() => {
       background: #fff; /* 滑块悬停时的颜色 */
     }
     .main_content {
-      width: 726px;
+      width: 862px;
       overflow-y: auto;
       overflow-x: hidden;
       flex: 1;

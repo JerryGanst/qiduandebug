@@ -1414,7 +1414,7 @@ onUnmounted(() => {
       background: #fff; /* 滑块悬停时的颜色 */
     }
     .main_content {
-      max-width: 860px;
+      max-width: 862px;
       box-sizing: border-box;
       overflow-y: auto;
       flex: 1;
