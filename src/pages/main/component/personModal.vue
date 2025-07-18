@@ -196,7 +196,7 @@
         <div v-else-if="previewType === 'pptx'" style="width: 100%; height: 100%">
           <vue-office-pptx :src="previewContent" style="height: 620px" />
         </div>
-        <div v-else-if="previewType === 'excel'" style="width: 100%">
+        <div v-else-if="previewType === 'excel'" style="width: 862px;height: 100%" >
           <vue-office-excel :src="previewContent" />
         </div>
         <div v-else class="unsupported-preview">暂不支持此格式预览</div>
@@ -236,6 +236,7 @@ import axios from 'axios'
 import mammoth from 'mammoth'
 import VueOfficePptx from '@vue-office/pptx'
 import VueOfficeExcel from '@vue-office/excel'
+import '@vue-office/excel/lib/index.css';
 import { useShared } from '@/utils/useShared'
 import eventBus from '@/utils/eventBus'
 import word from '@/assets/w.png'
