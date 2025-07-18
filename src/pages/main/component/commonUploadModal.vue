@@ -189,7 +189,7 @@
           <div v-else-if="previewType === 'pptx'" style="width: 100%">
             <vue-office-pptx :src="previewContent" />
           </div>
-          <div v-else-if="previewType === 'excel'" style="width: 100%">
+          <div v-else-if="previewType === 'excel'" style="width: 100%;height: 100%">
             <vue-office-excel :src="previewContent" />
           </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
