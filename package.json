@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --mode development",
-    "test": "vite --mode test",
+    "dev": "vite --open --mode development",
+    "test": "vite --open --mode test",
     "prod": "vite --mode production",
     "build:dev": "vite build --mode development",
     "build:test": "vite build --mode test",
@@ -32,8 +32,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.14",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@typescript-eslint/parser": "^8.37.0",
     "@vitejs/plugin-vue": "^5.2.1",
     "axios": "^1.8.1",
     "element-plus": "^2.9.5",
