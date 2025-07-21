@@ -357,7 +357,7 @@
                     class="tooltip-wrapper"
                     @mouseenter="showModelTip = true"
                     @mouseleave="showModelTip = false"
-                    v-if="pageType === 'query' || pageType === 'it'"
+                    v-if="['query', 'it', 'board'].includes(pageType)"
                   >
                     <img
                       :src="deepType ? deepSelect : deep"
