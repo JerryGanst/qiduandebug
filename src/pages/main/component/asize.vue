@@ -549,9 +549,11 @@ const getUserInfo = async id => {
         userInfo.value.url = 'https://dcs.luxshare-ict.com/Upload/emp_photo/' + userInfo.value.id + '.jpg?cp=zhaopian'
 
         if (powerList.value.includes(userInfo.value.id)) {
-          localStorage.setItem('isLaw', true)
+          localStorage.setItem('enableLaw', true)
+          localStorage.setItem('enableBoardOffice', true)
         } else {
-          localStorage.setItem('isLaw', false)
+          localStorage.setItem('enableLaw', false)
+          localStorage.setItem('enableBoardOffice', false)
         }
         nextTick(() => {
           getPower()
@@ -767,7 +769,8 @@ const handleLogout = () => {
   // 处理退出登录逻辑
   ElMessage.success('退出成功')
   localStorage.setItem('userInfo', '')
-  localStorage.setItem('isLaw', false)
+  localStorage.setItem('enableLaw', false)
+  localStorage.setItem('enableBoardOffice', false)
 
   localStorage.setItem('powerList', [])
   selectType.value = 1
@@ -1229,9 +1232,11 @@ onMounted(() => {
     const loginData = JSON.parse(localStorage.getItem('userInfo'))
     userInfo.value.id = loginData.id
     if (powerList.value.includes(loginData.id)) {
-      localStorage.setItem('isLaw', true)
+      localStorage.setItem('enableLaw', true)
+      localStorage.setItem('enableBoardOffice', true)
     } else {
-      localStorage.setItem('isLaw', false)
+      localStorage.setItem('enableLaw', false)
+      localStorage.setItem('enableBoardOffice', false)
     }
     getPower()
     getUserPower()

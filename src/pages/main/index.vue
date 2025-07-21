@@ -46,12 +46,12 @@
           <div v-else class="center-container" style="padding-top: 0px">
             <DragUpload v-if="isDragOver" ref="dragUploads"></DragUpload>
             <div class="main_content" v-if="!isDragOver" style="width: 862px">
-              <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'" class="title_tiQuery">
+              <div v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board'" class="title_tiQuery">
                 <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
                   {{ tipQuery }}
                 </div>
               </div>
-              <div class="title_float" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
+              <div class="title_float" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board'">
                 <span v-if="limitQueryLoading">
                   <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
                 </span>
@@ -63,7 +63,7 @@
                 class="title_float"
                 :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
                 v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board') &&
                   currentObj.messages.type === 'final_answer' &&
                   !limitQueryLoading
                 "
@@ -74,7 +74,7 @@
               </div>
               <MarkdownRenderer
                 v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board') &&
                   currentObj.messages.type === 'final_answer' &&
                   currentObj.messages.content &&
                   !limitQueryLoading
@@ -83,7 +83,7 @@
               />
               <div
                 v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board') &&
                   currentObj.messages.type === 'final_answer' &&
                   currentObj.messages.sources &&
                   !limitQueryLoading
@@ -96,7 +96,7 @@
                 class="href_source"
                 v-for="(it, index) in processedData"
                 v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board') &&
                   currentObj.messages.type === 'final_answer' &&
                   currentObj.messages.sources &&
                   !limitQueryLoading
@@ -108,7 +108,7 @@
               <div
                 class="query_common"
                 v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law') &&
+                  (pageType === 'query' || pageType === 'it' || pageType === 'law'|| pageType === 'board') &&
                   currentObj.messages.type === 'final_answer' &&
                   !limitQueryLoading
                 "
@@ -284,7 +284,7 @@
             <div class="query_content" v-if="!isDragOver">
               <div
                 class="tran_select"
-                v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law'"
+                v-if="pageType === 'query' || pageType === 'sample' || pageType === 'it' || pageType === 'law' || pageType === 'board'"
               >
                 <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
                   <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
@@ -310,9 +310,19 @@
                   <el-radio-button label="法务专题" value="法务专题" v-if="isLaw === 'true' && isNet">
                     法务专题
                   </el-radio-button>
+                  <el-tooltip
+                    content="该模式仅支持通过office网络访问"
+                    placement="top"
+                    v-if=" enableBoardOffice === 'true' && !isNet"
+                  >
+                    <el-radio-button label="董办专题" value="董办专题" disabled>董办专题</el-radio-button>
+                  </el-tooltip>
+                  <el-radio-button label="董办专题" value="董办专题" v-if="enableBoardOffice === 'true' && isNet">
+                    董办专题
+                  </el-radio-button>
                 </el-radio-group>
               </div>
-              <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
+              <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board'">
                 <el-input
                   v-model="newQuestion"
                   placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -380,7 +390,7 @@
                           : imageA
                     "
                     class="arrow"
-                    v-if="isNet && pageType === 'law'"
+                    v-if="isNet && pageType === 'law' || pageType === 'board'"
                     @click="submitLawSend"
                   />
                 </div>
@@ -621,6 +631,7 @@ const {
   fileAry,
   fileInputAry,
   isLaw,
+  enableBoardOffice,
   contentType,
   dragUploads,
   isDragOver,
@@ -721,7 +732,7 @@ const showFileSample = val => {
   showFileMenu.value = !showFileMenu.value
 }
 const handleDragOver = () => {
-  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law' || pageType.value === 'board') {
     return
   }
 
@@ -750,7 +761,7 @@ const getTextAfterLastDot = str => {
   return str.slice(lastDotIndex + 1)
 }
 const handleDragLeave = () => {
-  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law' || pageType.value === 'board') {
     return
   }
   isDragOver.value = false
@@ -823,6 +834,13 @@ const updateDots = () => {
   }
 }
 
+const MODE_MAPPING = new Map([
+  ['人资行政专题', 'HR'],
+  ['IT专题', 'IT'],
+  ['法务专题', 'Law'],
+  ['董办专题', 'board']
+]);
+
 const toDoc = async data => {
   if (selectedMode.value === '法务专题' && !isNet.value) {
     ElMessage.warning('该模式仅支持通过office网络访问')
@@ -833,7 +851,7 @@ const toDoc = async data => {
       '/Files/getFileLinkByName?fileName=' +
         data.document_title +
         '&target=' +
-        (selectedMode.value === 'IT专题' ? 'IT' : selectedMode.value === '人资行政专题' ? 'HR' : 'Law')
+        (MODE_MAPPING.get(selectedMode.value))
 
       // showLoading: true
     )
@@ -1124,7 +1142,7 @@ const refreshData = () => {
     return
   }
   const anList = answerList.value
-  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law' || pageType.value === 'board') {
     queryIng.value = false
     submitQuestion(tipQuery.value, true)
   } else if (pageType.value === 'tran') {
@@ -1974,7 +1992,7 @@ const submitQuestion = async (val, isRefresh) => {
     ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
-  if (pageType.value === 'law' && !isNet.value) {
+  if (['law', 'board'].includes(pageType.value) && !isNet.value) {
     ElMessage.warning('该模式仅支持通过office网络访问')
     return
   }
@@ -2397,12 +2415,12 @@ const getHistory = async (id, page, val, ids) => {
                     : page === 'tran'
                       ? '翻译'
                       : '总结'
-          if (page === 'query' || page === 'it' || page === 'law' || page === 'tran' || page === 'final') {
+          if (page === 'query' || page === 'it' || page === 'law' || page === 'board' || page === 'tran' || page === 'final') {
             for (var h = 0; h < answerList.value.length; h++) {
               if (ids === answerList.value[h].id) {
                 activeIndex.value = h
                 selectedMode.value = answerList.value[0].type
-                if (page === 'query' || page === 'it' || page === 'law') {
+                if (page === 'query' || page === 'it' || page === 'law' || page === 'board') {
                   currentQuestion.value = true
                   tipQuery.value = answerList.value[h].data.question
                   currentObj.value.list = answerList.value[h].data.think
@@ -2484,7 +2502,7 @@ const cancelCurrentRequest = async val => {
       postSample(id, title.replace(/\([^)]*\)/g, ''), deepType.value)
       limitId.value = ''
     }
-    if (val === 'query' || val === 'it' || val === 'law') {
+    if (val === 'query' || val === 'it' || val === 'law' || val === 'board') {
       isSampleLoad.value = false
       limitLoading.value = false
       limitTranLoading.value = false
@@ -2584,7 +2602,8 @@ const getPower = () => {
     })
 }
 const setlaw = () => {
-  isLaw.value = localStorage.getItem('isLaw')
+  isLaw.value = localStorage.getItem('enableLaw')
+  enableBoardOffice.value = localStorage.getItem('enableBoardOffice')
   getPower()
 }
 const handleClickOutside = event => {
@@ -2597,7 +2616,8 @@ onMounted(() => {
   eventBus.on('submit-sampleFile', submitSampleFile)
   document.addEventListener('click', handleClickOutside)
   nextTick(() => {
-    isLaw.value = localStorage.getItem('isLaw')
+    isLaw.value = localStorage.getItem('enableLaw')
+    enableBoardOffice.value = localStorage.getItem('enableBoardOffice')
     isNet.value = localStorage.getItem('isNet')
   })
 })
