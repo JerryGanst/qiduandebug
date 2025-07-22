@@ -13,7 +13,7 @@
   >
     <div
       class="title"
-      v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || (pageType === 'sample' && !isDragOver)"
+      v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board' || (pageType === 'sample' && !isDragOver)"
     >
       <img src="@/assets/logo2.png" class="title_src" />
       <div>
@@ -25,7 +25,7 @@
         </div>
       </div>
     </div>
-    <div class="content_list" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
+    <div class="content_list" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'|| pageType === 'board'">
       <div class="list_item">
         <div class="list_title">近期热搜</div>
         <div class="list_tip">深度搜索您关心的问题</div>
@@ -296,7 +296,7 @@
   <div class="select_content" v-if="!isDragOver">
     <div
       class="tran_select"
-      v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || (pageType === 'sample' && !isDragOver)"
+      v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'|| pageType === 'board' || (pageType === 'sample' && !isDragOver)"
     >
       <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
         <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
@@ -314,9 +314,13 @@
           <el-radio-button label="法务专题" value="法务专题" disabled>法务专题</el-radio-button>
         </el-tooltip>
         <el-radio-button label="法务专题" value="法务专题" v-if="isLaw === 'true' && isNet">法务专题</el-radio-button>
+        <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="enableBoardOffice === 'true' && !isNet">
+          <el-radio-button label="董办专题" value="董办专题" disabled>董办专题</el-radio-button>
+        </el-tooltip>
+        <el-radio-button label="董办专题" value="董办专题" v-if="enableBoardOffice === 'true' && isNet">董办专题</el-radio-button>
       </el-radio-group>
     </div>
-    <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'">
+    <div class="textarea" v-if="pageType === 'query' || pageType === 'it' || pageType === 'law'|| pageType === 'board'">
       <el-input
         v-model="newQuestion"
         placeholder="请输入您的问题,换行请按下Shift+Enter"
@@ -337,7 +341,7 @@
           class="tooltip-wrapper"
           @mouseenter="showModelTip = true"
           @mouseleave="showModelTip = false"
-          v-if="pageType === 'query' || pageType === 'it'"
+          v-if="['query', 'it', 'board'].includes(pageType)"
         >
           <img :src="deepType ? deepSelect : deep" class="arrow" @click="checkDeepType" style="margin-right: 10px" />
 
@@ -379,7 +383,7 @@
           "
           class="arrow"
           @click="submitLawSend"
-          v-if="isNet && pageType === 'law'"
+          v-if="isNet && (pageType === 'law' || pageType === 'board')"
         />
       </div>
     </div>
@@ -624,6 +628,7 @@ const {
   showModelTip,
   fileInputAry,
   isLaw,
+  enableBoardOffice,
   isNet,
   isLogin,
   dragUploads,
@@ -882,7 +887,7 @@ const handleClickOutside = event => {
   }
 }
 const setDrag = val => {
-  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law') {
+  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law' || pageType.value === 'board') {
     return
   }
   isDragOver.value = val
@@ -892,7 +897,8 @@ const setDrag = val => {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   nextTick(() => {
-    isLaw.value = localStorage.getItem('isLaw')
+    isLaw.value = localStorage.getItem('enableLaw')
+    enableBoardOffice.value = localStorage.getItem('enableBoardOffice')
     const isNetValue = localStorage.getItem('isNet')
     isNet.value = isNetValue === 'true'
   })

@@ -140,6 +140,7 @@ const limitAry = ref([])
 const showFileTip = ref(false)
 const showModelTip = ref(false)
 const isLaw = ref(false)
+const enableBoardOffice = ref(false)
 const knowSelect = ref(1)
 const fileInputAry = ref([])
 const isDragOver = ref(false)
@@ -208,6 +209,17 @@ const checkData = val => {
   }
   return true
 }
+
+// 1. 创建模式映射表（建议放在文件顶部作为常量）
+const MODE_MAPPING = new Map([
+  ['通用模式', 'sample'],
+  ['人资行政专题', 'query'],
+  ['IT专题', 'it'],
+  ['法务专题', 'law'],
+  ['董办专题', 'board'],
+  ['翻译', 'tran']
+]);
+
 const changeMode = () => {
   currentQuestion.value = false
   activeIndex.value = ''
@@ -215,18 +227,9 @@ const changeMode = () => {
   dynamicRows.value = 1
   currentId.value = ''
   drayAry.value = []
-  pageType.value =
-    selectedMode.value === '通用模式'
-      ? 'sample'
-      : selectedMode.value === '人资行政专题'
-        ? 'query'
-        : selectedMode.value === 'IT专题'
-          ? 'it'
-          : selectedMode.value === '法务专题'
-            ? 'law'
-            : selectedMode.value === '翻译'
-              ? 'tran'
-              : 'final'
+
+// 2. 通过Map获取值（带默认值）
+  pageType.value = MODE_MAPPING.get(selectedMode.value) ?? 'final';
   chatQuery.messages = []
 }
 const checkDeepType = () => {
@@ -430,6 +433,9 @@ export function useShared() {
   const updateIsLaw = newName => {
     isLaw.value = newName
   }
+  const updateEnableBoardOffice = newName => {
+    enableBoardOffice.value = newName
+  }
   const updateContentType = newName => {
     contentType.value = newName
   }
@@ -556,6 +562,7 @@ export function useShared() {
     showModelTip,
     fileInputAry,
     isLaw,
+    enableBoardOffice,
     contentType,
     changeMode,
     updateCurrentIntel,
@@ -615,6 +622,7 @@ export function useShared() {
     updateFileAry,
     updateFileInputAry,
     updateIsLaw,
+    updateEnableBoardOffice,
     updateKnowSelect,
     updateDragUploads,
     updateIsDragOver,
