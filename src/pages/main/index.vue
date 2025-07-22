@@ -405,7 +405,7 @@
                           : imageA
                     "
                     class="arrow"
-                    v-if="(isNet && pageType === 'law') || pageType === 'board'"
+                    v-if="(isNet && ['law', 'board'].includes(pageType))"
                     @click="submitLawSend"
                   />
                 </div>
