@@ -815,7 +815,7 @@ const getFileAry = () => {
     }
     const obj = {
       fileId: fileAry.value[i].fileId.fileId ? fileAry.value[i].fileId.fileId : fileAry.value[i].fileId,
-      local: fileAry.value[i].fileId.local ? fileAry.value[i].fileId.local : fileAry.value[i].local
+      local: fileAry.value[i].fileId.local !== undefined ? fileAry.value[i].fileId.local : false
     }
 
     fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById', {
@@ -888,7 +888,7 @@ const getFile = () => {
   }
   const obj = {
     fileId: fileObj.value.fileId.fileId ? fileObj.value.fileId.fileId : fileObj.value.fileId,
-    local: fileObj.value.fileId.local === false ? fileObj.value.fileId.local : fileObj.value.local
+    local: fileObj.value.fileId.local !== undefined ? fileObj.value.fileId.local : false
   }
   // 使用 POST 请求（与后端 @PostMapping 匹配）
   fetch(import.meta.env.VITE_API_BASE_URL + '/Files/getFileById', {
