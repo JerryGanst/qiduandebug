@@ -75,7 +75,7 @@
   <div v-else class="create_main">
     <div v-if="intelList.length > 0" class="create_ask">
       <div class="main_content">
-        <div class="sample_item" ref="messageContainerIntel">
+        <div class="sample_item" ref="messageContainerIntel" @scroll="checkScrollPosition">
           <div class="content_title">{{ currentIntel.name }}</div>
           <div class="content_tip">
             <div class="content_robot"><img src="@/assets/robot.png" /></div>
@@ -219,6 +219,20 @@
               <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
             </div> -->
           </div>
+        </div>
+        <!-- 添加滚动到底部按钮 -->
+        <div
+          v-if="showScrollButton"
+          class="scroll-to-bottom"
+          :class="{'loading': isIntelLoad}"
+          @click="scrollToBottom"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 19V5M5 12l7 7 7-7" stroke="currentColor" stroke-width="2"/>
+          </svg>
+
+          <!-- 外围旋转圆环 - 只有在加载时显示 -->
+          <div v-if="isIntelLoad" class="loading-ring"></div>
         </div>
         <div class="query_common" v-if="!limitIntelLoading && intelQuery.messages.length > 0">
           <div>
@@ -413,6 +427,9 @@ const filePreRef = ref(null)
 const commonVisible = ref(false)
 const type = ref('create')
 const currentRequestUrl = ref('')
+const scrollPosition = ref(0) // 记录滚动位置
+const showScrollButton = ref(false) // 是否显示滚动按钮
+const userScrolledUp = ref(false) // 用户是否向上滚动
 let interval
 const placeholderText = ref(`# 设定
 你是一位营销文案奇才，擅长通过对话引导用户明确其产品或服务需求，并能创作出既幽默诙谐又信息准确、吸引力十足的广告语、宣传文案和社交媒体内容。
@@ -421,6 +438,26 @@ const placeholderText = ref(`# 设定
 ## 技能1：需求挖掘与沟通
 - 通过提问和互动，帮助用户清晰定义他们的产品特性和目标受众。
 - 识别用户的核心价值主张，并将其转化为文案的关键信息。`)
+const checkScrollPosition = () => {
+  if (!messageContainerIntel.value) return
+
+  const container = messageContainerIntel.value
+  const { scrollTop, scrollHeight, clientHeight } = container
+
+  // 更新滚动位置状态
+  scrollPosition.value = scrollTop
+
+  // 检查用户是否手动向上滚动
+  userScrolledUp.value = scrollHeight - scrollTop > clientHeight + 150
+
+  // 决定是否显示滚动按钮
+  if (isIntelLoad.value) {
+    // 流式输出过程中始终展示跳转到结尾按钮
+    showScrollButton.value = true
+  } else {
+    showScrollButton.value = userScrolledUp.value
+  }
+}
 
 const setInfo = id => {
   const anList = JSON.parse(JSON.stringify(answerListIntel.value))
@@ -717,12 +754,26 @@ const submitCommon = async () => {
 // 自动滚动
 const autoScroll = () => {
   nextTick(() => {
-    const container = document.querySelector('.message-container')
-    if (container) {
-      container.scrollTop = container.scrollHeight + 100
+    if (!messageContainerIntel.value || userScrolledUp.value) return
+
+    const container = messageContainerIntel.value
+    const { scrollHeight } = container
+
+    // 仅在用户靠近底部时自动滚动
+    container.scrollTop = scrollHeight
+  })
+}
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messageContainerIntel.value) {
+      messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
+      userScrolledUp.value = false
+      showScrollButton.value = false
     }
   })
 }
+
 const quickJSONCheck = str => {
   if (typeof str !== 'string') return false
   str = str.trim()
@@ -891,9 +942,7 @@ const submitSample = async (val, isRefresh) => {
         const jsonMatch = chunk.match(/data:\s*({[\s\S]*?})(?=\ndata:|\n\n|$)/)
         // 2. 添加条件判断包裹
         if (jsonMatch) {
-          if (messageContainerIntel.value) {
-            messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
-          }
+          autoScroll()
           try {
             const { content } = JSON.parse(jsonMatch[1])
 
@@ -1142,6 +1191,52 @@ onUnmounted(() => {
 })
 </script>
 <style lang="less" scoped>
+.scroll-to-bottom {
+  position: absolute;
+  right: 30px;
+  bottom: 120px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #1B6CFF;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(27, 108, 255, 0.3);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+/* 旋转圆环 */
+.loading-ring {
+  position: absolute;
+  width: 52px; /* 比按钮稍大一些 */
+  height: 52px; /* 比按钮稍大一些 */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid #66c7d8;
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.scroll-to-bottom:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(27, 108, 255, 0.4);
+}
+
+.scroll-to-bottom svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
 .query_common {
   margin-top: 20px;
   width: 100%;
