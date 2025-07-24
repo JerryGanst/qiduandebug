@@ -196,8 +196,11 @@
         <div v-else-if="previewType === 'pptx'" style="width: 100%; height: 100%">
           <vue-office-pptx :src="previewContent" style="height: 620px" />
         </div>
-        <div v-else-if="previewType === 'excel'" style="width: 1190px;height: 100%" >
-          <vue-office-excel :src="previewContent" />
+        <div v-else-if="previewType === 'excel'" style="width: 1192px;height: 100%" >
+          <vue-office-excel
+            :src="previewContent"
+            :options="{beforeTransformData, xls: isXls}"
+          />
         </div>
         <div v-else class="unsupported-preview">暂不支持此格式预览</div>
       </div>
@@ -250,6 +253,7 @@ import sort from '@/assets/sort.png'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import request from '@/utils/request' // 导入封装的 axios 方法
 import { Search } from '@element-plus/icons-vue'
+import {beforeTransformData} from "@/utils/common.js";
 
 const searchText = ref('')
 const dialogVisible = ref(false)
@@ -268,6 +272,7 @@ const totals = ref(100)
 const isCollapsed = ref(false)
 const loading = ref(false)
 const fileLoading = ref(false)
+const isXls = ref(false)
 const knowOptions = ref([
   {
     value: 1,
@@ -545,62 +550,16 @@ const handlePreview = async file => {
       // 例如在onUnmounted或关闭弹窗的方法中调用 URL.revokeObjectURL(pdfUrl)
     } else if (['pptx', 'ppt'].includes(file.extension)) {
       // 新增：处理PPT文件
-      const arrayBuffer = await file.raw.arrayBuffer()
-      previewContent.value = arrayBuffer // 直接传递ArrayBuffer
+      previewContent.value = await file.raw.arrayBuffer() // 直接传递ArrayBuffer
       previewType.value = 'pptx' // 标识为PPT类型
-      previewFileId.value = 123
     } else if (['xlsx', 'xls'].includes(file.extension)) {
-      if (file.size / 1024 / 1024 > 10) {
-        // 新增：处理Excel文件
-        const arrayBuffer = await file.raw.arrayBuffer()
-
-        // 使用xlsx库处理Excel文件
-        const XLSX = await import('xlsx')
-        const workbook = XLSX.read(arrayBuffer, {
-          type: 'array',
-          sheetRows: 10 // 限制读取前10行
-        })
-
-        // 获取第一个工作表
-        const firstSheetName = workbook.SheetNames[0]
-        const worksheet = workbook.Sheets[firstSheetName]
-
-        // 转换为JSON格式（包含表头）
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-          header: 1, // 包含标题行
-          defval: '', // 空单元格默认值
-          range: 0 // 从第一行开始
-        })
-
-        // 提取前10行前2列
-        const previewData = jsonData
-          .slice(0, 10) // 前10行
-          .map(row => [
-            row[0] || '', // 第一列（记录ID）
-            row[1] || '', // 第二列（用户ID）
-            row[2] || '', // 第二列（用户ID）
-            row[3] || '', // 第二列（用户ID）
-            row[4] || '' // 第二列（用户ID）
-          ])
-
-        // 创建新的工作簿只包含前10行前2列
-        const newWorkbook = XLSX.utils.book_new()
-        const newWorksheet = XLSX.utils.aoa_to_sheet(previewData)
-        XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, 'Preview')
-
-        // 转换为Blob供vue-office-excel使用
-        const excelBlob = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'array' })
-        previewContent.value = new Blob([excelBlob], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        })
-        previewType.value = 'excel' // 标识为Excel类型
-        previewFileId.value = 123
+      if (file.extension === 'xls') {
+        isXls.value = true
       } else {
-        const arrayBuffer = await file.raw.arrayBuffer()
-        previewContent.value = arrayBuffer // 直接传递ArrayBuffer
-        previewType.value = 'excel' // 标识为Excel类型
-        previewFileId.value = 123
+        isXls.value = false
       }
+      previewContent.value = await file.raw.arrayBuffer() // 直接传递ArrayBuffer
+      previewType.value = 'excel' // 标识为Excel类型
     } else {
       previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'
