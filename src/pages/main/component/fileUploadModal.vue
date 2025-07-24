@@ -655,6 +655,7 @@ const handlePreview = async file => {
       previewType.value = 'pptx' // 标识为PPT类型
     } else if (['xlsx', 'xls'].includes(file.extension)) {
       isXls.value = file.extension === 'xls';
+      previewContent.value = ''
       previewContent.value = await file.raw.arrayBuffer() // 直接传递ArrayBuffer
       previewType.value = 'excel' // 标识为Excel类型
     }  else {
