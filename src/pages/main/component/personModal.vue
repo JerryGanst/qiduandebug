@@ -285,7 +285,7 @@ const knowOptions = ref([
 ])
 
 // 常量定义
-const allowedFileTypes = '.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx'
+const allowedFileTypes = '.doc,.docx,.txt,.pdf,.pptx,.ppt,.xls,.xlsx'
 const activeIndex = ref(0)
 const nameSort = ref(false)
 const timeSort = ref(false)
