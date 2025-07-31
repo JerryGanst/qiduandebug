@@ -625,7 +625,7 @@ const displayMessage = async message => {
 
 // 获取第一次对话的标题
 let finalTitle = ref('')
-const postSample = async (agentId, mes) => {
+const postSample = async (agentId, mes, tempChatId) => {
   let num = parseInt(sessionStorage.getItem('count'))
   num = num + 1
   sessionStorage.setItem('count', num)
@@ -633,8 +633,8 @@ const postSample = async (agentId, mes) => {
   if (intelCurrent.messages && intelCurrent.messages.length > 0) {
     finalTitle.value = intelCurrent.messages[0].content || ''
   }
-  if (conversationId.value) {
-    let chatResults = await getAgentChatByChatId(conversationId.value)
+  if (tempChatId) {
+    let chatResults = await getAgentChatByChatId(tempChatId)
     if (chatResults.status) {
       if (chatResults.data?.title) {
         finalTitle.value = chatResults.data?.title
@@ -643,7 +643,7 @@ const postSample = async (agentId, mes) => {
   }
   let saveAgentResult = await saveAgentChat({
     userId: userInfo.id,
-    id: conversationId.value,
+    id: tempChatId,
     agentId: agentId,
     messages: mes,
     title: finalTitle.value
@@ -752,6 +752,9 @@ const quickJSONCheck = str => {
   return (str.startsWith('{') && str.endsWith('}')) || (str.startsWith('[') && str.endsWith(']'))
 }
 const submitSample = async (val, isRefresh) => {
+  // 提交的一瞬间使用临时变量保存当前对话ID
+  let tempChatId = conversationId.value
+
   const fileInput = fileInputAry.value
   if (fileInput.length === 0 || !fileInput) {
     if (!checkIntelData(val)) {
@@ -895,7 +898,7 @@ const submitSample = async (val, isRefresh) => {
             // messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
           }
         })
-        postSample(agentId, query)
+        postSample(agentId, query, tempChatId)
         break
       }
       buffer += decoder.decode(value, { stream: true })
