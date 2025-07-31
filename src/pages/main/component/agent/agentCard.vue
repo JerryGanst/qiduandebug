@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import {ElMessage} from "element-plus";
 import AgentActions from './agentActions.vue'
+import aiImg from '@/assets/agent/ai.png'
 
 const props = defineProps<{
   agentId: string | number;
@@ -13,7 +13,7 @@ const props = defineProps<{
 const showActions = ref(false);
 const showMoreTips = ref(false); // 新增：控制提示框显示状态
 const aiImage = computed(() => {
-  return props.imgUrl || 'src/assets/agent/ai.png'
+  return props.imgUrl || aiImg
 });
 
 // 新增：切换提示框显示状态
