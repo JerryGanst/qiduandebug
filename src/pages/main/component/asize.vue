@@ -1,31 +1,49 @@
 <template>
-  <el-aside :width="isCollapsed ? '60px' : '280px'" class="aside">
+  <el-aside :width="sidebarWidth" class="aside">
     <div class="aside_left">
       <img class="aside_left_img" src="@/assets/logo.png" />
-      <div class="aside_left_message" @click="changeContent(1)">
-        <div class="aside_img" :style="{ backgroundColor: selectType === 1 ? '#E6F4FF' : '#F7F7F7' }">
-          <img :src="selectType === 1 ? messageBlue : messageGray" />
+      <div class="aside_left_message" @click="changeContent(ContentType.CONVERSATION)">
+        <div
+          class="aside_img"
+          :style="{ backgroundColor: selectType === ContentType.CONVERSATION ? '#E6F4FF' : '#F7F7F7' }"
+        >
+          <img :src="selectType === ContentType.CONVERSATION ? messageBlue : messageGray" />
         </div>
-        <div class="aside_message_text" :style="{ color: selectType === 1 ? '#1B6CFF' : '#9D9D9D' }">对话</div>
+        <div
+          class="aside_message_text"
+          :style="{ color: selectType === ContentType.CONVERSATION ? '#1B6CFF' : '#9D9D9D' }"
+        >
+          对话
+        </div>
       </div>
 
-      <div class="aside_left_file" v-if="isPowerFile" @click="changeContent(2)">
-        <div class="aside_img" :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }">
+      <div class="aside_left_file" v-if="isPowerFile" @click="changeContent(ContentType.KNOWLEDGE)">
+        <div
+          class="aside_img"
+          :style="{ backgroundColor: selectType === ContentType.KNOWLEDGE ? '#E6F4FF' : '#F7F7F7' }"
+        >
           <img
-            :src="selectType === 2 ? fileBlue : fileGray"
-            :style="{ backgroundColor: selectType === 2 ? '#E6F4FF' : '#F7F7F7' }"
+            :src="selectType === ContentType.KNOWLEDGE ? fileBlue : fileGray"
+            :style="{ backgroundColor: selectType === ContentType.KNOWLEDGE ? '#E6F4FF' : '#F7F7F7' }"
           />
         </div>
-        <div class="aside_message_text" :style="{ color: selectType === 2 ? '#1B6CFF' : '#9D9D9D' }">知识库</div>
+        <div
+          class="aside_message_text"
+          :style="{ color: selectType === ContentType.KNOWLEDGE ? '#1B6CFF' : '#9D9D9D' }"
+        >
+          知识库
+        </div>
       </div>
-      <div class="aside_left_file" @click="changeContent(3)" style="top: 225px">
-        <div class="aside_img" :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }">
+      <div class="aside_left_file" @click="changeContent(ContentType.AGENT)" style="top: 225px">
+        <div class="aside_img" :style="{ backgroundColor: selectType === ContentType.AGENT ? '#E6F4FF' : '#F7F7F7' }">
           <img
-            :src="selectType === 3 ? IntelligenceBlue : IntelligenceGray"
-            :style="{ backgroundColor: selectType === 3 ? '#E6F4FF' : '#F7F7F7' }"
+            :src="selectType === ContentType.AGENT ? IntelligenceBlue : IntelligenceGray"
+            :style="{ backgroundColor: selectType === ContentType.AGENT ? '#E6F4FF' : '#F7F7F7' }"
           />
         </div>
-        <div class="aside_message_text" :style="{ color: selectType === 3 ? '#1B6CFF' : '#9D9D9D' }">智能体</div>
+        <div class="aside_message_text" :style="{ color: selectType === ContentType.AGENT ? '#1B6CFF' : '#9D9D9D' }">
+          智能体
+        </div>
       </div>
 
       <div class="user-avatar-container" v-if="isLogin">
@@ -66,11 +84,12 @@
         width: isCollapsed ? '0px' : '220px',
         borderRight: isCollapsed ? 'none' : '2px solid #EAEAEA'
       }"
+      v-if="selectType !== ContentType.AGENT || isAgentDetail"
     >
       <!-- <div class="aside_right_content">
         <img src="@/assets/lux.png" />
       </div> -->
-      <div class="asize_message" v-if="selectType === 1">
+      <div class="asize_message" v-if="selectType === ContentType.CONVERSATION">
         <div class="aside_right_btn">
           <div @click="startNewConversation" class="back_set">
             {{ isCollapsed ? '' : '开启新对话' }}
@@ -150,7 +169,7 @@
           </el-menu-item>
         </el-menu>
       </div>
-      <div class="asize_file" v-if="selectType === 2">
+      <div class="asize_file" v-if="selectType === ContentType.KNOWLEDGE">
         <div
           class="asize_know"
           @click="changeFileModel(1)"
@@ -188,10 +207,10 @@
           </div>
         </div>
       </div>
-      <div class="asize_message" v-if="selectType === 3">
+      <div class="asize_message" v-if="selectType === ContentType.AGENT">
         <div class="aside_right_btn" style="display: flex">
-          <div class="intel_img"><img src="@/assets/robot.png" /></div>
-          <span class="intel_title">我的智能体</span>
+          <div class="intel_img" @click="backToAgentList"><img src="@/assets/agent/back.png" /></div>
+          <span class="intel_title">{{ currentIntel.name }}</span>
         </div>
         <div style="width: 190px; margin-left: 10px; margin-top: 5px">
           <el-input
@@ -208,30 +227,30 @@
         </div>
         <el-menu :default-active="activeIndexIntel" class="el_menu" style="margin-top: 10px">
           <el-menu-item
-            v-for="(question, index) in intelList"
-            :key="index"
+            v-for="(chat, index) in agentChatList"
+            :key="chat.agentChatId"
             style="position: relative"
             @mouseenter="() => handleHoverIntel(index, true)"
             @mouseleave="() => handleHoverIntel(index, false)"
           >
             <el-tooltip
-              :content="question"
-              placement="right"
+              :content="chat.title"
+              placement="top-end"
+              effect="light"
               popper-class="custom-tooltip"
-              :disabled="popoverVisibleIntel[index]"
             >
               <span
-                @click="querySelectIntel(question, index)"
+                @click="querySelectIntel(chat.agentChatId, index)"
                 :class="{ 'active-span': activeIndexIntel == index.toString() }"
                 :style="{ width: hoverStatesIntel[index] ? '165px' : '180px' }"
               >
-                {{ isCollapsed ? 'Q' : question }}
+                {{ isCollapsed ? 'Q' : chat.title }}
               </span>
             </el-tooltip>
             <el-popover
               v-model:visible="popoverVisibleIntel[index]"
               popper-class="right-aligned-popover"
-              placement="right"
+              placement="top-end"
               :popper-options="{
                 modifiers: [
                   {
@@ -259,7 +278,7 @@
                   cancel-button-text="取消"
                   icon="el-icon-warning"
                   icon-color="red"
-                  @confirm="handleConfirmDeleteIntel(question, index)"
+                  @confirm="handleConfirmDeleteIntel(chat.agentChatId)"
                 >
                   <template #reference>
                     <div class="edit_img delete_img">
@@ -268,19 +287,29 @@
                     </div>
                   </template>
                 </el-popconfirm>
-                <div class="edit_img rename_img" @click="handleEditIntel(question, index)">
+                <div class="edit_img rename_img" @click="handleEditIntel(chat.title, chat.agentChatId, index)">
                   <img src="@/assets/edit.png" class="aside_right_img" />
-                  <div style="width: 60px; text-align: left; margin-left: 6px">编辑</div>
+                  <div style="width: 60px; text-align: left; margin-left: 6px">重命名</div>
                 </div>
               </div>
             </el-popover>
           </el-menu-item>
         </el-menu>
-        <div class="create_intel" @click="createIntel" v-if="!isCreate">创建智能体</div>
+        <div class="create_conversation">
+          <div class="create_conversation_btn" @click="createNewConversation">
+            <img src="@/assets/agent/addconversation.png" />
+            <span>新建对话</span>
+          </div>
+        </div>
+        <!--        <div class="create_intel" @click="createIntel" v-if="!isCreate">创建智能体</div>-->
       </div>
     </div>
   </el-aside>
-  <div class="foldable" :style="{ left: isCollapsed ? '70px' : '290px' }">
+  <div
+    class="foldable"
+    v-show="selectType !== ContentType.AGENT || isAgentDetail"
+    :style="{ left: isCollapsed ? '70px' : '290px' }"
+  >
     <img :src="isCollapsed ? right : left" @click="toggleCollapse" />
   </div>
   <el-dialog v-model="dialogVisible" title="" width="400px" :before-close="handleClose" style="border-radius: 10px">
@@ -344,7 +373,7 @@
   </el-dialog>
   <el-dialog
     v-model="titleVisibleIntel"
-    title="编辑智能体名称"
+    title="编辑智能体对话"
     width="500px"
     :before-close="handleTitleCloseIntel"
     style="border-radius: 10px"
@@ -369,6 +398,7 @@
 <script setup>
 import { ref, onMounted, computed, nextTick, reactive, watch } from 'vue'
 import { useShared } from '@/utils/useShared'
+import { ContentType } from '@/utils/common'
 import { ElButton, ElDivider, ElMessage, ElPopover } from 'element-plus' // 引入 ElMessage
 import { networkState } from '@/utils/net'
 import { encryptData } from '@/utils/rsa'
@@ -396,7 +426,8 @@ import lawGray from '@/assets/law_gray.png'
 import lawBlue from '@/assets/law_blue.png'
 import IntelligenceGray from '@/assets/​​Intel_gray.png'
 import IntelligenceBlue from '@/assets/​​Intel_blue.png'
-import request from '@/utils/request' // 导入封装的 axios 方法
+import request from '@/utils/request'
+import { changeAgentChatTitle, removeAgentChatById } from '@/api/agent/actions.js' // 导入封装的 axios 方法
 // import commonModal from './commonUploadModal.vue'
 const isCollapsed = ref(false) // 左上角折叠控制
 const showPopup = ref(false) // 是否展示左下角用户信息弹窗
@@ -417,6 +448,7 @@ const isPowerFile = ref(true)
 const searchTextIntel = ref('')
 const hoverStates = ref({}) // 悬停状态
 const hoverStatesIntel = ref({})
+const currentAgentChatId = ref('')
 const {
   currentQuestion,
   newQuestion,
@@ -472,7 +504,10 @@ const {
   intelQuestion,
   isIntelStop,
   drayAry,
-  currentIntelId
+  currentIntelId,
+  isAgentDetail,
+  agentChatList,
+  conversationId
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -510,6 +545,10 @@ const handleTitleClose = done => {
 const handleTitleCloseIntel = done => {
   // 这里可以添加一些关闭前的逻辑
   done()
+}
+
+const createNewConversation = () => {
+  eventBus.emit('createNewConversation')
 }
 
 const popoverVisible = reactive({})
@@ -578,6 +617,8 @@ const handleClick = (param, e) => {
   // e.stopPropagation() // 正确获取事件对象
 }
 const changeContent = val => {
+  isAgentDetail.value = false
+  conversationId.value = ''
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return false
@@ -636,19 +677,22 @@ const handleEdit = (val, index) => {
   titleQuestion.value = val
   titleIndex.value = index
 }
-const handleEditIntel = (val, index) => {
-  eventBus.emit('setInfo', {
-    param1: 'edit',
-    param2: val
-  })
+const handleEditIntel = (val, agentChatId, index) => {
+  titleVisibleIntel.value = true
+  titleQuestionIntel.value = val
+  titleIndexIntel.value = index
+  currentAgentChatId.value = agentChatId
 }
 
-const submitTitleIntel = val => {
-  let params = titleQuestionIntel.value
-  intelList.value[titleIndexIntel.value] = params
-  answerListIntel.value[titleIndexIntel.value].title = params
+const submitTitleIntel = async() => {
+  let changeTitleResult = await changeAgentChatTitle(currentAgentChatId.value, titleQuestionIntel.value)
+  if (changeTitleResult.status) {
+    ElMessage.success('修改成功')
+    eventBus.emit('getHistoryData')
+  } else {
+    ElMessage.error(changeTitleResult.message)
+  }
   titleVisibleIntel.value = false
-  changeTitleIntel(answerListIntel.value[titleIndexIntel.value].id, params)
 }
 const submitTitle = val => {
   const result = extractLastBracket(questions.value[titleIndex.value]) // 输出：状态:正常
@@ -750,19 +794,19 @@ const handleSelectIntel = index => {
 
 // 点击开启新对话
 const startNewConversation = () => {
-  currentQuestion.value = ''
-  newQuestion.value = ''
-  tipQuery.value = ''
-  dynamicRows.value = 1
-  activeIndex.value = ''
-  currentIndex.value = ''
-  chatQuery.messages = []
-  chatQuery.isLoading = false
-  fileObj.value = ''
-  fileAry.value = ''
-  currentId.value = ''
-  pageType.value = 'sample'
-  selectedMode.value = '通用模式'
+  currentQuestion.value = '' // 清空当前问题输入框的内容
+  newQuestion.value = '' // 清空临时存储的新问题
+  tipQuery.value = '' // 清除输入框的提示文本
+  dynamicRows.value = 1 // 重置输入框行数为单行
+  activeIndex.value = '' // 取消左侧历史记录的高亮选中状态
+  currentIndex.value = '' // 清空当前对话的索引标识
+  chatQuery.messages = [] // 清空当前对话的消息数组
+  chatQuery.isLoading = false // 关闭消息加载状态
+  fileObj.value = '' // 清除单个文件对象
+  fileAry.value = '' // 清空文件数组
+  currentId.value = '' // 清空当前对话的唯一ID
+  pageType.value = 'sample' // 设置页面类型为通用模式
+  selectedMode.value = '通用模式' // 更新模式选择器显示文本
 }
 // 点击退出登录
 const handleLogout = () => {
@@ -773,7 +817,7 @@ const handleLogout = () => {
   localStorage.setItem('enableBoardOffice', false)
 
   localStorage.setItem('powerList', [])
-  selectType.value = 1
+  selectType.value = ContentType.CONVERSATION
   contentType.value = 1
   // isPowerFile.value = false
   questions.value = []
@@ -814,13 +858,15 @@ const handleClose = done => {
   done()
 }
 
-const handleConfirmDeleteIntel = (val, index) => {
-  let id = ''
-  const anList = JSON.parse(JSON.stringify(answerListIntel.value))
-  for (var i = 0; i < anList.length; i++) {
-    id = anList[index].id
+const handleConfirmDeleteIntel = async(agentChatId) => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  let deleteAgentChatResult = await removeAgentChatById(agentChatId, userInfo.id)
+  if (deleteAgentChatResult.status) {
+    eventBus.emit('getHistoryData', '')
+    ElMessage.success('删除成功')
+  } else {
+    ElMessage.error(deleteAgentChatResult.message)
   }
-  deleteDataIntel(id)
 }
 // 点击确定删除历史记录
 const handleConfirmDelete = (val, index) => {
@@ -851,20 +897,7 @@ const handleConfirmDelete = (val, index) => {
   }
   deleteData(id)
 }
-const deleteDataIntel = async (id, isRefresh) => {
-  request
-    .post('/Agent/deleteAgentById?agentId=' + id, {})
-    .then(res => {
-      if (res.status) {
-        if (!isRefresh) {
-          eventBus.emit('getHistoryData', '')
-        }
-      }
-    })
-    .catch(err => {
-      console.error(err)
-    })
-}
+
 // 删除数据
 const deleteData = async (id, isRefresh) => {
   // GET 请求
@@ -895,9 +928,9 @@ const querySelect = (val, index) => {
   activeIndex.value = index
   queryAn(val, index)
 }
-const querySelectIntel = (val, index) => {
+const querySelectIntel = (agentChatId, index) => {
   activeIndexIntel.value = index
-  queryAnIntel(val, index)
+  queryAnIntel(agentChatId, index)
 }
 // 搜索方法
 const searchData = () => {
@@ -917,22 +950,13 @@ const getMatchingIndexes = (arr1, val) => {
   }
 }
 
-const queryAnIntel = (val, index) => {
+const queryAnIntel = (agentChatId) => {
   intelQuestion.value = ''
   isIntelStop.value = false
   limitIntelLoading.value = false
-  val = index || index === 0 ? intelList.value[index] : val
-  const queryList = intelList.value
-  const anList = JSON.parse(JSON.stringify(answerListIntel.value))
-  const querySample = []
 
   fileInputAry.value = []
-  const id = anList[index].id
-  currentIntelId.value = id
-  eventBus.emit('changeInfo', id)
-  eventBus.emit('getRecord', id)
-
-  eventBus.emit('closeIntel')
+  eventBus.emit('getChatByAgentChatId', agentChatId)
 }
 // 点击切换左侧栏，控制左侧栏和右侧面板的数据
 const queryAn = (val, index, data) => {
@@ -1227,6 +1251,7 @@ const getPower = () => {
     })
 }
 onMounted(() => {
+  eventBus.on('showAgentChatList', showAgentChatList)
   if (localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).id) {
     isLogin.value = true
     const loginData = JSON.parse(localStorage.getItem('userInfo'))
@@ -1271,6 +1296,25 @@ const processedQuerys = computed(() => {
     return query.replace(/\([^)]*\)/g, '')
   })
 })
+
+const COLLAPSED_WIDTH = '60px' // 声明为常量的折叠宽度
+const EXPANDED_WIDTH = '280px' // 声明为常量的展开宽度
+const sidebarWidth = computed(() => {
+  // 不是智能体对话折叠
+  return (selectType.value === ContentType.AGENT && !isAgentDetail.value) || isCollapsed.value
+    ? COLLAPSED_WIDTH
+    : EXPANDED_WIDTH
+})
+
+const showAgentChatList = chatList => {
+  isAgentDetail.value = true
+}
+const backToAgentList = () => {
+  isAgentDetail.value = false
+  conversationId.value = ''
+  eventBus.emit('backToAgentList')
+}
+
 // 监听网络类型变化
 watch(
   () => networkState.networkType,
@@ -1491,6 +1535,34 @@ defineExpose({ queryAn, deleteData, setPower })
         height: 100%;
       }
     }
+    .create_conversation {
+      margin-left: 10px;
+      width: 198px;
+      height: 96px;
+      position: absolute;
+      border-top: 1px solid #ccc;
+      box-sizing: border-box;
+      bottom: 23px;
+      .create_conversation_btn {
+        cursor: pointer;
+        position: absolute;
+        bottom: 19px;
+        width: 180px;
+        height: 48px;
+        text-align: center;
+        line-height: 48px;
+        img {
+          vertical-align: middle;
+          width: 24px;
+          height: 24px;
+          margin-right: 8px;
+        }
+        span {
+          vertical-align: middle;
+          color: #1b6cff;
+        }
+      }
+    }
     .create_intel {
       width: 140px;
       display: flex;
@@ -1514,19 +1586,23 @@ defineExpose({ queryAn, deleteData, setPower })
     .aside_right_btn {
       padding: 22px 10px 10px 10px;
       .intel_img {
-        width: 32px !important;
-        height: 32px !important;
+        cursor: pointer;
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 16px;
+        border: 1.5px solid #1b6cff;
+        box-sizing: border-box;
+        padding-left: 5px;
         img {
-          width: 100%;
-          height: 100%;
-          float: left;
+          width: 15.89px;
+          height: 12.04px;
         }
       }
       .intel_title {
         color: #333333;
         font-size: 16px;
         padding-left: 12px;
-        line-height: 32px;
+        line-height: 28px;
       }
       .back_set {
         background-image: url('@/assets/start.png');
