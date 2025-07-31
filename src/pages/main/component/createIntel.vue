@@ -624,21 +624,29 @@ const displayMessage = async message => {
 }
 
 // 获取第一次对话的标题
-let firstTitle = ref('')
+let finalTitle = ref('')
 const postSample = async (agentId, mes) => {
   let num = parseInt(sessionStorage.getItem('count'))
   num = num + 1
   sessionStorage.setItem('count', num)
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   if (intelCurrent.messages && intelCurrent.messages.length > 0) {
-    firstTitle.value = intelCurrent.messages[0].content || ''
+    finalTitle.value = intelCurrent.messages[0].content || ''
+  }
+  if (conversationId.value) {
+    let chatResults = await getAgentChatByChatId(conversationId.value)
+    if (chatResults.status) {
+      if (chatResults.data?.title) {
+        finalTitle.value = chatResults.data?.title
+      }
+    }
   }
   let saveAgentResult = await saveAgentChat({
     userId: userInfo.id,
     id: conversationId.value,
     agentId: agentId,
     messages: mes,
-    title: firstTitle.value
+    title: finalTitle.value
   })
   if (saveAgentResult.status) {
     conversationId.value = saveAgentResult.data.id
