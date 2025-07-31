@@ -92,6 +92,7 @@ import { ElMessage } from 'element-plus'
 import { getAgentImgByObj } from '@/api/agent/actions.js'
 import { PageType } from '../../../../utils/common.js'
 import {watchEffect} from "vue-demi";
+import headImg from '@/assets/agent/head.png'
 
 let props = defineProps({
   formIntel: Object,
@@ -165,7 +166,7 @@ const beforeAvatarUpload = (rawFile) => {
 }
 
 const uploadUrl = ref(import.meta.env.VITE_API_BASE_URL + '/Agent/uploadPic')
-let headImgUrl = ref('src/assets/agent/head.png')
+let headImgUrl = ref(headImg)
 
 
 watchEffect(() => {
@@ -178,7 +179,7 @@ watchEffect(() => {
   }
   // 如果用户上传了图片，则显示默认头像
   if (finishedUploadHead.value) {
-    headImgUrl.value = 'src/assets/agent/head.png'
+    headImgUrl.value = headImg
   }
 })
 </script>
