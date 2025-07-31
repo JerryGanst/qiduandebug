@@ -565,7 +565,7 @@ const cancelCurrentRequest = async val => {
   // }
   const id = recordId.value
   const agentId = currentIntelId.value
-  postSample(agentId, mes)
+  postSample(agentId, mes, tempChatId)
   // limitIntelId.value = ''
 }
 const isObject = variable => {
@@ -751,9 +751,10 @@ const quickJSONCheck = str => {
   str = str.trim()
   return (str.startsWith('{') && str.endsWith('}')) || (str.startsWith('[') && str.endsWith(']'))
 }
+let tempChatId
 const submitSample = async (val, isRefresh) => {
   // 提交的一瞬间使用临时变量保存当前对话ID
-  let tempChatId = conversationId.value
+  tempChatId = conversationId.value
 
   const fileInput = fileInputAry.value
   if (fileInput.length === 0 || !fileInput) {
