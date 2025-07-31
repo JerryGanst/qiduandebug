@@ -13,6 +13,7 @@ const limitTranLoading = ref(false)
 const limitQueryLoading = ref(false)
 const questions = ref([]) // 左侧历史记录标题数组
 const intelList = ref([])
+const agentChatList = ref([])
 const answerList = ref([]) //历史记录数组
 const selectType = ref(1)
 const isTranStop = ref(false)
@@ -27,6 +28,8 @@ const currentIntel = ref({
 })
 const isCreate = ref(false)
 const contentType = ref(1)
+// 判断是否是智能体对话详情页
+const isAgentDetail = ref(false)
 const currentId = ref('') // 左侧历史记录当前选中的id
 const pageType = ref('sample') // 当前页面类型
 const selectedMode = ref('通用模式') // 模式
@@ -145,6 +148,7 @@ const knowSelect = ref(1)
 const fileInputAry = ref([])
 const isDragOver = ref(false)
 const isIntelStop = ref(false)
+const conversationId = ref('') // 保存填入对话ID
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -254,6 +258,9 @@ export function useShared() {
   const updateIsIntelStop = newName => {
     isIntelStop.value = newName
   }
+  const updateConversationId = newName => {
+    conversationId.value = newName
+  }
 
   const updateIsQueryStop = newName => {
     isQueryStop.value = newName
@@ -273,6 +280,9 @@ export function useShared() {
   }
   const updateIntelList = newName => {
     intelList.value = newName
+  }
+  const updateAgentChatList = newName => {
+    agentChatList.value = newName
   }
   const updateAnswerList = newName => {
     answerList.value = newName
@@ -439,6 +449,9 @@ export function useShared() {
   const updateContentType = newName => {
     contentType.value = newName
   }
+  const updateIsAgentDetail= newName => {
+    isAgentDetail.value = newName
+  }
   const updateKnowSelect = newName => {
     knowSelect.value = newName
   }
@@ -497,6 +510,7 @@ export function useShared() {
     currentIntelId,
     isSampleStop,
     isIntelStop,
+    conversationId,
     isQueryStop,
     drayAry,
     isDragOver,
@@ -512,6 +526,7 @@ export function useShared() {
     questions,
     loadingId,
     intelList,
+    agentChatList,
     answerList,
     answerListIntel,
     intelCurrent,
@@ -564,9 +579,11 @@ export function useShared() {
     isLaw,
     enableBoardOffice,
     contentType,
+    isAgentDetail,
     changeMode,
     updateCurrentIntel,
     updateIsIntelStop,
+    updateConversationId,
     updateCurrentQuestion,
     updateLimitFinalFile,
     updateLimitTranId,
@@ -627,9 +644,11 @@ export function useShared() {
     updateDragUploads,
     updateIsDragOver,
     updateIntelList,
+    updateAgentChatList,
     updateActiveIndexIntel,
     updateIsCreate,
     updateContentType,
+    updateIsAgentDetail,
     updateIsNet,
     updateIntelQuestion,
     updateCurrentTip,

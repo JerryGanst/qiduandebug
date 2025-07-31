@@ -1,86 +1,15 @@
 <template>
-  <div class="create_main" v-if="isCreate">
-    <div class="create_title">
-      <span class="create_back" @click="cancelIntel"><img src="@/assets/return.png" /></span>
-      <span style="padding-left: 12px">{{ type === 'edit' ? '编辑智能体' : '创建智能体' }}</span>
-    </div>
-    <div class="create_content">
-      <div class="create_name">
-        <div class="create_text">
-          <span style="color: #ff4d4f">*</span>
-          <span style="padding-left: 5px">智能体名称</span>
-        </div>
-        <div class="create_input">
-          <el-input placeholder="给您的智能体取个名字吧" style="width: 100%" v-model="formIntel.name" maxlength="15">
-            <template #suffix>
-              <span class="char-counter">{{ formIntel.name.length }}/15</span>
-            </template>
-          </el-input>
-        </div>
-      </div>
-      <div class="create_name" style="margin-top: 20px">
-        <div class="create_text">
-          <span style="color: #ff4d4f">*</span>
-          <span style="padding-left: 5px">智能体应该扮演什么角色</span>
-        </div>
-        <div class="create_input">
-          <el-input placeholder="输入你的角色" style="width: 100%" v-model="formIntel.nickName" maxlength="15">
-            <template #suffix>
-              <span class="char-counter">{{ formIntel.nickName.length }}/15</span>
-            </template>
-          </el-input>
-        </div>
-      </div>
-      <div class="create_name" style="margin-top: 20px">
-        <div class="create_text">
-          <span style="padding-left: 5px">智能体和您对话时的语气</span>
-        </div>
-        <div class="create_input">
-          <el-input
-            placeholder="给你的智能体设定一个语气吧"
-            style="width: 100%"
-            v-model="formIntel.tone"
-            maxlength="15"
-          >
-            <template #suffix>
-              <span class="char-counter">{{ formIntel.tone.length }}/15</span>
-            </template>
-          </el-input>
-        </div>
-      </div>
-      <div class="create_set">
-        <div @click="addIntel" :class="isComputed ? 'create_loading' : 'create_ai'">
-          {{ isComputed ? '停止' : '智能补充' }}
-        </div>
-        <div class="create_text">
-          <span style="color: #ff4d4f">*</span>
-          <span style="padding-left: 5px">设定</span>
-        </div>
-        <div class="create_input">
-          <el-input
-            :placeholder="placeholderText"
-            style="width: 100%; white-space: pre; font-family: monospace"
-            v-model="formIntel.description"
-            type="textarea"
-          ></el-input>
-        </div>
-      </div>
-      <div class="create_btn">
-        <div class="create_cancel" @click="cancelIntel">取消</div>
-        <div class="create_confirm" @click="createData()" v-if="type === 'create'">创建</div>
-        <div class="create_confirm" @click="createData('edit')" v-if="type === 'edit'">保存</div>
-      </div>
-    </div>
-  </div>
-  <div v-else class="create_main">
-    <div v-if="intelList.length > 0" class="create_ask">
+  <div class="create_main">
+    <!-- 临时去掉条件intelList.length > 0 -->
+    <div class="create_ask">
       <div class="main_content">
         <div class="sample_item" ref="messageContainerIntel" @scroll="checkScrollPosition">
-          <div class="content_title">{{ currentIntel.name }}</div>
           <div class="content_tip">
             <div class="content_robot"><img src="@/assets/robot.png" /></div>
             <div class="tip_text">
-              Hi,我是你创建的智能体{{ currentIntel.name }},在这段对话中，我将扮演{{ currentIntel.role }}的角色
+              Hi,我是你创建的
+              <span :style="{ fontWeight: 600 }">{{ currentIntel.name }}</span>
+              , 我将为你生成灵感，设计独属于你的风格。
             </div>
           </div>
           <div
@@ -221,14 +150,9 @@
           </div>
         </div>
         <!-- 添加滚动到底部按钮 -->
-        <div
-          v-if="showScrollButton"
-          class="scroll-to-bottom"
-          :class="{'loading': isIntelLoad}"
-          @click="scrollToBottom"
-        >
+        <div v-if="showScrollButton" class="scroll-to-bottom" :class="{ loading: isIntelLoad }" @click="scrollToBottom">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 19V5M5 12l7 7 7-7" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 19V5M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" />
           </svg>
 
           <!-- 外围旋转圆环 - 只有在加载时显示 -->
@@ -333,11 +257,6 @@
         </div>
       </div>
     </div>
-    <div class="empty" v-else>
-      <div class="empty_img"><img src="@/assets/kong.png" /></div>
-      <div class="empty_text">暂无智能体</div>
-      <div class="empty_create" @click="createIntel('create')">创建智能体</div>
-    </div>
   </div>
 
   <FileUpload ref="fileRefs"></FileUpload>
@@ -384,9 +303,9 @@ import pdf from '@/assets/pdf.png'
 import excel from '@/assets/excl.png'
 import ppt from '@/assets/ppt.png'
 import MarkdownRenderer from '../component/markdown.vue' // 引入 Markdown 渲染组件
+import { getAgentChatByAgentId, getAgentChatByChatId, saveAgentChat } from '../../../api/agent/actions'
 const {
   intelList,
-  isCreate,
   answerListIntel,
   activeIndexIntel,
   currentIntel,
@@ -406,7 +325,9 @@ const {
   dots,
   isIntelStop,
   currentIntelId,
-  recordId
+  recordId,
+  agentChatList,
+  conversationId
 } = useShared()
 const formIntel = ref({
   name: '',
@@ -467,6 +388,55 @@ const setInfo = id => {
     }
   }
 }
+
+const createNewConversation = () => {
+  // 1. 重置消息列表
+  intelQuery.messages = [];
+  intelCurrent.messages = [];
+
+  // 2. 清空输入内容
+  intelQuestion.value = '';
+
+  // 3. 清空文件列表
+  fileInputAry.value = [];
+
+  // 4. 重置加载状态
+  isIntelLoad.value = false;
+  limitIntelLoading.value = false;
+  isIntelStop.value = false;
+
+  // 5. 重置会话ID
+  conversationId.value = '';
+  recordId.value = '';
+
+  // 6. 重置评价相关
+  commonQuestion.value = '';
+
+  // 7. 停止进行中的请求
+  if (interval) {
+    clearInterval(interval);
+  }
+  if (currentRequestUrl.value) {
+    request.cancelRequest(currentRequestUrl.value);
+  }
+
+  // 8. 重置UI状态
+  dynamicRows.value = 1;
+  showScrollButton.value = false;
+  userScrolledUp.value = false;
+
+  // 9. 滚动到顶部
+  nextTick(() => {
+    // 调整输入框高度
+    adjustTextareaHeight('textareaInputIntel');
+
+    // 滚动到对话顶部
+    if (messageContainerIntel.value) {
+      messageContainerIntel.value.scrollTop = 0;
+    }
+  });
+}
+
 const createIntel = val => {
   if (isPureObject(val)) {
     type.value = val.param1
@@ -488,11 +458,8 @@ const createIntel = val => {
     formIntel.value.tone = ''
     formIntel.value.id = ''
   }
-  isCreate.value = true
 }
-const cancelIntel = () => {
-  isCreate.value = false
-}
+const cancelIntel = () => {}
 // 点号变化逻辑
 const updateDots = () => {
   if (dots.value.length >= 5) {
@@ -598,7 +565,7 @@ const cancelCurrentRequest = async val => {
   // }
   const id = recordId.value
   const agentId = currentIntelId.value
-  postSample(id, agentId, '11', mes)
+  postSample(agentId, mes)
   // limitIntelId.value = ''
 }
 const isObject = variable => {
@@ -655,35 +622,32 @@ const displayMessage = async message => {
     }, 30) // 每个字的显示间隔为 30 毫秒
   })
 }
-const postSample = async (id, agentId, title, mes) => {
+
+// 获取第一次对话的标题
+let firstTitle = ref('')
+const postSample = async (agentId, mes) => {
   let num = parseInt(sessionStorage.getItem('count'))
   num = num + 1
   sessionStorage.setItem('count', num)
-  // let titleStr = ''
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-  request
-    .post('/Agent/saveAgentChat', {
-      userId: userInfo.id,
-      id: id,
-      agentId: agentId,
-      messages: mes,
-      title: title
-      // showLoading: true
-    })
-    .then(res => {
-      if (res.status) {
-        // recordId.value = res.data.id
-        getHistory()
-        // currentIntelId.value = res.data
-        // const id = currentIntelId.value
-        // getHistory(id)
-      } else {
-        ElMessage.warning(res.message)
-      }
-    })
-    .catch(err => {
-      console.error('获取回复失败:', err)
-    })
+  if (intelCurrent.messages && intelCurrent.messages.length > 0) {
+    firstTitle.value = intelCurrent.messages[0].content || ''
+  }
+  let saveAgentResult = await saveAgentChat({
+    userId: userInfo.id,
+    id: conversationId.value,
+    agentId: agentId,
+    messages: mes,
+    title: firstTitle.value
+  })
+  if (saveAgentResult.status) {
+    conversationId.value = saveAgentResult.data.id
+    // 智能体对话保存完成，左侧列表选中第一个
+    activeIndexIntel.value = 0
+    getHistory()
+  } else {
+    ElMessage.warning(saveAgentResult.message)
+  }
 }
 const upCommon = async () => {
   if (!isLogin.value) {
@@ -700,7 +664,7 @@ const upCommon = async () => {
 
   request
     .post('/Agent/feedback', {
-      id: id,
+      id: conversationId.value,
       feedback: {
         agree: true,
         content: ''
@@ -728,7 +692,7 @@ const submitCommon = async () => {
   }
   let id = recordId.value
   request
-    .post('/Message/feedback', {
+    .post('/Agent/feedback', {
       id: id,
       feedback: {
         agree: false,
@@ -923,7 +887,7 @@ const submitSample = async (val, isRefresh) => {
             // messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
           }
         })
-        postSample(id, agentId, queryValue, query)
+        postSample(agentId, query)
         break
       }
       buffer += decoder.decode(value, { stream: true })
@@ -1035,7 +999,6 @@ const createData = val => {
         currentIntel.value.role = params.role
         currentIntel.value.tone = params.tone
         currentIntel.value.description = params.description
-        isCreate.value = false
         if (!val) {
           intelList.value.push(formIntel.value.name)
         }
@@ -1101,28 +1064,71 @@ const getInfo = async id => {
       console.error('获取回复失败:', err)
     })
 }
-const getHistory = async val => {
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-  request
-    .post('/Agent/findAgentByUserId?userId=' + userInfo.id + '&keyword=' + (val ? val : ''))
-    .then(res => {
-      if (res.status) {
-        answerListIntel.value = res.data
-        intelList.value = []
-        for (var i = 0; i < res.data.length; i++) {
-          intelList.value.push(res.data[i].persona.name)
-        }
-        if (res.data.length > 0) {
-          activeIndexIntel.value = 0
-          currentIntel.value = answerListIntel.value[0].persona
-          currentIntelId.value = answerListIntel.value[0].id
-          getInfo(answerListIntel.value[0].id)
+
+const getChatByAgentChatId = async chatId => {
+  conversationId.value = chatId
+  let chatResults = await getAgentChatByChatId(chatId)
+  if (chatResults.status) {
+    intelQuery.messages = chatResults?.data?.messages ? chatResults?.data?.messages : []
+    if (chatResults.data) {
+      recordId.value = chatResults.data.id
+    } else {
+      recordId.value = ''
+    }
+    nextTick(() => {
+      // 滚动到底部
+      if (messageContainerIntel.value) {
+        const messages = messageContainerIntel.value.children
+        if (messages.length > 0) {
+          const lastMessage = messages[messages.length - 2]
+          if (lastMessage) {
+            // 滚动到最后一个消息的开头部分
+            lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
         }
       }
     })
-    .catch(err => {
-      console.error('获取回复失败:', err)
-    })
+  }
+}
+const getHistory = async val => {
+  let agentHistoryList = await getAgentChatByAgentId(currentIntelId.value, val)
+
+  if (agentHistoryList.status) {
+    agentChatList.value = agentHistoryList.data
+
+    // answerListIntel.value = agentHistoryList.data
+    // intelList.value = []
+    // for (let i = 0; i < agentHistoryList.data.length; i++) {
+    //   intelList.value.push(agentHistoryList.data[i].persona.name)
+    // }
+    // if (agentHistoryList.data.length > 0) {
+    //   activeIndexIntel.value = 0
+    //   currentIntel.value = answerListIntel.value[0].persona
+    //   currentIntelId.value = answerListIntel.value[0].id
+    //   getInfo(answerListIntel.value[0].id)
+    // }
+  }
+
+  // request
+  //   .post('/Agent/findAgentByUserId?userId=' + userInfo.id + '&keyword=' + (val ? val : ''))
+  //   .then(res => {
+  //     if (res.status) {
+  //       answerListIntel.value = res.data
+  //       intelList.value = []
+  //       for (var i = 0; i < res.data.length; i++) {
+  //         intelList.value.push(res.data[i].persona.name)
+  //       }
+  //       if (res.data.length > 0) {
+  //         activeIndexIntel.value = 0
+  //         currentIntel.value = answerListIntel.value[0].persona
+  //         currentIntelId.value = answerListIntel.value[0].id
+  //         getInfo(answerListIntel.value[0].id)
+  //       }
+  //     }
+  //   })
+  //   .catch(err => {
+  //     console.error('获取回复失败:', err)
+  //   })
 }
 // 格式化服务器返回的内容
 const formatServerContent = content => {
@@ -1164,15 +1170,16 @@ const addIntel = async () => {
 }
 // 组件挂载时订阅事件
 onMounted(() => {
-  isCreate.value = false
   eventBus.on('getHistoryData', getHistory)
   eventBus.on('setInfo', createIntel)
   eventBus.on('closeIntel', cancelIntel)
 
   eventBus.on('submit-sampleFile', submitSampleFile)
   eventBus.on('getRecord', getInfo)
+  eventBus.on('getChatByAgentChatId', getChatByAgentChatId)
   eventBus.on('changeInfo', setInfo)
-  activeIndexIntel.value = 0
+  eventBus.on('createNewConversation', createNewConversation)
+  activeIndexIntel.value = -1
   adjustTextareaHeight('textareaInputIntel')
   getHistory()
   intelQuery.messages = []
@@ -1184,7 +1191,9 @@ onUnmounted(() => {
   eventBus.off('closeIntel', cancelIntel)
   eventBus.off('submit-sampleFile', submitSampleFile)
   eventBus.off('getRecord', getInfo)
+  eventBus.off('getChatByAgentChatId', getChatByAgentChatId)
   eventBus.off('changeInfo', setInfo)
+  eventBus.off('createNewConversation', createNewConversation)
   if (interval) {
     clearInterval(interval)
   }
@@ -1198,7 +1207,7 @@ onUnmounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #1B6CFF;
+  background: #1b6cff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1223,8 +1232,12 @@ onUnmounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 .scroll-to-bottom:hover {

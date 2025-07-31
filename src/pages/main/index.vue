@@ -14,7 +14,7 @@
     <el-container>
       <el-main>
         <div
-          v-if="contentType === 1"
+          v-if="contentType === ContentType.CONVERSATION"
           style="width: 100%; height: 100vh"
           @dragover.prevent="handleDragOver"
           @dragleave="handleDragLeave"
@@ -526,12 +526,13 @@
           <commonUploadModal ref="commonUploadModals"></commonUploadModal>
           <FilePreUpload ref="filePreRef"></FilePreUpload>
         </div>
-        <div v-if="contentType === 2" style="width: 100%; height: 100vh">
+        <div v-if="contentType === ContentType.KNOWLEDGE" style="width: 100%; height: 100vh">
           <personModal v-if="fileModal === 1"></personModal>
           <commonModal ref="commonLedge" v-if="fileModal === 2"></commonModal>
         </div>
-        <div v-if="contentType === 3">
-          <createIntel></createIntel>
+        <div v-if="contentType === ContentType.AGENT">
+          <agent v-if="!isAgentDetail"></agent>
+          <create-intel v-else></create-intel>
         </div>
       </el-main>
     </el-container>
@@ -588,7 +589,10 @@ import pdf from '@/assets/pdf.png'
 import excel from '@/assets/excl.png'
 import ppt from '@/assets/ppt.png'
 import request from '@/utils/request' // 导入封装的 axios 方法
-import MarkdownRenderer from './component/markdown.vue' // 引入 Markdown 渲染组件
+import MarkdownRenderer from './component/markdown.vue'
+import Agent from './component/agent/agent.vue'
+import { ContentType } from '@/utils/common.js'
+import { watchEffect } from 'vue-demi' // 引入 Markdown 渲染组件
 
 // 静态导入图片
 
@@ -658,7 +662,8 @@ const {
   messageContainerTran,
   limitTranLoading,
   limitQueryLoading,
-  isTranStop
+  isTranStop,
+  isAgentDetail
 } = useShared()
 
 const queryIng = ref(false)
