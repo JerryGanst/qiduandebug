@@ -497,6 +497,15 @@ export function useShared() {
     },
     { deep: true }
   )
+  watch(
+    intelQuestion,
+    newVal => {
+      if (!newVal.trim()) {
+        intelQuestion.value = ''
+      }
+    },
+    { deep: true }
+  )
   return {
     currentQuestion,
     currentIndex,

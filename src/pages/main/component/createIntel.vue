@@ -499,11 +499,11 @@ const handleCommonClose = done => {
   done()
 }
 const submitSampleSend = () => {
-  if (isIntelLoad && loadingIntelId.value && loadingIntelId.value === currentIntelId.value) {
+  if (isIntelLoad.value && loadingIntelId.value && loadingIntelId.value === currentIntelId.value) {
     stopQuery()
-    return
+  } else {
+    submitSample()
   }
-  submitSample()
 }
 const stopQuery = async () => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
@@ -631,7 +631,9 @@ const postSample = async (agentId, mes, tempChatId) => {
   sessionStorage.setItem('count', num)
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   if (intelCurrent.messages && intelCurrent.messages.length > 0) {
-    finalTitle.value = intelCurrent.messages[0].content || ''
+    // 对话名取第一个消息或文件名用逗号拼接的结果
+    finalTitle.value = intelCurrent.messages[0].content ||
+      intelCurrent.messages[0].files?.map(item => item.originalFileName).filter(Boolean).join(',') ||''
   }
   if (tempChatId) {
     let chatResults = await getAgentChatByChatId(tempChatId)
@@ -698,10 +700,9 @@ const submitCommon = async () => {
     ElMessage.warning('请先登录再使用')
     return false
   }
-  let id = recordId.value
   request
     .post('/Agent/feedback', {
-      id: id,
+      id: conversationId.value,
       feedback: {
         agree: false,
         content: commonQuestion.value
