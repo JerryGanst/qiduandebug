@@ -137,6 +137,12 @@ const exceedHandler = () => {
 }
 
 const successHandler = async(response) => {
+  if (!response.status) {
+    props.formIntel.agentPic = ''
+    finishedUploadHead.value = true
+    ElMessage.warning(response.message)
+    return
+  }
   let objectName = response.data
   let imgUrlResult = await getAgentImgByObj(objectName)
   if (imgUrlResult.status) {
