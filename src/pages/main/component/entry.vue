@@ -355,7 +355,7 @@
           @mouseleave="showKnowledgeTip = false"
           v-if="['query', 'it', 'board'].includes(pageType)"
         >
-          <img :src="useKnowledge ? deepSelect : deep" class="arrow" @click="toggleKnowledge" style="margin-right: 10px" />
+          <img :src="useKnowledge ? activeKnowledge : inactiveKnowledge" class="arrow" @click="toggleKnowledge" style="margin-right: 10px" />
 
           <transition name="fade">
             <div v-if="showKnowledgeTip" class="tooltip">{{ !useKnowledge ? '引用个人知识库文件问答' : '不使用个人知识库文件' }}</div>
@@ -440,7 +440,7 @@
           </transition>
         </div>
         <div class="tooltip-wrapper" @mouseenter="showKnowledgeTip = true" @mouseleave="showKnowledgeTip = false">
-          <img :src="useKnowledge ? deepSelect : deep" class="arrow" @click="toggleKnowledge" style="margin-right: 10px" />
+          <img :src="useKnowledge ? activeKnowledge : inactiveKnowledge" class="arrow" @click="toggleKnowledge" style="margin-right: 10px" />
 
           <transition name="fade">
             <div v-if="showKnowledgeTip" class="tooltip">{{ !useKnowledge ? '引用个人知识库文件问答' : '不使用个人知识库文件' }}</div>
@@ -584,6 +584,8 @@ import imageA from '@/assets/arrow_gray.png'
 import imageC from '@/assets/stop.png'
 import deep from '@/assets/deep.png'
 import deepSelect from '@/assets/deepSelect.png'
+import activeKnowledge from '@/assets/active_knowledge.png'
+import inactiveKnowledge from '@/assets/inactive_knowledge.png'
 import word from '@/assets/w.png'
 import text from '@/assets/text.png'
 import pdf from '@/assets/pdf.png'

@@ -379,7 +379,7 @@
                     v-if="['query', 'it', 'board'].includes(pageType)"
                   >
                     <img
-                      :src="useKnowledge ? deepSelect : deep"
+                      :src="useKnowledge ? activeKnowledge : inactiveKnowledge"
                       class="arrow"
                       @click="toggleKnowledge"
                       style="margin-right: 10px"
@@ -528,7 +528,7 @@
                   </div>
                   <div class="tooltip-wrapper" @mouseenter="showKnowledgeTip = true" @mouseleave="showKnowledgeTip = false">
                     <img
-                      :src="useKnowledge ? deepSelect : deep"
+                      :src="useKnowledge ? activeKnowledge : inactiveKnowledge"
                       class="arrow"
                       @click="toggleKnowledge"
                       style="margin-right: 10px"
@@ -536,7 +536,7 @@
 
                     <transition name="fade">
                       <div v-if="showKnowledgeTip" class="tooltip">
-                        {{ !useKnowledge ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
+                        {{ !useKnowledge ? '引用个人知识库文件问答' : '不使用个人知识库文件' }}
                       </div>
                     </transition>
                   </div>
@@ -625,6 +625,8 @@ import request from '@/utils/request' // 导入封装的 axios 方法
 import MarkdownRenderer from './component/markdown.vue'
 import Agent from './component/agent/agent.vue'
 import { ContentType } from '@/utils/common.js'
+import activeKnowledge from '@/assets/active_knowledge.png'
+import inactiveKnowledge from '@/assets/inactive_knowledge.png'
 import { watchEffect } from 'vue-demi' // 引入 Markdown 渲染组件
 
 // 静态导入图片
