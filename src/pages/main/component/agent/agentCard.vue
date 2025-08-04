@@ -106,7 +106,7 @@ const showAgentConversations = () => {
   }
 
   .title {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 400;
     color: #0D2761;
     flex: 1;
@@ -144,7 +144,7 @@ const showAgentConversations = () => {
       background-color: #EEEEEE;
       border-radius: 50%;
       text-align: center;
-      line-height: 14px;
+      line-height: 12px;
     }
   }
 

@@ -233,12 +233,12 @@
             @mouseenter="() => handleHoverIntel(index, true)"
             @mouseleave="() => handleHoverIntel(index, false)"
           >
-            <el-tooltip
-              :content="chat.title"
-              placement="top-end"
-              effect="light"
-              popper-class="custom-tooltip"
-            >
+<!--            <el-tooltip-->
+<!--              :content="chat.title"-->
+<!--              placement="top-end"-->
+<!--              effect="light"-->
+<!--              popper-class="custom-tooltip"-->
+<!--            >-->
               <span
                 @click="querySelectIntel(chat.agentChatId, index)"
                 :class="{ 'active-span': activeIndexIntel == index.toString() }"
@@ -246,7 +246,7 @@
               >
                 {{ isCollapsed ? 'Q' : chat.title }}
               </span>
-            </el-tooltip>
+<!--            </el-tooltip>-->
             <el-popover
               v-model:visible="popoverVisibleIntel[index]"
               popper-class="right-aligned-popover"
@@ -1540,7 +1540,7 @@ defineExpose({ queryAn, deleteData, setPower })
       width: 198px;
       height: 96px;
       position: absolute;
-      border-top: 1px solid #ccc;
+      border-top: 1px solid #E1EEFF;
       box-sizing: border-box;
       bottom: 23px;
       .create_conversation_btn {
@@ -1559,7 +1559,9 @@ defineExpose({ queryAn, deleteData, setPower })
         }
         span {
           vertical-align: middle;
-          color: #1b6cff;
+          color: #1B6CFF;
+          display: inline-block;
+          transform: translateY(-0.8px);
         }
       }
     }
@@ -1584,25 +1586,35 @@ defineExpose({ queryAn, deleteData, setPower })
       background-position: 16px 8px;
     }
     .aside_right_btn {
-      padding: 22px 10px 10px 10px;
+      height: 100px;
+      box-sizing: border-box;
+      border-bottom: 1px solid #E1EEFF;
+      margin-left: 10px;
+      margin-right: 20px;
+      margin-bottom: 14px;
+      padding-top: 41px;
       .intel_img {
         cursor: pointer;
-        width: 28px !important;
-        height: 28px !important;
-        border-radius: 16px;
-        border: 1.5px solid #1b6cff;
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 20px;
+        border: 1px solid #D0E4FF;
         box-sizing: border-box;
-        padding-left: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         img {
-          width: 15.89px;
-          height: 12.04px;
+          width: 19.86px;
+          height: 15.88px;
         }
       }
       .intel_title {
         color: #333333;
-        font-size: 16px;
+        font-size: 18px;
+        font-weight: 400;
         padding-left: 12px;
-        line-height: 28px;
+        line-height: 27px;
+        transform: translateY(5.6px);
       }
       .back_set {
         background-image: url('@/assets/start.png');
@@ -1631,6 +1643,7 @@ defineExpose({ queryAn, deleteData, setPower })
       border-right: none;
       width: 220px; /* 保持固定宽度 */
       background: #f9fbff;
+      height: 59vh;
       .more {
         width: 55px;
         height: 100%;

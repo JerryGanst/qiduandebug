@@ -18,6 +18,7 @@
           :before-upload="beforeAvatarUpload"
           :on-remove="removeHandler"
         >
+          <div class="addIcon"/>
           <img :src="headImgUrl" alt="" style="width: 100%;height: 100%;">
         </el-upload>
 
@@ -87,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getAgentImgByObj } from '@/api/agent/actions.js'
 import { PageType } from '../../../../utils/common.js'
@@ -140,6 +141,7 @@ const successHandler = async(response) => {
   if (!response.status) {
     props.formIntel.agentPic = ''
     finishedUploadHead.value = true
+    showOrHideHeaderImg('none')
     ElMessage.warning(response.message)
     return
   }
@@ -149,11 +151,15 @@ const successHandler = async(response) => {
     dialogImageUrl.value = imgUrlResult.data
     props.formIntel.agentPic = objectName
     finishedUploadHead.value = true
+    showOrHideHeaderImg('none')
   }
 }
 
 const removeHandler = () => {
+  const addIcon = document.querySelector('.addIcon');
+  addIcon.style.bottom = '0'
   props.formIntel.agentPic = ''
+  showOrHideHeaderImg('block')
 }
 
 const previewHandler = () => {
@@ -168,26 +174,62 @@ const beforeAvatarUpload = (rawFile) => {
     ElMessage.error('图片大小不能超过 10MB!')
     return false
   }
+  setPictureBottom('9px')
   return true
 }
 
 const uploadUrl = ref(import.meta.env.VITE_API_BASE_URL + '/Agent/uploadPic')
 let headImgUrl = ref(headImg)
 
+const setBackGroupColor = (backGroupColor) => {
+  nextTick(() => {
+    const uploadCard = document.querySelector('.el-upload--picture-card');
+    if (uploadCard) {
+      uploadCard.style.background = backGroupColor;
+    }
+  },100)
+}
+
+const showOrHideHeaderImg = (displayType) => {
+  nextTick(() => {
+    const uploadCard = document.querySelector('.el-upload--picture-card');
+    if (uploadCard) {
+      uploadCard.style.display = displayType;
+    }
+  },500)
+}
+
+const setPictureBottom = (bottom) => {
+  nextTick(() => {
+    const addIcon = document.querySelector('.addIcon')
+    if (addIcon) {
+      addIcon.style.bottom = bottom
+    }
+  },100)
+}
 
 watchEffect(() => {
   if (PageType.EDIT_PAGE !== props.type) {
     return;
   }
   // 如果是编辑页面且传入url且用户尚未上传图片，则显示用户上传的图片
-  if (props.formIntel.agentPicUrl && !finishedUploadHead.value) {
-    headImgUrl.value = props.formIntel.agentPicUrl
-  }
-  // 如果用户上传了图片，则显示默认头像
-  if (finishedUploadHead.value) {
+  if (!finishedUploadHead.value) {
+    if (props.formIntel.agentPicUrl) {
+      headImgUrl.value = props.formIntel.agentPicUrl
+      setBackGroupColor('none')
+    } else {
+      setBackGroupColor('linear-gradient(180.00deg, #d0e4ff 0%, #fff 100%)')
+      headImgUrl.value = headImg
+    }
+    setPictureBottom(0)
+  } else {
+    // 如果用户上传了图片，则显示默认头像
     headImgUrl.value = headImg
+    setBackGroupColor('linear-gradient(180.00deg, #d0e4ff 0%, #fff 100%)')
+    setPictureBottom('9px')
   }
 })
+
 </script>
 
 <style lang="less" scoped>
@@ -240,7 +282,49 @@ watchEffect(() => {
     margin-left: 50px;
 
     .agentImg {
-      margin-left: 289px;
+      :deep(.el-upload--picture-card) {
+        --el-upload-picture-card-size: 92px;
+        background: linear-gradient(180.00deg, #d0e4ff 0%, #fff 100%);
+      }
+      margin-left: 317px;
+      :deep(.el-upload-list--picture-card) {
+        --el-upload-list-picture-card-size: 92px;
+      }
+      .addIcon {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+        width: 20px;
+        height: 20px;
+        background: #4285F4; /* Google蓝色，可调整 */
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+
+      /* 加号的横线 */
+      .addIcon::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px; /* 加号横线长度 */
+        height: 2px;
+        background: white;
+      }
+
+      /* 加号的竖线 */
+      .addIcon::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        height: 10px; /* 加号竖线长度 */
+        background: white;
+      }
     }
 
     .create_name {
