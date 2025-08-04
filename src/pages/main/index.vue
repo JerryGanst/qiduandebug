@@ -376,7 +376,7 @@
                     class="tooltip-wrapper"
                     @mouseenter="showKnowledgeTip = true"
                     @mouseleave="showKnowledgeTip = false"
-                    v-if="['query', 'it', 'board'].includes(pageType)"
+                    v-if="['query'].includes(pageType)"
                   >
                     <img
                       :src="useKnowledge ? activeKnowledge : inactiveKnowledge"
