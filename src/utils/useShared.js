@@ -20,11 +20,13 @@ const isTranStop = ref(false)
 const recordId = ref('')
 const answerListIntel = ref([])
 const currentIntelId = ref('')
+const tempChatId = ref('')
 const currentIntel = ref({
   name: '',
   role: '',
   tone: '',
-  description: ''
+  description: '',
+  agentId: ''
 })
 const isCreate = ref(false)
 const contentType = ref(1)
@@ -149,6 +151,7 @@ const fileInputAry = ref([])
 const isDragOver = ref(false)
 const isIntelStop = ref(false)
 const conversationId = ref('') // 保存填入对话ID
+const loadingIntelId = ref('') // 当前正在发生对话的智能体
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -260,6 +263,10 @@ export function useShared() {
   }
   const updateConversationId = newName => {
     conversationId.value = newName
+  }
+
+  const updateLoadingIntelId = newName => {
+    loadingIntelId.value = newName
   }
 
   const updateIsQueryStop = newName => {
@@ -479,6 +486,9 @@ export function useShared() {
   const updateCurrentIntelId = newName => {
     currentIntelId.value = newName
   }
+  const updateTempChatId = newName => {
+    tempChatId.value = newName
+  }
   const updateRecordId = newName => {
     recordId.value = newName
   }
@@ -517,9 +527,11 @@ export function useShared() {
     isTranStop,
     isCreate,
     currentIntelId,
+    tempChatId,
     isSampleStop,
     isIntelStop,
     conversationId,
+    loadingIntelId,
     isQueryStop,
     drayAry,
     isDragOver,
@@ -593,6 +605,7 @@ export function useShared() {
     updateCurrentIntel,
     updateIsIntelStop,
     updateConversationId,
+    updateLoadingIntelId,
     updateCurrentQuestion,
     updateLimitFinalFile,
     updateLimitTranId,
@@ -666,6 +679,7 @@ export function useShared() {
     updateSelectType,
     updateLimitIntelLoading,
     updateCurrentIntelId,
+    updateTempChatId,
     updateRecordId,
     updateLimitTranLoading,
     updateLimitQueryLoading,

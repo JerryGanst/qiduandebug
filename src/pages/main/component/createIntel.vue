@@ -12,20 +12,20 @@
               , 我将为你生成灵感，设计独属于你的风格。
             </div>
           </div>
-          <div
-            class="sample_chat"
-            v-if="intelQuery.messages.length > 0 && !limitIntelLoading"
-            v-for="(item, index) in intelQuery.messages"
-          >
+          <template v-if="intelQuery.messages.length > 0 && !limitIntelLoading">
             <div
-              v-if="index % 2 === 0 && item.files && item.files.length > 0"
-              class="sample_chat_file"
-              :style="{ marginTop: index === 0 ? '28px' : '40px' }"
+                class="sample_chat"
+                v-for="(item, index) in intelQuery.messages"
             >
-              <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
+              <div
+                  v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                  class="sample_chat_file"
+                  :style="{ marginTop: index === 0 ? '28px' : '40px' }"
+              >
+                <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
                 <span style="display: flex; align-items: center">
                   <img
-                    :src="
+                      :src="
                       its.originalFileName.endsWith('txt')
                         ? text
                         : its.originalFileName.endsWith('pdf')
@@ -36,21 +36,16 @@
                               ? excel
                               : word
                     "
-                    style="width: 24px; height: 30px"
+                      style="width: 24px; height: 30px"
                   />
                 </span>
-                <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                  <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                </div>
               </div>
-            </div>
-            <!-- <div class="tip_load" v-if="index === intelQuery.messages.length - 1 && limitIntelLoading">
-              <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
-              <span style="padding-left: 10px">正在为您解答,请稍等</span>
-              <span>{{ dots }}</span>
-            </div> -->
-            <div
-              v-if="index % 2 === 0"
-              class="sample_chat_query"
-              :style="{
+              <div
+                  v-if="index % 2 === 0"
+                  class="sample_chat_query"
+                  :style="{
                 marginTop: item.content
                   ? item.files && item.files.length > 0
                     ? '10px'
@@ -60,41 +55,42 @@
                   : '0px',
                 padding: item.content ? '13px 15px' : '0px'
               }"
-            >
-              {{ item.content }}
-            </div>
-            <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
-            <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
-              <MarkdownRenderer
-                :markdown="item.before"
-                class="normal-text"
-                style="
+              >
+                {{ item.content }}
+              </div>
+              <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
+              <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
+                <MarkdownRenderer
+                    :markdown="item.before"
+                    class="normal-text"
+                    style="
                   font-size: 13px;
                   line-height: 24px;
                   padding: 0px 10px;
                   background-color: transparent;
                   color: #666;
                 "
-              />
-              <!-- 后半部分 -->
-              <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
+                />
+                <!-- 后半部分 -->
+                <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
+              </div>
+              <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
             </div>
-            <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
-          </div>
-          <div
-            class="sample_chat"
-            v-if="intelCurrent.messages.length > 0 && limitIntelLoading"
-            v-for="(item, index) in intelCurrent.messages"
-          >
+          </template>
+          <template v-if="intelCurrent.messages.length > 0 && limitIntelLoading">
             <div
-              v-if="index % 2 === 0 && item.files && item.files.length > 0"
-              class="sample_chat_file"
-              :style="{ marginTop: index === 0 ? '30px' : '40px' }"
+                class="sample_chat"
+                v-for="(item, index) in intelCurrent.messages"
             >
-              <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
+              <div
+                  v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                  class="sample_chat_file"
+                  :style="{ marginTop: index === 0 ? '30px' : '40px' }"
+              >
+                <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
                 <span style="display: flex; align-items: center">
                   <img
-                    :src="
+                      :src="
                       its.originalFileName.endsWith('txt')
                         ? text
                         : its.originalFileName.endsWith('pdf')
@@ -105,16 +101,16 @@
                               ? excel
                               : word
                     "
-                    style="width: 24px; height: 30px"
+                      style="width: 24px; height: 30px"
                   />
                 </span>
-                <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                  <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                </div>
               </div>
-            </div>
-            <div
-              v-if="index % 2 === 0"
-              class="sample_chat_query"
-              :style="{
+              <div
+                  v-if="index % 2 === 0"
+                  class="sample_chat_query"
+                  :style="{
                 marginTop: item.content
                   ? item.files && item.files.length > 0
                     ? '10px'
@@ -124,30 +120,17 @@
                   : '0px',
                 padding: item.content ? '13px 15px' : '0px'
               }"
-            >
-              {{ item.content }}
+              >
+                {{ item.content }}
+              </div>
+              <div class="tip_load" v-if="index === intelCurrent.messages.length - 1">
+                <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
+                <span style="padding-left: 10px">正在为您解答,请稍等</span>
+                <span>{{ dots }}</span>
+              </div>
+              <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" />
             </div>
-            <div class="tip_load" v-if="index === intelCurrent.messages.length - 1">
-              <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
-              <span style="padding-left: 10px">正在为您解答,请稍等</span>
-              <span>{{ dots }}</span>
-            </div>
-            <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" />
-            <!-- <div v-if="index % 2 !== 0" class="stream-response">
-              <MarkdownRenderer
-                :markdown="item.before"
-                class="normal-text"
-                style="
-                  font-size: 13px;
-                  line-height: 24px;
-                  padding: 0px 10px;
-                  background-color: transparent;
-                  color: #666;
-                "
-              />
-              <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
-            </div> -->
-          </div>
+          </template>
         </div>
         <!-- 添加滚动到底部按钮 -->
         <div v-if="showScrollButton" class="scroll-to-bottom" :class="{ loading: isIntelLoad }" @click="scrollToBottom">
@@ -327,7 +310,9 @@ const {
   currentIntelId,
   recordId,
   agentChatList,
-  conversationId
+  conversationId,
+  loadingIntelId,
+  tempChatId
 } = useShared()
 const formIntel = ref({
   name: '',
@@ -337,7 +322,6 @@ const formIntel = ref({
   id: ''
 })
 const isIntelLoad = ref(false)
-const loadingIntelId = ref('')
 const isDisabled = ref(false)
 const commonQuestion = ref('')
 const limitQuery = ref('')
@@ -402,17 +386,18 @@ const createNewConversation = () => {
 
   // 4. 重置加载状态
   isIntelLoad.value = false;
+  // 5.新建对话时 不展示流式输出框
   limitIntelLoading.value = false;
   isIntelStop.value = false;
 
-  // 5. 重置会话ID
+  // 6. 重置会话ID
   conversationId.value = '';
   recordId.value = '';
 
-  // 6. 重置评价相关
+  // 7. 重置评价相关
   commonQuestion.value = '';
 
-  // 7. 停止进行中的请求
+  // 8. 停止进行中的请求
   if (interval) {
     clearInterval(interval);
   }
@@ -554,19 +539,9 @@ const cancelCurrentRequest = async val => {
   isIntelStop.value = true
   intelQuery.messages = JSON.parse(JSON.stringify(intelCurrent.messages))
   const mes = intelQuery.messages
-  // let title = ''
-  // for (var i = 0; i < answerListIntel.value.length; i++) {
-  //   if (
-  //     intelQuery.messages[intelQuery.messages.length - 2].content ===
-  //     answerListIntel.value[i].data[answerListIntel.value[i].data.length - 2].content
-  //   ) {
-  //     title = answerListIntel.value[i].title
-  //   }
-  // }
-  const id = recordId.value
-  const agentId = currentIntelId.value
-  postSample(agentId, mes, tempChatId)
-  // limitIntelId.value = ''
+  postSample(currentIntelId.value, mes, tempChatId.value)
+  loadingIntelId.value = ''
+  intelQuery.isLoading = false
 }
 const isObject = variable => {
   const type = Object.prototype.toString.call(variable)
@@ -625,7 +600,7 @@ const displayMessage = async message => {
 
 // 获取第一次对话的标题
 let finalTitle = ref('')
-const postSample = async (agentId, mes, tempChatId) => {
+const postSample = async (agentId, mes, chatId) => {
   let num = parseInt(sessionStorage.getItem('count'))
   num = num + 1
   sessionStorage.setItem('count', num)
@@ -635,8 +610,8 @@ const postSample = async (agentId, mes, tempChatId) => {
     finalTitle.value = intelCurrent.messages[0].content ||
       intelCurrent.messages[0].files?.map(item => item.originalFileName).filter(Boolean).join(',') ||''
   }
-  if (tempChatId) {
-    let chatResults = await getAgentChatByChatId(tempChatId)
+  if (chatId) {
+    let chatResults = await getAgentChatByChatId(chatId)
     if (chatResults.status) {
       if (chatResults.data?.title) {
         finalTitle.value = chatResults.data?.title
@@ -645,16 +620,19 @@ const postSample = async (agentId, mes, tempChatId) => {
   }
   let saveAgentResult = await saveAgentChat({
     userId: userInfo.id,
-    id: tempChatId,
+    id: chatId,
     agentId: agentId,
     messages: mes,
     title: finalTitle.value
   })
   if (saveAgentResult.status) {
-    conversationId.value = saveAgentResult.data.id
-    // 智能体对话保存完成，左侧列表选中第一个
-    activeIndexIntel.value = 0
-    getHistory()
+    // 如果当前智能体为加载对话的智能体，则可设置会话ID
+    if (loadingIntelId.value && currentIntelId.value === loadingIntelId.value) {
+      conversationId.value = saveAgentResult.data.id
+      // 智能体对话保存完成，左侧列表选中第一个
+      activeIndexIntel.value = 0
+      getHistory()
+    }
   } else {
     ElMessage.warning(saveAgentResult.message)
   }
@@ -752,10 +730,51 @@ const quickJSONCheck = str => {
   str = str.trim()
   return (str.startsWith('{') && str.endsWith('}')) || (str.startsWith('[') && str.endsWith(']'))
 }
-let tempChatId
+
+const scrollToLastestMessage = () => {
+  nextTick(() => {
+    adjustTextareaHeight('textareaInputIntel')
+    // 滚动到底部
+    if (messageContainerIntel.value) {
+      const messages = messageContainerIntel.value.children
+      if (messages.length > 0) {
+        const lastMessage = messages[messages.length - 2]
+        // 滚动到最后一个消息的开头部分
+        lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+  })
+}
+
+// 当当前智能体ID与正在跑的智能体ID不同时
+const checkWhetherCreateNewChat = () => {
+  if(!currentIntelId.value || !loadingIntelId.value) return
+  if (currentIntelId.value === loadingIntelId.value) return
+  if (!conversationId.value) {
+    // 如果切到其他智能体且没有点击会话，则新建会话
+    createNewConversation()
+  } else {
+    intelQuestion.value = ''
+    isIntelStop.value = false
+    limitIntelLoading.value = false
+    fileInputAry.value = []
+    getChatByAgentChatId(conversationId.value)
+  }
+}
+
 const submitSample = async (val, isRefresh) => {
+  // 有问答正在进行不允许提交
+  if (intelQuery && intelQuery.isLoading) {
+    ElMessage.warning('有问答正在进行中,请稍后再试')
+    return
+  }
+
   // 提交的一瞬间使用临时变量保存当前对话ID
-  tempChatId = conversationId.value
+  if (conversationId.value) {
+    tempChatId.value = conversationId.value
+  } else {
+    tempChatId.value = ''
+  }
 
   const fileInput = fileInputAry.value
   if (fileInput.length === 0 || !fileInput) {
@@ -766,24 +785,20 @@ const submitSample = async (val, isRefresh) => {
   if (val) {
     intelQuestion.value = val
   }
-  const id = recordId.value
-  const agentId = currentIntelId.value
-  loadingIntelId.value = agentId
   const queryValue = intelQuestion.value
   isIntelStop.value = false
   limitQuery.value = intelQuestion.value
   limitIntelLoading.value = true
   dynamicRows.value = 1
   isIntelLoad.value = true
-
+  loadingIntelId.value = currentIntelId.value
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-
   if (intelQuery.messages.length === 1 && intelQuery.messages[0].files) {
     intelQuery.messages = []
   }
   let filesSample = []
   if (fileInput && fileInput.length > 0) {
-    for (var me = 0; me < fileInput.length; me++) {
+    for (let me = 0; me < fileInput.length; me++) {
       if (isPureObject(fileInput[me].fileId)) {
         filesSample.push(fileInput[me].fileId)
       } else {
@@ -803,16 +818,14 @@ const submitSample = async (val, isRefresh) => {
     content: queryValue ? queryValue : '',
     files: toRaw(JSON.parse(JSON.stringify(fileInput)))
   }
-  let mes = {
-    messages: []
-  }
+  let mes
   if (isRefresh) {
     intelQuery.messages.length -= 2
   }
   mes = JSON.parse(JSON.stringify(intelQuery))
   mes.messages.push(currentData)
   const params = JSON.parse(JSON.stringify(mes))
-  for (var j = 0; j < params.messages.length; j++) {
+  for (let j = 0; j < params.messages.length; j++) {
     if (j % 2 === 0) {
       params.messages[j].role = 'user'
     } else {
@@ -824,8 +837,6 @@ const submitSample = async (val, isRefresh) => {
   params.files = filesSample
   params.agentId = currentIntelId.value
   intelQuestion.value = ''
-  let title = ''
-
   interval = setInterval(updateDots, 500)
 
   nextTick(() => {
@@ -833,8 +844,6 @@ const submitSample = async (val, isRefresh) => {
       messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
     }
   })
-  // currentRequestUrl.value = '/AI/chatStream'
-  const controller = new AbortController()
   const assistantMsg = { role: 'assistant', content: '', before: '', after: '', hasSplit: false, isNewData: true }
   mes.messages.push(assistantMsg)
   // 使用一个对象记录哪些 content 已经有 user 了
@@ -843,7 +852,6 @@ const submitSample = async (val, isRefresh) => {
   const isThink = false
   fileInputAry.value = []
   fileAry.value = []
-  // intelQuery.messages = params.messages
   try {
     // 替换为实际的后端接口地址
     const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/agentChat', {
@@ -861,17 +869,6 @@ const submitSample = async (val, isRefresh) => {
     }
     const decoder = new TextDecoder() // 启用流模式解码
     let buffer = '' // 缓冲区用于存储不完整的数据
-    let isFirstChunk = true // 标记是否为第一个数据块
-
-    // 新增防抖更新机制
-    let updateTimer
-    const scheduleUpdate = () => {
-      clearTimeout(updateTimer)
-      updateTimer = setTimeout(() => {
-        intelCurrent.messages.splice(intelCurrent.messages.length - 1, 1, { ...assistantMsg })
-        autoScroll()
-      }, 100) // 100ms更新间隔
-    }
 
     while (true) {
       const { value, done } = await reader.read()
@@ -882,25 +879,19 @@ const submitSample = async (val, isRefresh) => {
         intelQuery.isLoading = false
         limitIntelId.value = ''
         currentRequestUrl.value = ''
+
+        let saveAgentId = currentIntelId.value
+        if (!loadingIntelId.value || loadingIntelId.value === currentIntelId.value) {
+          intelQuery.messages = JSON.parse(JSON.stringify(intelCurrent.messages))
+          scrollToLastestMessage()
+        }
+        // 如果存在正在加载的智能体 则保存时保存此智能体
+        if (loadingIntelId.value) {
+          saveAgentId = loadingIntelId.value
+        }
+        await postSample(saveAgentId, JSON.parse(JSON.stringify(intelCurrent.messages)), tempChatId.value)
+        checkWhetherCreateNewChat()
         loadingIntelId.value = ''
-        intelQuery.messages = JSON.parse(JSON.stringify(intelCurrent.messages))
-        const query = intelQuery.messages
-        nextTick(() => {
-          // dynamicRows.value = 1
-          adjustTextareaHeight('textareaInputIntel')
-          // adjustTextareaHeight('textareaInputSampleCurrent')
-          // 滚动到底部
-          if (messageContainerIntel.value) {
-            const messages = messageContainerIntel.value.children
-            if (messages.length > 0) {
-              const lastMessage = messages[messages.length - 2]
-              // 滚动到最后一个消息的开头部分
-              lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
-            // messageContainerIntel.value.scrollTop = messageContainerIntel.value.scrollHeight
-          }
-        })
-        postSample(agentId, query, tempChatId)
         break
       }
       buffer += decoder.decode(value, { stream: true })
@@ -922,7 +913,6 @@ const submitSample = async (val, isRefresh) => {
           autoScroll()
           try {
             const { content } = JSON.parse(jsonMatch[1])
-
             // 核心逻辑：逐字处理
             if (assistantMsg.hasSplit) {
               // 已遇到分隔符，内容追加到后半部分
@@ -962,11 +952,8 @@ const submitSample = async (val, isRefresh) => {
     loadingIntelId.value = ''
     isIntelLoad.value = false
     limitIntelId.value = ''
-    // queryIng.value = false
     nextTick(() => {
-      // dynamicRows.value = 1
       adjustTextareaHeight('textareaInputIntel')
-      // adjustTextareaHeight('textareaInputSampleCurrent')
     })
     ElMessage.error('服务器繁忙,请稍后再试')
   }
@@ -1011,7 +998,7 @@ const createData = val => {
         currentIntel.value.name = params.name
         currentIntel.value.role = params.role
         currentIntel.value.tone = params.tone
-        currentIntel.value.description = params.description
+        currentIntel.value.agentId = params.agentId
         if (!val) {
           intelList.value.push(formIntel.value.name)
         }
@@ -1080,6 +1067,10 @@ const getInfo = async id => {
 
 const getChatByAgentChatId = async chatId => {
   conversationId.value = chatId
+  if (intelQuery.isLoading) {
+    // 如果当前对话ID与正在输出的流式回答ID一致 则显示流式问答框 否则不显示
+    limitIntelLoading.value = chatId === tempChatId.value;
+  }
   let chatResults = await getAgentChatByChatId(chatId)
   if (chatResults.status) {
     intelQuery.messages = chatResults?.data?.messages ? chatResults?.data?.messages : []
@@ -1105,43 +1096,9 @@ const getChatByAgentChatId = async chatId => {
 }
 const getHistory = async val => {
   let agentHistoryList = await getAgentChatByAgentId(currentIntelId.value, val)
-
   if (agentHistoryList.status) {
     agentChatList.value = agentHistoryList.data
-
-    // answerListIntel.value = agentHistoryList.data
-    // intelList.value = []
-    // for (let i = 0; i < agentHistoryList.data.length; i++) {
-    //   intelList.value.push(agentHistoryList.data[i].persona.name)
-    // }
-    // if (agentHistoryList.data.length > 0) {
-    //   activeIndexIntel.value = 0
-    //   currentIntel.value = answerListIntel.value[0].persona
-    //   currentIntelId.value = answerListIntel.value[0].id
-    //   getInfo(answerListIntel.value[0].id)
-    // }
   }
-
-  // request
-  //   .post('/Agent/findAgentByUserId?userId=' + userInfo.id + '&keyword=' + (val ? val : ''))
-  //   .then(res => {
-  //     if (res.status) {
-  //       answerListIntel.value = res.data
-  //       intelList.value = []
-  //       for (var i = 0; i < res.data.length; i++) {
-  //         intelList.value.push(res.data[i].persona.name)
-  //       }
-  //       if (res.data.length > 0) {
-  //         activeIndexIntel.value = 0
-  //         currentIntel.value = answerListIntel.value[0].persona
-  //         currentIntelId.value = answerListIntel.value[0].id
-  //         getInfo(answerListIntel.value[0].id)
-  //       }
-  //     }
-  //   })
-  //   .catch(err => {
-  //     console.error('获取回复失败:', err)
-  //   })
 }
 // 格式化服务器返回的内容
 const formatServerContent = content => {
@@ -1195,6 +1152,8 @@ onMounted(() => {
   activeIndexIntel.value = -1
   adjustTextareaHeight('textareaInputIntel')
   getHistory()
+  // 初始化时不展示流式输出
+  limitIntelLoading.value = false;
   intelQuery.messages = []
 })
 // 组件卸载时关闭 SSE 连接
@@ -1305,7 +1264,6 @@ onUnmounted(() => {
     display: flex;
     flex-direction: row;
     margin-top: 20px;
-    margin-left: 30px;
     .content_robot {
       width: 46px;
       height: 46px;
@@ -1389,6 +1347,9 @@ onUnmounted(() => {
   border-radius: 10px;
   flex-direction: column;
   margin-bottom: 10px;
+  .textarea {
+    width: 862px;
+  }
 }
 .tooltip-wrapper {
   position: relative;
@@ -1518,7 +1479,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     .main_content::-webkit-scrollbar {
       width: 1px; /* 滚动条宽度 */
     }
@@ -1535,14 +1496,14 @@ onUnmounted(() => {
       background: #fff; /* 滑块悬停时的颜色 */
     }
     .main_content {
-      max-width: 862px;
+      width: 862px;
       box-sizing: border-box;
       overflow-y: auto;
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      margin-bottom: 10px;
+      margin: 0 auto 10px;
     }
   }
   .create_title {
