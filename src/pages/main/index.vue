@@ -202,7 +202,7 @@
                 </div>
                 <div
                   class="sample_chat"
-                  v-if="pageType === 'sample' && limitLoading && chatCurrent.messages.length > 0 && limitLoading"
+                  v-if="pageType === 'sample' && limitLoading && chatCurrent.messages.length > 0"
                   v-for="(item, index) in chatCurrent.messages"
                 >
                   <div
