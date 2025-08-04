@@ -372,6 +372,25 @@
                       </div>
                     </transition>
                   </div>
+                  <div
+                    class="tooltip-wrapper"
+                    @mouseenter="showKnowledgeTip = true"
+                    @mouseleave="showKnowledgeTip = false"
+                    v-if="['query', 'it', 'board'].includes(pageType)"
+                  >
+                    <img
+                      :src="useKnowledge ? deepSelect : deep"
+                      class="arrow"
+                      @click="toggleKnowledge"
+                      style="margin-right: 10px"
+                    />
+
+                    <transition name="fade">
+                      <div v-if="showKnowledgeTip" class="tooltip">
+                        {{ !useKnowledge ? '引用个人知识库文件问答' : '不使用个人知识库文件' }}
+                      </div>
+                    </transition>
+                  </div>
                   <img
                     :src="
                       isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
@@ -504,6 +523,20 @@
                     <transition name="fade">
                       <div v-if="showModelTip" class="tooltip">
                         {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
+                      </div>
+                    </transition>
+                  </div>
+                  <div class="tooltip-wrapper" @mouseenter="showKnowledgeTip = true" @mouseleave="showKnowledgeTip = false">
+                    <img
+                      :src="useKnowledge ? deepSelect : deep"
+                      class="arrow"
+                      @click="toggleKnowledge"
+                      style="margin-right: 10px"
+                    />
+
+                    <transition name="fade">
+                      <div v-if="showKnowledgeTip" class="tooltip">
+                        {{ !useKnowledge ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
                       </div>
                     </transition>
                   </div>
@@ -663,7 +696,9 @@ const {
   limitTranLoading,
   limitQueryLoading,
   isTranStop,
-  isAgentDetail
+  isAgentDetail,
+  toggleKnowledge,
+  useKnowledge
 } = useShared()
 
 const queryIng = ref(false)
@@ -688,6 +723,7 @@ const commonUploadModals = ref(null)
 let interval
 let lastUploadTime = 0
 const wrapperRef = ref(null)
+const showKnowledgeTip = ref(false)
 
 let abortController = new AbortController()
 

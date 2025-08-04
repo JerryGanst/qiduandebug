@@ -152,6 +152,7 @@ const isDragOver = ref(false)
 const isIntelStop = ref(false)
 const conversationId = ref('') // 保存填入对话ID
 const loadingIntelId = ref('') // 当前正在发生对话的智能体
+const useKnowledge = ref(false) // 是否启用知识库问答
 const adjustTextareaHeight = val => {
   const textareaRef =
     val === 'textareaInputQuery'
@@ -247,6 +248,14 @@ const checkDeepType = () => {
   deepType.value = !deepType.value
 }
 
+const toggleKnowledge = () => {
+  if (isSampleLoad.value || finalIng.value) {
+    ElMessage.warning('有问题正在回答中，请稍后再切换')
+    return
+  }
+  useKnowledge.value = !useKnowledge.value
+}
+
 export function useShared() {
   const updateCurrentQuestion = newName => {
     currentQuestion.value = newName
@@ -267,6 +276,10 @@ export function useShared() {
 
   const updateLoadingIntelId = newName => {
     loadingIntelId.value = newName
+  }
+
+  const updateUseKnowledge = newName => {
+    useKnowledge.value = newName
   }
 
   const updateIsQueryStop = newName => {
@@ -532,6 +545,7 @@ export function useShared() {
     isIntelStop,
     conversationId,
     loadingIntelId,
+    useKnowledge,
     isQueryStop,
     drayAry,
     isDragOver,
@@ -606,6 +620,7 @@ export function useShared() {
     updateIsIntelStop,
     updateConversationId,
     updateLoadingIntelId,
+    updateUseKnowledge,
     updateCurrentQuestion,
     updateLimitFinalFile,
     updateLimitTranId,
@@ -653,6 +668,7 @@ export function useShared() {
     updateFileObj,
     updateDeepType,
     checkDeepType,
+    toggleKnowledge,
     updateDocIng,
     updateTranIng,
     updateLimitAry,
