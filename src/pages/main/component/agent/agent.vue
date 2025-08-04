@@ -15,7 +15,7 @@ import request from '../../../../utils/request'
 import eventBus from '../../../../utils/eventBus'
 import { useShared } from '../../../../utils/useShared'
 
-// 定义10种好看的背景色
+// 定义30种好看的背景色
 const gradients = [
   '#EDF3FF', '#E6E6FF', '#D9F8FB', '#BCF3DD', '#FEE7D7',
   '#FFE6E6', '#E6FFE6', '#FFF8E1', '#F5F0FF', '#E0F7FA',
@@ -213,11 +213,6 @@ const showAgentConversations = async(agentId: string) => {
     currentIntelId.value = agentId
     eventBus.emit('showAgentChatList')
     agentChatList.value = chatResult.data
-    // if (chatResult && chatResult.data.length > 0) {
-    //   conversationId.value = chatResult.data[0]?.agentChatId
-    // } else {
-    //   conversationId.value = ''
-    // }
   } else {
     ElMessage.error(chatResult.message)
   }
@@ -226,8 +221,7 @@ const showAgentConversations = async(agentId: string) => {
 const {
     currentIntelId,
     currentIntel,
-    agentChatList,
-    conversationId
+    agentChatList
 }  = useShared()
 </script>
 
