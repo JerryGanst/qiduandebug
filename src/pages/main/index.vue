@@ -1530,6 +1530,7 @@ const submitSample = async (val, isRefresh) => {
   }
   params.userId = userInfo.value.id
   params.model = deepType.value ? 1 : 0
+  params.personalKnowledgeBase = useKnowledge.value
   params.files = filesSample
 
   tipQuery.value = queryValue
@@ -1616,7 +1617,7 @@ const submitSample = async (val, isRefresh) => {
   drayAry.value = []
   try {
     // 替换为实际的后端接口地址
-    const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/chatStream', {
+    const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/unifiedChat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

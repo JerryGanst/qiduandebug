@@ -507,7 +507,8 @@ const {
   currentIntelId,
   isAgentDetail,
   agentChatList,
-  conversationId
+  conversationId,
+  useKnowledge
 } = useShared()
 // 校验用户登录信息
 const rules = {
@@ -807,6 +808,7 @@ const startNewConversation = () => {
   currentId.value = '' // 清空当前对话的唯一ID
   pageType.value = 'sample' // 设置页面类型为通用模式
   selectedMode.value = '通用模式' // 更新模式选择器显示文本
+  useKnowledge.value = false
 }
 // 点击退出登录
 const handleLogout = () => {
