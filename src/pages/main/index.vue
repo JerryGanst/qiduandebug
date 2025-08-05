@@ -123,6 +123,7 @@
                       v-if="chatQuery.messages.length > 0 && !limitLoading"
                       v-for="(item, index) in chatQuery.messages"
                     >
+                      <!-- 偶数 用户发的消息 这里发的消息为文件类型-->
                       <div
                         v-if="index % 2 === 0 && item.files && item.files.length > 0"
                         class="sample_chat_file"
@@ -148,6 +149,7 @@
                           <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
                         </div>
                       </div>
+                      <!-- 偶数 用户发的消息为文本类型-->
                       <div
                         v-if="index % 2 === 0"
                         class="sample_chat_query"
@@ -164,7 +166,6 @@
                       >
                         {{ item.content }}
                       </div>
-                      <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
                       <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
                         <MarkdownRenderer
                           :markdown="item.before"
@@ -180,6 +181,7 @@
                         <!-- 后半部分 -->
                         <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
                       </div>
+                      <!-- isNewData恒为true以下应该是废弃代码-->
                       <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
                     </div>
                     <div
