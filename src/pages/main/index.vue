@@ -1922,13 +1922,6 @@ const submitTran = async (val, isRefresh, obj) => {
           }
           finalIng.value = false
           tranIng.value = false
-          const passData = {
-            question: passQuery,
-            answer: accumulatedContent
-          }
-          // if (isRefresh) answerList.value.splice(0, 1)
-          // console.log(123)
-          // postTran(passData, title.replace(/\([^)]*\)/g, ''), obj, target)
           clearInterval(interval)
         }
       }
@@ -1992,17 +1985,12 @@ const submitQuestion = async (val, isRefresh) => {
   const pgType = pageType.value
   const addTitle = pageType.value === 'query' ? '(query)' : pageType.value === 'it' ? '(it)' : '(law)'
   let title = ''
-  // if (addTitle === '(query)') {
-  //   deepType.value = 0
-  // }
   limitAry.value = JSON.parse(JSON.stringify(answerList.value))
   if (isRefresh) {
     let current = currentId.value
     const idx = answerList.value.findIndex(item => item.id === current)
     title = answerList.value[idx].title.replace(/\([^)]*\)/g, '')
-    let limitTitle = ''
     let limitObj = {}
-    limitTitle = questions.value[idx]
     questions.value.splice(idx, 1)
     limitObj = answerList.value[idx]
     answerList.value.splice(idx, 1)
@@ -2170,7 +2158,6 @@ const postSample = async (ids, title, isThink, postSample) => {
       data: chatQuery.messages,
       isThink: isThink ? true : false,
       title: title ? title : chatQuery.messages[0].content ? chatQuery.messages[0].content + titleStr : titleStr
-      // showLoading: true
     })
     .then(res => {
       if (res.status) {
@@ -2206,7 +2193,6 @@ const postQuestion = async (think, obj, val, type, isThink) => {
         question: val.queryValue,
         answer: obj
       }
-      // showLoading: true
     })
     .then(res => {
       if (res.status) {
@@ -2238,7 +2224,6 @@ const postTran = async (obj, title, ob, target) => {
         target: target,
         files: ob ? ob : ''
       }
-      // showLoading: true
     })
     .then(res => {
       limitFile.value = {}
@@ -2277,7 +2262,6 @@ const postFinal = async (obj, title, ob) => {
         },
         files: ob ? ob : ''
       }
-      // showLoading: true
     })
     .then(res => {
       limitFinalFile.value = {}
@@ -2301,7 +2285,6 @@ const getHistory = async (id, page, val, ids) => {
     .post('/Message/getMessageByUserId?userId=' + userInfo.value.id)
     .then(res => {
       if (res.status) {
-        // getMessageTitle()
         answerList.value = res.data
         questions.value = []
         const limitData = JSON.parse(JSON.stringify(queryTypes.value))
@@ -2330,12 +2313,6 @@ const getHistory = async (id, page, val, ids) => {
               questions.value.push(answerList.value[i].title)
             }
           }
-          // questions.value = questions.value.reduce((acc, current) => {
-          //   if (!acc.find(item => item === current)) {
-          //     acc.push(current)
-          //   }
-          //   return acc
-          // }, [])
           for (var k = 0; k < answerList.value.length; k++) {
             const obj = {
               name: '',
