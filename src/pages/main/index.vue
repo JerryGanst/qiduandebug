@@ -736,20 +736,11 @@ const showFileSample = val => {
   showFileMenu.value = !showFileMenu.value
 }
 const handleDragOver = () => {
-  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law' || pageType.value === 'board') {
+  if (['query','it','law','board'].includes(pageType.value)) {
     return
   }
 
   if (isSampleLoad.value || queryIng.value || docIng.value || tranIng.value || finalIng.value) {
-    // const now = Date.now()
-
-    // // Check if less than 3 seconds have passed since last click
-    // if (now - lastUploadTime < 2000) {
-    //   return
-    // }
-
-    // lastUploadTime = now
-    // ElMessage.warning('有问答正在进行中,请稍后再试')
     return
   }
   isDragOver.value = true
@@ -765,7 +756,7 @@ const getTextAfterLastDot = str => {
   return str.slice(lastDotIndex + 1)
 }
 const handleDragLeave = () => {
-  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law' || pageType.value === 'board') {
+  if (['query','it','law','board'].includes(pageType.value)) {
     return
   }
   isDragOver.value = false
@@ -1127,7 +1118,7 @@ const refreshData = () => {
     return
   }
   const anList = answerList.value
-  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law' || pageType.value === 'board') {
+  if (['query','it','law','board'].includes(pageType.value)) {
     queryIng.value = false
     submitQuestion(tipQuery.value, true)
   } else if (pageType.value === 'tran') {

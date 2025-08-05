@@ -892,7 +892,7 @@ const handleClickOutside = event => {
   }
 }
 const setDrag = val => {
-  if (pageType.value === 'query' || pageType.value === 'it' || pageType.value === 'law' || pageType.value === 'board') {
+  if (['query','it','law','board'].includes(pageType.value)) {
     return
   }
   isDragOver.value = val
