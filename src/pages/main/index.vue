@@ -51,6 +51,7 @@
                   <div
                     class="title_tiQuery"
                   >
+                    <!--最新的对话提问内容-->
                     <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
                       {{ tipQuery }}
                     </div>
@@ -60,6 +61,7 @@
                   >
                     <template v-if="limitQueryLoading">
                       <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
+                      <!--头里面流式在刷的消息-->
                       <span style="padding-left: 10px" >{{ currentMessage }}</span>
                     </template>
                   </div>
