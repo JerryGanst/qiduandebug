@@ -46,94 +46,85 @@
           <div v-else class="center-container" style="padding-top: 0px">
             <DragUpload v-if="isDragOver" ref="dragUploads"></DragUpload>
             <div class="main_content" v-if="!isDragOver" style="width: 862px">
-              <div
-                v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board'"
-                class="title_tiQuery"
-              >
-                <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
-                  {{ tipQuery }}
+              <template v-if="['query','it','law','board'].includes(pageType)">
+                <div
+                  class="title_tiQuery"
+                >
+                  <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
+                    {{ tipQuery }}
+                  </div>
                 </div>
-              </div>
-              <div
-                class="title_float"
-                v-if="pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board'"
-              >
+                <div
+                  class="title_float"
+                >
                 <span v-if="limitQueryLoading">
                   <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
                 </span>
-                <span style="padding-left: 10px" v-if="limitQueryLoading">
+                  <span style="padding-left: 10px" v-if="limitQueryLoading">
                   {{ currentMessage }}
                 </span>
-              </div>
-              <div
-                class="title_float"
-                :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
-                v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board') &&
+                </div>
+                <div
+                  class="title_float"
+                  :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
+                  v-if="
                   currentObj.messages.type === 'final_answer' &&
                   !limitQueryLoading
                 "
-              >
+                >
                 <span>
                   {{ currentObj.list?.content }}
                 </span>
-              </div>
-              <MarkdownRenderer
-                v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board') &&
-                  currentObj.messages.type === 'final_answer' &&
+                </div>
+                <MarkdownRenderer
+                  v-if="currentObj.messages.type === 'final_answer' &&
                   currentObj.messages.content &&
                   !limitQueryLoading
                 "
-                :markdown="currentObj.messages.content"
-              />
-              <div
-                v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board') &&
-                  currentObj.messages.type === 'final_answer' &&
+                  :markdown="currentObj.messages.content"
+                />
+                <div
+                  v-if="currentObj.messages.type === 'final_answer' &&
                   currentObj.messages.sources &&
                   !limitQueryLoading
                 "
-                class="query_source"
-              >
-                附件
-              </div>
-              <a
-                class="href_source"
-                v-for="(it, index) in processedData"
-                v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board') &&
-                  currentObj.messages.type === 'final_answer' &&
+                  class="query_source"
+                >
+                  附件
+                </div>
+                <a
+                  class="href_source"
+                  v-for="(it, index) in processedData"
+                  v-if="currentObj.messages.type === 'final_answer' &&
                   currentObj.messages.sources &&
                   !limitQueryLoading
                 "
-                @click="toDoc(it)"
-              >
-                {{ it.document_title }}(第{{ it.page.join('/') }}页)
-              </a>
-              <div
-                class="query_common"
-                v-if="
-                  (pageType === 'query' || pageType === 'it' || pageType === 'law' || pageType === 'board') &&
-                  currentObj.messages.type === 'final_answer' &&
+                  @click="toDoc(it)"
+                >
+                  {{ it.document_title }}(第{{ it.page.join('/') }}页)
+                </a>
+                <div
+                  class="query_common"
+                  v-if="currentObj.messages.type === 'final_answer' &&
                   !limitQueryLoading
                 "
-              >
-                <div>
-                  <img
-                    src="@/assets/refresh.png"
-                    style="margin-left: 10px"
-                    class="query_common_img"
-                    @click="refreshData"
-                  />
+                >
+                  <div>
+                    <img
+                      src="@/assets/refresh.png"
+                      style="margin-left: 10px"
+                      class="query_common_img"
+                      @click="refreshData"
+                    />
+                  </div>
+                  <div>
+                    <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+                  </div>
+                  <div>
+                    <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
+                  </div>
                 </div>
-                <div>
-                  <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
-                </div>
-                <div>
-                  <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
-                </div>
-              </div>
+              </template>
 
               <div class="sample_item" ref="messageContainer">
                 <div
