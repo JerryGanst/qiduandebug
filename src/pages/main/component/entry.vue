@@ -184,11 +184,6 @@
       :style="{ padding: transData ? '0px 15px' : '0px' }"
       :markdown="transData"
     />
-
-    <!-- <div class="title_tran_data" v-if="pageType === 'tran'" :style="{ padding: transData ? '0px 15px' : '0px' }">
-      <p>{{ transData }}</p>
-    </div> -->
-
     <div class="query_common" v-if="pageType === 'tran' && transQuest && !limitTranLoading && !isDragOver">
       <div>
         <img src="@/assets/refresh.png" style="margin-left: 10px" class="query_common_img" @click="refreshData" />
@@ -300,14 +295,6 @@
     >
       <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
         <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
-        <!-- <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="!isNet">
-          <el-radio-button label="人资行政专题" value="人资行政专题" disabled>人资行政专题</el-radio-button>
-        </el-tooltip>
-        <el-radio-button label="人资行政专题" value="人资行政专题" v-if="isNet">人资行政专题</el-radio-button> -->
-        <!-- <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="!isNet">
-          <el-radio-button label="IT专题" value="IT专题" disabled>IT专题</el-radio-button>
-        </el-tooltip> -->
-        <!-- <el-radio-button label="IT专题" value="IT专题" v-if="isNet">IT专题</el-radio-button> -->
         <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
         <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
         <el-tooltip content="该模式仅支持通过office网络访问" placement="top" v-if="isLaw === 'true' && !isNet">
@@ -404,12 +391,6 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <!-- <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
-          <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
-          <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,单个大小不能超过50M</div>
-          </transition>
-        </div> -->
         <div class="tooltip-wrapper" ref="wrapperRef">
           <img src="@/assets/file.png" class="arrow" @click="showFile('sample')" style="margin-right: 10px" />
           <transition name="fade">
@@ -469,13 +450,6 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <!-- <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
-          <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
-
-          <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
-          </transition>
-        </div> -->
         <div class="tooltip-wrapper" ref="wrapperRef">
           <img src="@/assets/file.png" class="arrow" @click="showFile('tran')" style="margin-right: 10px" />
           <transition name="fade">
@@ -517,13 +491,6 @@
       />
       <!-- 发送图标 -->
       <div class="send-icon">
-        <!-- <div class="tooltip-wrapper" @mouseenter="showFileTip = true" @mouseleave="showFileTip = false">
-          <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
-
-          <transition name="fade">
-            <div v-if="showFileTip" class="tooltip">添加文件,大小不能超过50M</div>
-          </transition>
-        </div> -->
         <div class="tooltip-wrapper" ref="wrapperRef">
           <img src="@/assets/file.png" class="arrow" @click="showFile('final')" style="margin-right: 10px" />
           <transition name="fade">
@@ -805,9 +772,7 @@ const finalPost = event => {
     emit('submit-final')
   }
 }
-const hoverDeep = val => {
-  isDeepShow.value = val
-}
+
 const samplePost = event => {
   emit('sample-post', event)
 }
@@ -868,24 +833,6 @@ const changeDynamicRows = () => {
   dynamicRowFinal.value = 1
 }
 
-// const getTopQuestion = val => {
-//   request
-//     .post('/Message/getTopQuestion?type=' + val)
-//     .then(res => {
-//       if (res.status) {
-//         if (val === '人资行政专题') {
-//           arrList.value = res.data
-//         } else if (val === '通用模式') {
-//           historyList.value = res.data
-//         } else if (val === 'IT专题') {
-//           itList.value = res.data
-//         }
-//       }
-//     })
-//     .catch(err => {
-//       console.error(err)
-//     })
-// }
 const handleClickOutside = event => {
   if (wrapperRef.value && !wrapperRef.value.contains(event.target)) {
     showFileMenu.value = false
