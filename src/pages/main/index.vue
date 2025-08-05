@@ -166,7 +166,7 @@
                       >
                         {{ item.content }}
                       </div>
-                      <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
+                      <div v-if="index % 2 !== 0" class="stream-response">
                         <MarkdownRenderer
                           :markdown="item.before"
                           class="normal-text"
@@ -182,7 +182,7 @@
                         <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
                       </div>
                       <!-- isNewData恒为true以下应该是废弃代码-->
-                      <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
+<!--                      <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />-->
                     </div>
                     <div
                       class="sample_chat"
