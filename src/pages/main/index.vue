@@ -57,73 +57,60 @@
                 <div
                   class="title_float"
                 >
-                <span v-if="limitQueryLoading">
-                  <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
-                </span>
+                  <span v-if="limitQueryLoading">
+                    <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
+                  </span>
                   <span style="padding-left: 10px" v-if="limitQueryLoading">
-                  {{ currentMessage }}
-                </span>
+                    {{ currentMessage }}
+                  </span>
                 </div>
-                <div
-                  class="title_float"
-                  :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
-                  v-if="
-                  currentObj.messages.type === 'final_answer' &&
-                  !limitQueryLoading
-                "
-                >
+                <template v-if="currentObj.messages.type === 'final_answer' && !limitQueryLoading">
+                  <div
+                    class="title_float"
+                    :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
+                  >
                 <span>
                   {{ currentObj.list?.content }}
                 </span>
-                </div>
-                <MarkdownRenderer
-                  v-if="currentObj.messages.type === 'final_answer' &&
-                  currentObj.messages.content &&
-                  !limitQueryLoading
-                "
-                  :markdown="currentObj.messages.content"
-                />
-                <div
-                  v-if="currentObj.messages.type === 'final_answer' &&
-                  currentObj.messages.sources &&
-                  !limitQueryLoading
-                "
-                  class="query_source"
-                >
-                  附件
-                </div>
-                <a
-                  class="href_source"
-                  v-for="(it, index) in processedData"
-                  v-if="currentObj.messages.type === 'final_answer' &&
-                  currentObj.messages.sources &&
-                  !limitQueryLoading
-                "
-                  @click="toDoc(it)"
-                >
-                  {{ it.document_title }}(第{{ it.page.join('/') }}页)
-                </a>
-                <div
-                  class="query_common"
-                  v-if="currentObj.messages.type === 'final_answer' &&
-                  !limitQueryLoading
-                "
-                >
-                  <div>
-                    <img
-                      src="@/assets/refresh.png"
-                      style="margin-left: 10px"
-                      class="query_common_img"
-                      @click="refreshData"
-                    />
                   </div>
-                  <div>
-                    <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+                  <template></template>
+                  <MarkdownRenderer
+                    v-if="currentObj.messages.content"
+                    :markdown="currentObj.messages.content"
+                  />
+                  <template v-if="currentObj.messages.sources">
+                    <div
+                      class="query_source"
+                    >
+                      附件
+                    </div>
+                    <a
+                      class="href_source"
+                      v-for="(it, index) in processedData"
+                      @click="toDoc(it)"
+                    >
+                      {{ it.document_title }}(第{{ it.page.join('/') }}页)
+                    </a>
+                  </template>
+                  <div
+                    class="query_common"
+                  >
+                    <div>
+                      <img
+                        src="@/assets/refresh.png"
+                        style="margin-left: 10px"
+                        class="query_common_img"
+                        @click="refreshData"
+                      />
+                    </div>
+                    <div>
+                      <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+                    </div>
+                    <div>
+                      <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
+                    </div>
                   </div>
-                  <div>
-                    <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
-                  </div>
-                </div>
+                </template>
               </template>
 
               <div class="sample_item" ref="messageContainer">
