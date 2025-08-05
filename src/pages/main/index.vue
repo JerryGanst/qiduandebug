@@ -117,18 +117,18 @@
                 </template>
 
                 <div class="sample_item" ref="messageContainer">
-                  <template v-if="pageType === 'sample' && chatQuery.messages.length > 0">
-                    <template v-if="!limitLoading">
+                  <template v-if="pageType === 'sample'">
+                    <div
+                      class="sample_chat"
+                      v-if="chatQuery.messages.length > 0 && !limitLoading"
+                      v-for="(item, index) in chatQuery.messages"
+                    >
                       <div
-                        class="sample_chat"
-                        v-for="(item, index) in chatQuery.messages"
+                        v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                        class="sample_chat_file"
+                        :style="{ marginTop: index === 0 ? '68px' : '40px' }"
                       >
-                        <div
-                          v-if="index % 2 === 0 && item.files && item.files.length > 0"
-                          class="sample_chat_file"
-                          :style="{ marginTop: index === 0 ? '68px' : '40px' }"
-                        >
-                          <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
+                        <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
                       <span style="display: flex; align-items: center">
                         <img
                           :src="
@@ -145,13 +145,13 @@
                           style="width: 24px; height: 30px"
                         />
                       </span>
-                            <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
-                          </div>
+                          <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
                         </div>
-                        <div
-                          v-if="index % 2 === 0"
-                          class="sample_chat_query"
-                          :style="{
+                      </div>
+                      <div
+                        v-if="index % 2 === 0"
+                        class="sample_chat_query"
+                        :style="{
                       marginTop: item.content
                         ? item.files && item.files.length > 0
                           ? '10px'
@@ -161,39 +161,38 @@
                         : '0px',
                       padding: item.content ? '13px 15px' : '0px'
                     }"
-                        >
-                          {{ item.content }}
-                        </div>
-                        <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
-                        <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
-                          <MarkdownRenderer
-                            :markdown="item.before"
-                            class="normal-text"
-                            style="
+                      >
+                        {{ item.content }}
+                      </div>
+                      <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
+                      <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
+                        <MarkdownRenderer
+                          :markdown="item.before"
+                          class="normal-text"
+                          style="
                         font-size: 13px;
                         line-height: 24px;
                         padding: 0px 10px;
                         background-color: transparent;
                         color: #666;
                       "
-                          />
-                          <!-- 后半部分 -->
-                          <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
-                        </div>
-                        <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
+                        />
+                        <!-- 后半部分 -->
+                        <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
                       </div>
-                    </template>
-                    <template v-if="limitLoading">
+                      <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
+                    </div>
+                    <div
+                      class="sample_chat"
+                      v-if="limitLoading && chatCurrent.messages.length > 0"
+                      v-for="(item, index) in chatCurrent.messages"
+                    >
                       <div
-                        class="sample_chat"
-                        v-for="(item, index) in chatCurrent.messages"
+                        v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                        class="sample_chat_file"
+                        :style="{ marginTop: index === 0 ? '70px' : '40px' }"
                       >
-                        <div
-                          v-if="index % 2 === 0 && item.files && item.files.length > 0"
-                          class="sample_chat_file"
-                          :style="{ marginTop: index === 0 ? '70px' : '40px' }"
-                        >
-                          <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
+                        <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
                       <span style="display: flex; align-items: center">
                         <img
                           :src="
@@ -210,13 +209,13 @@
                           style="width: 24px; height: 30px"
                         />
                       </span>
-                            <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
-                          </div>
+                          <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
                         </div>
-                        <div
-                          v-if="index % 2 === 0"
-                          class="sample_chat_query"
-                          :style="{
+                      </div>
+                      <div
+                        v-if="index % 2 === 0"
+                        class="sample_chat_query"
+                        :style="{
                       marginTop: item.content
                         ? item.files && item.files.length > 0
                           ? '10px'
@@ -226,32 +225,31 @@
                         : '0px',
                       padding: item.content ? '13px 15px' : '0px'
                     }"
-                        >
-                          {{ item.content }}
-                        </div>
-                        <div class="tip_load" v-if="index === chatCurrent.messages.length - 1">
-                          <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
-                          <span style="padding-left: 10px">正在为您解答,请稍等</span>
-                          <span>{{ dots }}</span>
-                        </div>
-                        <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
-                        <div v-if="index % 2 !== 0" class="stream-response">
-                          <MarkdownRenderer
-                            :markdown="item.before"
-                            class="normal-text"
-                            style="
+                      >
+                        {{ item.content }}
+                      </div>
+                      <div class="tip_load" v-if="index === chatCurrent.messages.length - 1">
+                        <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
+                        <span style="padding-left: 10px">正在为您解答,请稍等</span>
+                        <span>{{ dots }}</span>
+                      </div>
+                      <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
+                      <div v-if="index % 2 !== 0" class="stream-response">
+                        <MarkdownRenderer
+                          :markdown="item.before"
+                          class="normal-text"
+                          style="
                         font-size: 13px;
                         line-height: 24px;
                         padding: 0px 10px;
                         background-color: transparent;
                         color: #666;
                       "
-                          />
-                          <!-- 后半部分 -->
-                          <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
-                        </div>
+                        />
+                        <!-- 后半部分 -->
+                        <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
                       </div>
-                    </template>
+                    </div>
                   </template>
                 </div>
 
