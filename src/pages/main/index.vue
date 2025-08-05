@@ -58,12 +58,10 @@
                   <div
                     class="title_float"
                   >
-                  <span v-if="limitQueryLoading">
-                    <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
-                  </span>
-                    <span style="padding-left: 10px" v-if="limitQueryLoading">
-                    {{ currentMessage }}
-                  </span>
+                    <template v-if="limitQueryLoading">
+                      <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
+                      <span style="padding-left: 10px" >{{ currentMessage }}</span>
+                    </template>
                   </div>
                   <template v-if="currentObj.messages.type === 'final_answer' && !limitQueryLoading">
                     <div
