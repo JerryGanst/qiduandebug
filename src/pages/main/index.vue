@@ -253,6 +253,7 @@
                   </template>
                 </div>
 
+                <!-- 刷新 点赞 点踩-->
                 <div class="query_common" v-if="pageType === 'sample' && !limitLoading && chatQuery.messages.length > 0">
                   <div>
                     <img
