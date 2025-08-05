@@ -45,363 +45,364 @@
 
           <div v-else class="center-container" style="padding-top: 0px">
             <DragUpload v-if="isDragOver" ref="dragUploads"></DragUpload>
-            <div class="main_content" v-if="!isDragOver" style="width: 862px">
-              <template v-if="['query','it','law','board'].includes(pageType)">
-                <div
-                  class="title_tiQuery"
-                >
-                  <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
-                    {{ tipQuery }}
+            <template v-else>
+              <div class="main_content" style="width: 862px">
+                <template v-if="['query','it','law','board'].includes(pageType)">
+                  <div
+                    class="title_tiQuery"
+                  >
+                    <div class="title_tiQuery_text" :style="{ padding: tipQuery ? '13px 15px' : '0px' }">
+                      {{ tipQuery }}
+                    </div>
                   </div>
-                </div>
-                <div
-                  class="title_float"
-                >
+                  <div
+                    class="title_float"
+                  >
                   <span v-if="limitQueryLoading">
                     <img src="@/assets/robot.png" style="width: 36px; height: 36px" />
                   </span>
-                  <span style="padding-left: 10px" v-if="limitQueryLoading">
+                    <span style="padding-left: 10px" v-if="limitQueryLoading">
                     {{ currentMessage }}
                   </span>
-                </div>
-                <template v-if="currentObj.messages.type === 'final_answer' && !limitQueryLoading">
-                  <div
-                    class="title_float"
-                    :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
-                  >
+                  </div>
+                  <template v-if="currentObj.messages.type === 'final_answer' && !limitQueryLoading">
+                    <div
+                      class="title_float"
+                      :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
+                    >
                 <span>
                   {{ currentObj.list?.content }}
                 </span>
-                  </div>
-                  <template></template>
-                  <MarkdownRenderer
-                    v-if="currentObj.messages.content"
-                    :markdown="currentObj.messages.content"
-                  />
-                  <template v-if="currentObj.messages.sources">
-                    <div
-                      class="query_source"
-                    >
-                      附件
                     </div>
-                    <a
-                      class="href_source"
-                      v-for="(it, index) in processedData"
-                      @click="toDoc(it)"
-                    >
-                      {{ it.document_title }}(第{{ it.page.join('/') }}页)
-                    </a>
-                  </template>
-                  <div
-                    class="query_common"
-                  >
-                    <div>
-                      <img
-                        src="@/assets/refresh.png"
-                        style="margin-left: 10px"
-                        class="query_common_img"
-                        @click="refreshData"
-                      />
-                    </div>
-                    <div>
-                      <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
-                    </div>
-                    <div>
-                      <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
-                    </div>
-                  </div>
-                </template>
-              </template>
-
-              <div class="sample_item" ref="messageContainer">
-                <template v-if="pageType === 'sample' && chatQuery.messages.length > 0">
-                  <template v-if="!limitLoading">
-                    <div
-                      class="sample_chat"
-                      v-for="(item, index) in chatQuery.messages"
-                    >
-                      <div
-                        v-if="index % 2 === 0 && item.files && item.files.length > 0"
-                        class="sample_chat_file"
-                        :style="{ marginTop: index === 0 ? '68px' : '40px' }"
-                      >
-                        <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
-                      <span style="display: flex; align-items: center">
-                        <img
-                          :src="
-                            its.originalFileName.endsWith('txt')
-                              ? text
-                              : its.originalFileName.endsWith('pdf')
-                                ? pdf
-                                : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
-                                  ? ppt
-                                  : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
-                                    ? excel
-                                    : word
-                          "
-                          style="width: 24px; height: 30px"
-                        />
-                      </span>
-                          <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
-                        </div>
-                      </div>
-                      <div
-                        v-if="index % 2 === 0"
-                        class="sample_chat_query"
-                        :style="{
-                      marginTop: item.content
-                        ? item.files && item.files.length > 0
-                          ? '10px'
-                          : index === 0
-                            ? '70px'
-                            : '40px'
-                        : '0px',
-                      padding: item.content ? '13px 15px' : '0px'
-                    }"
-                      >
-                        {{ item.content }}
-                      </div>
-                      <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
-                      <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
-                        <MarkdownRenderer
-                          :markdown="item.before"
-                          class="normal-text"
-                          style="
-                        font-size: 13px;
-                        line-height: 24px;
-                        padding: 0px 10px;
-                        background-color: transparent;
-                        color: #666;
-                      "
-                        />
-                        <!-- 后半部分 -->
-                        <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
-                      </div>
-                      <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
-                    </div>
-                  </template>
-                  <template v-if="limitLoading">
-                    <div
-                      class="sample_chat"
-                      v-for="(item, index) in chatCurrent.messages"
-                    >
-                      <div
-                        v-if="index % 2 === 0 && item.files && item.files.length > 0"
-                        class="sample_chat_file"
-                        :style="{ marginTop: index === 0 ? '70px' : '40px' }"
-                      >
-                        <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
-                      <span style="display: flex; align-items: center">
-                        <img
-                          :src="
-                            its.originalFileName.endsWith('txt')
-                              ? text
-                              : its.originalFileName.endsWith('pdf')
-                                ? pdf
-                                : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
-                                  ? ppt
-                                  : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
-                                    ? excel
-                                    : word
-                          "
-                          style="width: 24px; height: 30px"
-                        />
-                      </span>
-                          <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
-                        </div>
-                      </div>
-                      <div
-                        v-if="index % 2 === 0"
-                        class="sample_chat_query"
-                        :style="{
-                      marginTop: item.content
-                        ? item.files && item.files.length > 0
-                          ? '10px'
-                          : index === 0
-                            ? '70px'
-                            : '40px'
-                        : '0px',
-                      padding: item.content ? '13px 15px' : '0px'
-                    }"
-                      >
-                        {{ item.content }}
-                      </div>
-                      <div class="tip_load" v-if="index === chatCurrent.messages.length - 1">
-                        <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
-                        <span style="padding-left: 10px">正在为您解答,请稍等</span>
-                        <span>{{ dots }}</span>
-                      </div>
-                      <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
-                      <div v-if="index % 2 !== 0" class="stream-response">
-                        <MarkdownRenderer
-                          :markdown="item.before"
-                          class="normal-text"
-                          style="
-                        font-size: 13px;
-                        line-height: 24px;
-                        padding: 0px 10px;
-                        background-color: transparent;
-                        color: #666;
-                      "
-                        />
-                        <!-- 后半部分 -->
-                        <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
-                      </div>
-                    </div>
-                  </template>
-                </template>
-              </div>
-
-              <div class="query_common" v-if="pageType === 'sample' && !limitLoading && chatQuery.messages.length > 0">
-                <div>
-                  <img
-                    src="@/assets/refresh.png"
-                    style="margin-left: 10px"
-                    class="query_common_img"
-                    @click="refreshData"
-                  />
-                </div>
-                <div>
-                  <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
-                </div>
-                <div>
-                  <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
-                </div>
-              </div>
-            </div>
-            <div class="query_content" v-if="!isDragOver">
-              <div
-                class="tran_select"
-                v-if="['query','sample','it','law','board'].includes(pageType)"
-              >
-                <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
-                  <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
-                  <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
-                  <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
-                  <el-tooltip
-                    content="该模式仅支持通过office网络访问"
-                    placement="top"
-                    v-if="isLaw === 'true' && !isNet"
-                  >
-                    <el-radio-button label="法务专题" value="法务专题" disabled>法务专题</el-radio-button>
-                  </el-tooltip>
-                  <el-radio-button label="法务专题" value="法务专题" v-if="isLaw === 'true' && isNet">
-                    法务专题
-                  </el-radio-button>
-                  <el-tooltip
-                    content="该模式仅支持通过office网络访问"
-                    placement="top"
-                    v-if="enableBoardOffice === 'true' && !isNet"
-                  >
-                    <el-radio-button label="董办专题" value="董办专题" disabled>董办专题</el-radio-button>
-                  </el-tooltip>
-                  <el-radio-button label="董办专题" value="董办专题" v-if="enableBoardOffice === 'true' && isNet">
-                    董办专题
-                  </el-radio-button>
-                </el-radio-group>
-              </div>
-              <div
-                class="textarea"
-                v-if="['query','it','law','board'].includes(pageType)"
-              >
-                <el-input
-                  v-model="newQuestion"
-                  placeholder="请输入您的问题,换行请按下Shift+Enter"
-                  class="custom-input"
-                  style="width: 100%"
-                  @keydown.enter.prevent="summitPost"
-                  @keyup.shift.enter.prevent="handleShiftEnter('textareaInputQuery')"
-                  type="textarea"
-                  :maxlength="4096"
-                  ref="textareaInputQuery"
-                  :rows="dynamicRows"
-                  @input="adjustTextareaHeight('textareaInputQuery')"
-                />
-                <!-- 发送图标 -->
-                <div class="send-icon">
-                  <div
-                    class="tooltip-wrapper"
-                    @mouseenter="showModelTip = true"
-                    @mouseleave="showModelTip = false"
-                    v-if="['query', 'it', 'board'].includes(pageType)"
-                  >
-                    <img
-                      :src="deepType ? deepSelect : deep"
-                      class="arrow"
-                      @click="checkDeepType"
-                      style="margin-right: 10px"
+                    <template></template>
+                    <MarkdownRenderer
+                      v-if="currentObj.messages.content"
+                      :markdown="currentObj.messages.content"
                     />
-
-                    <transition name="fade">
-                      <div v-if="showModelTip" class="tooltip">
-                        {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
+                    <template v-if="currentObj.messages.sources">
+                      <div
+                        class="query_source"
+                      >
+                        附件
                       </div>
-                    </transition>
+                      <a
+                        class="href_source"
+                        v-for="(it, index) in processedData"
+                        @click="toDoc(it)"
+                      >
+                        {{ it.document_title }}(第{{ it.page.join('/') }}页)
+                      </a>
+                    </template>
+                    <div
+                      class="query_common"
+                    >
+                      <div>
+                        <img
+                          src="@/assets/refresh.png"
+                          style="margin-left: 10px"
+                          class="query_common_img"
+                          @click="refreshData"
+                        />
+                      </div>
+                      <div>
+                        <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+                      </div>
+                      <div>
+                        <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
+                      </div>
+                    </div>
+                  </template>
+                </template>
+
+                <div class="sample_item" ref="messageContainer">
+                  <template v-if="pageType === 'sample' && chatQuery.messages.length > 0">
+                    <template v-if="!limitLoading">
+                      <div
+                        class="sample_chat"
+                        v-for="(item, index) in chatQuery.messages"
+                      >
+                        <div
+                          v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                          class="sample_chat_file"
+                          :style="{ marginTop: index === 0 ? '68px' : '40px' }"
+                        >
+                          <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
+                      <span style="display: flex; align-items: center">
+                        <img
+                          :src="
+                            its.originalFileName.endsWith('txt')
+                              ? text
+                              : its.originalFileName.endsWith('pdf')
+                                ? pdf
+                                : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
+                                  ? ppt
+                                  : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
+                                    ? excel
+                                    : word
+                          "
+                          style="width: 24px; height: 30px"
+                        />
+                      </span>
+                            <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                          </div>
+                        </div>
+                        <div
+                          v-if="index % 2 === 0"
+                          class="sample_chat_query"
+                          :style="{
+                      marginTop: item.content
+                        ? item.files && item.files.length > 0
+                          ? '10px'
+                          : index === 0
+                            ? '70px'
+                            : '40px'
+                        : '0px',
+                      padding: item.content ? '13px 15px' : '0px'
+                    }"
+                        >
+                          {{ item.content }}
+                        </div>
+                        <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
+                        <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
+                          <MarkdownRenderer
+                            :markdown="item.before"
+                            class="normal-text"
+                            style="
+                        font-size: 13px;
+                        line-height: 24px;
+                        padding: 0px 10px;
+                        background-color: transparent;
+                        color: #666;
+                      "
+                          />
+                          <!-- 后半部分 -->
+                          <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
+                        </div>
+                        <MarkdownRenderer v-if="index % 2 !== 0 && !item.isNewData" :markdown="item.content" />
+                      </div>
+                    </template>
+                    <template v-if="limitLoading">
+                      <div
+                        class="sample_chat"
+                        v-for="(item, index) in chatCurrent.messages"
+                      >
+                        <div
+                          v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                          class="sample_chat_file"
+                          :style="{ marginTop: index === 0 ? '70px' : '40px' }"
+                        >
+                          <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
+                      <span style="display: flex; align-items: center">
+                        <img
+                          :src="
+                            its.originalFileName.endsWith('txt')
+                              ? text
+                              : its.originalFileName.endsWith('pdf')
+                                ? pdf
+                                : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
+                                  ? ppt
+                                  : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
+                                    ? excel
+                                    : word
+                          "
+                          style="width: 24px; height: 30px"
+                        />
+                      </span>
+                            <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
+                          </div>
+                        </div>
+                        <div
+                          v-if="index % 2 === 0"
+                          class="sample_chat_query"
+                          :style="{
+                      marginTop: item.content
+                        ? item.files && item.files.length > 0
+                          ? '10px'
+                          : index === 0
+                            ? '70px'
+                            : '40px'
+                        : '0px',
+                      padding: item.content ? '13px 15px' : '0px'
+                    }"
+                        >
+                          {{ item.content }}
+                        </div>
+                        <div class="tip_load" v-if="index === chatCurrent.messages.length - 1">
+                          <span><img src="@/assets/robot.png" style="width: 36px; height: 36px" /></span>
+                          <span style="padding-left: 10px">正在为您解答,请稍等</span>
+                          <span>{{ dots }}</span>
+                        </div>
+                        <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
+                        <div v-if="index % 2 !== 0" class="stream-response">
+                          <MarkdownRenderer
+                            :markdown="item.before"
+                            class="normal-text"
+                            style="
+                        font-size: 13px;
+                        line-height: 24px;
+                        padding: 0px 10px;
+                        background-color: transparent;
+                        color: #666;
+                      "
+                          />
+                          <!-- 后半部分 -->
+                          <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
+                        </div>
+                      </div>
+                    </template>
+                  </template>
+                </div>
+
+                <div class="query_common" v-if="pageType === 'sample' && !limitLoading && chatQuery.messages.length > 0">
+                  <div>
+                    <img
+                      src="@/assets/refresh.png"
+                      style="margin-left: 10px"
+                      class="query_common_img"
+                      @click="refreshData"
+                    />
                   </div>
-                  <img
-                    :src="
-                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
-                        ? imageC
-                        : newQuestion
-                          ? imageB
-                          : imageA
-                    "
-                    v-if="pageType === 'query'"
-                    class="arrow"
-                    @click="submitQuestionSend"
-                  />
-                  <img
-                    :src="
-                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
-                        ? imageC
-                        : newQuestion
-                          ? imageB
-                          : imageA
-                    "
-                    v-if="pageType === 'it'"
-                    class="arrow"
-                    @click="submitITSend"
-                  />
-                  <img
-                    :src="
-                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
-                        ? imageC
-                        : newQuestion
-                          ? imageB
-                          : imageA
-                    "
-                    class="arrow"
-                    v-if="(isNet && ['law', 'board'].includes(pageType))"
-                    @click="submitLawSend"
-                  />
+                  <div>
+                    <img src="@/assets/up.png" @click="upCommon" class="query_common_img" style="margin-left: 15px" />
+                  </div>
+                  <div>
+                    <img src="@/assets/down.png" style="margin-left: 15px" @click="downCommon" class="query_common_img" />
+                  </div>
                 </div>
               </div>
-              <div
-                class="textarea"
-                :class="[fileInputAry && fileInputAry.length > 0 ? 'sampleAreaAry' : 'sampleArea']"
-                v-if="pageType === 'sample'"
-              >
-                <el-input
-                  v-model="newQuestion"
-                  placeholder="请输入您的问题,换行请按下Shift+Enter"
-                  style="width: 100%"
-                  class="custom-input"
-                  clearable
-                  @keydown.enter.prevent="samplePost"
-                  @keyup.shift.enter.prevent="handleShiftEnter('textareaInputSample')"
-                  ref="textareaInputSample"
-                  :maxlength="4096"
-                  type="textarea"
-                  :rows="dynamicRows"
-                  @input="adjustTextareaHeight('textareaInputSample')"
-                />
-                <div class="filesList" v-if="fileInputAry && fileInputAry.length > 0">
-                  <div
-                    v-for="(item, index) in fileInputAry"
-                    style="cursor: pointer"
-                    :style="{ marginLeft: index === 0 ? '5px' : '10px' }"
-                    @click="showListFile(item)"
-                  >
+              <div class="query_content">
+                <div
+                  class="tran_select"
+                  v-if="['query','sample','it','law','board'].includes(pageType)"
+                >
+                  <el-radio-group v-model="selectedMode" @change="changeMode" :disabled="isSampleLoad">
+                    <el-radio-button label="通用模式" value="通用模式">通用模式</el-radio-button>
+                    <el-radio-button label="人资行政专题" value="人资行政专题">人资行政专题</el-radio-button>
+                    <el-radio-button label="IT专题" value="IT专题">IT专题</el-radio-button>
+                    <el-tooltip
+                      content="该模式仅支持通过office网络访问"
+                      placement="top"
+                      v-if="isLaw === 'true' && !isNet"
+                    >
+                      <el-radio-button label="法务专题" value="法务专题" disabled>法务专题</el-radio-button>
+                    </el-tooltip>
+                    <el-radio-button label="法务专题" value="法务专题" v-if="isLaw === 'true' && isNet">
+                      法务专题
+                    </el-radio-button>
+                    <el-tooltip
+                      content="该模式仅支持通过office网络访问"
+                      placement="top"
+                      v-if="enableBoardOffice === 'true' && !isNet"
+                    >
+                      <el-radio-button label="董办专题" value="董办专题" disabled>董办专题</el-radio-button>
+                    </el-tooltip>
+                    <el-radio-button label="董办专题" value="董办专题" v-if="enableBoardOffice === 'true' && isNet">
+                      董办专题
+                    </el-radio-button>
+                  </el-radio-group>
+                </div>
+                <div
+                  class="textarea"
+                  v-if="['query','it','law','board'].includes(pageType)"
+                >
+                  <el-input
+                    v-model="newQuestion"
+                    placeholder="请输入您的问题,换行请按下Shift+Enter"
+                    class="custom-input"
+                    style="width: 100%"
+                    @keydown.enter.prevent="summitPost"
+                    @keyup.shift.enter.prevent="handleShiftEnter('textareaInputQuery')"
+                    type="textarea"
+                    :maxlength="4096"
+                    ref="textareaInputQuery"
+                    :rows="dynamicRows"
+                    @input="adjustTextareaHeight('textareaInputQuery')"
+                  />
+                  <!-- 发送图标 -->
+                  <div class="send-icon">
+                    <div
+                      class="tooltip-wrapper"
+                      @mouseenter="showModelTip = true"
+                      @mouseleave="showModelTip = false"
+                      v-if="['query', 'it', 'board'].includes(pageType)"
+                    >
+                      <img
+                        :src="deepType ? deepSelect : deep"
+                        class="arrow"
+                        @click="checkDeepType"
+                        style="margin-right: 10px"
+                      />
+
+                      <transition name="fade">
+                        <div v-if="showModelTip" class="tooltip">
+                          {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
+                        </div>
+                      </transition>
+                    </div>
+                    <img
+                      :src="
+                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
+                        ? imageC
+                        : newQuestion
+                          ? imageB
+                          : imageA
+                    "
+                      v-if="pageType === 'query'"
+                      class="arrow"
+                      @click="submitQuestionSend"
+                    />
+                    <img
+                      :src="
+                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
+                        ? imageC
+                        : newQuestion
+                          ? imageB
+                          : imageA
+                    "
+                      v-if="pageType === 'it'"
+                      class="arrow"
+                      @click="submitITSend"
+                    />
+                    <img
+                      :src="
+                      isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
+                        ? imageC
+                        : newQuestion
+                          ? imageB
+                          : imageA
+                    "
+                      class="arrow"
+                      v-if="(isNet && ['law', 'board'].includes(pageType))"
+                      @click="submitLawSend"
+                    />
+                  </div>
+                </div>
+                <div
+                  class="textarea"
+                  :class="[fileInputAry && fileInputAry.length > 0 ? 'sampleAreaAry' : 'sampleArea']"
+                  v-if="pageType === 'sample'"
+                >
+                  <el-input
+                    v-model="newQuestion"
+                    placeholder="请输入您的问题,换行请按下Shift+Enter"
+                    style="width: 100%"
+                    class="custom-input"
+                    clearable
+                    @keydown.enter.prevent="samplePost"
+                    @keyup.shift.enter.prevent="handleShiftEnter('textareaInputSample')"
+                    ref="textareaInputSample"
+                    :maxlength="4096"
+                    type="textarea"
+                    :rows="dynamicRows"
+                    @input="adjustTextareaHeight('textareaInputSample')"
+                  />
+                  <div class="filesList" v-if="fileInputAry && fileInputAry.length > 0">
+                    <div
+                      v-for="(item, index) in fileInputAry"
+                      style="cursor: pointer"
+                      :style="{ marginLeft: index === 0 ? '5px' : '10px' }"
+                      @click="showListFile(item)"
+                    >
                     <span style="display: flex; align-items: center">
                       <img
                         :src="
@@ -418,11 +419,11 @@
                         style="width: 22px; height: 28px"
                       />
                     </span>
-                    <span style="padding-left: 10px; width: 50px; overflow: hidden; padding-top: 8px" class="file_name">
+                      <span style="padding-left: 10px; width: 50px; overflow: hidden; padding-top: 8px" class="file_name">
                       {{ item.originalFileName }}
                     </span>
-                    <span
-                      style="
+                      <span
+                        style="
                         position: absolute;
                         width: 16px;
                         height: 16px;
@@ -433,71 +434,72 @@
                         justify-content: center;
                         align-items: center;
                       "
-                      @click.stop="deleteImg(index)"
-                    >
+                        @click.stop="deleteImg(index)"
+                      >
                       <img src="@/assets/close.png" style="width: 10px; height: 10px" />
                     </span>
+                    </div>
                   </div>
-                </div>
-                <!-- 发送图标 -->
-                <div class="send-icon">
-                  <div class="tooltip-wrapper" ref="wrapperRef">
-                    <img
-                      src="@/assets/file.png"
-                      class="arrow"
-                      @click="showFileSample('sample')"
-                      style="margin-right: 10px"
-                    />
-                    <transition name="fade">
-                      <div v-if="showFileMenu" class="file-menu" @click.stop>
-                        <div class="triangle"></div>
-                        <div class="menu-item" @click="handleFileSelect('local', 'sample')">从本地读取</div>
-                        <div class="menu-item" @click="handleFileSelect('knowledge', 'sample')">从知识库读取</div>
-                      </div>
-                    </transition>
-                  </div>
-                  <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
-                    <img
-                      :src="deepType ? deepSelect : deep"
-                      class="arrow"
-                      @click="checkDeepType"
-                      style="margin-right: 10px"
-                    />
+                  <!-- 发送图标 -->
+                  <div class="send-icon">
+                    <div class="tooltip-wrapper" ref="wrapperRef">
+                      <img
+                        src="@/assets/file.png"
+                        class="arrow"
+                        @click="showFileSample('sample')"
+                        style="margin-right: 10px"
+                      />
+                      <transition name="fade">
+                        <div v-if="showFileMenu" class="file-menu" @click.stop>
+                          <div class="triangle"></div>
+                          <div class="menu-item" @click="handleFileSelect('local', 'sample')">从本地读取</div>
+                          <div class="menu-item" @click="handleFileSelect('knowledge', 'sample')">从知识库读取</div>
+                        </div>
+                      </transition>
+                    </div>
+                    <div class="tooltip-wrapper" @mouseenter="showModelTip = true" @mouseleave="showModelTip = false">
+                      <img
+                        :src="deepType ? deepSelect : deep"
+                        class="arrow"
+                        @click="checkDeepType"
+                        style="margin-right: 10px"
+                      />
 
-                    <transition name="fade">
-                      <div v-if="showModelTip" class="tooltip">
-                        {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
-                      </div>
-                    </transition>
-                  </div>
-                  <div class="tooltip-wrapper" @mouseenter="showKnowledgeTip = true" @mouseleave="showKnowledgeTip = false">
-                    <img
-                      :src="useKnowledge ? activeKnowledge : inactiveKnowledge"
-                      class="arrow"
-                      @click="toggleKnowledge"
-                      style="margin-right: 10px"
-                    />
+                      <transition name="fade">
+                        <div v-if="showModelTip" class="tooltip">
+                          {{ !deepType ? '切换成deepSeek-R1模式' : '切换成普通模式' }}
+                        </div>
+                      </transition>
+                    </div>
+                    <div class="tooltip-wrapper" @mouseenter="showKnowledgeTip = true" @mouseleave="showKnowledgeTip = false">
+                      <img
+                        :src="useKnowledge ? activeKnowledge : inactiveKnowledge"
+                        class="arrow"
+                        @click="toggleKnowledge"
+                        style="margin-right: 10px"
+                      />
 
-                    <transition name="fade">
-                      <div v-if="showKnowledgeTip" class="tooltip">
-                        {{ !useKnowledge ? '引用个人知识库文件问答' : '不使用个人知识库文件' }}
-                      </div>
-                    </transition>
-                  </div>
-                  <img
-                    :src="
+                      <transition name="fade">
+                        <div v-if="showKnowledgeTip" class="tooltip">
+                          {{ !useKnowledge ? '引用个人知识库文件问答' : '不使用个人知识库文件' }}
+                        </div>
+                      </transition>
+                    </div>
+                    <img
+                      :src="
                       isSampleLoad && (currentIndex || currentIndex === 0) && currentIndex == activeIndex
                         ? imageC
                         : newQuestion || fileInputAry.length > 0
                           ? imageB
                           : imageA
                     "
-                    class="arrow"
-                    @click="submitSampleSend"
-                  />
+                      class="arrow"
+                      @click="submitSampleSend"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            </template>
           </div>
           <FileUpload ref="fileRefs"></FileUpload>
           <commonUploadModal ref="commonUploadModals"></commonUploadModal>
