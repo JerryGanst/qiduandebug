@@ -932,23 +932,7 @@ const displayMessagesSequentially = async () => {
 }
 let fullContent = '' // 保存所有已显示内容
 let currentDisplayIndex = 0 // 当前显示位置
-// 改进后的逐字显示函数
-// const display = async message => {
-//   return new Promise(resolve => {
-//     let i = 0
-//     const interval = setInterval(() => {
-//       if (i < message.length) {
-//         // 逐个字追加到完整内容中
-//         fullContent += message[i]
-//         currentTransData.value = fullContent // 显示完整内容
-//         i++
-//       } else {
-//         clearInterval(interval)
-//         resolve()
-//       }
-//     }, 0)
-//   })
-// }
+
 const display = async (message, batchSize = 12) => {
   return new Promise(resolve => {
     let i = 0
@@ -2067,7 +2051,6 @@ const submitQuestion = async (val, isRefresh) => {
   }
   queryTypes.value = JSON.parse(JSON.stringify(limitData))
   const isThink = deepType.value === true ? true : false
-  let list = {}
   const anList = JSON.parse(JSON.stringify(answerList.value))
   const hasId = anList.some(item => item.id === currentId.value)
   let id = ''
@@ -2130,17 +2113,15 @@ const submitQuestion = async (val, isRefresh) => {
       jsonStr.forEach(element => {
         const type = JSON.parse(element).type
         if (type === 'reasoning') {
+          // 暂定为留下的废弃代码
           currentObj.value.list = JSON.parse(element)
-          list = JSON.parse(JSON.stringify(currentObj.value.list))
         }
         if (type === 'final_answer') {
           queryIng.value = false
           limitQueryId.value = ''
-          // loadingInstance.close();
           currentObj.value.messages = JSON.parse(element)
           finalAnswer = JSON.parse(element)
           currentObj.value.messages.isHistory = true
-          const query = title ? title : queryValue
           const paramsQuery = {
             title: title ? title : queryValue,
             queryValue: queryValue
@@ -2153,6 +2134,7 @@ const submitQuestion = async (val, isRefresh) => {
         } else {
           currentObj.value.messageList.push(JSON.parse(element))
         }
+        // 根据content字段去重复元素
         if (currentObj.value.messageList.length > 0) {
           currentObj.value.messageList = Array.from(
             new Set(currentObj.value.messageList.map(message => message.content))
