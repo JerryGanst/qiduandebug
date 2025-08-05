@@ -70,15 +70,16 @@
                       class="title_float"
                       :style="{ paddingTop: currentObj.list?.content ? '10px' : '0px' }"
                     >
-                <span>
-                  {{ currentObj.list?.content }}
-                </span>
+                      <!-- 思考完成后上方刷的消息 -->
+                      <span>
+                         {{ currentObj.list?.content }}
+                      </span>
                     </div>
-                    <template></template>
                     <MarkdownRenderer
                       v-if="currentObj.messages.content"
                       :markdown="currentObj.messages.content"
                     />
+                    <!--文件列表-->
                     <template v-if="currentObj.messages.sources">
                       <div
                         class="query_source"
@@ -93,6 +94,7 @@
                         {{ it.document_title }}(第{{ it.page.join('/') }}页)
                       </a>
                     </template>
+                    <!-- 刷新 点赞 点踩 -->
                     <div
                       class="query_common"
                     >
