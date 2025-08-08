@@ -919,7 +919,7 @@ const submitSample = async (val, isRefresh) => {
       if (quickJSONCheck(buffer)) {
         const jsonData = JSON.parse(buffer)
         if (jsonData.code === 400) {
-          ElMessage.error('文本过长，请重新尝试')
+          ElMessage.warning(jsonData.message)
         }
       }
 
