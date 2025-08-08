@@ -240,7 +240,7 @@
 <!--              popper-class="custom-tooltip"-->
 <!--            >-->
               <span
-                @click="querySelectIntel(chat.agentChatId, index)"
+                @click="querySelectIntel('compare' === currentAgentType ? chat.imgRecognitionId : chat.agentChatId, index)"
                 :class="{ 'active-span': activeIndexIntel == index.toString() }"
                 :style="{ width: hoverStatesIntel[index] ? '165px' : '180px' }"
               >
@@ -278,7 +278,7 @@
                   cancel-button-text="取消"
                   icon="el-icon-warning"
                   icon-color="red"
-                  @confirm="handleConfirmDeleteIntel(chat.agentChatId)"
+                  @confirm="handleConfirmDeleteIntel('compare' === currentAgentType ? chat.imgRecognitionId : chat.agentChatId)"
                 >
                   <template #reference>
                     <div class="edit_img delete_img">
@@ -287,7 +287,7 @@
                     </div>
                   </template>
                 </el-popconfirm>
-                <div class="edit_img rename_img" @click="handleEditIntel(chat.title, chat.agentChatId, index)">
+                <div class="edit_img rename_img" @click="handleEditIntel(chat.title, 'compare' === currentAgentType ? chat.imgRecognitionId : chat.agentChatId, index)">
                   <img src="@/assets/edit.png" class="aside_right_img" />
                   <div style="width: 60px; text-align: left; margin-left: 6px">重命名</div>
                 </div>
@@ -427,7 +427,12 @@ import lawBlue from '@/assets/law_blue.png'
 import IntelligenceGray from '@/assets/​​Intel_gray.png'
 import IntelligenceBlue from '@/assets/​​Intel_blue.png'
 import request from '@/utils/request'
-import { changeAgentChatTitle, removeAgentChatById } from '@/api/agent/actions.js' // 导入封装的 axios 方法
+import {
+  changeAgentChatTitle,
+  changeImgRecognitionChatTitle,
+  deleteImgRecognitionById,
+  removeAgentChatById
+} from '@/api/agent/actions.js' // 导入封装的 axios 方法
 // import commonModal from './commonUploadModal.vue'
 const isCollapsed = ref(false) // 左上角折叠控制
 const showPopup = ref(false) // 是否展示左下角用户信息弹窗
@@ -508,6 +513,7 @@ const {
   isAgentDetail,
   agentChatList,
   conversationId,
+  currentAgentType,
   useKnowledge
 } = useShared()
 // 校验用户登录信息
@@ -620,6 +626,8 @@ const handleClick = (param, e) => {
 const changeContent = val => {
   isAgentDetail.value = false
   conversationId.value = ''
+  // 卸载时清空智能体类型
+  currentAgentType.value = ''
   if (!isLogin.value) {
     ElMessage.warning('请先登录再使用')
     return false
@@ -686,7 +694,12 @@ const handleEditIntel = (val, agentChatId, index) => {
 }
 
 const submitTitleIntel = async() => {
-  let changeTitleResult = await changeAgentChatTitle(currentAgentChatId.value, titleQuestionIntel.value)
+  let changeTitleResult
+  if ('compare' === currentAgentType.value) {
+    changeTitleResult = await changeImgRecognitionChatTitle(currentAgentChatId.value, titleQuestionIntel.value)
+  } else {
+    changeTitleResult = await changeAgentChatTitle(currentAgentChatId.value, titleQuestionIntel.value)
+  }
   if (changeTitleResult.status) {
     ElMessage.success('修改成功')
     eventBus.emit('getHistoryData')
@@ -862,7 +875,14 @@ const handleClose = done => {
 
 const handleConfirmDeleteIntel = async(agentChatId) => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-  let deleteAgentChatResult = await removeAgentChatById(agentChatId, userInfo.id)
+  let deleteAgentChatResult
+  if ('compare' === currentAgentType.value) {
+    deleteAgentChatResult = await deleteImgRecognitionById(agentChatId, userInfo.id)
+  } else {
+    deleteAgentChatResult = await removeAgentChatById(agentChatId, userInfo.id)
+  }
+  // 删除完成后新建对话
+  createNewConversation()
   if (deleteAgentChatResult.status) {
     eventBus.emit('getHistoryData', '')
     ElMessage.success('删除成功')
@@ -1314,6 +1334,8 @@ const showAgentChatList = chatList => {
 const backToAgentList = () => {
   isAgentDetail.value = false
   conversationId.value = ''
+  // 卸载时清空智能体类型
+  currentAgentType.value = ''
   eventBus.emit('backToAgentList')
 }
 

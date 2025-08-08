@@ -9,6 +9,7 @@ const props = defineProps<{
   agentContent: string;
   backgroundColor?: string;
   imgUrl?: string;
+  agentType?: string;
 }>();
 const showActions = ref(false);
 const showMoreTips = ref(false); // 新增：控制提示框显示状态
@@ -58,6 +59,7 @@ const showAgentConversations = () => {
       <div
         class="moreActions"
         v-show="showActions"
+        v-if="'default' !== agentType"
         @click.stop="toggleMoreTips">...</div>
   </div>
   <div

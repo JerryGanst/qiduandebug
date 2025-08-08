@@ -7,6 +7,10 @@ import {getAgentContent} from '../../../../api/agent/actions'
 import {removeAgentById} from '../../../../api/agent/actions'
 import {getAgentDetailById} from '../../../../api/agent/actions'
 import {getAgentChatByAgentId} from '../../../../api/agent/actions'
+import {getImageRecognitionsByUserId} from '../../../../api/agent/actions'
+import {saveImgRecognition} from '../../../../api/agent/actions'
+import {getImgRecognitionById} from '../../../../api/agent/actions'
+import {deleteImgRecognitionById} from '../../../../api/agent/actions'
 import {PageType} from '../../../../utils/common'
 import {FromPage} from '../../../../utils/common'
 import CreateAgentForm from "../agent/createAgentForm.vue";
@@ -27,6 +31,24 @@ const gradients = [
 
 // 模拟数据
 const agents = ref([])
+let userId = ref(JSON.parse(localStorage.getItem('userInfo')).id)
+let agentType = ref('default')
+let defaultAgentName = ref('镭雕图片对比')
+let defaultAgentContent = ref('镭雕图片对比是一名精确、细致的图片对比专家，擅长对多张图片进行逐项、逐行的差异分析。\n' +
+  '它会在用户提供至少两张图片后，执行对比任务，输出一张包含所有对比项的表格。\n' +
+  '分析原则是**“无遗漏”**：\n' +
+  '\n' +
+  '不仅指出不同点，也会列出相同点，并在差异分析中标明“无差异”\n' +
+  '\n' +
+  '差异分类会细化到具体细节层面（如字符内容、符号形状、颜色值、位置偏差、线条粗细、阴影效果等），避免笼统描述\n' +
+  '\n' +
+  '无论差异大小（即使只有一个像素、符号或颜色值的变化）都会被明确记录\n' +
+  '\n' +
+  '表格格式固定为：\n' +
+  '\n' +
+  '| 对比项 | 图1 | 图2 | ... | 图n | 差异分析 |\n' +
+  '\n' +
+  '通过这种方式，智能体可为视觉检查、质量检测、图像版本比对等场景提供高精度分析报告。')
 
 onMounted(() => {
   fetchAgentList()
@@ -42,7 +64,7 @@ const fetchAgentList = async () => {
   if (result.status) {
     if (!result.data) return;
     if (result.data.length === 0) {
-      pageType.value = PageType.EMPTY_PAGE
+      // pageType.value = PageType.EMPTY_PAGE
     }
     agents.value = result.data.map(item => {
       return {
@@ -203,13 +225,19 @@ const editAgent = async(agentId: string) => {
 }
 
 const showAgentConversations = async(agentId: string) => {
-  let chatResult = await getAgentChatByAgentId(agentId)
-  let agentDetail = await getAgentDetailById(agentId)
-  if (agentDetail.status) {
-    currentIntel.value.name = agentDetail.data.agentName
-    currentIntel.value.description = agentDetail.data.agentDescription
-  }
-  if (chatResult.status) {
+    if(agentId === userId.value) {
+      currentIntel.value.name = defaultAgentName.value
+      currentIntel.value.description = defaultAgentContent.value
+      // 设置为默认的比较智能体
+      currentAgentType.value = 'compare'
+    } else {
+      let agentDetail = await getAgentDetailById(agentId)
+      if (agentDetail.status) {
+        currentIntel.value.name = agentDetail.data.agentName
+        currentIntel.value.description = agentDetail.data.agentDescription
+      }
+    }
+
     currentIntelId.value = agentId
     eventBus.emit('showAgentChatList')
     agentChatList.value = chatResult.data
@@ -222,7 +250,9 @@ const {
     currentIntelId,
     currentIntel,
     agentChatList
+    currentAgentType
 }  = useShared()
+
 </script>
 
 <template>
@@ -233,6 +263,16 @@ const {
       </div>
     </div>
     <div class="agentList">
+      <AgentCard
+        :key="userId"
+        :agent-id="userId"
+        :agent-title="defaultAgentName"
+        :agent-content="defaultAgentContent"
+        :background-color="gradients[Math.floor(Math.random() * gradients.length)]"
+        :agent-type = "agentType"
+        @edit-agent = "editAgent"
+        @show-agent-conversations="showAgentConversations"
+      />
       <AgentCard
         v-for="agent in agents"
         :key="agent.id"
@@ -303,15 +343,15 @@ const {
   width: 1052px;
 
   .createAgent {
-    margin-left: 792px;
+    margin-left: 872px;
     .createButton {
       border: 1px solid #518FFF;
       border-radius: 27px;
-      width: 260px;
-      height: 50px;
+      width: 180px;
+      height: 42px;
       cursor: pointer;
       text-align: center;
-      line-height: 50px;
+      line-height: 42px;
       box-sizing: border-box;
       span {
         color: #518FFF;

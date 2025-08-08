@@ -1,4 +1,3 @@
-handlePreview
 <template>
   <el-dialog
     v-model="dialogVisible"
@@ -20,7 +19,7 @@ handlePreview
             :show-file-list="false"
             :file-list="fileQueue"
             :before-upload="checkFileSize"
-            :limit="5"
+            :limit="maxFileNumber"
           >
             <i class="el-icon-upload" />
             <div class="el-upload__text">
@@ -30,10 +29,10 @@ handlePreview
                 <span style="color: #868686">支持格式：{{ allowedFileTypes }}</span>
               </div>
               <div class="el-upload__subtext" v-if="type === 'sample'">
-                <span style="color: #868686">一次性最多上传五个附件,单个大小不超过50M</span>
+                <span style="color: #868686">一次性最多上传{{maxFileNumber}}个附件,单个大小不超过{{fileMaxSize}}M</span>
               </div>
               <div class="el-upload__subtext" v-else>
-                <span style="color: #868686">大小不超过50M</span>
+                <span style="color: #868686">大小不超过{{fileMaxSize}}M</span>
               </div>
             </div>
           </el-upload>
@@ -50,24 +49,14 @@ handlePreview
           <div v-for="(file, index) in fileQueue" :key="file.uid" class="file-item" @click="handlePreview(file)">
             <div class="file_img">
               <img
-                :src="
-                  file.extension === 'txt'
-                    ? text
-                    : file.extension === 'pdf'
-                      ? pdf
-                      : file.extension === 'ppt' || file.extension === 'pptx'
-                        ? ppt
-                        : file.extension === 'xls' || file.extension === 'xlsx'
-                          ? excel
-                          : word
-                "
+                :src="getFileImg(file)"
               />
             </div>
             <div class="file-info">
               <span class="filename">{{ file.name }}</span>
               <div class="file-actions">
                 <span
-                  @click.stop="handleDelete(index)"
+                  @click.stop="handleDelete(file.uid)"
                   style="width: 20px; height: 20px; cursor: pointer"
                   :style="{ marginRight: file.status === 'pending' ? '0px' : '10px' }"
                 >
@@ -110,11 +99,12 @@ handlePreview
             <div style="font-size: 12px; color: #bebebe; margin-top: 2px; margin-bottom: 4px">
               {{ file.size ? (file.size / 1024).toFixed(1) : 0 }}KB
             </div>
-            <el-progress
-              :percentage="file.progress"
-              :color="customProgressColor(file)"
-              :status="getStatusType(file.status)"
-            />
+            <!-- 进度条有bug 先隐藏-->
+<!--            <el-progress-->
+<!--              :percentage="file.progress"-->
+<!--              :color="customProgressColor(file)"-->
+<!--              :status="getStatusType(file.status)"-->
+<!--            />-->
           </div>
         </div>
       </div>
@@ -152,6 +142,9 @@ handlePreview
               :options="{beforeTransformData, xls: isXls}"
             />
           </div>
+          <div v-else-if="previewType === 'img'" style="width: 100%">
+            <img :src="previewContent" style="width: 100%; height: 100%" />
+          </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>
         <div v-else="previewFileId" class="preview-container">
@@ -184,14 +177,10 @@ import VueOfficeExcel from '@vue-office/excel'
 
 import mammoth from 'mammoth'
 import { useShared } from '@/utils/useShared'
+import { getFileImg } from '@/utils/common'
 import eventBus from '@/utils/eventBus'
-import word from '@/assets/w.png'
-import text from '@/assets/text.png'
-import pdf from '@/assets/pdf.png'
 import excel from '@/assets/excl.png'
-import ppt from '@/assets/ppt.png'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
-import { Close } from '@element-plus/icons-vue'
 import request from '@/utils/request' // 导入封装的 axios 方法
 import { fromPairs } from 'lodash-es'
 import { beforeTransformData } from '@/utils/common.js'
@@ -200,10 +189,11 @@ const fileQueue = ref([])
 const previewContent = ref(null)
 const previewType = ref('')
 const previewFileId = ref(null)
+// 是否为单文件上传，tran为单文件
 const type = ref('tran')
 const isXls = ref(false)
 const emit = defineEmits(['submit-tran', 'submit-final'])
-const { fileObj, isSampleLoad, finalIng, isLogin, fileAry, limitFile, limitFinalFile, currentId } = useShared()
+const { fileObj, isSampleLoad, finalIng, isLogin, fileAry, limitFile, limitFinalFile, currentId, currentAgentType } = useShared()
 // 常量定义
 const STATUS = {
   PENDING: 'pending',
@@ -211,6 +201,11 @@ const STATUS = {
   PAUSED: 'paused',
   SUCCESS: 'success',
   ERROR: 'error'
+}
+
+const isCompareAgent = ref(false)
+if (currentAgentType.value === 'compare') {
+  isCompareAgent.value = true
 }
 const selectedKnow = ref(1)
 const selectedMode = ref('')
@@ -233,7 +228,14 @@ const knowList = ref([
 
 const selectedValues = ref([]) // 存储选中的值（数组）
 const knowOptions = ref([])
-const allowedFileTypes = '.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx'
+let allowedFileTypes = '.doc,.docx,.txt,.pdf,pptx,.ppt,.xls,.xlsx'
+let maxFileNumber = 5
+let fileMaxSize = 50
+if (isCompareAgent.value) {
+  allowedFileTypes = '.jpg,.jpeg,.png,.gif'
+  maxFileNumber = 2
+  fileMaxSize = 10
+}
 // 颜色映射
 const statusColors = {
   [STATUS.PENDING]: '#EDEDED',
@@ -273,15 +275,23 @@ const stopDrag = () => {
   document.body.style.userSelect = ''
 }
 
-// 新增删除处理函数
-const handleDelete = index => {
-  const deletedFile = fileQueue.value[index]
-  // 清除关联预览（同步操作）
-  if (previewFileId.value === deletedFile.uid) {
-    previewFileId.value = null // 必须同步清除关联标识
-    previewContent.value = null
-    previewType.value = ''
+// 因只有两张图片 所以删除图片时 可以做预览换成另外一个
+const handlePicturePreview = () => {
+  if (fileQueue.length !== 0) {
+    let anotherFile = fileQueue.value[0]
+    previewFileId.value = anotherFile.uid // 必须同步清除关联标识
+    previewContent.value = URL.createObjectURL(anotherFile.raw)
+    previewType.value = 'img'
   }
+}
+
+// 新增删除处理函数
+const handleDelete = uid => {
+  const deletedFile = fileQueue.value.find(file => file.uid === uid)
+  if (isCompareAgent.value) {
+      handlePicturePreview(deletedFile.uid)
+  }
+  
   // 强制 DOM 更新（关键修复）
   nextTick(() => {
     // 通过重新赋值触发响应式更新
@@ -302,9 +312,10 @@ const handleDelete = index => {
     // 提取array2的name集合
     // 过滤array1，排除name存在于array2中的对象
     if (fileAry.value && fileAry.value.length > 0) {
-      fileAry.value = fileAry.value.filter(item => item.originalFileName !== fileQueue.value[index].name)
+      fileAry.value = fileAry.value.filter(item => item.originalFileName !== deletedFile.name)
     }
 
+    const index = fileQueue.value.findIndex(file => file.uid === uid);
     fileQueue.value.splice(index, 1)
 
     nextTick(() => {
@@ -365,7 +376,8 @@ const startUpload = async file => {
                 filePath: res.data?.data[0].filePath,
                 fileType: res.data?.data[0].fileType,
                 originalFileName: res.data?.data[0].originalFileName,
-                uploadTime: res.data?.data[0].uploadTime
+                uploadTime: res.data?.data[0].uploadTime,
+                fileUrl: res.data?.data[0].fileUrl
               }
 
               ary.push(obj)
@@ -463,9 +475,9 @@ const customProgressColor = file => {
 }
 
 const checkFileSize = file => {
-  const isLt10M = file.size / 1024 / 1024 < 50
+  const isLt10M = file.size / 1024 / 1024 < fileMaxSize
   if (!isLt10M) {
-    ElMessage.warning('附件大小不能超过50MB!')
+    ElMessage.warning('附件大小不能超过' + fileMaxSize + 'MB!')
   }
 
   return isLt10M
@@ -517,24 +529,16 @@ const getStatusType = status => {
 
 // 附件添加处理
 const handleFileAdd = uploadFile => {
-  const exception = uploadFile.name.split('.').pop().toLowerCase()
-  if (
-    exception !== 'txt' &&
-    exception !== 'doc' &&
-    exception !== 'docx' &&
-    exception !== 'ppt' &&
-    exception !== 'pptx' &&
-    exception !== 'xls' &&
-    exception !== 'xlsx' &&
-    exception !== 'pdf'
+  const file_extension = uploadFile.name.split('.').pop().toLowerCase()
+  if (!allowedFileTypes.split(',').includes('.' + file_extension)
   ) {
     ElMessage.warning('暂不支持此格式上传')
     return
   }
 
-  if (fileQueue.value.length >= 5) {
-    ElMessage.warning('一次性最多上传五个文件')
-    fileQueue.value = fileQueue.value.slice(-5)
+  if (fileQueue.value.length >= maxFileNumber) {
+    ElMessage.warning('一次性最多上传'+ maxFileNumber + '个文件')
+    fileQueue.value = fileQueue.value.slice(-maxFileNumber)
     return
   }
   const file = {
@@ -548,8 +552,8 @@ const handleFileAdd = uploadFile => {
     cancel: null,
     source: null
   }
-  if (file.size / 1024 / 1024 > 50) {
-    ElMessage.warning('附件大小不能超过50MB!')
+  if (file.size / 1024 / 1024 > fileMaxSize) {
+    ElMessage.warning('附件大小不能超过' + fileMaxSize + 'MB!')
     return
   }
   previewFileId.value = file.uid
@@ -568,7 +572,7 @@ const handleFileAdd = uploadFile => {
     }
     return acc
   }, [])
-  handlePreview(type.value === 'sample' ? fileQueue.value[0] : file)
+  handlePreview((type.value === 'sample' && !isCompareAgent.value) ? fileQueue.value[0] : file)
 }
 
 // 暂停上传
@@ -658,7 +662,12 @@ const handlePreview = async file => {
       previewContent.value = ''
       previewContent.value = await file.raw.arrayBuffer() // 直接传递ArrayBuffer
       previewType.value = 'excel' // 标识为Excel类型
-    }  else {
+    }  else if (['png', 'jpg', 'jpeg', 'gif'].includes(file.extension)) {
+      previewType.value = 'img'
+      nextTick(() => {
+        previewContent.value = URL.createObjectURL(file.raw)
+      }, 100)
+    } else {
       previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'
     }
