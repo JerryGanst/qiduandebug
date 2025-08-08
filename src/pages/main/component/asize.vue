@@ -879,6 +879,8 @@ const handleConfirmDeleteIntel = async(agentChatId) => {
   } else {
     deleteAgentChatResult = await removeAgentChatById(agentChatId, userInfo.id)
   }
+  // 删除完成后新建对话
+  createNewConversation()
   if (deleteAgentChatResult.status) {
     eventBus.emit('getHistoryData', '')
     ElMessage.success('删除成功')
