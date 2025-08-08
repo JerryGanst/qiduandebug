@@ -7,6 +7,10 @@ import {getAgentContent} from '../../../../api/agent/actions'
 import {removeAgentById} from '../../../../api/agent/actions'
 import {getAgentDetailById} from '../../../../api/agent/actions'
 import {getAgentChatByAgentId} from '../../../../api/agent/actions'
+import {getImageRecognitionsByUserId} from '../../../../api/agent/actions'
+import {saveImgRecognition} from '../../../../api/agent/actions'
+import {getImgRecognitionById} from '../../../../api/agent/actions'
+import {deleteImgRecognitionById} from '../../../../api/agent/actions'
 import {PageType} from '../../../../utils/common'
 import {FromPage} from '../../../../utils/common'
 import CreateAgentForm from "../agent/createAgentForm.vue";
@@ -27,6 +31,10 @@ const gradients = [
 
 // 模拟数据
 const agents = ref([])
+let userId = ref(JSON.parse(localStorage.getItem('userInfo')).id)
+let agentType = ref('default')
+let defaultAgentName = ref('智能图片比较')
+let defaultAgentContent = ref('智能图片比较是一款基于人工智能技术的智能工具，专为高效、精准的图片分析与比对而设计。')
 
 onMounted(() => {
   fetchAgentList()
@@ -203,32 +211,29 @@ const editAgent = async(agentId: string) => {
 }
 
 const showAgentConversations = async(agentId: string) => {
-  let chatResult = await getAgentChatByAgentId(agentId)
-  let agentDetail = await getAgentDetailById(agentId)
-  if (agentDetail.status) {
-    currentIntel.value.name = agentDetail.data.agentName
-    currentIntel.value.description = agentDetail.data.agentDescription
-  }
-  if (chatResult.status) {
+    if(agentId === userId.value) {
+      currentIntel.value.name = defaultAgentName.value
+      currentIntel.value.description = defaultAgentContent.value
+      // 设置为默认的比较智能体
+      currentAgentType.value = 'compare'
+    } else {
+      let agentDetail = await getAgentDetailById(agentId)
+      if (agentDetail.status) {
+        currentIntel.value.name = agentDetail.data.agentName
+        currentIntel.value.description = agentDetail.data.agentDescription
+      }
+    }
+
     currentIntelId.value = agentId
     eventBus.emit('showAgentChatList')
-    agentChatList.value = chatResult.data
-    // if (chatResult && chatResult.data.length > 0) {
-    //   conversationId.value = chatResult.data[0]?.agentChatId
-    // } else {
-    //   conversationId.value = ''
-    // }
-  } else {
-    ElMessage.error(chatResult.message)
-  }
 }
 
 const {
     currentIntelId,
     currentIntel,
-    agentChatList,
-    conversationId
+    currentAgentType
 }  = useShared()
+
 </script>
 
 <template>
@@ -239,6 +244,16 @@ const {
       </div>
     </div>
     <div class="agentList">
+      <AgentCard
+        :key="userId"
+        :agent-id="userId"
+        :agent-title="defaultAgentName"
+        :agent-content="defaultAgentContent"
+        :background-color="gradients[Math.floor(Math.random() * gradients.length)]"
+        :agent-type = "agentType"
+        @edit-agent = "editAgent"
+        @show-agent-conversations="showAgentConversations"
+      />
       <AgentCard
         v-for="agent in agents"
         :key="agent.id"
