@@ -225,31 +225,27 @@ const editAgent = async(agentId: string) => {
 }
 
 const showAgentConversations = async(agentId: string) => {
-    if(agentId === userId.value) {
-      currentIntel.value.name = defaultAgentName.value
-      currentIntel.value.description = defaultAgentContent.value
-      // 设置为默认的比较智能体
-      currentAgentType.value = 'compare'
-    } else {
-      let agentDetail = await getAgentDetailById(agentId)
-      if (agentDetail.status) {
-        currentIntel.value.name = agentDetail.data.agentName
-        currentIntel.value.description = agentDetail.data.agentDescription
-      }
-    }
-
-    currentIntelId.value = agentId
-    eventBus.emit('showAgentChatList')
-    agentChatList.value = chatResult.data
+  if(agentId === userId.value) {
+    currentIntel.value.name = defaultAgentName.value
+    currentIntel.value.description = defaultAgentContent.value
+    // 设置为默认的比较智能体
+    currentAgentType.value = 'compare'
   } else {
-    ElMessage.error(chatResult.message)
+    let agentDetail = await getAgentDetailById(agentId)
+    if (agentDetail.status) {
+      currentIntel.value.name = agentDetail.data.agentName
+      currentIntel.value.description = agentDetail.data.agentDescription
+    }
   }
+
+  currentIntelId.value = agentId
+  eventBus.emit('showAgentChatList')
 }
+
 
 const {
     currentIntelId,
     currentIntel,
-    agentChatList
     currentAgentType
 }  = useShared()
 
