@@ -9,7 +9,8 @@
             <div class="tip_text">
               Hi,我是你创建的
               <span :style="{ fontWeight: 600 }">{{ currentIntel.name }}</span>
-              , 我将为你生成灵感，设计独属于你的风格。
+              <span v-if="'compare' === currentAgentType">, 请先上传标准图再上传对比图比较</span>
+              <span v-else>, 我将为你生成灵感，设计独属于你的风格。</span>
             </div>
           </div>
           <template v-if="intelQuery.messages.length > 0 && !limitIntelLoading">

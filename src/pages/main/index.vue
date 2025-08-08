@@ -1640,49 +1640,8 @@ const submitSample = async (val, isRefresh) => {
         postSample(id, title, isThink, filesSample)
       }
 
-      chunks.forEach(chunk => {
-        // 1. 修复正则匹配语法
-        const jsonMatch = chunk.match(/data:\s*({[\s\S]*?})(?=\ndata:|\n\n|$)/)
-        // 2. 添加条件判断包裹
-        if (jsonMatch) {
-          if (messageContainer.value) {
-            messageContainer.value.scrollTop = messageContainer.value.scrollHeight
-          }
-          try {
-            const { content } = JSON.parse(jsonMatch[1])
 
-            // 核心逻辑：逐字处理
-            if (assistantMsg.hasSplit) {
-              // 已遇到分隔符，内容追加到后半部分
-              assistantMsg.after += content
-            } else {
-              const sp = isThink ? '</think>' : ''
-              // 检查当前数据块是否包含分隔符
-              const splitIndex = content.indexOf(sp)
-              if (splitIndex === -1) {
-                // 未找到分隔符，全部追加到前半部分
-                assistantMsg.before += content
-              } else {
-                // 找到分隔符，分割内容
-                assistantMsg.before += content.slice(0, splitIndex)
-                assistantMsg.after += content.slice(splitIndex + sp.length)
-                assistantMsg.hasSplit = true
-              }
-            }
-            // 立即更新视图（无需防抖）
-            chatCurrent.messages.splice(-1, 1, {
-              ...toRaw(assistantMsg),
-              before: assistantMsg.before,
-              after: assistantMsg.after,
-              content: assistantMsg.before + assistantMsg.after // 兼容旧字段
-            })
-          } catch (e) {
-            currentIndex.value = ''
-            console.error('JSON 解析失败:', jsonMatch[1], '错误:', e)
-            ElMessage.error('数据格式异常')
-          }
-        }
-      })
+
     }
   } catch (error) {
     chatQuery.isLoading = false
