@@ -33,8 +33,22 @@ const gradients = [
 const agents = ref([])
 let userId = ref(JSON.parse(localStorage.getItem('userInfo')).id)
 let agentType = ref('default')
-let defaultAgentName = ref('智能图片比较')
-let defaultAgentContent = ref('智能图片比较是一款基于人工智能技术的智能工具，专为高效、精准的图片分析与比对而设计。')
+let defaultAgentName = ref('镭雕图片对比')
+let defaultAgentContent = ref('镭雕图片对比是一名精确、细致的图片对比专家，擅长对多张图片进行逐项、逐行的差异分析。\n' +
+  '它会在用户提供至少两张图片后，执行对比任务，输出一张包含所有对比项的表格。\n' +
+  '分析原则是**“无遗漏”**：\n' +
+  '\n' +
+  '不仅指出不同点，也会列出相同点，并在差异分析中标明“无差异”\n' +
+  '\n' +
+  '差异分类会细化到具体细节层面（如字符内容、符号形状、颜色值、位置偏差、线条粗细、阴影效果等），避免笼统描述\n' +
+  '\n' +
+  '无论差异大小（即使只有一个像素、符号或颜色值的变化）都会被明确记录\n' +
+  '\n' +
+  '表格格式固定为：\n' +
+  '\n' +
+  '| 对比项 | 图1 | 图2 | ... | 图n | 差异分析 |\n' +
+  '\n' +
+  '通过这种方式，智能体可为视觉检查、质量检测、图像版本比对等场景提供高精度分析报告。')
 
 onMounted(() => {
   fetchAgentList()
@@ -324,15 +338,15 @@ const {
   width: 1052px;
 
   .createAgent {
-    margin-left: 792px;
+    margin-left: 872px;
     .createButton {
       border: 1px solid #518FFF;
       border-radius: 27px;
-      width: 260px;
-      height: 50px;
+      width: 180px;
+      height: 42px;
       cursor: pointer;
       text-align: center;
-      line-height: 50px;
+      line-height: 42px;
       box-sizing: border-box;
       span {
         color: #518FFF;
