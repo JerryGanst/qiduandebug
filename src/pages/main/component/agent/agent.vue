@@ -50,7 +50,7 @@ const fetchAgentList = async () => {
   if (result.status) {
     if (!result.data) return;
     if (result.data.length === 0) {
-      pageType.value = PageType.EMPTY_PAGE
+      // pageType.value = PageType.EMPTY_PAGE
     }
     agents.value = result.data.map(item => {
       return {

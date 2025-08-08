@@ -740,11 +740,14 @@ const scrollToLastestMessage = () => {
   })
 }
 
-const setMessages = async(params) => {
+const setMessages = async(params, isRefresh = false) => {
   if (conversationId.value) {
     let chatResult = await getImgRecognitionById(conversationId.value)
     if (chatResult.status) {
       params.messages =  chatResult.data?.imgMessages
+      if (params.messages.length >= 2 && isRefresh) {
+        params.messages.splice(-2)
+      }
     }
   }
 }
@@ -839,7 +842,7 @@ const submitSample = async (val, isRefresh) => {
   }
   if (currentAgentType.value === 'compare') {
     params.messages = []
-    await setMessages(params)
+    await setMessages(params, isRefresh)
     params.userId = userInfo.id
     params.content = intelQuestion.value
     params.images = images
