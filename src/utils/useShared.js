@@ -28,6 +28,8 @@ const currentIntel = ref({
   description: '',
   agentId: ''
 })
+// 设置当前智能体选中的类型
+const currentAgentType = ref('')
 const isCreate = ref(false)
 const contentType = ref(1)
 // 判断是否是智能体对话详情页
@@ -316,6 +318,9 @@ export function useShared() {
   const updateCurrentIntel = newName => {
     currentIntel.value = newName
   }
+  const updateCurrentAgentType = newName => {
+    currentAgentType.value = newName
+  }
   const updateloadingId = newName => {
     loadingId.value = newName
   }
@@ -527,6 +532,7 @@ export function useShared() {
     isTranStop,
     isCreate,
     currentIntelId,
+    currentAgentType,
     tempChatId,
     isSampleStop,
     isIntelStop,
@@ -603,6 +609,7 @@ export function useShared() {
     isAgentDetail,
     changeMode,
     updateCurrentIntel,
+    updateCurrentAgentType,
     updateIsIntelStop,
     updateConversationId,
     updateLoadingIntelId,

@@ -13,63 +13,47 @@
             </div>
           </div>
           <template v-if="intelQuery.messages.length > 0 && !limitIntelLoading">
-            <div
-                class="sample_chat"
-                v-for="(item, index) in intelQuery.messages"
-            >
+            <div class="sample_chat" v-for="(item, index) in intelQuery.messages">
               <div
-                  v-if="index % 2 === 0 && item.files && item.files.length > 0"
-                  class="sample_chat_file"
-                  :style="{ marginTop: index === 0 ? '28px' : '40px' }"
+                v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                class="sample_chat_file"
+                :style="{ marginTop: index === 0 ? '28px' : '40px' }"
               >
                 <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
-                <span style="display: flex; align-items: center">
-                  <img
-                      :src="
-                      its.originalFileName.endsWith('txt')
-                        ? text
-                        : its.originalFileName.endsWith('pdf')
-                          ? pdf
-                          : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
-                            ? ppt
-                            : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
-                              ? excel
-                              : word
-                    "
-                      style="width: 24px; height: 30px"
-                  />
-                </span>
+                  <span style="display: flex; align-items: center">
+                    <img :src="getFileImgByOriginFile(its)" style="width: 24px; height: 30px" />
+                  </span>
                   <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
                 </div>
               </div>
               <div
-                  v-if="index % 2 === 0"
-                  class="sample_chat_query"
-                  :style="{
-                marginTop: item.content
-                  ? item.files && item.files.length > 0
-                    ? '10px'
-                    : index === 0
-                      ? '30px'
-                      : '40px'
-                  : '0px',
-                padding: item.content ? '13px 15px' : '0px'
-              }"
+                v-if="index % 2 === 0"
+                class="sample_chat_query"
+                :style="{
+                  marginTop: item.content
+                    ? item.files && item.files.length > 0
+                      ? '10px'
+                      : index === 0
+                        ? '30px'
+                        : '40px'
+                    : '0px',
+                  padding: item.content ? '13px 15px' : '0px'
+                }"
               >
                 {{ item.content }}
               </div>
               <!-- <MarkdownRenderer v-if="index % 2 !== 0" :markdown="item.content" type="answer" /> -->
               <div v-if="index % 2 !== 0 && item.isNewData" class="stream-response">
                 <MarkdownRenderer
-                    :markdown="item.before"
-                    class="normal-text"
-                    style="
-                  font-size: 13px;
-                  line-height: 24px;
-                  padding: 0px 10px;
-                  background-color: transparent;
-                  color: #666;
-                "
+                  :markdown="item.before"
+                  class="normal-text"
+                  style="
+                    font-size: 13px;
+                    line-height: 24px;
+                    padding: 0px 10px;
+                    background-color: transparent;
+                    color: #666;
+                  "
                 />
                 <!-- 后半部分 -->
                 <MarkdownRenderer v-if="item.hasSplit" :markdown="item.after" class="normal-text" />
@@ -78,48 +62,32 @@
             </div>
           </template>
           <template v-if="intelCurrent.messages.length > 0 && limitIntelLoading">
-            <div
-                class="sample_chat"
-                v-for="(item, index) in intelCurrent.messages"
-            >
+            <div class="sample_chat" v-for="(item, index) in intelCurrent.messages">
               <div
-                  v-if="index % 2 === 0 && item.files && item.files.length > 0"
-                  class="sample_chat_file"
-                  :style="{ marginTop: index === 0 ? '30px' : '40px' }"
+                v-if="index % 2 === 0 && item.files && item.files.length > 0"
+                class="sample_chat_file"
+                :style="{ marginTop: index === 0 ? '30px' : '40px' }"
               >
                 <div v-for="its in item.files" class="item_files" @click="showListFile(its)">
-                <span style="display: flex; align-items: center">
-                  <img
-                      :src="
-                      its.originalFileName.endsWith('txt')
-                        ? text
-                        : its.originalFileName.endsWith('pdf')
-                          ? pdf
-                          : its.originalFileName.endsWith('ppt') || its.originalFileName.endsWith('pptx')
-                            ? ppt
-                            : its.originalFileName.endsWith('xls') || its.originalFileName.endsWith('xlsx')
-                              ? excel
-                              : word
-                    "
-                      style="width: 24px; height: 30px"
-                  />
-                </span>
+                  <span style="display: flex; align-items: center">
+                    <img :src="getFileImgByOriginFile(its)" style="width: 24px; height: 30px" />
+                  </span>
                   <span style="padding-left: 10px" class="file_name">{{ its.originalFileName }}</span>
                 </div>
               </div>
               <div
-                  v-if="index % 2 === 0"
-                  class="sample_chat_query"
-                  :style="{
-                marginTop: item.content
-                  ? item.files && item.files.length > 0
-                    ? '10px'
-                    : index === 0
-                      ? '30px'
-                      : '40px'
-                  : '0px',
-                padding: item.content ? '13px 15px' : '0px'
-              }"
+                v-if="index % 2 === 0"
+                class="sample_chat_query"
+                :style="{
+                  marginTop: item.content
+                    ? item.files && item.files.length > 0
+                      ? '10px'
+                      : index === 0
+                        ? '30px'
+                        : '40px'
+                    : '0px',
+                  padding: item.content ? '13px 15px' : '0px'
+                }"
               >
                 {{ item.content }}
               </div>
@@ -177,20 +145,7 @@
               @click="showListFile(item)"
             >
               <span style="display: flex; align-items: center">
-                <img
-                  :src="
-                    item.originalFileName.endsWith('txt')
-                      ? text
-                      : item.originalFileName.endsWith('pdf')
-                        ? pdf
-                        : item.originalFileName.endsWith('ppt') || item.originalFileName.endsWith('pptx')
-                          ? ppt
-                          : item.originalFileName.endsWith('xls') || item.originalFileName.endsWith('xlsx')
-                            ? excel
-                            : word
-                  "
-                  style="width: 22px; height: 28px"
-                />
+                <img :src="getFileImgByOriginFile(item)" style="width: 22px; height: 28px" />
               </span>
               <span style="padding-left: 10px; width: 50px; overflow: hidden; padding-top: 8px" class="file_name">
                 {{ item.originalFileName }}
@@ -221,7 +176,13 @@
                 <div v-if="showFileMenu" class="file-menu" @click.stop>
                   <div class="triangle"></div>
                   <div class="menu-item" @click="handleFileSelect('local', 'sample')">从本地读取</div>
-                  <div class="menu-item" @click="handleFileSelect('knowledge', 'sample')">从知识库读取</div>
+                  <div
+                    class="menu-item"
+                    @click="handleFileSelect('knowledge', 'sample')"
+                    v-if="'compare' !== currentAgentType"
+                  >
+                    从知识库读取
+                  </div>
                 </div>
               </transition>
             </div>
@@ -269,7 +230,7 @@
   </el-dialog>
 </template>
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, toRaw } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, toRaw } from 'vue'
 import { useShared } from '@/utils/useShared'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import request from '@/utils/request' // 导入封装的 axios 方法
@@ -280,13 +241,18 @@ import FilePreUpload from '../component/filePreModal.vue'
 import imageB from '@/assets/arrow_blue.png'
 import imageA from '@/assets/arrow_gray.png'
 import imageC from '@/assets/stop.png'
-import word from '@/assets/w.png'
 import text from '@/assets/text.png'
-import pdf from '@/assets/pdf.png'
-import excel from '@/assets/excl.png'
-import ppt from '@/assets/ppt.png'
 import MarkdownRenderer from '../component/markdown.vue' // 引入 Markdown 渲染组件
-import { getAgentChatByAgentId, getAgentChatByChatId, saveAgentChat } from '../../../api/agent/actions'
+import {
+  getAgentChatByAgentId,
+  getAgentChatByChatId,
+  getImageRecognitionsByUserId,
+  getImgRecognitionById,
+  saveAgentChat,
+  saveImgRecognition
+} from '../../../api/agent/actions'
+import { getFileImgByOriginFile } from '@/utils/common.js'
+
 const {
   intelList,
   answerListIntel,
@@ -312,7 +278,8 @@ const {
   agentChatList,
   conversationId,
   loadingIntelId,
-  tempChatId
+  tempChatId,
+  currentAgentType
 } = useShared()
 const formIntel = ref({
   name: '',
@@ -375,51 +342,51 @@ const setInfo = id => {
 
 const createNewConversation = () => {
   // 1. 重置消息列表
-  intelQuery.messages = [];
-  intelCurrent.messages = [];
+  intelQuery.messages = []
+  intelCurrent.messages = []
 
   // 2. 清空输入内容
-  intelQuestion.value = '';
+  intelQuestion.value = ''
 
   // 3. 清空文件列表
-  fileInputAry.value = [];
+  fileInputAry.value = []
 
   // 4. 重置加载状态
-  isIntelLoad.value = false;
+  isIntelLoad.value = false
   // 5.新建对话时 不展示流式输出框
-  limitIntelLoading.value = false;
-  isIntelStop.value = false;
+  limitIntelLoading.value = false
+  isIntelStop.value = false
 
   // 6. 重置会话ID
-  conversationId.value = '';
-  recordId.value = '';
+  conversationId.value = ''
+  recordId.value = ''
 
   // 7. 重置评价相关
-  commonQuestion.value = '';
+  commonQuestion.value = ''
 
   // 8. 停止进行中的请求
   if (interval) {
-    clearInterval(interval);
+    clearInterval(interval)
   }
   if (currentRequestUrl.value) {
-    request.cancelRequest(currentRequestUrl.value);
+    request.cancelRequest(currentRequestUrl.value)
   }
 
   // 8. 重置UI状态
-  dynamicRows.value = 1;
-  showScrollButton.value = false;
-  userScrolledUp.value = false;
+  dynamicRows.value = 1
+  showScrollButton.value = false
+  userScrolledUp.value = false
 
   // 9. 滚动到顶部
   nextTick(() => {
     // 调整输入框高度
-    adjustTextareaHeight('textareaInputIntel');
+    adjustTextareaHeight('textareaInputIntel')
 
     // 滚动到对话顶部
     if (messageContainerIntel.value) {
-      messageContainerIntel.value.scrollTop = 0;
+      messageContainerIntel.value.scrollTop = 0
     }
-  });
+  })
 }
 
 const createIntel = val => {
@@ -580,23 +547,6 @@ const checkIntelData = val => {
   }
   return true
 }
-// 逐个字显示消息内容的函数
-const displayMessage = async message => {
-  return new Promise(resolve => {
-    let i = 0
-    const interval = setInterval(() => {
-      if (i < message.content.length) {
-        // 逐个字添加到 currentMessage 中
-        currentMessage.value += message.content[i]
-        i++
-      } else {
-        // 停止定时器
-        clearInterval(interval)
-        resolve() // 当前消息显示完成
-      }
-    }, 30) // 每个字的显示间隔为 30 毫秒
-  })
-}
 
 // 获取第一次对话的标题
 let finalTitle = ref('')
@@ -607,24 +557,68 @@ const postSample = async (agentId, mes, chatId) => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'))
   if (intelCurrent.messages && intelCurrent.messages.length > 0) {
     // 对话名取第一个消息或文件名用逗号拼接的结果
-    finalTitle.value = intelCurrent.messages[0].content ||
-      intelCurrent.messages[0].files?.map(item => item.originalFileName).filter(Boolean).join(',') ||''
+    finalTitle.value =
+      intelCurrent.messages[0].content ||
+      intelCurrent.messages[0].files
+        ?.map(item => item.originalFileName)
+        .filter(Boolean)
+        .join(',') ||
+      ''
   }
   if (chatId) {
-    let chatResults = await getAgentChatByChatId(chatId)
+    let chatResults
+    if ('compare' === currentAgentType.value) {
+      chatResults = await getImgRecognitionById(chatId)
+    } else {
+      chatResults = await getAgentChatByChatId(chatId)
+    }
     if (chatResults.status) {
       if (chatResults.data?.title) {
         finalTitle.value = chatResults.data?.title
       }
     }
   }
-  let saveAgentResult = await saveAgentChat({
-    userId: userInfo.id,
-    id: chatId,
-    agentId: agentId,
-    messages: mes,
-    title: finalTitle.value
-  })
+  let saveAgentResult
+  if (currentAgentType.value === 'compare') {
+    mes.forEach(item => {
+      if (item.role === 'user') {
+        let chatMsg = {}
+        let content = []
+        chatMsg.type = 'text'
+        chatMsg.text = item.content
+        if (item.files && item.files.length > 0) {
+          for (let i = 0; i < item.files.length; i++) {
+            let urlMsg = {}
+            urlMsg.type = 'image_url'
+            urlMsg.image_url = { image: item.files[i] }
+            content.push(urlMsg)
+          }
+        }
+        content.push(chatMsg)
+        item.content = content
+        delete item.files
+      } else if (item.role === 'assistant') {
+        item.content = [{
+          "type": "text",
+          "text": item.content
+        }]
+      }
+    })
+    saveAgentResult = await saveImgRecognition({
+      userId: userInfo.id,
+      imgMessages: mes,
+      title: finalTitle.value,
+      id: chatId
+    })
+  } else {
+    saveAgentResult = await saveAgentChat({
+      userId: userInfo.id,
+      id: chatId,
+      agentId: agentId,
+      messages: mes,
+      title: finalTitle.value
+    })
+  }
   if (saveAgentResult.status) {
     // 如果当前智能体为加载对话的智能体，则可设置会话ID
     if (loadingIntelId.value && currentIntelId.value === loadingIntelId.value) {
@@ -746,9 +740,18 @@ const scrollToLastestMessage = () => {
   })
 }
 
+const setMessages = async(params) => {
+  if (conversationId.value) {
+    let chatResult = await getImgRecognitionById(conversationId.value)
+    if (chatResult.status) {
+      params.messages =  chatResult.data?.imgMessages
+    }
+  }
+}
+
 // 当当前智能体ID与正在跑的智能体ID不同时
 const checkWhetherCreateNewChat = () => {
-  if(!currentIntelId.value || !loadingIntelId.value) return
+  if (!currentIntelId.value || !loadingIntelId.value) return
   if (currentIntelId.value === loadingIntelId.value) return
   if (!conversationId.value) {
     // 如果切到其他智能体且没有点击会话，则新建会话
@@ -825,6 +828,8 @@ const submitSample = async (val, isRefresh) => {
   mes = JSON.parse(JSON.stringify(intelQuery))
   mes.messages.push(currentData)
   const params = JSON.parse(JSON.stringify(mes))
+  let images = filesSample.map(file => file.fileId)
+  let chatUrl = '/AI/agentChat'
   for (let j = 0; j < params.messages.length; j++) {
     if (j % 2 === 0) {
       params.messages[j].role = 'user'
@@ -832,10 +837,19 @@ const submitSample = async (val, isRefresh) => {
       params.messages[j].role = 'assistant'
     }
   }
-  params.userId = userInfo.id
-  params.model = 0
-  params.files = filesSample
-  params.agentId = currentIntelId.value
+  if (currentAgentType.value === 'compare') {
+    params.messages = []
+    await setMessages(params)
+    params.userId = userInfo.id
+    params.content = intelQuestion.value
+    params.images = images
+    chatUrl = '/AI/imageRecognition'
+  } else {
+    params.userId = userInfo.id
+    params.model = 0
+    params.files = filesSample
+    params.agentId = currentIntelId.value
+  }
   intelQuestion.value = ''
   interval = setInterval(updateDots, 500)
 
@@ -854,7 +868,7 @@ const submitSample = async (val, isRefresh) => {
   fileAry.value = []
   try {
     // 替换为实际的后端接口地址
-    const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/AI/agentChat', {
+    const res = await fetch(import.meta.env.VITE_API_BASE_URL + chatUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -891,6 +905,7 @@ const submitSample = async (val, isRefresh) => {
         }
         await postSample(saveAgentId, JSON.parse(JSON.stringify(intelCurrent.messages)), tempChatId.value)
         checkWhetherCreateNewChat()
+        // 再执行完save以后再把loading状态清空
         loadingIntelId.value = ''
         break
       }
@@ -912,27 +927,34 @@ const submitSample = async (val, isRefresh) => {
         if (jsonMatch) {
           autoScroll()
           try {
-            const { content } = JSON.parse(jsonMatch[1])
+            const { content, type } = JSON.parse(jsonMatch[1])
             // 核心逻辑：逐字处理
-            if (assistantMsg.hasSplit) {
-              // 已遇到分隔符，内容追加到后半部分
-              assistantMsg.after += content
-            } else {
-              const sp = isThink ? '</think>' : ''
-              // 检查当前数据块是否包含分隔符
-              const splitIndex = content.indexOf(sp)
-              if (splitIndex === -1) {
-                // 未找到分隔符，全部追加到前半部分
-                assistantMsg.before += content
+            if ('compare' !== currentAgentType.value) {
+              if (assistantMsg.hasSplit) {
+                // 已遇到分隔符，内容追加到后半部分
+                assistantMsg.after += content
               } else {
-                // 找到分隔符，分割内容
-                assistantMsg.before += content.slice(0, splitIndex)
-                assistantMsg.after += content.slice(splitIndex + sp.length)
-                assistantMsg.hasSplit = true
+                const sp = isThink ? '</think>' : ''
+                // 检查当前数据块是否包含分隔符
+                const splitIndex = content.indexOf(sp)
+                if (splitIndex === -1) {
+                  // 未找到分隔符，全部追加到前半部分
+                  assistantMsg.before += content
+                } else {
+                  // 找到分隔符，分割内容
+                  assistantMsg.before += content.slice(0, splitIndex)
+                  assistantMsg.after += content.slice(splitIndex + sp.length)
+                  assistantMsg.hasSplit = true
+                }
               }
+            } else {
+              if (type === 'model_streaming') {
+                assistantMsg.after += content
+              }
+              assistantMsg.hasSplit = true
             }
 
-            // 立即更新视图（无需防抖）
+            // 立即更新视图（更新最后一条消息）
             intelCurrent.messages.splice(-1, 1, {
               ...toRaw(assistantMsg),
               before: assistantMsg.before,
@@ -1022,7 +1044,7 @@ const isPureObject = value => {
 }
 const submitSampleFile = val => {
   // isDragOver.value = false
-  for (var i = 0; i < val.length; i++) {
+  for (let i = 0; i < val.length; i++) {
     val[i].fileName = decodeURIComponent(val[i].fileName)
     val[i].originalFileName = decodeURIComponent(val[i].originalFileName)
   }
@@ -1069,11 +1091,33 @@ const getChatByAgentChatId = async chatId => {
   conversationId.value = chatId
   if (intelQuery.isLoading) {
     // 如果当前对话ID与正在输出的流式回答ID一致 则显示流式问答框 否则不显示
-    limitIntelLoading.value = chatId === tempChatId.value;
+    limitIntelLoading.value = chatId === tempChatId.value
   }
-  let chatResults = await getAgentChatByChatId(chatId)
+  let chatResults
+  if (currentAgentType.value === 'compare') {
+    chatResults = await getImgRecognitionById(chatId)
+  } else {
+    chatResults = await getAgentChatByChatId(chatId)
+  }
   if (chatResults.status) {
-    intelQuery.messages = chatResults?.data?.messages ? chatResults?.data?.messages : []
+    if (currentAgentType.value === 'compare') {
+      intelQuery.messages = chatResults?.data?.imgMessages ? chatResults?.data?.imgMessages : []
+      for (let i = 0; i < intelQuery.messages.length; i++) {
+        let oriContent = intelQuery.messages[i].content
+        if (oriContent && Array.isArray(oriContent)) {
+          let files = []
+          for (let j = 0; j < oriContent.length; j++) {
+            if (oriContent[j].type === 'image_url') {
+              files.push(oriContent[j]?.image_url?.image)
+            }
+          }
+          intelQuery.messages[i].files = files
+          intelQuery.messages[i].content = oriContent.find(content_item => content_item.type === 'text').text
+        }
+      }
+    } else {
+      intelQuery.messages = chatResults?.data?.messages ? chatResults?.data?.messages : []
+    }
     if (chatResults.data) {
       recordId.value = chatResults.data.id
     } else {
@@ -1095,7 +1139,13 @@ const getChatByAgentChatId = async chatId => {
   }
 }
 const getHistory = async val => {
-  let agentHistoryList = await getAgentChatByAgentId(currentIntelId.value, val)
+  let agentHistoryList
+  if ('compare' === currentAgentType.value) {
+    agentHistoryList = await getImageRecognitionsByUserId(currentIntelId.value, val)
+  } else {
+    agentHistoryList = await getAgentChatByAgentId(currentIntelId.value, val)
+  }
+
   if (agentHistoryList.status) {
     agentChatList.value = agentHistoryList.data
   }
@@ -1153,7 +1203,7 @@ onMounted(() => {
   adjustTextareaHeight('textareaInputIntel')
   getHistory()
   // 初始化时不展示流式输出
-  limitIntelLoading.value = false;
+  limitIntelLoading.value = false
   intelQuery.messages = []
 })
 // 组件卸载时关闭 SSE 连接
@@ -1169,6 +1219,8 @@ onUnmounted(() => {
   if (interval) {
     clearInterval(interval)
   }
+  // 卸载时清空缓存文件
+  fileInputAry.value = []
 })
 </script>
 <style lang="less" scoped>

@@ -39,6 +39,9 @@ handlePreview
               :options="{beforeTransformData, xls: isXls}"
             />
           </div>
+          <div v-else-if="previewType === 'img'">
+            <img :src="previewContent" />
+          </div>
           <div v-else class="unsupported-preview">暂不支持此格式预览</div>
         </div>
 
@@ -79,6 +82,7 @@ import excel from '@/assets/excl.png'
 import { ElMessage } from 'element-plus' // 引入 ElMessage
 import { Close, Loading } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import {pictureTypes} from '@/utils/common'
 import { beforeTransformData } from '@/utils/common.js' // 导入封装的 axios 方法
 const dialogVisible = ref(false)
 const fileQueue = ref([])
@@ -504,6 +508,9 @@ const handlePreview = async file => {
       previewContent.value = ''
       previewContent.value = await file.raw.arrayBuffer() // 直接传递ArrayBuffer
       previewType.value = 'excel' // 标识为Excel类型
+    } else if (pictureTypes.includes(file.extension)) {
+      previewContent.value = URL.createObjectURL(file.raw)
+      previewType.value = 'img'
     } else {
       previewContent.value = '不支持此附件预览'
       previewType.value = 'unsupported'

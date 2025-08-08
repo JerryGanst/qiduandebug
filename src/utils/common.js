@@ -1,3 +1,8 @@
+import excel from '@/assets/excl.png'
+import word from '@/assets/w.png'
+import text from '@/assets/text.png'
+import pdf from '@/assets/pdf.png'
+import ppt from '@/assets/ppt.png'
 // excel文件解析预览方法
 export const beforeTransformData = (data) => {
   data._worksheets.forEach(worksheet => {
@@ -42,3 +47,34 @@ export const ContentType = {
   KNOWLEDGE: 2,    // 知识库
   AGENT: 3         // 智能体
 };
+
+
+const extensionMap = new Map([
+  ['txt', text],
+  ['pdf', pdf],
+  ['ppt', ppt],
+  ['pptx', ppt],
+  ['xls', excel],
+  ['xlsx', excel],
+  ['doc', word],
+  ['docx', word],
+]);
+
+export const pictureTypes = ['jpg','jpeg','png','gif']
+
+export const getFileImgByOriginFile = (file) => {
+  let origFileName = file.originalFileName;
+  const fileExtension = origFileName.split('.').pop().toLowerCase();
+  if (file.fileUrl && pictureTypes.includes(fileExtension)) {
+    return file.fileUrl;
+  }
+  return extensionMap.get(fileExtension) || text;
+}
+
+export const getFileImg = (file) => {
+  if (pictureTypes.includes(file.extension)) {
+    return URL.createObjectURL(file.raw)
+  }
+
+  return extensionMap.get(file.extension) || text
+}

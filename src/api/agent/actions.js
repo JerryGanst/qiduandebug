@@ -25,7 +25,17 @@ const API = Object.freeze({
   // 根据聊天记录ID获取聊天记录
   GET_AGENT_CHAT_BY_CHAT_ID: '/Agent/findAgentChatByChatId?chatId=',
   // 修改智能体标题
-  CHANGE_AGENT_CHAT_TITLE: '/Agent/updateAgentChatTitle?agentChatId='
+  CHANGE_AGENT_CHAT_TITLE: '/Agent/updateAgentChatTitle?agentChatId=',
+  // 修改图片对比智能体标题
+  CHANGE_IMG_RECOGNITION_CHAT_TITLE: '/imageRecognition/changeImageRecognitionTitle?id=',
+  // 根据用户id获取图片识别记录
+  GET_IMG_RECOGNITIONS_BY_USER_ID: '/imageRecognition/getImageRecognitionsByUserId?userId=',
+  // 保存用户图片识别记录
+  SAVE_IMG_RECOGNITION: '/imageRecognition/saveImgRecognition',
+  // 根据对话ID获取图片识别记录
+  GET_IMG_RECOGNITION_BY_ID: '/imageRecognition/getImgRecognitionById?id=',
+  // 根据对话ID删除图片识别记录
+  DELETE_IMG_RECOGNITION_BY_ID: '/imageRecognition/deleteImgRecognitionById?id=',
 });
 
 export const getAgentListByUserId = (userId) => request.post(API.GET_AGENT_LIST_BY_USER_ID + userId, {})
@@ -49,3 +59,13 @@ export const removeAgentChatById = (chatId, userId) => request.post(API.REMOVE_A
 export const getAgentChatByChatId = (chatId) => request.post(API.GET_AGENT_CHAT_BY_CHAT_ID + chatId , {  })
 
 export const changeAgentChatTitle = (agentChatId, title) => request.post(API.CHANGE_AGENT_CHAT_TITLE + agentChatId + '&title=' + (title || ''), {  })
+
+export const changeImgRecognitionChatTitle = (agentChatId, title) => request.post(API.CHANGE_IMG_RECOGNITION_CHAT_TITLE + agentChatId + '&title=' + (title || ''), {  })
+
+export const getImageRecognitionsByUserId = (userId, keyword) => request.post(API.GET_IMG_RECOGNITIONS_BY_USER_ID + userId + '&keyword=' + (keyword || ''), {  })
+
+export const saveImgRecognition = (agentChats) => request.post(API.SAVE_IMG_RECOGNITION, agentChats)
+
+export const getImgRecognitionById = (chatId) => request.post(API.GET_IMG_RECOGNITION_BY_ID + chatId, {  })
+
+export const deleteImgRecognitionById = (chatId) => request.post(API.DELETE_IMG_RECOGNITION_BY_ID + chatId)
