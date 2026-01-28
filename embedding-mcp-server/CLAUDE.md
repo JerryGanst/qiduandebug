@@ -8,5 +8,5 @@
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
 | #691 | 9:56 AM | 🔵 | Claude-Mem Contains Multiple README Files for Different Components | ~407 |
-| #680 | 9:21 AM | 🔵 | Cursor Context Injection via Auto-Updated Rules File | ~559 |
+| #656 | 9:12 AM | 🔵 | BGE-M3 Embedding MCP Server with 1024-Dimensional Multilingual Vectors | ~621 |
 </claude-mem-context>

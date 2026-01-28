@@ -83,13 +83,13 @@ export class SearchOrchestrator {
   ): Promise<StrategySearchResult> {
     // PATH 1: FILTER-ONLY (no query text) - Use SQLite
     if (!options.query) {
-      logger.debug('SEARCH', 'Orchestrator: Filter-only query, using SQLite', {});
+      logger.info('SEARCH', 'Orchestrator: Filter-only query, using SQLite', {});
       return await this.sqliteStrategy.search(options);
     }
 
     // PATH 2: CHROMA SEMANTIC SEARCH (query text + Chroma available)
     if (this.chromaStrategy) {
-      logger.debug('SEARCH', 'Orchestrator: Using Chroma semantic search', {});
+      logger.info('SEARCH', 'Orchestrator: Using Chroma semantic search', { query: options.query });
       const result = await this.chromaStrategy.search(options);
 
       // If Chroma succeeded (even with 0 results), return

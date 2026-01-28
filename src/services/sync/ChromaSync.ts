@@ -83,10 +83,20 @@ export class ChromaSync {
   private readonly VECTOR_DB_DIR: string;
   private readonly BATCH_SIZE = 100;
 
+  // BGE-M3 Embedding MCP client
+  private embeddingClient: Client | null = null;
+  private embeddingTransport: StdioClientTransport | null = null;
+  private embeddingConnected: boolean = false;
+  private embeddingEnabled: boolean = false;
+
   constructor(project: string) {
     this.project = project;
     this.collectionName = `cm__${project}`;
     this.VECTOR_DB_DIR = path.join(os.homedir(), '.claude-mem', 'vector-db');
+
+    // Check if BGE-M3 embedding is enabled
+    const settings = SettingsDefaultsManager.loadFromFile(USER_SETTINGS_PATH);
+    this.embeddingEnabled = settings.CLAUDE_MEM_EMBEDDING_MCP_ENABLED === 'true';
   }
 
   /**
@@ -139,9 +149,167 @@ export class ChromaSync {
       this.connected = true;
 
       logger.info('CHROMA_SYNC', 'Connected to Chroma MCP server', { project: this.project });
+
+      // Connect to embedding MCP server if enabled
+      if (this.embeddingEnabled) {
+        await this.ensureEmbeddingConnection();
+      }
     } catch (error) {
       logger.error('CHROMA_SYNC', 'Failed to connect to Chroma MCP server', { project: this.project }, error as Error);
       throw new Error(`Chroma connection failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Ensure embedding MCP client is connected (for BGE-M3)
+   * Gracefully degrades to default embeddings if connection fails
+   */
+  private async ensureEmbeddingConnection(): Promise<void> {
+    if (this.embeddingConnected && this.embeddingClient) {
+      return;
+    }
+
+    if (!this.embeddingEnabled) {
+      return;
+    }
+
+    logger.info('CHROMA_SYNC', 'Connecting to Embedding MCP server (BGE-M3)...', { project: this.project });
+
+    try {
+      const isWindows = process.platform === 'win32';
+      const settings = SettingsDefaultsManager.loadFromFile(USER_SETTINGS_PATH);
+      const { existsSync } = await import('fs');
+
+      // Get embedding server path from settings (required for bundled worker)
+      const embeddingServerDir = settings.CLAUDE_MEM_EMBEDDING_SERVER_PATH;
+      if (!embeddingServerDir) {
+        logger.warn('CHROMA_SYNC', 'CLAUDE_MEM_EMBEDDING_SERVER_PATH not set, cannot connect to embedding server', { project: this.project });
+        this.embeddingEnabled = false;
+        return;
+      }
+
+      const embeddingServerPath = path.join(embeddingServerDir, 'server.py');
+      if (!existsSync(embeddingServerPath)) {
+        logger.warn('CHROMA_SYNC', 'Embedding server not found', { path: embeddingServerPath, project: this.project });
+        this.embeddingEnabled = false;
+        return;
+      }
+
+      // Path to virtual environment Python (in the same parent directory as embedding-mcp-server)
+      const parentDir = path.dirname(embeddingServerDir);
+      const venvPythonPath = path.join(parentDir, '.venv', 'bin', 'python');
+      const venvPythonPathWin = path.join(parentDir, '.venv', 'Scripts', 'python.exe');
+
+      // Determine which Python to use
+      let pythonCommand = 'python3';
+
+      if (isWindows && existsSync(venvPythonPathWin)) {
+        pythonCommand = venvPythonPathWin;
+        logger.info('CHROMA_SYNC', 'Using venv Python (Windows)', { path: venvPythonPathWin });
+      } else if (!isWindows && existsSync(venvPythonPath)) {
+        pythonCommand = venvPythonPath;
+        logger.info('CHROMA_SYNC', 'Using venv Python', { path: venvPythonPath });
+      } else {
+        logger.info('CHROMA_SYNC', 'No venv found, using system python3');
+      }
+
+      const transportOptions: any = {
+        command: pythonCommand,
+        args: [embeddingServerPath],
+        stderr: 'ignore'
+      };
+
+      if (isWindows) {
+        transportOptions.windowsHide = true;
+      }
+
+      this.embeddingTransport = new StdioClientTransport(transportOptions);
+
+      this.embeddingClient = new Client({
+        name: 'claude-mem-embedding',
+        version: packageVersion
+      }, {
+        capabilities: {}
+      });
+
+      await this.embeddingClient.connect(this.embeddingTransport);
+      this.embeddingConnected = true;
+
+      logger.info('CHROMA_SYNC', 'Connected to Embedding MCP server (BGE-M3)', { project: this.project });
+    } catch (error) {
+      logger.warn('CHROMA_SYNC', 'Failed to connect to Embedding MCP server, falling back to default embeddings', { project: this.project }, error as Error);
+      // Gracefully degrade - don't throw, just disable custom embeddings
+      this.embeddingEnabled = false;
+      this.embeddingClient = null;
+      this.embeddingTransport = null;
+    }
+  }
+
+  /**
+   * Compute embeddings using BGE-M3 MCP server
+   * Returns empty array if embedding server not available (signals to use Chroma default)
+   */
+  private async computeEmbeddings(texts: string[]): Promise<number[][]> {
+    if (!this.embeddingEnabled || !this.embeddingClient) {
+      return []; // Let Chroma use default embeddings
+    }
+
+    try {
+      const result = await this.embeddingClient.callTool({
+        name: 'embed_texts',
+        arguments: { texts }
+      });
+
+      const data = result.content[0];
+      if (data.type !== 'text') {
+        throw new Error('Unexpected response type from embed_texts');
+      }
+
+      const parsed = JSON.parse(data.text);
+      if (parsed.error) {
+        throw new Error(parsed.error);
+      }
+
+      logger.debug('CHROMA_SYNC', 'Computed BGE-M3 embeddings', {
+        count: parsed.count,
+        dimensions: parsed.dimensions
+      });
+
+      return parsed.embeddings;
+    } catch (error) {
+      logger.error('CHROMA_SYNC', 'Failed to compute embeddings, falling back to default', { project: this.project }, error as Error);
+      return []; // Graceful fallback
+    }
+  }
+
+  /**
+   * Compute single query embedding using BGE-M3 MCP server
+   */
+  private async computeQueryEmbedding(query: string): Promise<number[] | null> {
+    if (!this.embeddingEnabled || !this.embeddingClient) {
+      return null; // Let Chroma use default embeddings
+    }
+
+    try {
+      const result = await this.embeddingClient.callTool({
+        name: 'embed_query',
+        arguments: { query }
+      });
+
+      const data = result.content[0];
+      if (data.type !== 'text') {
+        throw new Error('Unexpected response type from embed_query');
+      }
+
+      const parsed = JSON.parse(data.text);
+      if (parsed.error) {
+        throw new Error(parsed.error);
+      }
+
+      return parsed.embedding;
+    } catch (error) {
+      logger.error('CHROMA_SYNC', 'Failed to compute query embedding, falling back to default', { project: this.project }, error as Error);
+      return null; // Graceful fallback
     }
   }
 
@@ -361,19 +529,38 @@ export class ChromaSync {
     }
 
     try {
+      const texts = documents.map(d => d.document);
+      const ids = documents.map(d => d.id);
+      const metadatas = documents.map(d => d.metadata);
+
+      // Compute embeddings if BGE-M3 is enabled
+      const embeddings = await this.computeEmbeddings(texts);
+
+      const addArguments: any = {
+        collection_name: this.collectionName,
+        documents: texts,
+        ids: ids,
+        metadatas: metadatas
+      };
+
+      // Add pre-computed embeddings if available
+      if (embeddings.length > 0) {
+        addArguments.embeddings = embeddings;
+        logger.info('CHROMA_SYNC', 'Using BGE-M3 embeddings', {
+          count: embeddings.length,
+          dimensions: embeddings[0]?.length || 0
+        });
+      }
+
       await this.client.callTool({
         name: 'chroma_add_documents',
-        arguments: {
-          collection_name: this.collectionName,
-          documents: documents.map(d => d.document),
-          ids: documents.map(d => d.id),
-          metadatas: documents.map(d => d.metadata)
-        }
+        arguments: addArguments
       });
 
-      logger.debug('CHROMA_SYNC', 'Documents added', {
+      logger.info('CHROMA_SYNC', 'Documents added', {
         collection: this.collectionName,
-        count: documents.length
+        count: documents.length,
+        embeddingModel: embeddings.length > 0 ? 'bge-m3' : 'default'
       });
     } catch (error) {
       logger.error('CHROMA_SYNC', 'Failed to add documents', {
@@ -567,7 +754,28 @@ export class ChromaSync {
           throw new Error('Unexpected response type from chroma_get_documents');
         }
 
-        const parsed = JSON.parse(data.text);
+        // Handle error responses from Chroma (e.g., empty collection)
+        const responseText = data.text;
+        if (responseText.startsWith('Error') || responseText.includes('error')) {
+          logger.debug('CHROMA_SYNC', 'Collection appears empty or error occurred', {
+            project: this.project,
+            response: responseText.substring(0, 100)
+          });
+          break; // Treat as empty collection
+        }
+
+        let parsed: any;
+        try {
+          parsed = JSON.parse(responseText);
+        } catch (parseError) {
+          // If JSON parse fails, collection is likely empty or returned an error
+          logger.debug('CHROMA_SYNC', 'Could not parse response, treating as empty', {
+            project: this.project,
+            response: responseText.substring(0, 100)
+          });
+          break;
+        }
+
         const metadatas = parsed.metadatas || [];
 
         if (metadatas.length === 0) {
@@ -595,6 +803,11 @@ export class ChromaSync {
           batchSize: metadatas.length
         });
       } catch (error) {
+        // On first iteration, if we get an error, collection might be empty/new
+        if (offset === 0) {
+          logger.debug('CHROMA_SYNC', 'Collection appears to be new/empty', { project: this.project });
+          break;
+        }
         logger.error('CHROMA_SYNC', 'Failed to fetch existing IDs', { project: this.project }, error as Error);
         throw error;
       }
@@ -799,13 +1012,25 @@ export class ChromaSync {
 
     const whereStringified = whereFilter ? JSON.stringify(whereFilter) : undefined;
 
-    const arguments_obj = {
+    // Compute query embedding if BGE-M3 is enabled
+    const queryEmbedding = await this.computeQueryEmbedding(query);
+
+    const arguments_obj: any = {
       collection_name: this.collectionName,
-      query_texts: [query],
       n_results: limit,
       include: ['documents', 'metadatas', 'distances'],
       where: whereStringified
     };
+
+    // Use pre-computed embedding or text query
+    if (queryEmbedding) {
+      arguments_obj.query_embeddings = [queryEmbedding];
+      logger.debug('CHROMA_SYNC', 'Using BGE-M3 query embedding', {
+        dimensions: queryEmbedding.length
+      });
+    } else {
+      arguments_obj.query_texts = [query];
+    }
 
     let result;
     try {
@@ -884,25 +1109,39 @@ export class ChromaSync {
    * Close the Chroma client connection and cleanup subprocess
    */
   async close(): Promise<void> {
-    if (!this.connected && !this.client && !this.transport) {
+    if (!this.connected && !this.client && !this.transport &&
+        !this.embeddingConnected && !this.embeddingClient && !this.embeddingTransport) {
       return;
     }
 
-    // Close client first
+    // Close Chroma client first
     if (this.client) {
       await this.client.close();
     }
 
-    // Explicitly close transport to kill subprocess
+    // Explicitly close Chroma transport to kill subprocess
     if (this.transport) {
       await this.transport.close();
     }
 
-    logger.info('CHROMA_SYNC', 'Chroma client and subprocess closed', { project: this.project });
+    // Close embedding client
+    if (this.embeddingClient) {
+      await this.embeddingClient.close();
+    }
+
+    // Close embedding transport
+    if (this.embeddingTransport) {
+      await this.embeddingTransport.close();
+    }
+
+    logger.info('CHROMA_SYNC', 'Chroma and embedding clients closed', { project: this.project });
 
     // Always reset state
     this.connected = false;
     this.client = null;
     this.transport = null;
+    this.embeddingConnected = false;
+    this.embeddingClient = null;
+    this.embeddingTransport = null;
   }
 }

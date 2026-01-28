@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>时间衰减方案设计 - claude-mem RAG 优化</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e4e4e4;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 40px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h2 {
+      color: #00d4ff;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+    h3 {
+      color: #7b2cbf;
+      margin: 20px 0 10px;
+    }
+    .chart-container {
+      position: relative;
+      height: 400px;
+      margin: 20px 0;
+    }
+    .formula {
+      background: rgba(0, 212, 255, 0.1);
+      border-left: 4px solid #00d4ff;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+      font-family: 'Courier New', monospace;
+    }
+    .formula-title {
+      color: #00d4ff;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    th {
+      background: rgba(123, 44, 191, 0.3);
+      color: #fff;
+    }
+    tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .highlight {
+      color: #00d4ff;
+      font-weight: bold;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .comparison-item {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 20px;
+      border-radius: 12px;
+    }
+    .comparison-item.old {
+      border: 1px solid #ff6b6b;
+    }
+    .comparison-item.new {
+      border: 1px solid #51cf66;
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      margin-bottom: 10px;
+    }
+    .tag.old { background: #ff6b6b; color: #fff; }
+    .tag.new { background: #51cf66; color: #fff; }
+    ul {
+      padding-left: 20px;
+      line-height: 1.8;
+    }
+    .key-points {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .key-point {
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 44, 191, 0.1));
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .key-point .number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00d4ff;
+    }
+    .key-point .label {
+      color: #888;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏱️ 时间衰减方案设计</h1>
+    <p class="subtitle">claude-mem RAG 搜索优化 · 对数衰减保护常数方案</p>
+
+    <!-- 设计目标 -->
+    <div class="card">
+      <h2>🎯 设计目标</h2>
+      <div class="key-points">
+        <div class="key-point">
+          <div class="number">90天</div>
+          <div class="label">保护期内高权重</div>
+        </div>
+        <div class="key-point">
+          <div class="number">180天</div>
+          <div class="label">衰减至 5%</div>
+        </div>
+        <div class="key-point">
+          <div class="number">前慢后快</div>
+          <div class="label">对数衰减曲线</div>
+        </div>
+      </div>
+      <ul>
+        <li><strong>90天内</strong>：记忆权重保持较高，缓慢衰减（用户活跃期保护）</li>
+        <li><strong>90-180天</strong>：加速衰减，逐渐移除保护</li>
+        <li><strong>180天后</strong>：仅保留基础指数衰减，趋近于 0 但不完全消失</li>
+      </ul>
+    </div>
+
+    <!-- 新旧对比 -->
+    <div class="card">
+      <h2>📊 新旧方案对比</h2>
+      <div class="comparison">
+        <div class="comparison-item old">
+          <span class="tag old">旧方案</span>
+          <h3>硬截断</h3>
+          <ul>
+            <li>90天内：100% 权重</li>
+            <li>90天后：<strong>0%（完全丢弃）</strong></li>
+            <li>第89天 = 第1天（无区分）</li>
+            <li>第91天直接消失</li>
+          </ul>
+        </div>
+        <div class="comparison-item new">
+          <span class="tag new">新方案</span>
+          <h3>对数衰减 + 保护常数</h3>
+          <ul>
+            <li>0-30天：≈100%（几乎不衰减）</li>
+            <li>30-90天：95% → 36%（缓慢下降）</li>
+            <li>90-180天：36% → 5%（加速下降）</li>
+            <li>180天后：5% → 0（渐进趋零）</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数学公式 -->
+    <div class="card">
+      <h2>📐 数学公式</h2>
+
+      <div class="formula">
+        <div class="formula-title">最终得分公式（乘法组合）</div>
+        <p>Score(t) = clamp(BaseDecay(t) × (1 + BoostFactor(t)), minWeight, 1.0)</p>
+        <p style="color: #888; margin-top: 10px;">minWeight = 0.01（1% 保底，老记忆不会完全消失）</p>
+      </div>
+
+      <h3>1. 基础指数衰减 BaseDecay(t)</h3>
+      <div class="formula">
+        <p>BaseDecay(t) = e<sup>-t/τ</sup></p>
+        <p style="color: #888; margin-top: 10px;">其中 τ = 60（半衰期60天）</p>
+      </div>
+
+      <h3>2. 对数衰减增益因子 BoostFactor(t)</h3>
+      <div class="formula">
+        <p>BoostFactor(t) = B<sub>max</sub> × max(0, 1 - ln(1 + t/k) / ln(1 + T<sub>max</sub>/k))</p>
+        <p style="color: #888; margin-top: 10px;">
+          B<sub>max</sub> = 0.5（最大增益值）<br>
+          k = 30（曲线形状参数，越小前期越平缓）<br>
+          T<sub>max</sub> = 180（增益完全消失的时间）
+        </p>
+      </div>
+
+      <h3>为什么用对数？</h3>
+      <p>对数函数 ln(1+x) 的特点是<span class="highlight">前慢后快</span>：</p>
+      <ul>
+        <li>x 较小时，ln(1+x) ≈ x，增长缓慢</li>
+        <li>x 较大时，增长加速</li>
+        <li>这正好符合"早期保护、后期放开"的需求</li>
+      </ul>
+    </div>
+
+    <!-- 主图表 -->
+    <div class="card">
+      <h2>📈 衰减曲线可视化</h2>
+      <div class="chart-container">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 分量分解图 -->
+    <div class="card">
+      <h2>🔍 分量分解</h2>
+      <div class="chart-container">
+        <canvas id="componentChart"></canvas>
+      </div>
+      <p style="text-align: center; color: #888; margin-top: 10px;">
+        蓝色 = 基础指数衰减 | 紫色 = 增益因子 | 绿色 = 最终得分 (乘法组合)
+      </p>
+    </div>
+
+    <!-- 数值表格 -->
+    <div class="card">
+      <h2>📋 关键时间点数值</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>时间 (天)</th>
+            <th>BaseDecay</th>
+            <th>Boost (增益)</th>
+            <th>最终得分</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+      </table>
+    </div>
+
+    <!-- 实际效果 -->
+    <div class="card">
+      <h2>💡 实际搜索效果</h2>
+      <p>假设有两条记忆，语义相似度相同：</p>
+      <table>
+        <thead>
+          <tr>
+            <th>记忆</th>
+            <th>创建时间</th>
+            <th>语义分数</th>
+            <th>时间衰减</th>
+            <th>最终排序分</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>记忆 A</td>
+            <td>7天前</td>
+            <td>0.85</td>
+            <td>× 1.00</td>
+            <td class="highlight">0.850</td>
+          </tr>
+          <tr>
+            <td>记忆 B</td>
+            <td>60天前</td>
+            <td>0.85</td>
+            <td>× 0.60</td>
+            <td>0.510</td>
+          </tr>
+          <tr>
+            <td>记忆 C</td>
+            <td>120天前</td>
+            <td>0.85</td>
+            <td>× 0.20</td>
+            <td>0.170</td>
+          </tr>
+          <tr>
+            <td>记忆 D</td>
+            <td>180天前</td>
+            <td>0.85</td>
+            <td>× 0.05</td>
+            <td>0.043</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top: 15px; color: #888;">
+        → 最近的记忆 A 排在最前，但老记忆不会完全消失，仍有机会被召回
+      </p>
+    </div>
+
+  </div>
+
+  <script>
+    // 配置参数
+    const CONFIG = {
+      baseHalfLife: 60,      // τ - 半衰期
+      boostMax: 0.5,         // B_max - 最大增益
+      curveFactor: 30,       // k - 曲线形状
+      protectionDuration: 180, // T_max - 保护期
+      minWeight: 0.01        // 最小权重保底
+    };
+
+    // 计算函数
+    function calcBaseDecay(t) {
+      const result = Math.exp(-t / CONFIG.baseHalfLife);
+      return result < 1e-10 ? 0 : result;
+    }
+
+    function calcBoostFactor(t) {
+      const logFactor = Math.log(1 + t / CONFIG.curveFactor) /
+                        Math.log(1 + CONFIG.protectionDuration / CONFIG.curveFactor);
+      return CONFIG.boostMax * Math.max(0, 1 - logFactor);
+    }
+
+    function calcFinalScore(t) {
+      const base = calcBaseDecay(t);
+      const boost = calcBoostFactor(t);
+      // 乘法组合: BaseDecay × (1 + BoostFactor)
+      const raw = base * (1 + boost);
+      return Math.min(1.0, Math.max(CONFIG.minWeight, raw));
+    }
+
+    // 生成数据
+    const days = [];
+    const baseDecayData = [];
+    const boostData = [];
+    const finalScoreData = [];
+    const oldMethodData = [];
+
+    for (let t = 0; t <= 365; t += 1) {
+      days.push(t);
+      baseDecayData.push(calcBaseDecay(t));
+      boostData.push(calcBoostFactor(t));
+      finalScoreData.push(calcFinalScore(t));
+      oldMethodData.push(t <= 90 ? 1.0 : 0.0);
+    }
+
+    // 主图表
+    new Chart(document.getElementById('mainChart'), {
+      type: 'line',
+      data: {
+        labels: days,
+        datasets: [
+          {
+            label: '新方案（对数衰减）',
+            data: finalScoreData,
+            borderColor: '#51cf66',
+            backgroundColor: 'rgba(81, 207, 102, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 3
+          },
+          {
+            label: '旧方案（硬截断）',
+            data: oldMethodData,
+            borderColor: '#ff6b6b',
+            borderDash: [5, 5],
+            fill: false,
+            tension: 0,
+            borderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#e4e4e4' }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: '天数', color: '#888' },
+            ticks: { color: '#888' },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          y: {
+            title: { display: true, text: '权重', color: '#888' },
+            ticks: { color: '#888' },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            min: 0,
+            max: 1.1
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        }
+      }
+    });
+
+    // 分量图
+    new Chart(document.getElementById('componentChart'), {
+      type: 'line',
+      data: {
+        labels: days,
+        datasets: [
+          {
+            label: '最终得分',
+            data: finalScoreData,
+            borderColor: '#51cf66',
+            borderWidth: 3,
+            tension: 0.4
+          },
+          {
+            label: '基础指数衰减',
+            data: baseDecayData,
+            borderColor: '#00d4ff',
+            borderWidth: 2,
+            tension: 0.4
+          },
+          {
+            label: '增益因子 Boost',
+            data: boostData,
+            borderColor: '#7b2cbf',
+            borderWidth: 2,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#e4e4e4' }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: '天数', color: '#888' },
+            ticks: { color: '#888' },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          y: {
+            title: { display: true, text: '值', color: '#888' },
+            ticks: { color: '#888' },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            min: 0,
+            max: 1.1
+          }
+        }
+      }
+    });
+
+    // 数据表格
+    const keyDays = [0, 7, 30, 60, 90, 120, 150, 180, 270, 365];
+    const descriptions = [
+      '刚创建',
+      '一周内',
+      '一个月',
+      '两个月',
+      '三个月（保护期临界）',
+      '四个月',
+      '五个月',
+      '六个月（保护结束）',
+      '九个月',
+      '一年'
+    ];
+
+    const tableBody = document.getElementById('dataTable');
+    keyDays.forEach((t, i) => {
+      const base = calcBaseDecay(t);
+      const c = calcBoostFactor(t);
+      const final = calcFinalScore(t);
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${t}</td>
+        <td>${base.toFixed(3)}</td>
+        <td>${c.toFixed(3)}</td>
+        <td class="highlight">${final.toFixed(3)}</td>
+        <td style="color: #888">${descriptions[i]}</td>
+      `;
+      tableBody.appendChild(row);
+    });
+  </script>
+</body>
+</html>

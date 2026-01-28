@@ -23,6 +23,8 @@ import {
 import { ChromaSync } from '../../../sync/ChromaSync.js';
 import { SessionStore } from '../../../sqlite/SessionStore.js';
 import { logger } from '../../../../utils/logger.js';
+import { getQueryExpander } from '../QueryExpander.js';
+import { getTimeDecay } from '../TimeDecay.js';
 
 export class ChromaSearchStrategy extends BaseSearchStrategy implements SearchStrategy {
   readonly name = 'chroma';
@@ -67,15 +69,27 @@ export class ChromaSearchStrategy extends BaseSearchStrategy implements SearchSt
       // Build Chroma where filter for doc_type
       const whereFilter = this.buildWhereFilter(searchType);
 
-      // Step 1: Chroma semantic search
-      logger.debug('SEARCH', 'ChromaSearchStrategy: Querying Chroma', { query, searchType });
-      const chromaResults = await this.chromaSync.queryChroma(
-        query,
-        SEARCH_CONSTANTS.CHROMA_BATCH_SIZE,
-        whereFilter
+      // Step 1: Query Expansion for better recall
+      const expander = getQueryExpander();
+      const searchQueries = expander.getSearchQueries(query, 3);
+
+      logger.info('SEARCH', 'ChromaSearchStrategy: Query expansion', {
+        original: query,
+        expanded: searchQueries
+      });
+
+      // Step 2: Multi-query retrieval (parallel)
+      const allResults = await Promise.all(
+        searchQueries.map(q =>
+          this.chromaSync.queryChroma(q, SEARCH_CONSTANTS.CHROMA_BATCH_SIZE, whereFilter)
+        )
       );
 
-      logger.debug('SEARCH', 'ChromaSearchStrategy: Chroma returned matches', {
+      // Step 3: Merge and deduplicate results
+      const chromaResults = this.mergeChromaResults(allResults);
+
+      logger.info('SEARCH', 'ChromaSearchStrategy: Merged results', {
+        queryCount: searchQueries.length,
         matchCount: chromaResults.ids.length
       });
 
@@ -209,5 +223,42 @@ export class ChromaSearchStrategy extends BaseSearchStrategy implements SearchSt
     }
 
     return { obsIds, sessionIds, promptIds };
+  }
+
+  /**
+   * Merge results from multiple Chroma queries
+   * Deduplicates by ID, applies time decay, and sorts by adjusted distance
+   */
+  private mergeChromaResults(
+    results: Array<{ ids: number[]; distances: number[]; metadatas: any[] }>
+  ): { ids: number[]; distances: number[]; metadatas: any[] } {
+    const timeDecay = getTimeDecay();
+    const idMap = new Map<number, { distance: number; adjustedDistance: number; metadata: any }>();
+
+    for (const result of results) {
+      for (let i = 0; i < result.ids.length; i++) {
+        const id = result.ids[i];
+        const distance = result.distances[i];
+        const metadata = result.metadatas[i];
+
+        // Apply time decay to distance (older items get higher adjusted distance)
+        const createdAtEpoch = metadata?.created_at_epoch || Date.now();
+        const adjustedDistance = timeDecay.applyToDistance(distance, createdAtEpoch);
+
+        const existing = idMap.get(id);
+        if (!existing || adjustedDistance < existing.adjustedDistance) {
+          idMap.set(id, { distance, adjustedDistance, metadata });
+        }
+      }
+    }
+
+    // Sort by adjusted distance (considering time decay - older items rank lower)
+    const sorted = Array.from(idMap.entries()).sort((a, b) => a[1].adjustedDistance - b[1].adjustedDistance);
+
+    return {
+      ids: sorted.map(([id]) => id),
+      distances: sorted.map(([, data]) => data.distance),
+      metadatas: sorted.map(([, data]) => data.metadata)
+    };
   }
 }

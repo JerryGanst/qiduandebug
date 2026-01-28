@@ -50,6 +50,10 @@ export interface SettingsDefaults {
   // Feature Toggles
   CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY: string;
   CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE: string;
+  // Embedding Configuration
+  CLAUDE_MEM_EMBEDDING_MODEL: string;  // 'default' | 'bge-m3'
+  CLAUDE_MEM_EMBEDDING_MCP_ENABLED: string;  // 'true' | 'false'
+  CLAUDE_MEM_EMBEDDING_SERVER_PATH: string;  // Path to embedding-mcp-server directory
 }
 
 export class SettingsDefaultsManager {
@@ -94,6 +98,10 @@ export class SettingsDefaultsManager {
     // Feature Toggles
     CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY: 'true',
     CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE: 'false',
+    // Embedding Configuration
+    CLAUDE_MEM_EMBEDDING_MODEL: 'default',  // 'default' uses chroma-mcp built-in (all-MiniLM-L6-v2)
+    CLAUDE_MEM_EMBEDDING_MCP_ENABLED: 'false',  // Set to 'true' to enable BGE-M3 embedding server
+    CLAUDE_MEM_EMBEDDING_SERVER_PATH: '',  // Path to embedding-mcp-server (e.g., /path/to/claude-mem/embedding-mcp-server)
   };
 
   /**

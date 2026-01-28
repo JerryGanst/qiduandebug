@@ -7,6 +7,14 @@
 // Main orchestrator
 export { SearchOrchestrator } from './SearchOrchestrator.js';
 
+// Query Processing
+export { QueryExpander, getQueryExpander } from './QueryExpander.js';
+export type { ExpandedQuery } from './QueryExpander.js';
+
+// Time Decay
+export { TimeDecay, getTimeDecay, createTimeDecay, DEFAULT_TIME_DECAY_CONFIG } from './TimeDecay.js';
+export type { TimeDecayConfig } from './TimeDecay.js';
+
 // Formatters
 export { ResultFormatter } from './ResultFormatter.js';
 export { TimelineBuilder } from './TimelineBuilder.js';

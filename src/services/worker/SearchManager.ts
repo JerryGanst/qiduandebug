@@ -28,7 +28,9 @@ import { ModeManager } from '../domain/ModeManager.js';
 import {
   SearchOrchestrator,
   TimelineBuilder,
-  SEARCH_CONSTANTS
+  SEARCH_CONSTANTS,
+  getQueryExpander,
+  getTimeDecay
 } from './search/index.js';
 import type { TimelineData } from './search/index.js';
 
@@ -62,6 +64,49 @@ export class SearchManager {
     whereFilter?: Record<string, any>
   ): Promise<{ ids: number[]; distances: number[]; metadatas: any[] }> {
     return await this.chromaSync.queryChroma(query, limit, whereFilter);
+  }
+
+  /**
+   * Merge results from multiple Chroma queries
+   * Deduplicates by ID, applies time decay, and sorts by adjusted distance
+   */
+  private mergeChromaResults(
+    results: Array<{ ids: number[]; distances: number[]; metadatas: any[] }>
+  ): { ids: number[]; distances: number[]; metadatas: any[] } {
+    const timeDecay = getTimeDecay();
+    const idMap = new Map<number, { distance: number; adjustedDistance: number; metadata: any }>();
+
+    for (const result of results) {
+      for (let i = 0; i < result.ids.length; i++) {
+        const id = result.ids[i];
+        const distance = result.distances[i];
+        const metadata = result.metadatas[i];
+
+        // Apply time decay to distance (older items get higher adjusted distance)
+        const createdAtEpoch = metadata?.created_at_epoch || Date.now();
+        const adjustedDistance = timeDecay.applyToDistance(distance, createdAtEpoch);
+
+        const existing = idMap.get(id);
+        if (!existing || adjustedDistance < existing.adjustedDistance) {
+          idMap.set(id, { distance, adjustedDistance, metadata });
+        }
+      }
+    }
+
+    // Sort by adjusted distance (best matches first, considering time decay)
+    const sorted = [...idMap.entries()].sort((a, b) => a[1].adjustedDistance - b[1].adjustedDistance);
+
+    logger.debug('SEARCH', 'Time decay applied to results', {
+      totalResults: sorted.length,
+      topAdjustedDistance: sorted[0]?.[1].adjustedDistance?.toFixed(4),
+      topOriginalDistance: sorted[0]?.[1].distance?.toFixed(4)
+    });
+
+    return {
+      ids: sorted.map(([id]) => id),
+      distances: sorted.map(([, data]) => data.distance), // Return original distances
+      metadatas: sorted.map(([, data]) => data.metadata)
+    };
   }
 
   /**
@@ -152,7 +197,7 @@ export class SearchManager {
     // PATH 2: CHROMA SEMANTIC SEARCH (query text + Chroma available)
     else if (this.chromaSync) {
       let chromaSucceeded = false;
-      logger.debug('SEARCH', 'Using ChromaDB semantic search', { typeFilter: type || 'all' });
+      logger.info('SEARCH', 'Using ChromaDB semantic search', { typeFilter: type || 'all' });
 
       // Build Chroma where filter for doc_type
       let whereFilter: Record<string, any> | undefined;
@@ -164,8 +209,19 @@ export class SearchManager {
         whereFilter = { doc_type: 'user_prompt' };
       }
 
-      // Step 1: Chroma semantic search with optional type filter
-      const chromaResults = await this.queryChroma(query, 100, whereFilter);
+      // Step 1: Query Expansion for better recall
+      const expander = getQueryExpander();
+      const searchQueries = expander.getSearchQueries(query, 3);
+      logger.info('SEARCH', 'Query expansion', { original: query, expanded: searchQueries });
+
+      // Step 2: Multi-query retrieval (parallel)
+      const allResults = await Promise.all(
+        searchQueries.map(q => this.queryChroma(q, 100, whereFilter))
+      );
+
+      // Step 3: Merge and deduplicate results
+      const chromaResults = this.mergeChromaResults(allResults);
+      logger.info('SEARCH', 'Merged results', { queryCount: searchQueries.length, matchCount: chromaResults.ids.length });
       chromaSucceeded = true; // Chroma didn't throw error
       logger.debug('SEARCH', 'ChromaDB returned semantic matches', { matchCount: chromaResults.ids.length });
 
