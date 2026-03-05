@@ -1023,8 +1023,10 @@ export class ChromaSync {
     };
 
     // Use pre-computed embedding or text query
+    // Note: Chroma MCP requires query_texts even when using query_embeddings
     if (queryEmbedding) {
       arguments_obj.query_embeddings = [queryEmbedding];
+      arguments_obj.query_texts = [query]; // Required by Chroma MCP validation
       logger.debug('CHROMA_SYNC', 'Using BGE-M3 query embedding', {
         dimensions: queryEmbedding.length
       });
@@ -1069,7 +1071,10 @@ export class ChromaSync {
     try {
       parsed = JSON.parse(resultText);
     } catch (error) {
-      logger.error('CHROMA_SYNC', 'Failed to parse Chroma response', { project: this.project }, error as Error);
+      logger.error('CHROMA_SYNC', 'Failed to parse Chroma response', {
+        project: this.project,
+        responsePreview: resultText?.substring(0, 500)
+      }, error as Error);
       return { ids: [], distances: [], metadatas: [] };
     }
 

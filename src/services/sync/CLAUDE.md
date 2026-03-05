@@ -8,4 +8,14 @@
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
 | #648 | 9:08 AM | 🔵 | ChromaDB Vector Sync with BGE-M3 Embeddings and Granular Document Strategy | ~718 |
+
+### Jan 28, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #1123 | 10:25 PM | 🔴 | Fixed ChromaDB Query Validation Error by Adding Required query_texts Field | ~290 |
+| #1117 | 10:23 PM | ✅ | Increased Chroma Error Response Preview Length | ~245 |
+| #1114 | 10:20 PM | ✅ | Added response preview logging to Chroma parse error handler | ~289 |
+| #1113 | 10:19 PM | 🔵 | ChromaSync queries use this.collectionName directly without cm__ prefix transformation | ~353 |
+| #1106 | 10:18 PM | 🔵 | ChromaSync catches JSON parse errors and returns empty results silently | ~345 |
 </claude-mem-context>

@@ -10,6 +10,11 @@ Usage:
     uvx --python 3.13 embedding-mcp     # Via uvx (after pip install)
 """
 
+import os
+# Force offline mode - use cached model only, no HuggingFace connection
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
 import json
 import asyncio
 import logging
