@@ -13,7 +13,7 @@ MCP server providing BGE-M3 embeddings for claude-mem.
 
 - Python 3.10+ (recommended: 3.13)
 - ~2-3GB RAM/VRAM for the model
-- First run will download the model (~1GB)
+- Model must be pre-cached locally (~1GB). The server runs in offline mode (`HF_HUB_OFFLINE=1`) and will not download models at runtime. Pre-cache with: `python -c "from FlagEmbedding import BGEM3FlagModel; BGEM3FlagModel('BAAI/bge-m3')"`
 
 ## Installation
 

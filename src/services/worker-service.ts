@@ -18,8 +18,7 @@ import { HOOK_TIMEOUTS } from '../shared/hook-constants.js';
 import { SettingsDefaultsManager } from '../shared/SettingsDefaultsManager.js';
 import { getAuthMethodDescription } from '../shared/EnvManager.js';
 import { logger } from '../utils/logger.js';
-import { ChromaMcpManager } from './sync/ChromaMcpManager.js';
-import { ChromaSync } from './sync/ChromaSync.js';
+// ChromaMcpManager intentionally not imported — Chroma managed by ChromaSync via DatabaseManager
 
 // Windows: avoid repeated spawn popups when startup fails (issue #921)
 const WINDOWS_SPAWN_COOLDOWN_MS = 2 * 60 * 1000;
@@ -176,7 +175,7 @@ export class WorkerService {
   private searchRoutes: SearchRoutes | null = null;
 
   // Chroma MCP manager (lazy - connects on first use)
-  private chromaMcpManager: ChromaMcpManager | null = null;
+  // ChromaMcpManager not used — Chroma connection managed by ChromaSync via DatabaseManager
 
   // Initialization tracking
   private initializationComplete: Promise<void>;
@@ -391,13 +390,12 @@ export class WorkerService {
         runOneTimeChromaMigration();
       }
 
-      // Initialize ChromaMcpManager only if Chroma is enabled
+      // Chroma connection is managed by ChromaSync (via DatabaseManager).
+      // ChromaMcpManager is NOT initialized here to avoid dual chroma-mcp process spawning.
+      // See: ChromaSync.ensureConnection() handles its own MCP lifecycle.
       const chromaEnabled = settings.CLAUDE_MEM_CHROMA_ENABLED !== 'false';
-      if (chromaEnabled) {
-        this.chromaMcpManager = ChromaMcpManager.getInstance();
-        logger.info('SYSTEM', 'ChromaMcpManager initialized (lazy - connects on first use)');
-      } else {
-        logger.info('SYSTEM', 'Chroma disabled via CLAUDE_MEM_CHROMA_ENABLED=false, skipping ChromaMcpManager');
+      if (!chromaEnabled) {
+        logger.info('SYSTEM', 'Chroma disabled via CLAUDE_MEM_CHROMA_ENABLED=false, using SQLite-only search');
       }
 
       const modeId = settings.CLAUDE_MEM_MODE;
@@ -435,10 +433,11 @@ export class WorkerService {
       this.resolveInitialization();
       logger.info('SYSTEM', 'Core initialization complete (DB + search ready)');
 
-      // Auto-backfill Chroma for all projects if out of sync with SQLite (fire-and-forget)
-      if (this.chromaMcpManager) {
-        ChromaSync.backfillAllProjects().then(() => {
-          logger.info('CHROMA_SYNC', 'Backfill check complete for all projects');
+      // Auto-backfill Chroma if out of sync with SQLite (fire-and-forget)
+      const chromaSync = this.dbManager.getChromaSync();
+      if (chromaSync) {
+        chromaSync.ensureBackfilled().then(() => {
+          logger.info('CHROMA_SYNC', 'Backfill check complete');
         }).catch(error => {
           logger.error('CHROMA_SYNC', 'Backfill failed (non-blocking)', {}, error as Error);
         });
@@ -862,7 +861,7 @@ export class WorkerService {
       sessionManager: this.sessionManager,
       mcpClient: this.mcpClient,
       dbManager: this.dbManager,
-      chromaMcpManager: this.chromaMcpManager || undefined
+      // ChromaSync cleanup is handled by dbManager.close()
     });
   }
 

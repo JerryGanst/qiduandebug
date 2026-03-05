@@ -26,7 +26,8 @@ const CHROMA_MCP_CLIENT_NAME = 'claude-mem-chroma';
 const CHROMA_MCP_CLIENT_VERSION = '1.0.0';
 const MCP_CONNECTION_TIMEOUT_MS = 30_000;
 const RECONNECT_BACKOFF_MS = 10_000; // Don't retry connections faster than this after failure
-const DEFAULT_CHROMA_DATA_DIR = path.join(os.homedir(), '.claude-mem', 'chroma');
+// Aligned with ChromaSync and migrate-embeddings.ts — single data directory
+const DEFAULT_CHROMA_DATA_DIR = path.join(os.homedir(), '.claude-mem', 'vector-db');
 
 export class ChromaMcpManager {
   private static instance: ChromaMcpManager | null = null;

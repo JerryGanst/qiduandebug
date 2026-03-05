@@ -50,6 +50,15 @@ export interface SettingsDefaults {
   // Feature Toggles
   CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY: string;
   CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE: string;
+  // Chroma Configuration
+  CLAUDE_MEM_CHROMA_ENABLED: string;  // 'true' | 'false' - enable/disable Chroma vector search
+  CLAUDE_MEM_CHROMA_MODE: string;  // 'local' | 'remote'
+  CLAUDE_MEM_CHROMA_HOST: string;
+  CLAUDE_MEM_CHROMA_PORT: string;
+  CLAUDE_MEM_CHROMA_SSL: string;  // 'true' | 'false'
+  CLAUDE_MEM_CHROMA_TENANT: string;
+  CLAUDE_MEM_CHROMA_DATABASE: string;
+  CLAUDE_MEM_CHROMA_API_KEY: string;
   // Embedding Configuration
   CLAUDE_MEM_EMBEDDING_MODEL: string;  // 'default' | 'bge-m3'
   CLAUDE_MEM_EMBEDDING_MCP_ENABLED: string;  // 'true' | 'false'
@@ -98,6 +107,15 @@ export class SettingsDefaultsManager {
     // Feature Toggles
     CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY: 'true',
     CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE: 'false',
+    // Chroma Configuration
+    CLAUDE_MEM_CHROMA_ENABLED: 'true',  // Vector search enabled by default
+    CLAUDE_MEM_CHROMA_MODE: 'local',  // 'local' = persistent file-based, 'remote' = HTTP client
+    CLAUDE_MEM_CHROMA_HOST: '127.0.0.1',
+    CLAUDE_MEM_CHROMA_PORT: '8000',
+    CLAUDE_MEM_CHROMA_SSL: 'false',
+    CLAUDE_MEM_CHROMA_TENANT: 'default_tenant',
+    CLAUDE_MEM_CHROMA_DATABASE: 'default_database',
+    CLAUDE_MEM_CHROMA_API_KEY: '',
     // Embedding Configuration
     CLAUDE_MEM_EMBEDDING_MODEL: 'default',  // 'default' uses chroma-mcp built-in (all-MiniLM-L6-v2)
     CLAUDE_MEM_EMBEDDING_MCP_ENABLED: 'false',  // Set to 'true' to enable BGE-M3 embedding server
