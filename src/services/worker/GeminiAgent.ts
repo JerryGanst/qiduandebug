@@ -17,6 +17,7 @@ import { SessionManager } from './SessionManager.js';
 import { logger } from '../../utils/logger.js';
 import { buildInitPrompt, buildObservationPrompt, buildSummaryPrompt, buildContinuationPrompt } from '../../sdk/prompts.js';
 import { SettingsDefaultsManager } from '../../shared/SettingsDefaultsManager.js';
+import { getCredential } from '../../shared/EnvManager.js';
 import type { ActiveSession, ConversationMessage } from '../worker-types.js';
 import { ModeManager } from '../domain/ModeManager.js';
 import {
@@ -27,8 +28,9 @@ import {
   type FallbackAgent
 } from './agents/index.js';
 
-// Gemini API endpoint
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+// Gemini API endpoint — use v1 (stable), not v1beta.
+// v1beta does not support newer models like gemini-3-flash.
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models';
 
 // Gemini model types (available via API)
 export type GeminiModel =
@@ -37,7 +39,8 @@ export type GeminiModel =
   | 'gemini-2.5-pro'
   | 'gemini-2.0-flash'
   | 'gemini-2.0-flash-lite'
-  | 'gemini-3-flash';
+  | 'gemini-3-flash'
+  | 'gemini-3-flash-preview';
 
 // Free tier RPM limits by model (requests per minute)
 const GEMINI_RPM_LIMITS: Record<GeminiModel, number> = {
@@ -46,7 +49,8 @@ const GEMINI_RPM_LIMITS: Record<GeminiModel, number> = {
   'gemini-2.5-pro': 5,
   'gemini-2.0-flash': 15,
   'gemini-2.0-flash-lite': 30,
-  'gemini-3-flash': 5,
+  'gemini-3-flash': 10,
+  'gemini-3-flash-preview': 5,
 };
 
 // Track last request time for rate limiting
@@ -133,6 +137,14 @@ export class GeminiAgent {
         throw new Error('Gemini API key not configured. Set CLAUDE_MEM_GEMINI_API_KEY in settings or GEMINI_API_KEY environment variable.');
       }
 
+      // Generate synthetic memorySessionId (Gemini is stateless, doesn't return session IDs)
+      if (!session.memorySessionId) {
+        const syntheticMemorySessionId = `gemini-${session.contentSessionId}-${Date.now()}`;
+        session.memorySessionId = syntheticMemorySessionId;
+        this.dbManager.getSessionStore().updateMemorySessionId(session.sessionDbId, syntheticMemorySessionId);
+        logger.info('SESSION', `MEMORY_ID_GENERATED | sessionDbId=${session.sessionDbId} | provider=Gemini`);
+      }
+
       // Load active mode
       const mode = ModeManager.getInstance().getActiveMode();
 
@@ -177,6 +189,10 @@ export class GeminiAgent {
       let lastCwd: string | undefined;
 
       for await (const message of this.sessionManager.getMessageIterator(session.sessionDbId)) {
+        // CLAIM-CONFIRM: Track message ID for confirmProcessed() after successful storage
+        // The message is now in 'processing' status in DB until ResponseProcessor calls confirmProcessed()
+        session.processingMessageIds.push(message._persistentId);
+
         // Capture cwd from each message for worktree support
         if (message.cwd) {
           lastCwd = message.cwd;
@@ -189,6 +205,12 @@ export class GeminiAgent {
           // Update last prompt number
           if (message.prompt_number !== undefined) {
             session.lastPromptNumber = message.prompt_number;
+          }
+
+          // CRITICAL: Check memorySessionId BEFORE making expensive LLM call
+          // This prevents wasting tokens when we won't be able to store the result anyway
+          if (!session.memorySessionId) {
+            throw new Error('Cannot process observations: memorySessionId not yet captured. This session may need to be reinitialized.');
           }
 
           // Build observation prompt
@@ -216,19 +238,32 @@ export class GeminiAgent {
           }
 
           // Process response using shared ResponseProcessor
-          await processAgentResponse(
-            obsResponse.content || '',
-            session,
-            this.dbManager,
-            this.sessionManager,
-            worker,
-            tokensUsed,
-            originalTimestamp,
-            'Gemini',
-            lastCwd
-          );
+          if (obsResponse.content) {
+            await processAgentResponse(
+              obsResponse.content,
+              session,
+              this.dbManager,
+              this.sessionManager,
+              worker,
+              tokensUsed,
+              originalTimestamp,
+              'Gemini',
+              lastCwd
+            );
+          } else {
+            logger.warn('SDK', 'Empty Gemini observation response, skipping processing to preserve message', {
+              sessionId: session.sessionDbId,
+              messageId: session.processingMessageIds[session.processingMessageIds.length - 1]
+            });
+            // Don't confirm - leave message for stale recovery
+          }
 
         } else if (message.type === 'summarize') {
+          // CRITICAL: Check memorySessionId BEFORE making expensive LLM call
+          if (!session.memorySessionId) {
+            throw new Error('Cannot process summary: memorySessionId not yet captured. This session may need to be reinitialized.');
+          }
+
           // Build summary prompt
           const summaryPrompt = buildSummaryPrompt({
             id: session.sessionDbId,
@@ -253,17 +288,25 @@ export class GeminiAgent {
           }
 
           // Process response using shared ResponseProcessor
-          await processAgentResponse(
-            summaryResponse.content || '',
-            session,
-            this.dbManager,
-            this.sessionManager,
-            worker,
-            tokensUsed,
-            originalTimestamp,
-            'Gemini',
-            lastCwd
-          );
+          if (summaryResponse.content) {
+            await processAgentResponse(
+              summaryResponse.content,
+              session,
+              this.dbManager,
+              this.sessionManager,
+              worker,
+              tokensUsed,
+              originalTimestamp,
+              'Gemini',
+              lastCwd
+            );
+          } else {
+            logger.warn('SDK', 'Empty Gemini summary response, skipping processing to preserve message', {
+              sessionId: session.sessionDbId,
+              messageId: session.processingMessageIds[session.processingMessageIds.length - 1]
+            });
+            // Don't confirm - leave message for stale recovery
+          }
         }
       }
 
@@ -367,13 +410,15 @@ export class GeminiAgent {
 
   /**
    * Get Gemini configuration from settings or environment
+   * Issue #733: Uses centralized ~/.claude-mem/.env for credentials, not random project .env files
    */
   private getGeminiConfig(): { apiKey: string; model: GeminiModel; rateLimitingEnabled: boolean } {
     const settingsPath = path.join(homedir(), '.claude-mem', 'settings.json');
     const settings = SettingsDefaultsManager.loadFromFile(settingsPath);
 
-    // API key: check settings first, then environment variable
-    const apiKey = settings.CLAUDE_MEM_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+    // API key: check settings first, then centralized claude-mem .env (NOT process.env)
+    // This prevents Issue #733 where random project .env files could interfere
+    const apiKey = settings.CLAUDE_MEM_GEMINI_API_KEY || getCredential('GEMINI_API_KEY') || '';
 
     // Model: from settings or default, with validation
     const defaultModel: GeminiModel = 'gemini-2.5-flash';
@@ -385,6 +430,7 @@ export class GeminiAgent {
       'gemini-2.0-flash',
       'gemini-2.0-flash-lite',
       'gemini-3-flash',
+      'gemini-3-flash-preview',
     ];
 
     let model: GeminiModel;
@@ -407,11 +453,12 @@ export class GeminiAgent {
 
 /**
  * Check if Gemini is available (has API key configured)
+ * Issue #733: Uses centralized ~/.claude-mem/.env, not random project .env files
  */
 export function isGeminiAvailable(): boolean {
   const settingsPath = path.join(homedir(), '.claude-mem', 'settings.json');
   const settings = SettingsDefaultsManager.loadFromFile(settingsPath);
-  return !!(settings.CLAUDE_MEM_GEMINI_API_KEY || process.env.GEMINI_API_KEY);
+  return !!(settings.CLAUDE_MEM_GEMINI_API_KEY || getCredential('GEMINI_API_KEY'));
 }
 
 /**

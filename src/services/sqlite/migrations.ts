@@ -259,7 +259,7 @@ export const migration004: Migration = {
         memory_session_id TEXT NOT NULL,
         project TEXT NOT NULL,
         text TEXT NOT NULL,
-        type TEXT NOT NULL CHECK(type IN ('decision', 'bugfix', 'feature', 'refactor', 'discovery')),
+        type TEXT NOT NULL,
         created_at TEXT NOT NULL,
         created_at_epoch INTEGER NOT NULL,
         FOREIGN KEY(memory_session_id) REFERENCES sdk_sessions(memory_session_id) ON DELETE CASCADE
@@ -372,6 +372,16 @@ export const migration005: Migration = {
 export const migration006: Migration = {
   version: 6,
   up: (db: Database) => {
+    // FTS5 may be unavailable on some platforms (e.g., Bun on Windows #791).
+    // Probe before creating tables — search falls back to ChromaDB when unavailable.
+    try {
+      db.run('CREATE VIRTUAL TABLE _fts5_probe USING fts5(test_column)');
+      db.run('DROP TABLE _fts5_probe');
+    } catch {
+      console.log('⚠️  FTS5 not available on this platform — skipping FTS migration (search uses ChromaDB)');
+      return;
+    }
+
     // FTS5 virtual table for observations
     // Note: This assumes the hierarchical fields (title, subtitle, etc.) already exist
     // from the inline migrations in SessionStore constructor

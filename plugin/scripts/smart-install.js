@@ -4,15 +4,71 @@
  *
  * Ensures Bun runtime and uv (Python package manager) are installed
  * (auto-installs if missing) and handles dependency installation when needed.
+ *
+ * Resolves the install directory from CLAUDE_PLUGIN_ROOT (set by Claude Code
+ * for both cache and marketplace installs), falling back to script location
+ * and legacy paths.
  */
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { execSync, spawnSync } from 'child_process';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { homedir } from 'os';
+import { fileURLToPath } from 'url';
 
-const ROOT = join(homedir(), '.claude', 'plugins', 'marketplaces', 'thedotmack');
-const MARKER = join(ROOT, '.install-version');
+// Early exit if plugin is disabled in Claude Code settings (#781)
+function isPluginDisabledInClaudeSettings() {
+  try {
+    const configDir = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
+    const settingsPath = join(configDir, 'settings.json');
+    if (!existsSync(settingsPath)) return false;
+    const settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+    return settings?.enabledPlugins?.['claude-mem@thedotmack'] === false;
+  } catch {
+    return false;
+  }
+}
+
+if (isPluginDisabledInClaudeSettings()) {
+  process.exit(0);
+}
 const IS_WINDOWS = process.platform === 'win32';
+
+/**
+ * Resolve the plugin root directory where dependencies should be installed.
+ *
+ * Priority:
+ * 1. CLAUDE_PLUGIN_ROOT env var (set by Claude Code for hooks — works for
+ *    both cache-based and marketplace installs)
+ * 2. Script location (dirname of this file, up one level from scripts/)
+ * 3. XDG path (~/.config/claude/plugins/marketplaces/thedotmack)
+ * 4. Legacy path (~/.claude/plugins/marketplaces/thedotmack)
+ */
+function resolveRoot() {
+  // CLAUDE_PLUGIN_ROOT is the authoritative location set by Claude Code
+  if (process.env.CLAUDE_PLUGIN_ROOT) {
+    const root = process.env.CLAUDE_PLUGIN_ROOT;
+    if (existsSync(join(root, 'package.json'))) return root;
+  }
+
+  // Derive from script location (this file is in <root>/scripts/)
+  try {
+    const scriptDir = dirname(fileURLToPath(import.meta.url));
+    const candidate = dirname(scriptDir);
+    if (existsSync(join(candidate, 'package.json'))) return candidate;
+  } catch {
+    // import.meta.url not available
+  }
+
+  // Probe XDG path, then legacy
+  const marketplaceRel = join('plugins', 'marketplaces', 'thedotmack');
+  const xdg = join(homedir(), '.config', 'claude', marketplaceRel);
+  if (existsSync(join(xdg, 'package.json'))) return xdg;
+
+  return join(homedir(), '.claude', marketplaceRel);
+}
+
+const ROOT = resolveRoot();
+const MARKER = join(ROOT, '.install-version');
 
 /**
  * Check if Bun is installed and accessible
@@ -63,6 +119,36 @@ function getBunPath() {
   }
 
   return null;
+}
+
+/**
+ * Minimum required bun version
+ * v1.1.14+ required for .changes property and multi-statement SQL support
+ */
+const MIN_BUN_VERSION = '1.1.14';
+
+/**
+ * Compare semver versions
+ */
+function compareVersions(v1, v2) {
+  const parts1 = v1.split('.').map(Number);
+  const parts2 = v2.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const p1 = parts1[i] || 0;
+    const p2 = parts2[i] || 0;
+    if (p1 > p2) return 1;
+    if (p1 < p2) return -1;
+  }
+  return 0;
+}
+
+/**
+ * Check if bun version meets minimum requirements
+ */
+function isBunVersionSufficient() {
+  const version = getBunVersion();
+  if (!version) return false;
+  return compareVersions(version, MIN_BUN_VERSION) >= 0;
 }
 
 /**
@@ -257,7 +343,7 @@ function installUv() {
  * Add shell alias for claude-mem command
  */
 function installCLI() {
-  const WORKER_CLI = join(ROOT, 'plugin', 'scripts', 'worker-service.cjs');
+  const WORKER_CLI = join(ROOT, 'scripts', 'worker-service.cjs');
   const bunPath = getBunPath() || 'bun';
   const aliasLine = `alias claude-mem='${bunPath} "${WORKER_CLI}"'`;
   const markerPath = join(ROOT, '.cli-installed');
@@ -375,9 +461,34 @@ function installDeps() {
   }));
 }
 
+/**
+ * Verify that critical runtime modules are resolvable from the install directory.
+ * Returns true if all critical modules exist, false otherwise.
+ */
+function verifyCriticalModules() {
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8'));
+  const dependencies = Object.keys(pkg.dependencies || {});
+
+  const missing = [];
+  for (const dep of dependencies) {
+    // Check that the module directory exists in node_modules
+    const modulePath = join(ROOT, 'node_modules', ...dep.split('/'));
+    if (!existsSync(modulePath)) {
+      missing.push(dep);
+    }
+  }
+
+  if (missing.length > 0) {
+    console.error(`❌ Post-install check failed: missing modules: ${missing.join(', ')}`);
+    return false;
+  }
+
+  return true;
+}
+
 // Main execution
 try {
-  // Step 1: Ensure Bun is installed (REQUIRED)
+  // Step 1: Ensure Bun is installed and meets minimum version (REQUIRED)
   if (!isBunInstalled()) {
     installBun();
 
@@ -385,6 +496,25 @@ try {
     if (!isBunInstalled()) {
       console.error('❌ Bun is required but not available in PATH');
       console.error('   Please restart your terminal after installation');
+      process.exit(1);
+    }
+  }
+
+  // Step 1.5: Ensure Bun version is sufficient
+  if (!isBunVersionSufficient()) {
+    const currentVersion = getBunVersion();
+    console.error(`⚠️  Bun ${currentVersion} is outdated. Minimum required: ${MIN_BUN_VERSION}`);
+    console.error('   Upgrading bun...');
+    try {
+      execSync('bun upgrade', { stdio: 'inherit', shell: IS_WINDOWS });
+      if (!isBunVersionSufficient()) {
+        console.error(`❌ Bun upgrade failed. Please manually upgrade: bun upgrade`);
+        process.exit(1);
+      }
+      console.error(`✅ Bun upgraded to ${getBunVersion()}`);
+    } catch (error) {
+      console.error(`❌ Failed to upgrade bun: ${error.message}`);
+      console.error('   Please manually upgrade: bun upgrade');
       process.exit(1);
     }
   }
@@ -407,6 +537,21 @@ try {
     const newVersion = pkg.version;
 
     installDeps();
+
+    // Verify critical modules are resolvable
+    if (!verifyCriticalModules()) {
+      console.error('⚠️  Retrying install with npm...');
+      try {
+        execSync('npm install --production', { cwd: ROOT, stdio: 'inherit', shell: IS_WINDOWS });
+      } catch {
+        // npm also failed
+      }
+      if (!verifyCriticalModules()) {
+        console.error('❌ Dependencies could not be installed. Plugin may not work correctly.');
+        process.exit(1);
+      }
+    }
+
     console.error('✅ Dependencies installed');
 
     // Auto-restart worker to pick up new code

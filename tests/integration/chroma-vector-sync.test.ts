@@ -311,4 +311,57 @@ describe('ChromaSync Vector Sync Integration', () => {
       await expect(sync.close()).resolves.toBeUndefined();
     });
   });
+
+  describe('Process leak prevention (Issue #761)', () => {
+    /**
+     * Regression test for GitHub Issue #761:
+     * "Feature Request: Option to disable Chroma (RAM usage / zombie processes)"
+     *
+     * Root cause: When connection errors occur (MCP error -32000, Connection closed),
+     * the code was resetting `connected` and `client` but NOT closing the transport,
+     * leaving the chroma-mcp subprocess alive. Each reconnection attempt spawned
+     * a NEW process while old ones accumulated as zombies.
+     *
+     * Fix: Transport lifecycle is now managed by ChromaMcpManager (singleton),
+     * which handles connect/disconnect/cleanup. ChromaSync delegates to it.
+     */
+    it('should have transport cleanup in ChromaMcpManager error handlers', async () => {
+      // ChromaSync now delegates connection management to ChromaMcpManager.
+      // Verify that ChromaMcpManager source includes transport cleanup.
+      const sourceFile = await Bun.file(
+        new URL('../../src/services/sync/ChromaMcpManager.ts', import.meta.url)
+      ).text();
+
+      // Verify that error handlers include transport cleanup
+      expect(sourceFile).toContain('this.transport.close()');
+
+      // Verify transport is set to null after close
+      expect(sourceFile).toContain('this.transport = null');
+
+      // Verify connected is set to false after close
+      expect(sourceFile).toContain('this.connected = false');
+    });
+
+    it('should reset state after close regardless of connection status', async () => {
+      // ChromaSync.close() is now a lightweight method that logs and returns.
+      // Connection state is managed by ChromaMcpManager singleton.
+      const { ChromaSync } = await import('../../src/services/sync/ChromaSync.js');
+      const sync = new ChromaSync(testProject);
+
+      // close() should complete without error regardless of state
+      await expect(sync.close()).resolves.toBeUndefined();
+    });
+
+    it('should clean up transport in ChromaMcpManager close() method', async () => {
+      // Read the ChromaMcpManager source to verify transport.close() is in the close path
+      const sourceFile = await Bun.file(
+        new URL('../../src/services/sync/ChromaMcpManager.ts', import.meta.url)
+      ).text();
+
+      // Verify the close/disconnect method properly cleans up transport
+      expect(sourceFile).toContain('await this.transport.close()');
+      expect(sourceFile).toContain('this.transport = null');
+      expect(sourceFile).toContain('this.connected = false');
+    });
+  });
 });

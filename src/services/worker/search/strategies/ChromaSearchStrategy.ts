@@ -66,8 +66,8 @@ export class ChromaSearchStrategy extends BaseSearchStrategy implements SearchSt
     let prompts: UserPromptSearchResult[] = [];
 
     try {
-      // Build Chroma where filter for doc_type
-      const whereFilter = this.buildWhereFilter(searchType);
+      // Build Chroma where filter for doc_type and project
+      const whereFilter = this.buildWhereFilter(searchType, project);
 
       // Step 1: Query Expansion for better recall
       const expander = getQueryExpander();
@@ -164,23 +164,49 @@ export class ChromaSearchStrategy extends BaseSearchStrategy implements SearchSt
   }
 
   /**
-   * Build Chroma where filter for document type
+   * Build Chroma where filter for document type and project
+   *
+   * When a project is specified, includes it in the ChromaDB where clause
+   * so that vector search is scoped to the target project. Without this,
+   * larger projects dominate the top-N results and smaller projects get
+   * crowded out before the post-hoc SQLite project filter can take effect.
    */
-  private buildWhereFilter(searchType: string): Record<string, any> | undefined {
+  private buildWhereFilter(searchType: string, project?: string): Record<string, any> | undefined {
+    let docTypeFilter: Record<string, any> | undefined;
     switch (searchType) {
       case 'observations':
-        return { doc_type: 'observation' };
+        docTypeFilter = { doc_type: 'observation' };
+        break;
       case 'sessions':
-        return { doc_type: 'session_summary' };
+        docTypeFilter = { doc_type: 'session_summary' };
+        break;
       case 'prompts':
-        return { doc_type: 'user_prompt' };
+        docTypeFilter = { doc_type: 'user_prompt' };
+        break;
       default:
-        return undefined;
+        docTypeFilter = undefined;
     }
+
+    if (project) {
+      const projectFilter = { project };
+      if (docTypeFilter) {
+        return { $and: [docTypeFilter, projectFilter] };
+      }
+      return projectFilter;
+    }
+
+    return docTypeFilter;
   }
 
   /**
    * Filter results by recency (90-day window)
+   *
+   * IMPORTANT: ChromaSync.queryChroma() returns deduplicated `ids` (unique sqlite_ids)
+   * but the `metadatas` array may contain multiple entries per sqlite_id (e.g., one
+   * observation can have narrative + multiple facts as separate Chroma documents).
+   *
+   * This method iterates over the deduplicated `ids` and finds the first matching
+   * metadata for each ID to avoid array misalignment issues.
    */
   private filterByRecency(chromaResults: {
     ids: number[];
@@ -188,10 +214,19 @@ export class ChromaSearchStrategy extends BaseSearchStrategy implements SearchSt
   }): Array<{ id: number; meta: ChromaMetadata }> {
     const cutoff = Date.now() - SEARCH_CONSTANTS.RECENCY_WINDOW_MS;
 
-    return chromaResults.metadatas
-      .map((meta, idx) => ({
-        id: chromaResults.ids[idx],
-        meta
+    // Build a map from sqlite_id to first metadata for efficient lookup
+    const metadataByIdMap = new Map<number, ChromaMetadata>();
+    for (const meta of chromaResults.metadatas) {
+      if (meta?.sqlite_id !== undefined && !metadataByIdMap.has(meta.sqlite_id)) {
+        metadataByIdMap.set(meta.sqlite_id, meta);
+      }
+    }
+
+    // Iterate over deduplicated ids and get corresponding metadata
+    return chromaResults.ids
+      .map(id => ({
+        id,
+        meta: metadataByIdMap.get(id) as ChromaMetadata
       }))
       .filter(item => item.meta && item.meta.created_at_epoch > cutoff);
   }

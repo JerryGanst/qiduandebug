@@ -22,12 +22,14 @@
 
 <p align="center">
   <a href="docs/i18n/README.zh.md">🇨🇳 中文</a> •
+  <a href="docs/i18n/README.zh-tw.md">🇹🇼 繁體中文</a> •
   <a href="docs/i18n/README.ja.md">🇯🇵 日本語</a> •
+  <a href="docs/i18n/README.pt.md">🇵🇹 Português</a> •
   <a href="docs/i18n/README.pt-br.md">🇧🇷 Português</a> •
   <a href="docs/i18n/README.ko.md">🇰🇷 한국어</a> •
   <a href="docs/i18n/README.es.md">🇪🇸 Español</a> •
   <a href="docs/i18n/README.de.md">🇩🇪 Deutsch</a> •
-  <a href="docs/i18n/README.fr.md">🇫🇷 Français</a>
+  <a href="docs/i18n/README.fr.md">🇫🇷 Français</a> •
   <a href="docs/i18n/README.he.md">🇮🇱 עברית</a> •
   <a href="docs/i18n/README.ar.md">🇸🇦 العربية</a> •
   <a href="docs/i18n/README.ru.md">🇷🇺 Русский</a> •
@@ -37,10 +39,12 @@
   <a href="docs/i18n/README.tr.md">🇹🇷 Türkçe</a> •
   <a href="docs/i18n/README.uk.md">🇺🇦 Українська</a> •
   <a href="docs/i18n/README.vi.md">🇻🇳 Tiếng Việt</a> •
+  <a href="docs/i18n/README.tl.md">🇵🇭 Tagalog</a> •
   <a href="docs/i18n/README.id.md">🇮🇩 Indonesia</a> •
   <a href="docs/i18n/README.th.md">🇹🇭 ไทย</a> •
   <a href="docs/i18n/README.hi.md">🇮🇳 हिन्दी</a> •
   <a href="docs/i18n/README.bn.md">🇧🇩 বাংলা</a> •
+  <a href="docs/i18n/README.ur.md">🇵🇰 اردو</a> •
   <a href="docs/i18n/README.ro.md">🇷🇴 Română</a> •
   <a href="docs/i18n/README.sv.md">🇸🇪 Svenska</a> •
   <a href="docs/i18n/README.it.md">🇮🇹 Italiano</a> •
@@ -109,12 +113,24 @@
 Start a new Claude Code session in the terminal and enter the following commands:
 
 ```
-> /plugin marketplace add thedotmack/claude-mem
+/plugin marketplace add thedotmack/claude-mem
 
-> /plugin install claude-mem
+/plugin install claude-mem
 ```
 
 Restart Claude Code. Context from previous sessions will automatically appear in new sessions.
+
+> **Note:** Claude-Mem is also published on npm, but `npm install -g claude-mem` installs the **SDK/library only** — it does not register the plugin hooks or set up the worker service. To use Claude-Mem as a plugin, always install via the `/plugin` commands above.
+
+### 🦞 OpenClaw Gateway
+
+Install claude-mem as a persistent memory plugin on [OpenClaw](https://openclaw.ai) gateways with a single command:
+
+```bash
+curl -fsSL https://install.cmem.ai/openclaw.sh | bash
+```
+
+The installer handles dependencies, plugin setup, AI provider configuration, worker startup, and optional real-time observation feeds to Telegram, Discord, Slack, and more. See the [OpenClaw Integration Guide](https://docs.claude-mem.ai/openclaw-integration) for details.
 
 **Key Features:**
 
@@ -133,7 +149,7 @@ Restart Claude Code. Context from previous sessions will automatically appear in
 
 ## Documentation
 
-📚 **[View Full Documentation](docs/)** - Browse markdown docs on GitHub
+📚 **[View Full Documentation](https://docs.claude-mem.ai/)** - Browse on official website
 
 ### Getting Started
 
@@ -202,7 +218,6 @@ Claude-Mem provides intelligent memory search through **4 MCP tools** following 
 1. **`search`** - Search memory index with full-text queries, filters by type/date/project
 2. **`timeline`** - Get chronological context around a specific observation or query
 3. **`get_observations`** - Fetch full observation details by IDs (always batch multiple IDs)
-4. **`__IMPORTANT`** - Workflow documentation (always visible to Claude)
 
 **Example Usage:**
 
@@ -235,6 +250,17 @@ See **[Beta Features Documentation](https://docs.claude-mem.ai/beta-features)** 
 - **Bun**: JavaScript runtime and process manager (auto-installed if missing)
 - **uv**: Python package manager for vector search (auto-installed if missing)
 - **SQLite 3**: For persistent storage (bundled)
+
+---
+### Windows Setup Notes
+
+If you see an error like:
+
+```powershell
+npm : The term 'npm' is not recognized as the name of a cmdlet
+```
+
+Make sure Node.js and npm are installed and added to your PATH. Download the latest Node.js installer from https://nodejs.org and restart your terminal after installation.
 
 ---
 

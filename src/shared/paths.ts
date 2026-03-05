@@ -28,6 +28,9 @@ export const DATA_DIR = SettingsDefaultsManager.get('CLAUDE_MEM_DATA_DIR');
 // Note: CLAUDE_CONFIG_DIR is a Claude Code setting, not claude-mem, so leave as env var
 export const CLAUDE_CONFIG_DIR = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
 
+// Plugin installation directory - respects CLAUDE_CONFIG_DIR for users with custom Claude locations
+export const MARKETPLACE_ROOT = join(CLAUDE_CONFIG_DIR, 'plugins', 'marketplaces', 'thedotmack');
+
 // Data subdirectories
 export const ARCHIVES_DIR = join(DATA_DIR, 'archives');
 export const LOGS_DIR = join(DATA_DIR, 'logs');
@@ -37,6 +40,10 @@ export const MODES_DIR = join(DATA_DIR, 'modes');
 export const USER_SETTINGS_PATH = join(DATA_DIR, 'settings.json');
 export const DB_PATH = join(DATA_DIR, 'claude-mem.db');
 export const VECTOR_DB_DIR = join(DATA_DIR, 'vector-db');
+
+// Observer sessions directory - used as cwd for SDK queries
+// Sessions here won't appear in user's `claude --resume` for their actual projects
+export const OBSERVER_SESSIONS_DIR = join(DATA_DIR, 'observer-sessions');
 
 // Claude integration paths
 export const CLAUDE_SETTINGS_PATH = join(CLAUDE_CONFIG_DIR, 'settings.json');
@@ -92,7 +99,9 @@ export function ensureAllClaudeDirs(): void {
 }
 
 /**
- * Get current project name from git root or cwd
+ * Get current project name from git root or cwd.
+ * Includes parent directory to avoid collisions when repos share a folder name
+ * (e.g., ~/work/monorepo → "work/monorepo" vs ~/personal/monorepo → "personal/monorepo").
  */
 export function getCurrentProjectName(): string {
   try {
@@ -102,12 +111,13 @@ export function getCurrentProjectName(): string {
       stdio: ['pipe', 'pipe', 'ignore'],
       windowsHide: true
     }).trim();
-    return basename(gitRoot);
+    return basename(dirname(gitRoot)) + '/' + basename(gitRoot);
   } catch (error) {
     logger.debug('SYSTEM', 'Git root detection failed, using cwd basename', {
       cwd: process.cwd()
     }, error as Error);
-    return basename(process.cwd());
+    const cwd = process.cwd();
+    return basename(dirname(cwd)) + '/' + basename(cwd);
   }
 }
 

@@ -2,7 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import {
   isPortInUse,
   waitForHealth,
-  waitForPortFree
+  waitForPortFree,
+  getInstalledPluginVersion,
+  checkVersionMatch
 } from '../../src/services/infrastructure/index.js';
 
 describe('HealthMonitor', () => {
@@ -98,16 +100,18 @@ describe('HealthMonitor', () => {
       expect(callCount).toBeGreaterThanOrEqual(3);
     });
 
-    it('should check readiness endpoint not health endpoint', async () => {
+    it('should check health endpoint for liveness', async () => {
       const fetchMock = mock(() => Promise.resolve({ ok: true } as Response));
       global.fetch = fetchMock;
 
       await waitForHealth(37777, 1000);
 
-      // waitForHealth uses /api/readiness, not /api/health
+      // waitForHealth uses /api/health (liveness), not /api/readiness
+      // This is because hooks have 15-second timeout but full initialization can take 5+ minutes
+      // See: https://github.com/thedotmack/claude-mem/issues/811
       const calls = fetchMock.mock.calls;
       expect(calls.length).toBeGreaterThan(0);
-      expect(calls[0][0]).toBe('http://127.0.0.1:37777/api/readiness');
+      expect(calls[0][0]).toBe('http://127.0.0.1:37777/api/health');
     });
 
     it('should use default timeout when not specified', async () => {
@@ -117,6 +121,65 @@ describe('HealthMonitor', () => {
       const result = await waitForHealth(37777);
 
       expect(result).toBe(true);
+    });
+  });
+
+  describe('getInstalledPluginVersion', () => {
+    it('should return a valid semver string', () => {
+      const version = getInstalledPluginVersion();
+
+      // Should be a string matching semver pattern or 'unknown'
+      if (version !== 'unknown') {
+        expect(version).toMatch(/^\d+\.\d+\.\d+/);
+      }
+    });
+
+    it('should not throw on ENOENT (graceful degradation)', () => {
+      // The function handles ENOENT internally — should not throw
+      // If package.json exists, it returns the version; if not, 'unknown'
+      expect(() => getInstalledPluginVersion()).not.toThrow();
+    });
+  });
+
+  describe('checkVersionMatch', () => {
+    it('should assume match when worker version is unavailable', async () => {
+      global.fetch = mock(() => Promise.reject(new Error('ECONNREFUSED')));
+
+      const result = await checkVersionMatch(39999);
+
+      expect(result.matches).toBe(true);
+      expect(result.workerVersion).toBeNull();
+    });
+
+    it('should detect version mismatch', async () => {
+      global.fetch = mock(() => Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ version: '0.0.0-definitely-wrong' })
+      } as Response));
+
+      const result = await checkVersionMatch(37777);
+
+      // Unless the plugin version is also '0.0.0-definitely-wrong', this should be a mismatch
+      const pluginVersion = getInstalledPluginVersion();
+      if (pluginVersion !== 'unknown' && pluginVersion !== '0.0.0-definitely-wrong') {
+        expect(result.matches).toBe(false);
+      }
+    });
+
+    it('should detect version match', async () => {
+      const pluginVersion = getInstalledPluginVersion();
+      if (pluginVersion === 'unknown') return; // Skip if can't read plugin version
+
+      global.fetch = mock(() => Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ version: pluginVersion })
+      } as Response));
+
+      const result = await checkVersionMatch(37777);
+
+      expect(result.matches).toBe(true);
+      expect(result.pluginVersion).toBe(pluginVersion);
+      expect(result.workerVersion).toBe(pluginVersion);
     });
   });
 
