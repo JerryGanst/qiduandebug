@@ -541,35 +541,49 @@ export class ChromaSync {
       const ids = documents.map(d => d.id);
       const metadatas = documents.map(d => d.metadata);
 
-      // Compute embeddings if BGE-M3 is enabled
-      const embeddings = await this.computeEmbeddings(texts);
+      // Use embedding server's direct Chroma access for BGE-M3 embeddings
+      if (this.embeddingEnabled && this.embeddingClient) {
+        const result = await this.embeddingClient.callTool({
+          name: 'chroma_add_with_embeddings',
+          arguments: {
+            collection_name: this.collectionName,
+            documents: texts,
+            ids: ids,
+            metadatas: metadatas,
+            data_dir: this.VECTOR_DB_DIR
+          }
+        });
 
-      const addArguments: any = {
-        collection_name: this.collectionName,
-        documents: texts,
-        ids: ids,
-        metadatas: metadatas
-      };
+        const data = result.content[0];
+        if (data.type === 'text') {
+          const parsed = JSON.parse(data.text);
+          if (parsed.error) {
+            throw new Error(parsed.error);
+          }
+          logger.info('CHROMA_SYNC', 'Documents added with BGE-M3', {
+            collection: this.collectionName,
+            added: parsed.added,
+            skipped: parsed.skipped,
+            dimensions: parsed.dimensions
+          });
+        }
+      } else {
+        // Fallback: use chroma-mcp with default embeddings (384-dim)
+        await this.client.callTool({
+          name: 'chroma_add_documents',
+          arguments: {
+            collection_name: this.collectionName,
+            documents: texts,
+            ids: ids,
+            metadatas: metadatas
+          }
+        });
 
-      // Add pre-computed embeddings if available
-      if (embeddings.length > 0) {
-        addArguments.embeddings = embeddings;
-        logger.info('CHROMA_SYNC', 'Using BGE-M3 embeddings', {
-          count: embeddings.length,
-          dimensions: embeddings[0]?.length || 0
+        logger.info('CHROMA_SYNC', 'Documents added with default embeddings', {
+          collection: this.collectionName,
+          count: documents.length
         });
       }
-
-      await this.client.callTool({
-        name: 'chroma_add_documents',
-        arguments: addArguments
-      });
-
-      logger.info('CHROMA_SYNC', 'Documents added', {
-        collection: this.collectionName,
-        count: documents.length,
-        embeddingModel: embeddings.length > 0 ? 'bge-m3' : 'default'
-      });
     } catch (error) {
       logger.error('CHROMA_SYNC', 'Failed to add documents', {
         collection: this.collectionName,
@@ -1018,61 +1032,89 @@ export class ChromaSync {
       );
     }
 
-    const whereStringified = whereFilter ? JSON.stringify(whereFilter) : undefined;
+    // Use embedding server's direct Chroma query if BGE-M3 is enabled
+    let resultText: string;
 
-    // Compute query embedding if BGE-M3 is enabled
-    const queryEmbedding = await this.computeQueryEmbedding(query);
+    if (this.embeddingEnabled && this.embeddingClient) {
+      try {
+        const queryArgs: any = {
+          collection_name: this.collectionName,
+          query: query,
+          n_results: limit,
+          include: ['documents', 'metadatas', 'distances'],
+          data_dir: this.VECTOR_DB_DIR
+        };
+        if (whereFilter) {
+          queryArgs.where = whereFilter;
+        }
 
-    const arguments_obj: any = {
-      collection_name: this.collectionName,
-      n_results: limit,
-      include: ['documents', 'metadatas', 'distances'],
-      where: whereStringified
-    };
+        const result = await this.embeddingClient.callTool({
+          name: 'chroma_query_with_embeddings',
+          arguments: queryArgs
+        });
 
-    // Use pre-computed embedding or text query
-    // Note: Chroma MCP requires query_texts even when using query_embeddings
-    if (queryEmbedding) {
-      arguments_obj.query_embeddings = [queryEmbedding];
-      arguments_obj.query_texts = [query]; // Required by Chroma MCP validation
-      logger.debug('CHROMA_SYNC', 'Using BGE-M3 query embedding', {
-        dimensions: queryEmbedding.length
-      });
-    } else {
-      arguments_obj.query_texts = [query];
-    }
+        const data = result.content[0];
+        if (data.type !== 'text') {
+          throw new Error('Unexpected response type from chroma_query_with_embeddings');
+        }
 
-    let result;
-    try {
-      result = await this.client.callTool({
-        name: 'chroma_query_documents',
-        arguments: arguments_obj
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const isConnectionError =
-        errorMessage.includes('Not connected') ||
-        errorMessage.includes('Connection closed') ||
-        errorMessage.includes('MCP error -32000');
-
-      if (isConnectionError) {
-        // Reset connection state so next call attempts reconnect
-        this.connected = false;
-        this.client = null;
-        logger.error('CHROMA_SYNC', 'Connection lost during query',
+        resultText = data.text;
+        logger.debug('CHROMA_SYNC', 'Queried with BGE-M3 embedding', { query });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error('CHROMA_SYNC', 'BGE-M3 query failed, falling back to chroma-mcp',
           { project: this.project, query }, error as Error);
-        throw new Error(`Chroma query failed - connection lost: ${errorMessage}`);
+
+        // Fall through to chroma-mcp fallback below
+        resultText = '';
       }
-      throw error;
+    } else {
+      resultText = '';
     }
 
-    const resultText = result.content[0]?.text || (() => {
-      logger.error('CHROMA', 'Missing text in MCP chroma_query_documents result', {
-        project: this.project,
-        query_text: query
-      });
-      return '';
-    })();
+    // Fallback: use chroma-mcp with default embeddings
+    if (!resultText) {
+      const whereStringified = whereFilter ? JSON.stringify(whereFilter) : undefined;
+
+      const arguments_obj: any = {
+        collection_name: this.collectionName,
+        n_results: limit,
+        include: ['documents', 'metadatas', 'distances'],
+        where: whereStringified,
+        query_texts: [query]
+      };
+
+      let result;
+      try {
+        result = await this.client!.callTool({
+          name: 'chroma_query_documents',
+          arguments: arguments_obj
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const isConnectionError =
+          errorMessage.includes('Not connected') ||
+          errorMessage.includes('Connection closed') ||
+          errorMessage.includes('MCP error -32000');
+
+        if (isConnectionError) {
+          this.connected = false;
+          this.client = null;
+          logger.error('CHROMA_SYNC', 'Connection lost during query',
+            { project: this.project, query }, error as Error);
+          throw new Error(`Chroma query failed - connection lost: ${errorMessage}`);
+        }
+        throw error;
+      }
+
+      resultText = result.content[0]?.text || (() => {
+        logger.error('CHROMA', 'Missing text in MCP chroma_query_documents result', {
+          project: this.project,
+          query_text: query
+        });
+        return '';
+      })();
+    }
 
     // Parse JSON response
     let parsed: any;
