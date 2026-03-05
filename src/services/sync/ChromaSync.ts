@@ -195,20 +195,28 @@ export class ChromaSync {
         return;
       }
 
-      // Path to virtual environment Python (in the same parent directory as embedding-mcp-server)
+      // Look for virtual environment Python — check inside embedding server dir first, then parent
+      const venvInServerPath = path.join(embeddingServerDir, '.venv', 'bin', 'python');
+      const venvInServerPathWin = path.join(embeddingServerDir, '.venv', 'Scripts', 'python.exe');
       const parentDir = path.dirname(embeddingServerDir);
-      const venvPythonPath = path.join(parentDir, '.venv', 'bin', 'python');
-      const venvPythonPathWin = path.join(parentDir, '.venv', 'Scripts', 'python.exe');
+      const venvInParentPath = path.join(parentDir, '.venv', 'bin', 'python');
+      const venvInParentPathWin = path.join(parentDir, '.venv', 'Scripts', 'python.exe');
 
-      // Determine which Python to use
+      // Determine which Python to use (prefer embedding-mcp-server/.venv over parent/.venv)
       let pythonCommand = 'python3';
 
-      if (isWindows && existsSync(venvPythonPathWin)) {
-        pythonCommand = venvPythonPathWin;
-        logger.info('CHROMA_SYNC', 'Using venv Python (Windows)', { path: venvPythonPathWin });
-      } else if (!isWindows && existsSync(venvPythonPath)) {
-        pythonCommand = venvPythonPath;
-        logger.info('CHROMA_SYNC', 'Using venv Python', { path: venvPythonPath });
+      if (isWindows && existsSync(venvInServerPathWin)) {
+        pythonCommand = venvInServerPathWin;
+        logger.info('CHROMA_SYNC', 'Using embedding server venv Python (Windows)', { path: venvInServerPathWin });
+      } else if (!isWindows && existsSync(venvInServerPath)) {
+        pythonCommand = venvInServerPath;
+        logger.info('CHROMA_SYNC', 'Using embedding server venv Python', { path: venvInServerPath });
+      } else if (isWindows && existsSync(venvInParentPathWin)) {
+        pythonCommand = venvInParentPathWin;
+        logger.info('CHROMA_SYNC', 'Using parent venv Python (Windows)', { path: venvInParentPathWin });
+      } else if (!isWindows && existsSync(venvInParentPath)) {
+        pythonCommand = venvInParentPath;
+        logger.info('CHROMA_SYNC', 'Using parent venv Python', { path: venvInParentPath });
       } else {
         logger.info('CHROMA_SYNC', 'No venv found, using system python3');
       }
