@@ -21,6 +21,11 @@
         "default": 37777,
         "description": "Port for Claude-Mem worker service"
       },
+      "workerHost": {
+        "type": "string",
+        "default": "127.0.0.1",
+        "description": "Host/IP for Claude-Mem worker service (default: 127.0.0.1). Use Tailscale IP for remote worker access."
+      },
       "project": {
         "type": "string",
         "default": "openclaw",

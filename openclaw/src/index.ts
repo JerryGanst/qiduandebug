@@ -168,6 +168,7 @@ interface ClaudeMemPluginConfig {
   syncMemoryFile?: boolean;
   project?: string;
   workerPort?: number;
+  workerHost?: string;
   observationFeed?: {
     enabled?: boolean;
     channel?: string;
@@ -241,8 +242,9 @@ function buildGetSourceLabel(
 // Worker HTTP Client
 // ============================================================================
 
+let _workerHost = "127.0.0.1";
 function workerBaseUrl(port: number): string {
-  return `http://127.0.0.1:${port}`;
+  return `http://${_workerHost}:${port}`;
 }
 
 async function workerPost(
@@ -518,6 +520,9 @@ async function connectToSSEStream(
 export default function claudeMemPlugin(api: OpenClawPluginApi): void {
   const userConfig = (api.pluginConfig || {}) as ClaudeMemPluginConfig;
   const workerPort = userConfig.workerPort || DEFAULT_WORKER_PORT;
+  if (userConfig.workerHost) {
+    _workerHost = userConfig.workerHost;
+  }
   const baseProjectName = userConfig.project || "openclaw";
   const getSourceLabel = buildGetSourceLabel(userConfig.observationFeed?.emojis);
 
@@ -1012,5 +1017,5 @@ export default function claudeMemPlugin(api: OpenClawPluginApi): void {
     },
   });
 
-  api.logger.info(`[claude-mem] OpenClaw plugin loaded — v1.0.0 (worker: 127.0.0.1:${workerPort})`);
+  api.logger.info(`[claude-mem] OpenClaw plugin loaded — v1.0.0 (worker: ${_workerHost}:${workerPort})`);
 }
